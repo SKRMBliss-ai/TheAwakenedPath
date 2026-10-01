@@ -4991,11 +4991,19 @@ function chirpyLogUsage(character, voice, status, context, feeling) {
    paying for two. */
 const chirpyInflight = new Map(); // cacheKey -> Promise<Buffer>
 /* After Gemini refuses for quota, stop asking for a while: every attempt until
-   then would only fail. A spent day earns a long pause; a per-minute limit only
-   the wait Gemini names. Per instance, which is enough. */
+   then would only fail. A spent day waits for the allowance to come back at
+   midnight Pacific time; a per-minute limit only the wait Gemini names. Per
+   instance, which is enough. */
 let chirpyQuotaPausedUntil = 0;
+function chirpyMsUntilPacificMidnight(now = new Date()) {
+    const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/Los_Angeles', hourCycle: 'h23', hour: 'numeric', minute: 'numeric', second: 'numeric',
+    }).formatToParts(now);
+    const part = (type) => Number(parts.find((p) => p.type === type).value);
+    return ((24 - part('hour')) * 3600 - part('minute') * 60 - part('second')) * 1000;
+}
 function chirpyQuotaPause(body) {
-    if (/PerDay/i.test(body)) return { ms: 30 * 60 * 1000, why: 'Gemini daily allowance spent (429)', status: 'gemini_daily_limit' };
+    if (/PerDay/i.test(body)) return { ms: chirpyMsUntilPacificMidnight(), why: 'Gemini daily allowance spent (429)', status: 'gemini_daily_limit' };
     const secs = Number(/"retryDelay":\s*"(\d+(?:\.\d+)?)s"/.exec(body)?.[1]);
     if (!(secs > 0)) return { ms: 60 * 1000, why: 'Gemini limit reached (429)', status: 'gemini_limit' };
     return { ms: Math.min(secs, 300) * 1000, why: 'Gemini per-minute limit (429)', status: 'gemini_minute_limit' };
@@ -5038,10 +5046,17 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
             res.set('X-Chirpy-Cache', CHIRPY_CACHE_ENABLED ? 'MISS' : 'LIVE');
             return res.send(wav);
         };
-        const refuse = (status, message, reason, usageStatus) => {
+        /* The reason goes in the body for whoever opens the request in the
+           browser's network tab, and Retry-After tells the app how long to stop
+           asking, so a room reading ten lines doesn't send ten doomed requests. */
+        const refuse = (status, message, reason, usageStatus, retryMs = 0) => {
             chirpyLogMiss(cacheKey, fields, reason);
             usage(usageStatus);
-            return res.status(status).send(message);
+            if (retryMs > 0) {
+                res.set('Retry-After', String(Math.ceil(retryMs / 1000)));
+                res.set('Access-Control-Expose-Headers', 'Retry-After');
+            }
+            return res.status(status).send(`${message} ${reason}`);
         };
 
         /* Rides on a recording already under way: no second Gemini call. */
@@ -5051,10 +5066,10 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
             catch { return refuse(502, 'Chirpy lost his voice for a moment.', 'shared synthesis failed (502)', 'synthesis_error'); }
         }
         if (aiRateLimited('chirpyVoice', callerKey(req))) {
-            return refuse(429, 'Too many requests — please wait a moment.', 'rate limited (429)', 'rate_limited');
+            return refuse(429, 'Too many requests — please wait a moment.', 'rate limited (429)', 'rate_limited', 60 * 1000);
         }
         if (Date.now() < chirpyQuotaPausedUntil) {
-            return refuse(503, 'Chirpy is resting his voice.', 'waiting out a Gemini limit (paused)', 'paused_for_gemini_limit');
+            return refuse(503, 'Chirpy is resting his voice.', 'waiting out a Gemini limit (paused)', 'paused_for_gemini_limit', chirpyQuotaPausedUntil - Date.now());
         }
 
         /* Registered before the first await, so a second ask arriving while the
@@ -5069,12 +5084,16 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
         try {
             wav = await job;
         } catch (error) {
-            if (error.budget) return refuse(503, 'Chirpy is resting his voice.', 'daily budget spent (503)', 'budget_exhausted');
+            if (error.budget) {
+                const utcMidnight = new Date();
+                utcMidnight.setUTCHours(24, 0, 0, 0);
+                return refuse(503, 'Chirpy is resting his voice.', 'daily budget spent (503)', 'budget_exhausted', utcMidnight - Date.now());
+            }
             console.error('Chirpy voice failure:', error.message);
             if (error.status === 429) {
                 const pause = chirpyQuotaPause(error.body || '');
                 chirpyQuotaPausedUntil = Date.now() + pause.ms;
-                return refuse(503, 'Chirpy is resting his voice.', pause.why, pause.status);
+                return refuse(503, 'Chirpy is resting his voice.', pause.why, pause.status, pause.ms);
             }
             return refuse(502, 'Chirpy lost his voice for a moment.', `synthesis failed (502): ${String(error.message).slice(0, 200)}`, 'synthesis_error');
         } finally {

@@ -140,6 +140,7 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
   const key = `${who}|${feeling}|${context ? JSON.stringify(context) : ''}|${text}`;
   const cached = heard.get(key);
   if (cached) { play(cached, text, onEnd); return; }
+  if (Date.now() < restingUntil) { browserVoice(text); return; }
 
   /*
     GEMINI FIRST, BROWSER ONLY AS A LAST RESORT — AND LATE ENOUGH NEVER TO
@@ -198,6 +199,13 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
   one request.
 */
 const pending = new Map<string, Promise<string | null>>();
+/*
+  WHEN THE SERVER SAYS HE IS RESTING — a 503 once Gemini's allowance is spent,
+  or a 429 for asking too fast — nothing is asked again until the wait it names
+  is over. Every line until then goes straight to the browser voice; a room
+  reading ten lines used to send ten requests that were sure to be refused.
+*/
+let restingUntil = 0;
 
 function fetchLine(key: string, body: Record<string, unknown>): Promise<string | null> {
   const waiting = pending.get(key);
@@ -208,8 +216,13 @@ function fetchLine(key: string, body: Record<string, unknown>): Promise<string |
     body: JSON.stringify(body),
   })
     .then((r) => {
-      if (!r.ok) console.warn(`[chirpy-voice] ${r.status}: ${key.slice(0, 30)}`);
-      return r.ok ? r.blob() : null;
+      if (r.ok) return r.blob();
+      if (r.status === 503 || r.status === 429) {
+        const wait = Number(r.headers.get('Retry-After'));
+        restingUntil = Date.now() + (wait > 0 ? wait * 1000 : r.status === 429 ? 60_000 : 5 * 60_000);
+      }
+      void r.text().then((why) => console.warn(`[chirpy-voice] ${r.status}: ${why.slice(0, 120)}`)).catch(() => {});
+      return null;
     })
     .then((blob) => {
       if (!blob) return null;
