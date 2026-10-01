@@ -671,24 +671,53 @@ export function ReflectionPath({ onExit, onGrownUp }: {
           onError={(e) => { e.currentTarget.style.display = 'none'; }} />
       </div>
 
-      {/* ── Compact affirmation bar ─────────────────────────────────────────── */}
-      <div className={`rr-affirm ${speaking ? 'rr-affirm-live' : ''}`}>
-        <img className="rr-affirm-art" src={`${V4}affirmation_bar_blank.webp`} alt="" aria-hidden="true" draggable={false} />
-        <p className="rr-affirm-text" aria-live="polite">{roomLine ?? affirmation}</p>
-        <div className="rr-affirm-tools">
-          <button
-            className={focused?.favourite ? 'rr-on' : ''}
-            onClick={() => focused && favourite(focused)}
-            disabled={!focused}
-            aria-pressed={!!focused?.favourite}
-            aria-label={focused?.favourite ? 'Remove from favourites' : 'Keep as favourite'}
-          >{focused?.favourite ? '♥' : '♡'}</button>
-        </div>
-        {speaking && !still && (
-          <span className="rr-affirm-sparks" aria-hidden="true">
-            {Array.from({ length: 7 }, (_, i) => <i key={i} style={{ '--i': i } as CSSProperties} />)}
+      {/* ── Affirmation with calm objects flanking it ────────────────────────── */}
+      <div className="rr-affirm-wrap">
+        {/* Left: breathe lantern */}
+        <button
+          className={`rr-calm-object rr-calm-lantern ${calmMode === 'breathing' ? 'rr-on' : ''}`}
+          aria-pressed={calmMode === 'breathing'}
+          onClick={startBreathing}
+        >
+          <img src={`${V3}lantern.webp`} alt="" aria-hidden="true" draggable={false} />
+          <span className="rr-calm-motes" aria-hidden="true">
+            {[8, 32, 51, 68, 84, 22].map((x, i) => <i key={x} style={{ '--x': x, '--d': i * 0.9 } as CSSProperties} />)}
           </span>
-        )}
+          <span className="rr-calm-tag">{calmMode === 'breathing' ? 'Stop whenever' : 'Breathe & relax'}</span>
+        </button>
+
+        {/* Center: affirmation bar */}
+        <div className={`rr-affirm ${speaking ? 'rr-affirm-live' : ''}`}>
+          <img className="rr-affirm-art" src={`${V4}affirmation_bar_blank.webp`} alt="" aria-hidden="true" draggable={false} />
+          <p className="rr-affirm-text" aria-live="polite">{roomLine ?? affirmation}</p>
+          <div className="rr-affirm-tools">
+            <button
+              className={focused?.favourite ? 'rr-on' : ''}
+              onClick={() => focused && favourite(focused)}
+              disabled={!focused}
+              aria-pressed={!!focused?.favourite}
+              aria-label={focused?.favourite ? 'Remove from favourites' : 'Keep as favourite'}
+            >{focused?.favourite ? '♥' : '♡'}</button>
+          </div>
+          {speaking && !still && (
+            <span className="rr-affirm-sparks" aria-hidden="true">
+              {Array.from({ length: 7 }, (_, i) => <i key={i} style={{ '--i': i } as CSSProperties} />)}
+            </span>
+          )}
+        </div>
+
+        {/* Right: meditation star */}
+        <button
+          className={`rr-calm-object rr-calm-star ${calmMode === 'meditation' ? 'rr-on' : ''}`}
+          aria-pressed={calmMode === 'meditation'}
+          onClick={startMeditation}
+        >
+          <img src={`${V4}meditation_focus_star.webp`} alt="" aria-hidden="true" draggable={false} />
+          <span className="rr-calm-motes" aria-hidden="true">
+            {[8, 32, 51, 68, 84, 22].map((x, i) => <i key={x} style={{ '--x': x, '--d': i * 0.9 } as CSSProperties} />)}
+          </span>
+          <span className="rr-calm-tag">{calmMode === 'meditation' ? 'Finish for now' : '2 min quiet'}</span>
+        </button>
       </div>
 
 
@@ -730,52 +759,6 @@ export function ReflectionPath({ onExit, onGrownUp }: {
         </div>
       )}
 
-      {/*
-        ── The two quiet things, standing in the room ──────────────────────
-
-        These were a pair of glass pills in a row at the very bottom of the
-        screen — the only thing on a page that is otherwise entirely a place
-        that still read as a toolbar. A child scanning this room sees lanterns,
-        crystals, cushions and a rug; two rounded rectangles with a moon glyph
-        are the one thing their eye files as "app".
-
-        So they are objects now, standing on the stone either side of where the
-        child is sitting, each with a little hand-lettered tag leaning against
-        it. The lantern breathes on its own — its light swells and fades on the
-        same slow count the exercise uses — and the star turns, so both of them
-        say what they do before anybody reads a word. That is the point: a
-        five-year-old who cannot yet read "Breathe & relax" can watch the
-        lantern and already know.
-
-        Both are real buttons underneath, with the labels still in the
-        accessible name, so nothing is lost for a screen reader or a keyboard.
-      */}
-      <div className="rr-calm-objects">
-        <button
-          className={`rr-calm-object rr-calm-lantern ${calmMode === 'breathing' ? 'rr-on' : ''}`}
-          aria-pressed={calmMode === 'breathing'}
-          onClick={startBreathing}
-        >
-          <img src={`${V3}lantern.webp`} alt="" aria-hidden="true" draggable={false} />
-          <span className="rr-calm-motes" aria-hidden="true">
-            {[8, 32, 51, 68, 84, 22].map((x, i) => <i key={x} style={{ '--x': x, '--d': i * 0.9 } as CSSProperties} />)}
-          </span>
-
-          <span className="rr-calm-tag">{calmMode === 'breathing' ? 'Stop whenever' : 'Breathe & relax'}</span>
-        </button>
-        <button
-          className={`rr-calm-object rr-calm-star ${calmMode === 'meditation' ? 'rr-on' : ''}`}
-          aria-pressed={calmMode === 'meditation'}
-          onClick={startMeditation}
-        >
-          <img src={`${V4}meditation_focus_star.webp`} alt="" aria-hidden="true" draggable={false} />
-          <span className="rr-calm-motes" aria-hidden="true">
-            {[8, 32, 51, 68, 84, 22].map((x, i) => <i key={x} style={{ '--x': x, '--d': i * 0.9 } as CSSProperties} />)}
-          </span>
-
-          <span className="rr-calm-tag">{calmMode === 'meditation' ? 'Finish for now' : '2 min quiet'}</span>
-        </button>
-      </div>
 
       {/* The grown-up exit stays a plain control, and stays where it always is
           on every screen (§2.10). It is not scenery and must never be a thing
