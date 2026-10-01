@@ -4974,6 +4974,19 @@ function chirpyLogMiss(cacheKey, fields, reason) {
     }, { merge: true }).catch(() => { /* logging must never break the voice */ });
 }
 
+function chirpyLogUsage(character, voice, status, context, feeling) {
+    const docId = `${new Date().toISOString().split('T')[0]}-${Math.random().toString(36).slice(2, 9)}`;
+    const room = context?.title || 'unknown';
+    db.collection('chirpyVoiceUsage').doc(docId).set({
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        character,
+        voice,
+        status,
+        room,
+        feeling: feeling || 'not recorded',
+    }).catch(() => { /* logging must never break the voice */ });
+}
+
 /* Two requests for the same new line at once share one recording instead of
    paying for two. */
 const chirpyInflight = new Map(); // cacheKey -> Promise<Buffer>
@@ -4982,10 +4995,10 @@ const chirpyInflight = new Map(); // cacheKey -> Promise<Buffer>
    the wait Gemini names. Per instance, which is enough. */
 let chirpyQuotaPausedUntil = 0;
 function chirpyQuotaPause(body) {
-    if (/PerDay/i.test(body)) return { ms: 30 * 60 * 1000, why: 'Gemini daily allowance spent (429)' };
+    if (/PerDay/i.test(body)) return { ms: 30 * 60 * 1000, why: 'Gemini daily allowance spent (429)', status: 'gemini_daily_limit' };
     const secs = Number(/"retryDelay":\s*"(\d+(?:\.\d+)?)s"/.exec(body)?.[1]);
-    if (!(secs > 0)) return { ms: 60 * 1000, why: 'Gemini limit reached (429)' };
-    return { ms: Math.min(secs, 300) * 1000, why: 'Gemini per-minute limit (429)' };
+    if (!(secs > 0)) return { ms: 60 * 1000, why: 'Gemini limit reached (429)', status: 'gemini_limit' };
+    return { ms: Math.min(secs, 300) * 1000, why: 'Gemini per-minute limit (429)', status: 'gemini_minute_limit' };
 }
 
 exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances: 3 }, async (req, res) => {
@@ -4999,14 +5012,17 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
     const character = req.body && req.body.character === 'mind' ? 'mind'
         : req.body && req.body.character === 'guide' ? 'guide'
         : 'grownup';
+    const context = chirpyContext(req.body && req.body.context);
     const { direction, toneName, cacheKey } = chirpyResolve({
-        text, voiceName, character, feeling: req.body && req.body.feeling, context: chirpyContext(req.body && req.body.context),
+        text, voiceName, character, feeling: req.body && req.body.feeling, context,
     });
+    const usage = (status) => chirpyLogUsage(character, voiceName, status, context, toneName);
 
     try {
         const cachedWav = CHIRPY_CACHE_ENABLED ? await chirpyCached(cacheKey) : null;
         if (cachedWav) {
             console.log(`[chirpyVoice] Cache hit: ${cacheKey} (${voiceName})`);
+            usage('cache_hit');
             res.set('Content-Type', 'audio/wav');
             res.set('Cache-Control', 'public, max-age=2592000, immutable');
             res.set('X-Chirpy-Cache', 'HIT');
@@ -5015,55 +5031,62 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
 
         if (CHIRPY_CACHE_ENABLED) console.log(`[chirpyVoice] Cache miss: ${cacheKey} (${voiceName})`);
         const fields = { text, voice: voiceName, character, emotion: toneName };
-        const sendWav = (wav) => {
+        const sendWav = (wav, status) => {
+            usage(status);
             res.set('Content-Type', 'audio/wav');
             res.set('Cache-Control', CHIRPY_CACHE_ENABLED ? 'public, max-age=2592000, immutable' : 'no-store');
             res.set('X-Chirpy-Cache', CHIRPY_CACHE_ENABLED ? 'MISS' : 'LIVE');
             return res.send(wav);
         };
-        const refuse = (status, message, reason) => {
+        const refuse = (status, message, reason, usageStatus) => {
             chirpyLogMiss(cacheKey, fields, reason);
+            usage(usageStatus);
             return res.status(status).send(message);
         };
 
+        /* Rides on a recording already under way: no second Gemini call. */
         const inflight = chirpyInflight.get(cacheKey);
         if (inflight) {
-            try { return sendWav(await inflight); }
-            catch { return refuse(502, 'Chirpy lost his voice for a moment.', 'shared synthesis failed (502)'); }
+            try { return sendWav(await inflight, 'shared'); }
+            catch { return refuse(502, 'Chirpy lost his voice for a moment.', 'shared synthesis failed (502)', 'synthesis_error'); }
         }
         if (aiRateLimited('chirpyVoice', callerKey(req))) {
-            return refuse(429, 'Too many requests — please wait a moment.', 'rate limited (429)');
+            return refuse(429, 'Too many requests — please wait a moment.', 'rate limited (429)', 'rate_limited');
         }
         if (Date.now() < chirpyQuotaPausedUntil) {
-            return refuse(503, 'Chirpy is resting his voice.', 'waiting out a Gemini limit (paused)');
-        }
-        if (!(await reserveAiBudget('chirpyVoice'))) {
-            return refuse(503, 'Chirpy is resting his voice.', 'daily budget spent (503)');
+            return refuse(503, 'Chirpy is resting his voice.', 'waiting out a Gemini limit (paused)', 'paused_for_gemini_limit');
         }
 
+        /* Registered before the first await, so a second ask arriving while the
+           budget is being checked shares this one rather than starting its own. */
         const line = { text, voiceName, direction, cacheKey, character, emotion: toneName };
-        const job = CHIRPY_CACHE_ENABLED ? chirpySynthAndStore(line) : chirpySynth(line);
+        const job = (async () => {
+            if (!(await reserveAiBudget('chirpyVoice'))) throw Object.assign(new Error('daily budget spent'), { budget: true });
+            return CHIRPY_CACHE_ENABLED ? chirpySynthAndStore(line) : chirpySynth(line);
+        })();
         chirpyInflight.set(cacheKey, job);
         let wav;
         try {
             wav = await job;
         } catch (error) {
+            if (error.budget) return refuse(503, 'Chirpy is resting his voice.', 'daily budget spent (503)', 'budget_exhausted');
             console.error('Chirpy voice failure:', error.message);
             if (error.status === 429) {
                 const pause = chirpyQuotaPause(error.body || '');
                 chirpyQuotaPausedUntil = Date.now() + pause.ms;
-                return refuse(503, 'Chirpy is resting his voice.', pause.why);
+                return refuse(503, 'Chirpy is resting his voice.', pause.why, pause.status);
             }
-            return refuse(502, 'Chirpy lost his voice for a moment.', `synthesis failed (502): ${String(error.message).slice(0, 200)}`);
+            return refuse(502, 'Chirpy lost his voice for a moment.', `synthesis failed (502): ${String(error.message).slice(0, 200)}`, 'synthesis_error');
         } finally {
             chirpyInflight.delete(cacheKey);
         }
         console.log(`[chirpyVoice] ${CHIRPY_CACHE_ENABLED ? 'Cached new' : 'Recorded live'}: ${cacheKey}`);
         db.collection('chirpyVoiceMisses').doc(cacheKey).delete().catch(() => {});
-        return sendWav(wav);
+        return sendWav(wav, 'synthesized');
     } catch (error) {
         console.error('Chirpy voice failure:', error.message);
         chirpyLogMiss(cacheKey, { text, voice: voiceName, character, emotion: toneName }, `synthesis failed (502): ${String(error.message).slice(0, 200)}`);
+        usage('synthesis_error');
         return res.status(502).send('Chirpy lost his voice for a moment.');
     }
 });
@@ -5303,6 +5326,65 @@ exports.cacheByEmotion = onRequest({ cors: true, secrets: [adminToken] }, async 
         res.json({ deletedCount });
     } catch (error) {
         console.error('[cacheByEmotion] error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+exports.voiceUsageStats = onRequest({ cors: true, secrets: [adminToken] }, async (req, res) => {
+    if (!verifyAdminToken(req)) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+        const usageCol = db.collection('chirpyVoiceUsage');
+        const snapshot = await usageCol.get();
+
+        const stats = {
+            totalCalls: snapshot.size,
+            byStatus: {},
+            byCharacter: {},
+            byVoice: {},
+            byRoom: {},
+            today: 0,
+            statusTrend: {},
+        };
+
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            const timestamp = data.timestamp?.toDate?.().getTime() || 0;
+
+            stats.byStatus[data.status] = (stats.byStatus[data.status] || 0) + 1;
+            stats.byCharacter[data.character] = (stats.byCharacter[data.character] || 0) + 1;
+            stats.byVoice[data.voice] = (stats.byVoice[data.voice] || 0) + 1;
+            stats.byRoom[data.room] = (stats.byRoom[data.room] || 0) + 1;
+
+            if (timestamp >= todayStart) {
+                stats.today += 1;
+            }
+
+            const date = new Date(timestamp).toISOString().split('T')[0];
+            stats.statusTrend[data.status] = (stats.statusTrend[data.status] || 0) + 1;
+        });
+
+        const usageList = snapshot.docs.map((doc) => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                timestamp: data.timestamp?.toDate?.().toISOString() || '',
+                character: data.character || 'unknown',
+                voice: data.voice || 'unknown',
+                status: data.status || 'unknown',
+                room: data.room || 'unknown',
+                feeling: data.feeling || 'not recorded',
+            };
+        }).sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1)).slice(0, 100);
+
+        res.json({ stats, usageList });
+    } catch (error) {
+        console.error('[voiceUsageStats] error:', error);
         res.status(500).json({ error: error.message });
     }
 });
