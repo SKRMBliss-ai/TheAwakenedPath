@@ -4,7 +4,7 @@ import { BEHAVIOURS, BADGES, REWARDS, todayKey } from './data';
 import { EGG_STICKER_IDS, earnedStickers, type StickerStats } from './stickers';
 import {
   EGG_FRIEND_BY_ID, MEMORY_LIMIT, SEEDS_PER_DAY, eggPrizeFor, plantKindFor,
-  type EggPrize, type Memory, type NewMemory, type ParentStory, type PlacedItem, type Plant,
+  type EggPrize, type Memory, type NewMemory, type PlacedItem, type Plant,
 } from './delight';
 
 /**
@@ -140,8 +140,8 @@ interface KidState {
   /** Week (its Monday) -> the chapters read that week, 0-6. */
   chaptersRead: Record<string, number[]>;
   storiesFinished: string[];
-  /** Written by a grown-up in the Story Studio. Not progress, so starting over keeps them. */
-  parentStories: ParentStory[];
+  /** Week -> the story read that week. Set at the first chapter, so a story changed mid-week can't swap it out. */
+  storyByWeek: Record<string, string>;
 
   completeOnboarding: (name: string, avatarId: string) => void;
   setName: (name: string) => void;
@@ -178,8 +178,6 @@ interface KidState {
   setCornerWall: (id: string) => void;
   /** A chapter read to its last page. Reports whether it was new, and whether it finished the story. */
   readChapter: (week: string, chapter: number, storyId: string, title: string) => { firstTime: boolean; finished: boolean };
-  saveParentStory: (story: ParentStory) => void;
-  deleteParentStory: (id: string) => void;
   reset: () => void;
 }
 
@@ -269,7 +267,7 @@ export const useKidStore = create<KidState>()(
       cornerWall: 'treehouse',
       chaptersRead: {},
       storiesFinished: [],
-      parentStories: [],
+      storyByWeek: {},
 
       completeOnboarding: (name, avatarId) => set({ onboarded: true, name: name.trim() || 'Explorer', avatarId }),
       setName: (name) => { if (name.trim()) set({ name: name.trim() }); },
@@ -451,6 +449,7 @@ export const useKidStore = create<KidState>()(
           return {
             ...activity,
             chaptersRead: { ...s.chaptersRead, [week]: nowRead },
+            storyByWeek: s.storyByWeek[week] ? s.storyByWeek : { ...s.storyByWeek, [week]: storyId },
             storiesFinished: finished ? [...s.storiesFinished, storyId] : s.storiesFinished,
             points,
             pointsByBehaviour: { ...s.pointsByBehaviour, mindheart: (s.pointsByBehaviour.mindheart ?? 0) + 10 },
@@ -460,20 +459,13 @@ export const useKidStore = create<KidState>()(
         return result;
       },
 
-      saveParentStory: (story) => set((s) => ({
-        parentStories: s.parentStories.some((p) => p.id === story.id)
-          ? s.parentStories.map((p) => (p.id === story.id ? story : p))
-          : [...s.parentStories, story],
-      })),
-      deleteParentStory: (id) => set((s) => ({ parentStories: s.parentStories.filter((p) => p.id !== id) })),
-
       reset: () => set({
         onboarded: false, name: '', avatarId: 'sunny', points: 0, pointsByBehaviour: {},
         completions: {}, missionsDone: {}, reflections: {}, savedReflections: [], monthReviews: {}, scenariosDone: {},
         streak: 0, badges: [], rewards: [], gameStats: NO_GAME_STATS, stickers: [], stickerQueue: [],
         memories: [], visitDays: [], activeDays: [], plants: [], gardenSeen: '', wateredOn: '',
         eggHatchedOn: '', eggsHatched: 0, eggPrize: null, friends: [], jokesTold: [], eggStickers: [],
-        corner: [], cornerWall: 'treehouse', chaptersRead: {}, storiesFinished: [],
+        corner: [], cornerWall: 'treehouse', chaptersRead: {}, storiesFinished: [], storyByWeek: {},
       }),
       };
     },

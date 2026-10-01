@@ -1,4 +1,5 @@
 import type { ReflectionTag } from '../../../kids/store';
+import { addedLines, liveText, type LiveText } from './liveContent';
 
 type Affirmations = Record<ReflectionTag, string[]>;
 
@@ -93,4 +94,13 @@ export function pickThreeAffirmations(tag: ReflectionTag): string[] {
     whole set is what needs to be ready before a child taps one. */
 export function allAffirmations(): string[] {
   return [...new Set(Object.values(AFFIRMATIONS).flat())];
+}
+
+export const affirmationId = (tag: ReflectionTag, i: number) => `affirm:${tag}:${i}`;
+
+/** Every affirmation as the app says it: changed on the admin page, plus any added there. */
+export function liveAffirmations(texts?: Record<string, LiveText>): string[] {
+  const all = (Object.keys(AFFIRMATIONS) as ReflectionTag[])
+    .flatMap((tag) => AFFIRMATIONS[tag].map((line, i) => liveText(affirmationId(tag, i), line, texts)));
+  return [...all, ...addedLines('affirm:new:', texts).map((t) => t.text)];
 }

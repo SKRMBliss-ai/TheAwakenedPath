@@ -5,7 +5,7 @@ import { BEHAVIOURS, todayKey } from '../../../kids/data';
 import { FONT } from '../ui/chrome';
 import { useQuiet } from '../ui/quiet';
 import { MicButton } from '../ui/MicButton';
-import { VIRTUE_ROOMS, type VirtueRoom } from './rooms';
+import { VIRTUE_ROOMS, roomText, type VirtueRoom } from './rooms';
 import { roomGamesFor } from './roomGames';
 import { RoomGamePlayer } from './RoomGamePlayer';
 import { GoodChoicesShelf } from './GoodChoicesShelf';
@@ -15,11 +15,13 @@ import { BadgeSlot } from './ChildBadge';
 import { bandUnknown } from '../kit/band';
 import { chirpySprite } from '../ui/sprites';
 import * as sound from '../kit/sound';
-import { AFFIRMATIONS } from '../kit/affirmations';
+import { liveAffirmations } from '../kit/affirmations';
+import { useLiveContent } from '../kit/liveContent';
+import { ADMIN_PATH, useKidsAdmin } from '../kit/useKidsAdmin';
 import { speak } from '../kit/chirpyVoice';
 import { isMuted, setMuted } from '../../../../lib/sfx';
 import { useDiaryFilledToday } from '../kit/diaryToday';
-import { grewBetween, rememberedGreeting } from '../../../kids/delight';
+import { rememberedGreeting } from '../../../kids/delight';
 import { HomeTreasures } from './HomeTreasures';
 import './HomeScreen.css';
 import './DiaryNudge.css';
@@ -107,7 +109,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   const [teaching, setTeaching] = useState<string | null>(null);
   const lastTeaching = useRef('');
   const sayTeaching = () => {
-    const pool = Object.values(AFFIRMATIONS).flat();
+    const pool = liveAffirmations();
     if (!pool.length) return;
     let line = pool[Math.floor(Math.random() * pool.length)];
     /* Never the same one twice running — a repeat reads as the tap not
@@ -130,13 +132,14 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     spoken to; see delight.rememberedGreeting for what he will and will not
     say about a child coming back.
   */
-  const lastVisit = [...s.visitDays].reverse().find((d) => d < today) ?? '';
   const greeting = rememberedGreeting({
     name, today, memories: s.memories,
-    grew: grewBetween(s.plants, lastVisit, today),
     eggReady: s.eggHatchedOn !== today && s.activeDays.includes(today),
   });
   const room = VIRTUE_ROOMS.find((r) => r.id === selected);
+  const texts = useLiveContent((st) => st.texts);
+  const admin = useKidsAdmin();
+  const words = room && roomText(room, texts);
   const behaviour = BEHAVIOURS.find((b) => b.id === selected);
   const game = room ? roomGamesFor(room.id)[0] : undefined;
   const points = s.points;
@@ -224,6 +227,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
 
       <footer className="mg-safety">
         <button className="chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button>
+        {admin && <a className="mg-admin chrome-fade" href={ADMIN_PATH}>Admin</a>}
       </footer>
     </div>
     <dialog className="mg-room-dialog" aria-labelledby="mg-room-title" ref={dialog} onClose={() => setSelected(null)} onClick={(e) => { if (e.target === e.currentTarget) close(); }}>
@@ -235,8 +239,8 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
           if (!go) { setMode(item); return; }
           close(); go();
         }} aria-pressed={mode === item}>{item === 'reflect' ? 'My day' : item === 'play' ? 'Play' : 'Learn'}</button>)}</nav>
-        {mode === 'reflect' && <><p>{behaviour.prompt}</p><div className="mg-day-options"><button aria-pressed={!!s.completions[today]?.[room.id]} onClick={() => s.setBehaviourOn(today, room.id, true)}>Yes, I did</button><button aria-pressed={!s.completions[today]?.[room.id]} onClick={() => s.setBehaviourOn(today, room.id, false)}>Not today</button></div><label htmlFor="mg-home-note">Something to remember (if you like)</label><textarea id="mg-home-note" value={note} onChange={(e) => write(e.target.value)} rows={3} /><MicButton onText={(text) => write(note ? `${note} ${text}` : text)} /><button className="mg-save" onClick={() => setSaved(true)}>{saved ? 'Saved in your diary' : 'Save my thought'}</button><p role="status">{saved ? 'Your thought is saved on this device.' : 'You can stop whenever you like.'}</p></>}
-        {mode === 'learn' && <><h3>{room.learn.title}</h3><p>{room.learn.body}</p><button className="mg-save" onClick={() => { close(); if (room.id === 'mindheart' && onReflectionPath) onReflectionPath(); else onOpenRoom(room); }}>{room.id === 'mindheart' && onReflectionPath ? 'Sit in the Reflection Room →' : 'Explore this room →'}</button></>}
+        {mode === 'reflect' && <><p>{words?.prompt ?? behaviour.prompt}</p><div className="mg-day-options"><button aria-pressed={!!s.completions[today]?.[room.id]} onClick={() => s.setBehaviourOn(today, room.id, true)}>Yes, I did</button><button aria-pressed={!s.completions[today]?.[room.id]} onClick={() => s.setBehaviourOn(today, room.id, false)}>Not today</button></div><label htmlFor="mg-home-note">Something to remember (if you like)</label><textarea id="mg-home-note" value={note} onChange={(e) => write(e.target.value)} rows={3} /><MicButton onText={(text) => write(note ? `${note} ${text}` : text)} /><button className="mg-save" onClick={() => setSaved(true)}>{saved ? 'Saved in your diary' : 'Save my thought'}</button><p role="status">{saved ? 'Your thought is saved on this device.' : 'You can stop whenever you like.'}</p></>}
+        {mode === 'learn' && <><h3>{words?.learn.title}</h3><p>{words?.learn.body}</p><button className="mg-save" onClick={() => { close(); if (room.id === 'mindheart' && onReflectionPath) onReflectionPath(); else onOpenRoom(room); }}>{room.id === 'mindheart' && onReflectionPath ? 'Sit in the Reflection Room →' : 'Explore this room →'}</button></>}
         {mode === 'play' && (game ? <RoomGamePlayer key={game.id} game={game} accent="#ffe099" onDone={(earned) => { const marker = `home:${game.id}`; if (!(s.scenariosDone[today] ?? []).includes(marker)) { s.completeScenario(marker); s.awardPoints(earned, room.id); } setMode('reflect'); }} /> : <button className="mg-save" onClick={() => { close(); onOpenRoom(room); }}>Enter the {behaviour.title} activity →</button>)}
         <button className="mg-dialog-grownup" onClick={() => { close(); onGrownUp(); }}>Talk to a grown-up</button>
       </>}

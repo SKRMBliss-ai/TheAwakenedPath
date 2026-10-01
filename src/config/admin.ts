@@ -69,3 +69,18 @@ export const isMonitoredEmail = (email: string | null | undefined) => {
            !lowerEmail.includes('skrm') && 
            !IGNORED_EMAILS.includes(lowerEmail);
 };
+
+// Who may edit the shared Mind Gym for Kids content (stories, feelings and
+// thoughts, games, teaching lines). Mirrors KIDS_CONTENT_EDITORS in
+// functions/index.js, which re-checks every change server-side; this copy only
+// decides whether the app shows the way in. Add an editor in both places.
+export const KIDS_CONTENT_ADMIN_EMAILS = [
+    'shrutikhungar@gmail.com',
+    'simkatyal1@gmail.com',
+    'rashmi.purbey@gmail.com',
+    'smriti.duggal@gmail.com',
+    'skrmblissai@gmail.com'
+];
+
+export const canEditKidsContent = (email: string | null | undefined) =>
+    !!email && KIDS_CONTENT_ADMIN_EMAILS.includes(email.toLowerCase());

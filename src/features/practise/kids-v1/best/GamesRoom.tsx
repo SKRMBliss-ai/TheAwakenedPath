@@ -15,6 +15,7 @@ import { Steady } from '../ui/Steady';
 import { STEADY_GROWNUP } from '../kit/steady';
 import { childAge } from '../kit/band';
 import { createPracticeSession, createScenarioPool, eligibleScenarios } from '../kit/behaviourPractice';
+import { withLiveGames } from '../kit/liveContent';
 import { themeForFeeling, roomIdForTheme, type GamesTheme } from '../kit/gamesRoomThemes';
 import { todaysFeeling } from '../kit/todaysFeeling';
 import * as sound from '../kit/sound';
@@ -327,7 +328,8 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
   const [session, setSession] = useState(() => makeSession(theme));
 
   function makeSession(forTheme: GamesTheme) {
-    const pool = createScenarioPool(eligibleScenarios(forTheme, childAge()));
+    const age = childAge();
+    const pool = createScenarioPool(withLiveGames(forTheme, age, eligibleScenarios(forTheme, age)));
     const creditTo = roomIdForTheme(forTheme);
     return createPracticeSession({
       next: () => pool.next(),

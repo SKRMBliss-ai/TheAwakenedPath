@@ -238,6 +238,15 @@ const gymRoute = (() => {
   return matchGymRoute(window.location.pathname);
 })();
 
+// Mind Gym for Kids content admin (stories, feelings and thoughts, games,
+// teaching words). Checked before gymRoute, which only matches whole paths
+// and would send /mindgymforkidsv1/admin to the 404 below.
+const isKidsAdminRoute = (() => {
+  if (typeof window === 'undefined') return false;
+  const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
+  return p === '/mindgymforkidsv1/admin' || p.startsWith('/mindgymforkidsv1/admin/');
+})();
+
 // Admin cache panel access via ?admin=<token> query parameter
 const isAdminRoute = (() => {
   if (typeof window === 'undefined') return false;
@@ -398,6 +407,15 @@ if (isAdminRoute) {
           </AchievementsProvider>
         </ThemeProvider>
       </AuthProvider>
+    </ErrorBoundary>,
+  );
+} else if (isKidsAdminRoute) {
+  const KidsAdmin = lazy(() => import('./features/practise/kids-v1/admin/KidsAdmin'));
+  root.render(
+    <ErrorBoundary featureName="KidsContentAdmin">
+      <Suspense fallback={null}>
+        <KidsAdmin />
+      </Suspense>
     </ErrorBoundary>,
   );
 } else if (gymRoute) {

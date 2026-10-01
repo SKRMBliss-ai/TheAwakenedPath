@@ -2,6 +2,20 @@
 
 This document maps where content originates across The Awakened Path application.
 
+## Mind Gym for Kids: content changed on the admin pages
+
+The files listed below are the built-in content. On top of them sits a shared layer that admins edit at
+`/mindgymforkidsv1/admin`, and every child's app merges it in when it opens:
+
+- **Stories** for the Story Map, each booked for a week (otherwise the four built-in stories rotate)
+- **Feelings and thoughts**: added feeling balls, and added thoughts for any feeling
+- **Games**: added Games Room questions, and changed or hidden built-in ones
+- **Teaching words**: changed room cards, affirmations and "Another way" lines, plus added affirmations and "Another way" lines
+
+It is stored in the Firestore collection `kidsContent` and read and written only through the `kidsContent`
+Cloud Function (`functions/index.js`), which checks the editor's account on every change. The app keeps a copy
+on each device (`kit/liveContent.ts`) and falls back to the built-in content when the service can't be reached.
+
 ## Story Lab
 
 ### Thoughts (Clouds)

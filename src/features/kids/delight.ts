@@ -536,9 +536,29 @@ export function adventureForWeek(weekKey: string, parentStories: readonly Parent
   return ADVENTURES[((weeks % ADVENTURES.length) + ADVENTURES.length) % ADVENTURES.length];
 }
 
+/**
+ * The story this child reads this week. Once they have read a chapter it stays
+ * theirs until Sunday, whatever the schedule says by then: a story booked or
+ * moved mid-week reaches the children who haven't started, and never swaps out
+ * the one someone is halfway through.
+ */
+export function storyForChild(
+  week: string, parentStories: readonly ParentStory[], pinned: string | undefined, readAny: boolean,
+): Adventure {
+  if (pinned) {
+    const theirs = parentStories.find((s) => s.id === pinned && storyProblems(s).length === 0)
+      ?? ADVENTURES.find((a) => a.id === pinned);
+    if (theirs) return theirs;
+  } else if (readAny) {
+    // Read before stories were pinned, which only the built-in rotation could have been.
+    return adventureForWeek(week);
+  }
+  return adventureForWeek(week, parentStories);
+}
+
 /* ── Stories a grown-up writes ───────────────────────────────────────────── */
 
-/** Written in the Story Studio. `week` is the Monday it is told; without one it is a draft. */
+/** Written on the admin Stories page and shared with every child. `week` is the Monday it is told; without one it is a draft. */
 export interface ParentStory extends Adventure { week?: string }
 
 export const MAX_PAGES = 6;
@@ -605,29 +625,25 @@ function followUp(m: Memory): string {
 export interface Greeting { title: string; line: string }
 
 /**
- * What Chirpy says when a child comes back, written to kit/awayFor's rules: it
- * is only ever about something the child did and chose to tell him, and it
- * never names how long they were gone, never says they were missed and never
- * asks why. "Last time", not "on Tuesday".
+ * What Chirpy says when a child comes back. He is a friend who noticed they
+ * were gone: he says he missed them, says when it has been a while, and still
+ * remembers what they did last time, however long ago that was. What he never
+ * does is ask why they stayed away; "What have you been up to?" is as far as
+ * he goes.
  *
- * After a real absence he does not reach back for what they told him weeks
- * ago at all; he has news of his own instead, and only if there is some.
  * Nothing on a first visit, and nothing once they have started today, unless
  * the egg is ready — that is news every time.
  */
 export function rememberedGreeting(input: {
-  name: string; today: string; memories: readonly Memory[]; grew: number; eggReady: boolean;
+  name: string; today: string; memories: readonly Memory[]; eggReady: boolean;
 }): Greeting | null {
   const hi = input.name ? `, ${input.name}` : '';
   if (input.eggReady) return { title: `Your egg is wiggling${hi}!`, line: 'Something is about to hatch. Tap your egg to see!' };
   if (input.memories.some((m) => m.day === input.today)) return null;
   const last = input.memories.find((m) => m.day < input.today);
   if (!last) return null;
-  if (daysBetween(last.day, input.today) >= 7) {
-    return input.grew > 0
-      ? { title: `Hello${hi}!`, line: 'Guess what? Your garden kept growing while I was napping. Come and see what came up!' }
-      : null;
-  }
-  const when = daysBetween(last.day, input.today) === 1 ? 'Yesterday' : 'Last time';
-  return { title: `Welcome back${hi}!`, line: `${when} ${remembered(last)}. ${followUp(last)}` };
+  const gap = daysBetween(last.day, input.today);
+  if (gap === 1) return { title: `Welcome back${hi}!`, line: `Yesterday ${remembered(last)}. ${followUp(last)}` };
+  if (gap < 7) return { title: `I missed you${hi}!`, line: `Last time ${remembered(last)}. ${followUp(last)}` };
+  return { title: `I missed you so much${hi}!`, line: `It’s been a while! Last time ${remembered(last)}. What have you been up to?` };
 }

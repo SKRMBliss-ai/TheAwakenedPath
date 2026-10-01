@@ -4,8 +4,10 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useKidStore } from '../../../kids/store';
 import { todayKey } from '../../../kids/data';
 import {
-  CORNER_ITEM_BY_ID, adventureForWeek, chapterOpen, dayDate, weekStartKey, weekdayIndex, withName, type Adventure,
+  CORNER_ITEM_BY_ID, chapterOpen, dayDate, storyForChild, weekStartKey, weekdayIndex, withName, type Adventure,
 } from '../../../kids/delight';
+import { useLiveContent } from '../kit/liveContent';
+import { ADMIN_PATH, useKidsAdmin } from '../kit/useKidsAdmin';
 import { useQuiet } from '../ui/quiet';
 import { FONT } from '../ui/chrome';
 import { DoorHandle } from '../ui/DoorHandle';
@@ -203,17 +205,17 @@ export function Reader({ story, chapter, name, onClose, onNext, onCorner, still,
 
 /* ── The map ──────────────────────────────────────────────────────────────── */
 
-export function AdventureMap({ onExit, onGrownUp, onCorner, onStudio }: {
-  onExit: () => void; onGrownUp: () => void; onCorner: () => void; onStudio: () => void;
-}) {
+export function AdventureMap({ onExit, onGrownUp, onCorner }: { onExit: () => void; onGrownUp: () => void; onCorner: () => void }) {
   const quiet = useQuiet();
   const reduced = useReducedMotion();
   const still = quiet || !!reduced;
   const today = todayKey();
   const week = weekStartKey(today);
-  const parentStories = useKidStore((s) => s.parentStories);
-  const story = adventureForWeek(week, parentStories);
+  const parentStories = useLiveContent((s) => s.stories);
+  const pinned = useKidStore((s) => s.storyByWeek[week]);
   const read = useKidStore((s) => s.chaptersRead[week] ?? EMPTY);
+  const story = storyForChild(week, parentStories, pinned, read.length > 0);
+  const admin = useKidsAdmin();
   const name = useKidStore((s) => s.name);
   const kid = name && name !== 'Explorer' ? name : '';
   const tall = useTall();
@@ -308,9 +310,7 @@ export function AdventureMap({ onExit, onGrownUp, onCorner, onStudio }: {
             <span>Read all 7 chapters to win <b>{keepsake.name}</b> for your corner</span>
           </p>
         )}
-        {/* Dull on purpose, like "leave a note" in the Reflection Room: an adult
-            looking for it finds it, a child has already tapped a stone. */}
-        <button className="am-studio" onClick={onStudio}>For a grown-up · write a story</button>
+        {admin && <a className="am-studio" href={`${ADMIN_PATH}/stories`}>Admin · stories</a>}
       </div>
 
       {typeof document !== 'undefined' && createPortal(

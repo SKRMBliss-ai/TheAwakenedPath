@@ -20,6 +20,8 @@
  *   a theme-default icon during this conversion so the existing Option UI keeps working.
  */
 
+import { addedLines, feelingId, liveText, useLiveContent, type LiveThought } from './liveContent';
+
 export type Option = { text: string; icon: string; own?: boolean };
 
 export type Theme =
@@ -35,7 +37,7 @@ export type AgeInput = number | AgeBand | undefined;
 export type SafetyRouting = 'routine' | 'adult-support';
 export type ContentOrigin = 'existing' | 'expanded';
 
-type Thought = Option & {
+export type Thought = Option & {
   theme: Theme;
   ageBand: AgeBand;
   subtheme: string;
@@ -126,7 +128,7 @@ export const THEME_GUIDANCE: Record<Theme, {
   }
 };
 
-const THOUGHTS: Record<FeelingKey, Thought[]> = {
+export const THOUGHTS: Record<FeelingKey, Thought[]> = {
   "happy": [
     {
       "text": "Today went well.",
@@ -8800,7 +8802,7 @@ const EVENTS: Record<Theme, EventOption[]> = {
  *   and keep the icon set (✳ ❋ ✦ ✧ ☘ ❃ ❉ ✺) varied within a theme so the
  *   rotating window doesn't repeat a glyph twice in one screen.
  */
-const POSSIBILITIES: Record<Theme, Option[]> = {
+export const POSSIBILITIES: Record<Theme, Option[]> = {
   rejection: [
     { text: 'Maybe they were busy and it had nothing to do with me.', icon: '✳' },
     { text: "Maybe they didn't notice me, not that they don't like me.", icon: '❋' },
@@ -8893,7 +8895,7 @@ const POSSIBILITIES: Record<Theme, Option[]> = {
   ],
 };
 
-const DEFAULT_THEME_BY_FEELING: Record<FeelingKey, Theme> = {
+export const DEFAULT_THEME_BY_FEELING: Record<FeelingKey, Theme> = {
   happy: 'bright',
   excited: 'bright',
   calm: 'bright',
@@ -8906,7 +8908,7 @@ const DEFAULT_THEME_BY_FEELING: Record<FeelingKey, Theme> = {
 };
 
 /** Normalise whatever the check-in stored ("Worried", "worried") to a key. */
-function toKey(feeling: string | undefined): FeelingKey {
+export function toKey(feeling: string | undefined): FeelingKey {
   const raw = (feeling ?? '').trim().toLowerCase();
   const k = ({ anxious: 'worried', grief: 'sad' } as Record<string, string>)[raw] ?? raw;
   return k in THOUGHTS ? (k as FeelingKey) : 'other';
@@ -8966,8 +8968,31 @@ export function thoughtsFor(
   feeling: string | undefined,
   age?: AgeInput,
 ): Option[] {
-  const pool = forAge(THOUGHTS[toKey(feeling)], age);
+  const band = toAgeBand(age);
+  const added = liveThoughtsFor(feeling).filter((t) => !band || !t.ageBand || t.ageBand === band);
+  const pool = [...forAge(THOUGHTS[toKey(feeling)], age), ...added];
   return shuffled(uniqueByText(pool)).map(({ text, icon }) => ({ text, icon }));
+}
+
+/**
+ * Thoughts added on the admin page for this feeling: its own, and those of the
+ * built-in pool it borrows (Anxious borrows Worried's, Bored borrows Other's).
+ */
+function liveThoughtsFor(feeling: string | undefined): LiveThought[] {
+  const own = feelingId(feeling);
+  const key = toKey(feeling);
+  return useLiveContent.getState().thoughts.filter((t) => t.feeling === own || t.feeling === key);
+}
+
+/** Which theme a thought leads to: its own, else its feeling's, else the default for that feeling. */
+function themeFor(thought: string, feeling: string | undefined, age?: AgeInput): Theme {
+  const match = findThought(thought, feeling, age);
+  if (match) return match.theme;
+  const { thoughts, feelings } = useLiveContent.getState();
+  const live = thoughts.find((t) => t.text === thought);
+  if (live?.theme) return live.theme;
+  const from = live?.feeling ?? feelingId(feeling);
+  return feelings.find((f) => f.id === from)?.theme ?? DEFAULT_THEME_BY_FEELING[toKey(from)];
 }
 
 function findThought(
@@ -9017,9 +9042,7 @@ export function eventsFor(
   feeling: string | undefined,
   age?: AgeInput,
 ): Option[] {
-  const key = toKey(feeling);
-  const match = findThought(thought, feeling, age);
-  const theme = match?.theme ?? DEFAULT_THEME_BY_FEELING[key];
+  const theme = themeFor(thought, feeling, age);
 
   const pool = forAge(EVENTS[theme], age);
   return shuffled(uniqueByText(pool)).map(({ text, icon }) => ({ text, icon }));
@@ -9042,11 +9065,17 @@ export function possibilitiesFor(
   feeling: string | undefined,
   age?: AgeInput,
 ): Option[] {
-  const key = toKey(feeling);
-  const match = findThought(thought, feeling, age);
-  const theme = match?.theme ?? DEFAULT_THEME_BY_FEELING[key];
+  return shuffled(uniqueByText(possibilityLines(themeFor(thought, feeling, age))));
+}
 
-  return shuffled(uniqueByText(POSSIBILITIES[theme]));
+export const possibilityId = (theme: Theme, i: number) => `another:${theme}:${i}`;
+
+/** One theme's "Another Way" lines as the app says them: changed on the admin page, plus any added there. */
+export function possibilityLines(theme: Theme): Option[] {
+  const texts = useLiveContent.getState().texts;
+  const base = POSSIBILITIES[theme].map((o, i) => ({ ...o, text: liveText(possibilityId(theme, i), o.text, texts) }));
+  const added = addedLines(`another:${theme}:new:`, texts).map((t) => ({ text: t.text, icon: '✦' }));
+  return [...base, ...added];
 }
 
 /** Metadata for a tapped library thought, for safety routing / analytics. */
@@ -9095,7 +9124,8 @@ export function thoughtNeedsAdultSupport(
   feeling: string | undefined,
   age?: AgeInput,
 ): boolean {
-  return thoughtMetaFor(thought, feeling, age)?.safety === 'adult-support';
+  return thoughtMetaFor(thought, feeling, age)?.safety === 'adult-support'
+    || useLiveContent.getState().thoughts.some((t) => t.text === thought && t.safety === 'adult-support');
 }
 
 export function eventNeedsAdultSupport(

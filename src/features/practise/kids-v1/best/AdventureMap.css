@@ -51,8 +51,8 @@
 .am-keep img { width: 40px; height: 40px; object-fit: contain; filter: drop-shadow(0 3px 4px #0008); }
 .am-keep b { color: #ffe08a; }
 .am-studio {
-  min-height: 36px; padding: 0 12px; border: 0; background: none; cursor: pointer;
-  font-family: inherit; font-size: 11.5px; font-weight: 700; color: #ffffff6b;
+  display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px;
+  font-size: 11.5px; font-weight: 700; color: #ffffff6b; text-decoration: none;
 }
 .am-studio:hover, .am-studio:focus-visible { color: #ffffffcc; }
 .am-studio:focus-visible { outline: 2px solid #ffe9a6; outline-offset: 2px; border-radius: 10px; }

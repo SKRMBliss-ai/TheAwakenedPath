@@ -25,6 +25,7 @@
 
 import { BEHAVIOURS } from '../../../kids/data';
 import { getRoom, type RoomConfig, type RoomId as GymRoomId } from '../rooms';
+import { liveText, type LiveText } from '../kit/liveContent';
 
 export interface VirtueRoom {
   /** Same id as the behaviour in My Best Every Day. Do not renumber. */
@@ -215,6 +216,24 @@ export function artRoomFor(v: { art: GymRoomId }): RoomConfig {
 /** Convenience for screens that only need the room's colour. */
 export function accentFor(v: { art: GymRoomId }): string {
   return getRoom(v.art).palette.accent;
+}
+
+/** The room's words a grown-up can change on the admin Teaching words page. */
+export const ROOM_LINES = ['tagline', 'prompt', 'weekendPrompt', 'learnTitle', 'learnBody', 'caughtLine'] as const;
+export type RoomLine = (typeof ROOM_LINES)[number];
+export const roomLineId = (roomId: string, line: RoomLine) => `room:${roomId}:${line}`;
+
+/** A room with any admin changes to its words applied. */
+export function roomText(room: VirtueRoom, texts?: Record<string, LiveText>): VirtueRoom {
+  const say = (line: RoomLine, base: string) => liveText(roomLineId(room.id, line), base, texts);
+  return {
+    ...room,
+    tagline: say('tagline', room.tagline),
+    prompt: say('prompt', room.prompt),
+    weekendPrompt: room.weekendPrompt && say('weekendPrompt', room.weekendPrompt),
+    learn: { title: say('learnTitle', room.learn.title), body: say('learnBody', room.learn.body) },
+    caughtLine: say('caughtLine', room.caughtLine),
+  };
 }
 
 export function getVirtueRoom(id: string): VirtueRoom | undefined {

@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { feelingsForAge } from '../kit/checkinContent';
+import { useLiveContent } from '../kit/liveContent';
 import { childAge } from '../kit/band';
 import * as sound from '../kit/sound';
 
@@ -105,6 +106,7 @@ export function FeelingBalls({
   onBurst?: () => void;
 }) {
   const [popped, setPopped] = useState<string | null>(null);
+  useLiveContent((s) => s.feelings);
   const feelings = feelingsForAge(childAge());
   const { ref, width } = useLayerWidth();
   const { size, height, spots } = layout(feelings.length, width);

@@ -1706,6 +1706,8 @@ const AI_DAILY_CAPS = {
       may be synthesised in a day", not per-visit cost.
     */
     chirpyVoice: 3000,
+    // Admin-only rewording ideas in the kids content pages; each line is cached once asked.
+    kidsSuggest: 200,
 };
 const aiHits = new Map(); // "endpoint:key" -> number[] of request timestamps
 
@@ -5220,4 +5222,169 @@ exports.cacheByEmotion = onRequest({ cors: true, secrets: [adminToken] }, async 
         console.error('[cacheByEmotion] error:', error);
         res.status(500).json({ error: error.message });
     }
+});
+
+/* ===========================================================================
+ * KIDS CONTENT — what the Mind Gym for Kids admin pages add or change, shared
+ * by every child.
+ *
+ * One collection, `kidsContent`, one document per item:
+ *   { kind, id, data, updatedAt, updatedBy }
+ * kinds: story · feeling · thought · game · text (a changed teaching line).
+ *
+ * Every read and write goes through this function and the Admin SDK rather
+ * than the client SDK. CI deploys functions on every push to main but never
+ * deploys firestore.rules, so a rule written for a new collection would sit in
+ * the repo undeployed and every child's read would be refused.
+ *
+ *   get      anyone — the kids app loads this on start (cached ~1 min here)
+ *   whoami   anyone — whether the signed-in account may edit
+ *   save     admins — create or replace one item
+ *   delete   admins — remove one item
+ *   suggest  admins — Gemini proposes better wordings for a line (cached)
+ * =========================================================================== */
+const KIDS_CONTENT = "kidsContent";
+const KIDS_CONTENT_KINDS = ["story", "feeling", "thought", "game", "text"];
+const KIDS_CONTENT_MAX_BYTES = 200 * 1024;
+const KIDS_CONTENT_ID = /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$/;
+let kidsContentCache = null; // { at, items } — per instance
+
+/* Who may edit the kids content: every admin, plus anyone added here. A scoped
+   grant like canCuratePractice in firestore.rules: editing stories and games
+   doesn't need the rest of what ADMIN_EMAILS unlocks (user data, email blasts).
+   Mirrored in src/config/admin.ts, which only decides whether the app shows the
+   way in. */
+const KIDS_CONTENT_EDITORS = [...ADMIN_EMAILS];
+function canEditKidsContent(request) {
+    const tok = request && request.auth && request.auth.token;
+    return !!tok && tok.email_verified === true && KIDS_CONTENT_EDITORS.includes((tok.email || "").toLowerCase());
+}
+
+async function loadKidsContent() {
+    const snap = await db.collection(KIDS_CONTENT).get();
+    return snap.docs
+        .map((d) => {
+            const x = d.data();
+            return {
+                kind: x.kind,
+                id: x.id,
+                data: x.data,
+                updatedAt: x.updatedAt ? x.updatedAt.toMillis() : null,
+                updatedBy: x.updatedBy || null,
+            };
+        })
+        .filter((x) => KIDS_CONTENT_KINDS.includes(x.kind) && typeof x.id === "string"
+            && x.data && typeof x.data === "object");
+}
+
+const KIDS_HOUSE_RULES = [
+    "You are helping edit the words in Mind Gym for Kids, an app for children aged about 4 to 12, guided by a friendly bird called Chirpy.",
+    "House rules for every line:",
+    "- Short, concrete, everyday words a 6-year-old understands when the line is read aloud.",
+    "- Warm and curious, never preachy. Never spell out the moral; let the child notice it.",
+    "- No shame, no 'good child / bad child', no pressure to do more or come back more.",
+    "- Believable for a child: avoid grand claims a child would not say about themselves.",
+    "- Keep any {name} placeholder exactly as written.",
+].join("\n");
+
+exports.kidsContent = onCall({ secrets: [geminiKey], maxInstances: 5 }, async (request) => {
+    const body = request.data || {};
+    const action = body.action;
+    const isAdmin = canEditKidsContent(request);
+
+    if (action === "get") {
+        if (isAdmin && body.fresh) return { items: await loadKidsContent() };
+        if (!kidsContentCache || Date.now() - kidsContentCache.at > 60_000) {
+            kidsContentCache = { at: Date.now(), items: await loadKidsContent() };
+        }
+        // Who changed what is for the editors, not for every child's device.
+        return { items: isAdmin ? kidsContentCache.items : kidsContentCache.items.map(({ updatedBy, ...rest }) => rest) };
+    }
+
+    if (action === "whoami") {
+        const tok = request.auth && request.auth.token;
+        return { admin: isAdmin, email: (tok && tok.email) || null, verified: !!(tok && tok.email_verified) };
+    }
+
+    if (!isAdmin) throw new HttpsError("permission-denied", "Only Mind Gym admins can change this.");
+    const by = request.auth.token.email;
+
+    if (action === "save" || action === "delete") {
+        const { kind, id } = body;
+        if (!KIDS_CONTENT_KINDS.includes(kind)) throw new HttpsError("invalid-argument", "Unknown kind of content.");
+        if (typeof id !== "string" || !KIDS_CONTENT_ID.test(id)) throw new HttpsError("invalid-argument", "That id can't be used.");
+        const ref = db.collection(KIDS_CONTENT).doc(`${kind}__${id}`);
+        if (action === "delete") {
+            await ref.delete();
+        } else {
+            const data = body.data;
+            if (!data || typeof data !== "object" || Array.isArray(data)) throw new HttpsError("invalid-argument", "Nothing to save.");
+            if (Buffer.byteLength(JSON.stringify(data)) > KIDS_CONTENT_MAX_BYTES) {
+                throw new HttpsError("invalid-argument", "That is too big to save in one go.");
+            }
+            await ref.set({ kind, id, data, updatedAt: admin.firestore.FieldValue.serverTimestamp(), updatedBy: by });
+        }
+        kidsContentCache = null;
+        return { ok: true, updatedBy: by, updatedAt: Date.now() };
+    }
+
+    if (action === "suggest") {
+        const text = typeof body.text === "string" ? body.text.trim().slice(0, 600) : "";
+        const where = typeof body.where === "string" ? body.where.trim().slice(0, 200) : "";
+        const guide = typeof body.guide === "string" ? body.guide.trim().slice(0, 600) : "";
+        if (!text) throw new HttpsError("invalid-argument", "There is no line to improve.");
+
+        const key = crypto.createHash("sha1").update(`${where}\n${guide}\n${text}`).digest("hex");
+        const cacheRef = db.collection("kidsContentSuggestions").doc(key);
+        if (!body.again) {
+            const hit = await cacheRef.get();
+            if (hit.exists && Array.isArray(hit.data().suggestions)) return { suggestions: hit.data().suggestions, cached: true };
+        }
+        if (!(await reserveAiBudget("kidsSuggest"))) {
+            throw new HttpsError("resource-exhausted", "Today's suggestion limit is used up. Try again tomorrow.");
+        }
+
+        const prompt = [
+            KIDS_HOUSE_RULES,
+            "",
+            `Where this line appears: ${where || "in the app"}`,
+            guide ? `Guidance for this kind of line: ${guide}` : "",
+            "",
+            "The current line:",
+            `"""${text}"""`,
+            "",
+            "Suggest up to 3 better versions. Each must fully replace the line, in the same voice, no longer than it, keeping its meaning.",
+            "If the line is already very good, offer one gentle variation instead.",
+            "For each, give a reason a parent would understand, under 15 words.",
+            'Reply only with JSON: {"suggestions":[{"text":"...","why":"..."}]}',
+        ].filter((line) => line !== "").join("\n");
+
+        let parsed;
+        try {
+            const genAI = new GoogleGenerativeAI(geminiKey.value());
+            const model = genAI.getGenerativeModel({
+                model: "gemini-2.0-flash",
+                generationConfig: { responseMimeType: "application/json", temperature: 0.9 },
+            });
+            const result = await model.generateContent(prompt);
+            parsed = JSON.parse(result.response.text());
+        } catch (e) {
+            console.error("kidsContent suggest failed:", e.message);
+            throw new HttpsError("unavailable", "Suggestions aren't available right now. Try again in a minute.");
+        }
+        const list = Array.isArray(parsed) ? parsed : (parsed && Array.isArray(parsed.suggestions) ? parsed.suggestions : []);
+        const suggestions = list
+            .map((x) => ({
+                text: String((x && x.text) || "").trim().slice(0, 600),
+                why: String((x && x.why) || "").trim().slice(0, 300),
+            }))
+            .filter((x) => x.text && x.text !== text)
+            .slice(0, 3);
+        if (suggestions.length) {
+            await cacheRef.set({ suggestions, text, where, at: admin.firestore.FieldValue.serverTimestamp() });
+        }
+        return { suggestions, cached: false };
+    }
+
+    throw new HttpsError("invalid-argument", "Unknown action.");
 });
