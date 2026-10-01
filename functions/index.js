@@ -5032,6 +5032,10 @@ exports.warmChirpyVoiceCache = onSchedule(
                 await chirpySynthAndStore({ text, voiceName: CHIRPY_MIND_VOICE, direction, cacheKey, character: 'mind', emotion });
                 synthesised++;
             } catch (e) {
+                if (e.message?.includes('429')) {
+                    console.log(`[warmChirpyVoiceCache] hit rate limit (429). Stopping to preserve budget. Resumes next run.`);
+                    break;
+                }
                 failed++;
                 console.warn(`[warmChirpyVoiceCache] failed "${text.slice(0, 40)}": ${e.message}`);
             }
