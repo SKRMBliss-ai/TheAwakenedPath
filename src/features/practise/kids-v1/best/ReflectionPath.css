@@ -390,7 +390,7 @@
 
 /* ── Calm mode — room dims ──────────────────────────────────────────────── */
 
-.rr-calm-mode :is(.rr-bricks, .rr-charms, .rr-head, .rr-actions, .rr-cast, .rr-affirm) {
+.rr-calm-mode :is(.rr-bricks, .rr-charms, .rr-head, .rr-actions, .rr-cast, .rr-affirm, .rr-calm-objects) {
   opacity: .2;
   pointer-events: none;
   transition: opacity .8s ease;
@@ -802,4 +802,160 @@
 .rr-still .rr-bg { opacity: 1; transform: none; transition: none; }
 @media (prefers-reduced-motion: reduce) {
   .rr-room *, .rr-room { animation: none !important; transition: none !important; }
+}
+
+/* ── The two quiet things, standing on the floor ───────────────────────── */
+
+/*
+  A LANTERN AND A STAR, NOT TWO PILLS.
+
+  "Breathe & relax" and "2 min quiet" were a pair of glass buttons in a row at
+  the very foot of the screen — the only thing on a page that is otherwise
+  entirely a place that still read as a toolbar. A child scanning this room
+  sees lanterns, crystals, cushions and a rug; two rounded rectangles with a
+  moon glyph are the one thing their eye files as "app".
+
+  They stand on the stone now, either side of where the child is sitting, each
+  with a little tag leaning against it. The lantern's light swells and fades on
+  the same slow count the exercise uses and the star turns, so both say what
+  they do before anybody reads a word — which is the whole point. A five-year
+  -old who cannot yet read "Breathe & relax" can watch the lantern and know.
+*/
+.rr-calm-objects{
+  position:absolute;z-index:7;left:0;right:0;bottom:clamp(54px,8vh,96px);
+  display:flex;justify-content:space-between;align-items:flex-end;
+  /* Far enough in to stand on open stone: at 13vw the star landed on top of
+     the crystals the room already has painted into its right-hand corner, and
+     two crystal clusters in the same place is one too many. */
+  padding:0 clamp(40px,21vw,330px);
+  pointer-events:none;
+}
+.rr-calm-object{
+  pointer-events:auto;position:relative;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:0;border:0;background:none;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .3s ease,filter .3s ease;
+}
+.rr-calm-object img{
+  display:block;width:auto;object-fit:contain;
+  filter:drop-shadow(0 10px 14px #0b041899);
+}
+/* The pool of light each one casts on the stone — what makes them stand on
+   the floor rather than float over a photograph of it. */
+.rr-calm-object:before{
+  content:'';position:absolute;z-index:-1;left:50%;bottom:16px;translate:-50% 0;
+  width:120%;height:34px;border-radius:50%;
+  background:radial-gradient(ellipse,#ffd98a66,transparent 70%);
+  transition:opacity .4s ease;
+}
+.rr-calm-object:hover,.rr-calm-object:focus-visible{transform:translateY(-6px) scale(1.04)}
+.rr-calm-object:focus-visible{outline:3px solid #ffe9b8;outline-offset:8px;border-radius:18px}
+
+/* The tag leaning against it: a scrap of warm paper, hand-lettered. */
+.rr-calm-tag{
+  padding:6px 13px;border-radius:13px;
+  background:linear-gradient(#fff3d2,#ecd3a2);
+  border:1px solid #c9a56a;color:#5a3a10;
+  font-size:clamp(11px,1.05vw,14px);font-weight:900;white-space:nowrap;
+  box-shadow:0 4px 10px -4px #0b0418aa,inset 0 1px 0 #fffaec;
+  transform:rotate(-1.6deg);
+}
+.rr-calm-star .rr-calm-tag{transform:rotate(1.6deg)}
+
+/* THE LANTERN BREATHES. Four seconds up, six down — the same count the
+   exercise keeps, so the object is a demonstration of itself. */
+.rr-calm-lantern img{height:clamp(118px,17vh,190px);animation:rr-lantern-breath 10s ease-in-out infinite}
+@keyframes rr-lantern-breath{
+  0%,100%{filter:drop-shadow(0 10px 14px #0b041899) brightness(.92) drop-shadow(0 0 6px #ffc45e55)}
+  40%{filter:drop-shadow(0 10px 14px #0b041899) brightness(1.12) drop-shadow(0 0 22px #ffd98aaa)}
+}
+/* AND THE STAR TURNS, slowly enough to be restful rather than busy. */
+.rr-calm-star img{height:clamp(98px,14vh,152px);animation:rr-star-turn 34s linear infinite}
+@keyframes rr-star-turn{to{rotate:360deg}}
+
+/* Lit while its own exercise is running, so the object a child started is
+   plainly the one that is going. */
+.rr-calm-object.rr-on{transform:translateY(-4px) scale(1.06)}
+.rr-calm-object.rr-on:before{opacity:1;background:radial-gradient(ellipse,#ffe9b8aa,transparent 72%)}
+.rr-calm-object.rr-on .rr-calm-tag{background:linear-gradient(#fffaec,#ffe6ad);border-color:#ffd98a}
+
+.rr-still .rr-calm-lantern img,.rr-still .rr-calm-star img{animation:none}
+@media(prefers-reduced-motion:reduce){
+  .rr-calm-lantern img,.rr-calm-star img{animation:none!important}
+}
+
+/* On a phone the two objects would stand on the child's head, so they sit
+   lower and smaller, still either side of him. */
+@media(max-width:700px){
+  .rr-calm-objects{padding:0 10px;bottom:clamp(46px,7vh,70px)}
+  .rr-calm-lantern img{height:84px}
+  .rr-calm-star img{height:70px}
+  .rr-calm-tag{font-size:10px;padding:5px 9px}
+}
+
+/* ── Glass tags, and a little magic around each object ─────────────────── */
+
+/*
+  THE TAGS WERE PAPER, AND PAPER SITS ON TOP OF A ROOM.
+
+  Two solid cream labels on a lamplit stone floor read as stickers — the exact
+  thing the objects were meant to stop. They are glass now: the floor shows
+  through them, the lettering keeps its warmth, and the only hard edge is a
+  thread of lantern light around the rim.
+
+  And both objects get what the room already has everywhere else — motes of
+  light drifting up out of them. The lantern's rise on its own breath; the
+  star's turn with it. It costs six spans and it is the difference between an
+  object and a picture of one.
+*/
+.rr-calm-tag{
+  background:linear-gradient(#fff3d229,#e8cf9c1f);
+  backdrop-filter:blur(9px) saturate(1.3);
+  -webkit-backdrop-filter:blur(9px) saturate(1.3);
+  border:1px solid #ffdfa359;
+  color:#fff3d6;
+  text-shadow:0 1px 4px #2a1606,0 0 12px #ffc45e66;
+  box-shadow:0 4px 14px -6px #0b041899,inset 0 1px 0 #fff6e033,0 0 16px -6px #ffd98a88;
+}
+.rr-calm-object:hover .rr-calm-tag,.rr-calm-object:focus-visible .rr-calm-tag{
+  background:linear-gradient(#fff3d23d,#e8cf9c2e);
+  border-color:#ffe9b8a6;
+  box-shadow:0 6px 18px -6px #0b0418aa,inset 0 1px 0 #fff6e04d,0 0 24px -6px #ffd98a;
+}
+.rr-calm-object.rr-on .rr-calm-tag{
+  background:linear-gradient(#fff6e04d,#ffd98a33);
+  border-color:#ffe9b8;color:#fffaec;
+}
+
+/* The star needs to be big enough for its glow to read — the sprite is mostly
+   halo, so at 150px the actual star was a speck. */
+.rr-calm-star img{height:clamp(150px,21vh,224px);filter:drop-shadow(0 8px 12px #0b041899) brightness(1.15) saturate(1.1)}
+
+/* Motes. Six per object, drifting up on their own clocks. */
+.rr-calm-motes{position:absolute;z-index:-1;left:50%;bottom:28px;translate:-50% 0;width:120px;height:120px;pointer-events:none}
+.rr-calm-motes i{
+  position:absolute;left:calc(14% + var(--x) * 1%);bottom:0;
+  width:5px;height:5px;border-radius:50%;
+  background:radial-gradient(circle,#fff6d6,#ffc45e00 70%);
+  box-shadow:0 0 8px #ffd98a;
+  animation:rr-mote 5.5s ease-in-out infinite;
+  animation-delay:calc(var(--d) * 1s);
+  opacity:0;
+}
+.rr-calm-star .rr-calm-motes i{background:radial-gradient(circle,#eaf4ff,#9ad4ff00 70%);box-shadow:0 0 8px #bfe6ff}
+@keyframes rr-mote{
+  0%{opacity:0;translate:0 0;scale:.5}
+  22%{opacity:.95}
+  100%{opacity:0;translate:calc(var(--x) * .18px) -78px;scale:1.05}
+}
+.rr-still .rr-calm-motes i{animation:none;opacity:0}
+@media(prefers-reduced-motion:reduce){.rr-calm-motes i{animation:none!important;opacity:0}}
+
+/* The affirmation bar is glass too — it was the last solid panel left sitting
+   on the floor, and the words matter more than the card under them. */
+.rr-affirm-art{opacity:.42}
+.rr-affirm-text{
+  color:#fff6e2;
+  text-shadow:0 2px 6px #1d0d04,0 0 16px #ffc45e55;
 }

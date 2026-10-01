@@ -276,22 +276,51 @@ export function ReflectionPath({ onExit, onGrownUp }: {
   /* How far the room has got, so a popup can interrupt and the room picks up
      where it left off afterwards. */
   const roomAt = useRef(0);
+  /*
+    THE ROOM KEEPS SAYING THEM, for as long as a child sits in it.
+
+    It already started on its own when they arrived — a welcome line, then
+    every affirmation they have, in a shuffled order. But it said them once and
+    then went quiet for good, which on a screen a child is meant to be able to
+    sit in for ten minutes meant the room fell silent about forty seconds in
+    and never spoke again. A room that affirms you once is a notification.
+
+    So when the list runs out it waits a breath and goes round again from the
+    top. Anything the child starts — a brick, a breathing exercise, the quiet
+    star — interrupts it, and it picks up afterwards, which is what roomAt was
+    always for.
+  */
+  const loopTimer = useRef<number | undefined>(undefined);
+  /* Each time this ticks the room starts the list again. A counter rather than
+     a function calling itself: the self-reference needed a ref written during
+     render, which React does not allow. */
+  const [roomPass, setRoomPass] = useState(0);
   const playRoom = useCallback(() => {
     const rest = roomAffirmations.slice(roomAt.current);
-    if (!rest.length) { setRoomLine(null); return; }
+    if (!rest.length) {
+      setRoomLine(null);
+      roomAt.current = 0;
+      window.clearTimeout(loopTimer.current);
+      loopTimer.current = window.setTimeout(() => setRoomPass((n) => n + 1), 14000);
+      return;
+    }
     playLines(
       rest.map((text) => ({ text, who: 'mind' as const })),
       (i) => { roomAt.current = roomAffirmations.length - rest.length + i + 1; setRoomLine(rest[i]); },
-      () => setRoomLine(null),
+      () => setRoomPass((n) => n + 1),
     );
   }, [roomAffirmations, playLines]);
+  useEffect(() => {
+    if (!roomPass) return;
+    playRoom();
+  }, [roomPass, playRoom]);
 
   useEffect(() => {
     const t1 = window.setTimeout(() => { setLit(true); cue('enterRoom'); }, still ? 0 : 420);
     const t2 = window.setTimeout(() => {
       playLines([{ text: WELCOME[Math.floor(Math.random() * WELCOME.length)], who: 'mind' }], () => {}, playRoom);
     }, still ? 300 : 1500);
-    return () => { window.clearTimeout(t1); window.clearTimeout(t2); lineToken.current += 1; stopSpeaking(); };
+    return () => { window.clearTimeout(t1); window.clearTimeout(t2); window.clearTimeout(loopTimer.current); lineToken.current += 1; stopSpeaking(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on arrival
   }, []);
 
@@ -701,16 +730,57 @@ export function ReflectionPath({ onExit, onGrownUp }: {
         </div>
       )}
 
-      {/* ── Action buttons ─────────────────────────────────────────────────── */}
+      {/*
+        ── The two quiet things, standing in the room ──────────────────────
+
+        These were a pair of glass pills in a row at the very bottom of the
+        screen — the only thing on a page that is otherwise entirely a place
+        that still read as a toolbar. A child scanning this room sees lanterns,
+        crystals, cushions and a rug; two rounded rectangles with a moon glyph
+        are the one thing their eye files as "app".
+
+        So they are objects now, standing on the stone either side of where the
+        child is sitting, each with a little hand-lettered tag leaning against
+        it. The lantern breathes on its own — its light swells and fades on the
+        same slow count the exercise uses — and the star turns, so both of them
+        say what they do before anybody reads a word. That is the point: a
+        five-year-old who cannot yet read "Breathe & relax" can watch the
+        lantern and already know.
+
+        Both are real buttons underneath, with the labels still in the
+        accessible name, so nothing is lost for a screen reader or a keyboard.
+      */}
+      <div className="rr-calm-objects">
+        <button
+          className={`rr-calm-object rr-calm-lantern ${calmMode === 'breathing' ? 'rr-on' : ''}`}
+          aria-pressed={calmMode === 'breathing'}
+          onClick={startBreathing}
+        >
+          <img src={`${V3}lantern.webp`} alt="" aria-hidden="true" draggable={false} />
+          <span className="rr-calm-motes" aria-hidden="true">
+            {[8, 32, 51, 68, 84, 22].map((x, i) => <i key={x} style={{ '--x': x, '--d': i * 0.9 } as CSSProperties} />)}
+          </span>
+
+          <span className="rr-calm-tag">{calmMode === 'breathing' ? 'Stop whenever' : 'Breathe & relax'}</span>
+        </button>
+        <button
+          className={`rr-calm-object rr-calm-star ${calmMode === 'meditation' ? 'rr-on' : ''}`}
+          aria-pressed={calmMode === 'meditation'}
+          onClick={startMeditation}
+        >
+          <img src={`${V4}meditation_focus_star.webp`} alt="" aria-hidden="true" draggable={false} />
+          <span className="rr-calm-motes" aria-hidden="true">
+            {[8, 32, 51, 68, 84, 22].map((x, i) => <i key={x} style={{ '--x': x, '--d': i * 0.9 } as CSSProperties} />)}
+          </span>
+
+          <span className="rr-calm-tag">{calmMode === 'meditation' ? 'Finish for now' : '2 min quiet'}</span>
+        </button>
+      </div>
+
+      {/* The grown-up exit stays a plain control, and stays where it always is
+          on every screen (§2.10). It is not scenery and must never be a thing
+          to find. */}
       <nav className="rr-actions" aria-label="Things you can do here">
-        <button className={calmMode === 'breathing' ? 'rr-on' : ''} aria-pressed={calmMode === 'breathing'}
-          onClick={startBreathing}>
-          <span aria-hidden="true">☾</span> Breathe &amp; relax
-        </button>
-        <button className={calmMode === 'meditation' ? 'rr-on' : ''} aria-pressed={calmMode === 'meditation'}
-          onClick={startMeditation}>
-          <span aria-hidden="true">✧</span> 2 min quiet
-        </button>
         <button className="rr-action-soft" onClick={() => { cancelLines(); stopSpeaking(); sound.stopMusic(); onGrownUp(); }}>
           <span aria-hidden="true">♡</span> Talk to a grown-up
         </button>
