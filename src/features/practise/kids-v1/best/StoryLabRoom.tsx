@@ -773,7 +773,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     {/* The handle leaves the room altogether. Stepping back through the four
         panels is a small thing and belongs in the footer; the door on the
         wall is what a child reaches for when they want out. */}
-    <DoorHandle side="left" label="Mind Gym" onClick={onExit} accent="#c490ff" scale={0.35} bottomVh={40} />
+    <DoorHandle side="left" label="Mind Gym" onClick={onExit} accent="#c490ff" scale={0.5} bottomVh={26} />
     <header className="sl-header">
       <button className="sl-logo" onClick={onExit} aria-label="Back to Mind Gym">Mind<span>Gym</span><small>A BRIGHTER<br />YOU INSIDE</small></button>
       <p className="sl-header-books" aria-hidden="true"><span>THOUGHTS</span><span>STORIES</span><span>POSSIBILITIES</span></p>

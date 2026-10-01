@@ -60,22 +60,18 @@ const SEAM = '/ui/handles/seam.webp';
 /**
  * HOW BIG THE FITTING IS.
  *
- * 88px, which is what this was, is a thumbnail. It came from the old dark
- * plate, where making it bigger only made a bigger brown smudge — so the
- * size was chosen to keep it out of the way rather than to make it usable,
- * and then the room complained it could not be seen. A door handle is
- * something a child aims a whole hand at.
+ * A door handle is something a child aims a whole hand at.
  *
  * Two sizes rather than one: a phone has no room for a wide fitting beside a
  * column of text, and a desktop has nothing but room. Keep this in step with
  * the `sm:` width on the plate below — it is the `sizes` hint that decides
  * which file the browser fetches, and a stale one quietly ships the small
- * plate to a screen drawing it at 210px.
+ * plate to a screen drawing it at 240px.
  */
-const PLATE_W_WIDE = 210;
+const PLATE_W_WIDE = 240;
 
 /** The `big` fitting at `lg` and up — see the prop's note for why only there. */
-const PLATE_W_BIG = 268;
+const PLATE_W_BIG = 320;
 
 /** The lever swings this far when pressed. Small: it reads as weight, not spin. */
 const PRESS_DEG = 8;
@@ -89,6 +85,9 @@ const TIP_MS = 2800;
 /** A back handle reminds the child where it is this often, for this long. */
 const REMIND_EVERY_MS = 60000;
 const REMIND_FOR_MS = 5000;
+
+/** Wave and wave the handle every N seconds to catch attention and show it's pressable. */
+const ATTN_BEAT_EVERY_MS = 5000;
 
 export function DoorHandle({
   side,
@@ -159,6 +158,18 @@ export function DoorHandle({
   useEffect(() => {
     const t = window.setTimeout(() => setIntroTip(false), TIP_MS);
     return () => clearTimeout(t);
+  }, []);
+
+  /* Every 5 seconds the handle waves briefly to show the child it's pressable,
+     catching attention and reminding them this is a control they can interact with. */
+  const [attnBeat, setAttnBeat] = useState(false);
+  useEffect(() => {
+    let clear = 0;
+    const every = window.setInterval(() => {
+      setAttnBeat(true);
+      clear = window.setTimeout(() => setAttnBeat(false), 800);
+    }, ATTN_BEAT_EVERY_MS);
+    return () => { window.clearInterval(every); window.clearTimeout(clear); };
   }, []);
 
   /* Children forget where the way out is, so a back handle waves and shows
@@ -363,12 +374,12 @@ export function DoorHandle({
             */
             className={
               big
-                ? 'h-auto w-[124px] max-w-none select-none sm:w-[210px] lg:w-[300px]'
-                : 'h-auto w-[124px] max-w-none select-none sm:w-[210px]'
+                ? 'h-auto w-[140px] max-w-none select-none sm:w-[240px] lg:w-[340px]'
+                : 'h-auto w-[140px] max-w-none select-none sm:w-[240px]'
             }
-            animate={{ rotate: pressed ? PRESS_DEG : reminding && !m.quiet ? [0, 12, -6, 10, 0] : 0 }}
-            transition={reminding && !pressed && !m.quiet
-              ? { duration: 1.2, repeat: 2, repeatDelay: 0.6 }
+            animate={{ rotate: pressed ? PRESS_DEG : (reminding || attnBeat) && !m.quiet ? [0, 12, -6, 10, 0] : 0 }}
+            transition={(reminding || attnBeat) && !pressed && !m.quiet
+              ? { duration: 1.2, repeat: reminding ? 2 : 1, repeatDelay: reminding ? 0.6 : 0 }
               : { type: 'spring', stiffness: 240, damping: 15 }}
             style={{
               transformOrigin: PIVOT,
