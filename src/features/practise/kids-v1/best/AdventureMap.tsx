@@ -111,9 +111,11 @@ export function Reader({ story, chapter, name, onClose, onNext, onCorner, still,
   const keepsake = CORNER_ITEM_BY_ID[story.keepsake];
 
   /* The pages either side, so each page is read as part of the chapter rather
-     than as a fresh start. */
-  const prevText = page > 0 ? withName(ch.pages[page - 1].text, name) : undefined;
-  const nextText = !last ? withName(ch.pages[page + 1].text, name) : undefined;
+     than as a fresh start. 'friend' stands in for the child's name: these only
+     steer the reading, and with each child's name in them every child would need
+     their own recording of a page that reads the same for all of them. */
+  const prevText = page > 0 ? withName(ch.pages[page - 1].text, '') : undefined;
+  const nextText = !last ? withName(ch.pages[page + 1].text, '') : undefined;
   const narration: NarrationContext = { title: `${story.title}, chapter ${chapter + 1}: ${ch.title}`, previous: prevText, next: nextText };
   const narrate = () => speak(text, quiet, 'grownup', undefined, '', narration);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- narration is derived from text
@@ -139,7 +141,7 @@ export function Reader({ story, chapter, name, onClose, onNext, onCorner, still,
     speak(result.finished
       ? `You finished the whole story!${keepsake ? ` ${keepsake.name} is waiting in your corner.` : ''}`
       : nextTitle ? `The end of chapter ${chapter + 1}. Next time: ${nextTitle}.` : `The end of chapter ${chapter + 1}.`, quiet, 'grownup', undefined, '',
-      { title: story.title, previous: text, mode: result.finished ? 'bedtime' : 'warm' });
+      { title: story.title, previous: withName(ch.pages[page].text, ''), mode: result.finished ? 'bedtime' : 'warm' });
   };
 
   return (
