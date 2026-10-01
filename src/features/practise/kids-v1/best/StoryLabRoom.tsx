@@ -931,7 +931,14 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     </div>
     <RoomThoughtParticles show={step === 2 && !thought} />
 
-    <nav className="sl-rail" aria-label="Journey progress">
+    {/*
+      The ribbon of light runs bright as far as the step they are standing on
+      and dim beyond it, so the strip shows progress with light rather than
+      only with ticks. One number, set here because only the component knows
+      how far along the walk is.
+    */}
+    <nav className="sl-rail" aria-label="Journey progress"
+      style={{ '--sl-lit': `${(Math.min(step, LAST_STEP) / LAST_STEP) * 100}%` } as CSSProperties}>
       <ol>{STEPS.map((label, i) => {
         const door = i === LAST_STEP;
         const ready = door && step >= 6 && !!onReflectionPath;

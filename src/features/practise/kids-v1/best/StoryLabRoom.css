@@ -1113,3 +1113,105 @@ button.sl-step-inner:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .sl-film[data-panels="2"] .sl-window p{font-size:14px}
 .sl-film[data-panels="1"] .sl-possibility-windows{width:min(100%,660px);margin:0 auto}
 .sl-film[data-panels="1"] .sl-truth{font-size:14px;width:min(100%,620px)}
+
+/* ── The strip: a ribbon of light on a lantern string ──────────────────── */
+
+/*
+  CHOSEN FROM FIVE MOCKED AGAINST THE REAL BACKDROP — the ribbon, with the
+  lantern string from the fourth.
+
+  The old strip was an opaque lavender slab across the foot of a painted room:
+  the one thing on the screen that still said "app". This one is glass. The
+  room shows through it, a rope runs along the top with each step hanging from
+  it on a short cord, and a ribbon of light runs through the middle — bright as
+  far as the step the child is standing on, dim beyond it. Progress is told in
+  light before it is told in ticks.
+
+  Every number that decides how far the light reaches comes from the component
+  (--sl-lit); nothing here counts steps.
+*/
+.sl-rail{
+  background:linear-gradient(90deg,#8ce4ff1f,#c79bff17 55%,#ffffff0a);
+  backdrop-filter:blur(13px) saturate(1.25);
+  -webkit-backdrop-filter:blur(13px) saturate(1.25);
+  border:1px solid #ffffff26;border-radius:34px;
+  box-shadow:0 12px 34px -18px #000,inset 0 1px 0 #ffffff26;
+}
+.sl-rail ol{padding:22px 26px 10px}
+
+/* The rope the lanterns hang from. */
+.sl-rail ol:before{
+  content:'';position:absolute;z-index:0;left:1%;right:1%;top:-10px;height:2px;
+  border-radius:2px;opacity:1;
+  background:linear-gradient(90deg,#5f4126,#b98a52 18%,#c99a62 50%,#b98a52 82%,#5f4126);
+  box-shadow:0 1px 0 #00000066;
+}
+/* The ribbon itself: lit to --sl-lit, then a faint rail the rest of the way. */
+.sl-rail ol:after{
+  content:'';position:absolute;z-index:0;left:4%;right:4%;top:44px;height:6px;
+  border-radius:6px;border:0;opacity:1;
+  background:linear-gradient(90deg,#8ce4ffd9 0 var(--sl-lit,0%),#ffffff1f var(--sl-lit,0%));
+  box-shadow:0 0 16px #8ce4ff7a;
+  transition:background .6s ease;
+}
+/* The arrows between stops belonged to the slab; the ribbon says it instead. */
+.sl-rail li:not(:last-child):after{display:none}
+/* The cord from the rope down to each lantern. */
+.sl-rail li:before{
+  content:'';position:absolute;z-index:0;top:-12px;left:50%;translate:-50% 0;
+  width:1.5px;height:14px;background:#b98a52;
+}
+
+/*
+  ONE LIT DISC PER STEP, COLOURED BY STEP, with the existing art inside it at
+  reduced opacity.
+
+  The six source icons were drawn for the home page's list, not as a family —
+  pink faces, a green figure, a blue cloud, a red query, a book, a bulb — so
+  side by side they never read as one set. Sitting them in a common disc and
+  letting the disc carry the colour is what makes them a set.
+
+  Masking the art to a flat silhouette instead was mocked and rejected: these
+  files are full-bleed circular artwork with no transparent background, so the
+  mask resolves to a plain filled circle and every step comes out identical.
+*/
+.sl-step-symbol{
+  width:50px;height:50px;border-radius:50%;
+  background:radial-gradient(circle at 38% 30%,#ffffff33,var(--sl-dot,#7a93f0) 62%,#00000033);
+  border:1.5px solid #ffffff66;
+  box-shadow:0 0 16px -2px var(--sl-dot,#7a93f0),inset 0 2px 6px #ffffff40;
+  transition:box-shadow .4s ease,scale .4s ease;
+}
+.sl-step-symbol img{width:34px;height:34px;opacity:.72;border-radius:0;filter:none}
+.sl-rail li:nth-child(1){--sl-dot:#f0609a}
+.sl-rail li:nth-child(2){--sl-dot:#2fbf8f}
+.sl-rail li:nth-child(3){--sl-dot:#7a93f0}
+.sl-rail li:nth-child(4){--sl-dot:#e0574f}
+.sl-rail li:nth-child(5){--sl-dot:#9a6ae0}
+.sl-rail li:nth-child(6){--sl-dot:#f0b128}
+.sl-rail li:nth-child(7){--sl-dot:#56c8e0}
+/* The one they are on is the brightest lantern on the string. */
+.sl-current .sl-step-symbol{
+  scale:1.1;
+  box-shadow:0 0 26px -2px var(--sl-dot),0 0 44px -8px #ffffff,inset 0 2px 8px #ffffff66;
+  filter:none;
+}
+.sl-current .sl-step-symbol img{opacity:.9}
+.sl-step-symbol>b{right:-3px;bottom:-2px;border:1.5px solid #ffffff88}
+
+/* Glass wants its words brighter than a lavender slab did. */
+.sl-rail li{color:#fffdfb;text-shadow:0 2px 7px #19082c,0 0 12px #00000080}
+.sl-rail .sl-current{color:#ffffff}
+.sl-rail .sl-collected{color:#eafff6}
+.sl-step-answer{color:#dff2ff;opacity:.95}
+.sl-current .sl-step-answer{color:#bdf0ff}
+.sl-collected .sl-step-answer{color:#b9f2da}
+.sl-rail-badge{
+  background:linear-gradient(#ffffff2e,#ffffff12);
+  backdrop-filter:blur(8px);border:1px solid #ffffff3d;color:#fffdfb;
+  text-shadow:0 2px 6px #19082c;
+}
+.sl-rail-done{
+  background:linear-gradient(#ffe9b84d,#ffd98a26);border-color:#ffe9b8;
+  box-shadow:0 0 24px -4px #ffd98a;
+}
