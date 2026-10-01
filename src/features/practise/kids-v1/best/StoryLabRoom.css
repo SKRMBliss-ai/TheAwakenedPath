@@ -1058,3 +1058,58 @@ button.sl-step-inner:focus-visible{outline:3px solid #fff;outline-offset:2px}
 @media(min-width:900px){
   .sl-child-label{display:block}
 }
+
+/* ── The card changes shape with the company it keeps ──────────────────── */
+
+/*
+  The design size is no longer a constant — see CANVAS in StoryLabRoom.tsx. One
+  panel is wide and low and takes most of the screen; four are the sheet's own
+  portrait cards standing side by side. The negative margins still make the row
+  measure the SCALED size rather than the drawn one.
+*/
+.sl-panel{
+  flex:0 0 var(--sl-pw);width:var(--sl-pw);height:var(--sl-ph);
+  margin:calc((var(--sl-ph) * var(--sl-scale) - var(--sl-ph)) / 2) calc((var(--sl-pw) * var(--sl-scale) - var(--sl-pw)) / 2);
+}
+
+/*
+  WHAT A WIDE CARD DOES WITH THE ROOM IT GAINS.
+
+  Nothing needs a second layout — the contents are in flow — but a few pieces
+  are drawn at a size that suits a 440px card and looks lost on an 1120px one.
+  So while a step is alone or paired, the boy, the screen, the ring and the
+  type all come up a size, and the choices spread across the width instead of
+  stacking in a narrow column.
+*/
+.sl-film[data-panels="1"] .sl-ask-bubble,
+.sl-film[data-panels="2"] .sl-ask-bubble{max-width:62%}
+.sl-film[data-panels="1"] .sl-ask-bubble h3{font-size:21px}
+.sl-film[data-panels="1"] .sl-ask-bubble p{font-size:14px}
+.sl-film[data-panels="1"] .sl-ask-chirpy{width:104px;height:116px}
+
+/*
+  NO LEFT GUTTER FOR A BOY WHO IS NOT IN THERE. Above 900px the panel's own
+  copy of him is hidden and .sl-room-boy stands on the floor beside the strip
+  instead, so reserving a column for him inside the card just left a hole. The
+  clouds get the whole width, and only their size changes.
+*/
+.sl-film[data-panels="1"] .sl-thought-clouds{padding-bottom:12px;gap:11px}
+.sl-film[data-panels="1"] .sl-thought-cloud{width:158px;min-height:82px!important;font-size:15px}
+.sl-film[data-panels="2"] .sl-thought-clouds{padding-bottom:22px;gap:9px}
+.sl-film[data-panels="2"] .sl-thought-cloud{width:142px;min-height:74px!important;font-size:14px}
+
+.sl-film[data-panels="1"] .sl-screen{height:230px}
+.sl-film[data-panels="2"] .sl-screen{height:190px}
+.sl-film[data-panels="1"] .sl-cards{grid-template-columns:repeat(6,1fr)}
+.sl-film[data-panels="1"] .sl-cards button{font-size:13px}
+.sl-film[data-panels="1"] .sl-cards.sl-confirm{grid-template-columns:repeat(4,1fr);width:62%;margin:0 auto}
+.sl-film[data-panels="1"] .sl-cards.sl-wide{grid-template-columns:repeat(4,1fr)}
+
+.sl-film[data-panels="1"] .sl-orbit-clue{width:22%;min-width:132px;font-size:11.5px}
+.sl-film[data-panels="1"] .sl-orbit-clue b{font-size:12.5px}
+.sl-film[data-panels="1"] .sl-book{width:min(100%,560px);margin-left:auto;margin-right:auto}
+.sl-film[data-panels="1"] .sl-book p{font-size:19px}
+.sl-film[data-panels="1"] .sl-window p,
+.sl-film[data-panels="2"] .sl-window p{font-size:14px}
+.sl-film[data-panels="1"] .sl-possibility-windows{width:min(100%,660px);margin:0 auto}
+.sl-film[data-panels="1"] .sl-truth{font-size:14px;width:min(100%,620px)}

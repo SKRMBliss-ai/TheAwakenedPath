@@ -171,8 +171,27 @@ function RoomThoughtParticles({ show }: { show: boolean }) {
   number is measured from the space actually available (see useFilmScale), not
   guessed from the viewport, because the header above it reflows.
 */
-const PANEL_W = 386;
-const PANEL_H = 675;
+/*
+  THE OPEN STEP TAKES THE ROOM, AND GIVES IT BACK AS THE OTHERS ARRIVE.
+
+  One panel on a 1512px screen used to be 280px wide with 1200px of nothing
+  either side of it, because every panel was drawn on the sheet's portrait
+  386x675 card and the card's height is what the window limits. A single card
+  that shape can never fill a landscape window.
+
+  So the card changes shape with the company it keeps. Alone, it is wide and
+  low and takes most of the screen; the second one arrives and they halve it
+  between them; by the fourth they are the sheet's own proportions standing
+  side by side. The content inside is laid out in flow, so a wider card simply
+  gives the clouds more room to drift into rather than needing a second
+  layout.
+*/
+const CANVAS = [
+  { w: 1120, h: 530 },
+  { w: 790, h: 600 },
+  { w: 565, h: 650 },
+  { w: 440, h: 675 },
+];
 const PANEL_GAP = 30;
 
 /*
@@ -228,6 +247,7 @@ const MY_OWN: Option = { text: 'My own idea…', icon: 'mic', own: true };
 function useFilmScale(count: number) {
   const box = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.5);
+  const canvas = CANVAS[Math.min(count, CANVAS.length) - 1] ?? CANVAS[CANVAS.length - 1];
   const measure = useCallback(() => {
     const node = box.current;
     if (!node) return;
@@ -239,8 +259,8 @@ function useFilmScale(count: number) {
     const height = node.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
     if (!width || !height) return;
     const usable = width - (count - 1) * PANEL_GAP - 8;
-    setScale(Math.max(0.2, Math.min(height / PANEL_H, usable / (count * PANEL_W))));
-  }, [count]);
+    setScale(Math.max(0.2, Math.min(height / canvas.h, usable / (count * canvas.w))));
+  }, [count, canvas.w, canvas.h]);
   useLayoutEffect(() => {
     measure();
     const node = box.current;
@@ -249,7 +269,7 @@ function useFilmScale(count: number) {
     observer.observe(node);
     return () => observer.disconnect();
   }, [measure]);
-  return { box, scale };
+  return { box, scale, canvas };
 }
 
 /* ── The options come round rather than all at once ────────────────────── *
@@ -409,7 +429,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   const narrow = useNarrow();
   const reached = Math.min(step, 5);
   const panels = narrow ? [reached] : [2, 3, 4, 5].filter(index => index <= reached);
-  const { box, scale } = useFilmScale(panels.length);
+  const { box, scale, canvas } = useFilmScale(panels.length);
 
   /*
     EVERY ARRIVAL IS AUDIBLE, AND IT IS THE BIG SWOOSH.
@@ -714,7 +734,8 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
       <button className="sl-grownup chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button>
     </header>
 
-    <div className="sl-film" ref={box} style={{ '--sl-scale': scale } as CSSProperties}>
+    <div className="sl-film" ref={box} data-panels={panels.length}
+      style={{ '--sl-scale': scale, '--sl-pw': `${canvas.w}px`, '--sl-ph': `${canvas.h}px` } as CSSProperties}>
       <div className="sl-film-row" tabIndex={-1} ref={heading}>
         <AnimatePresence initial={false}>
           {panels.map((index, position) => <motion.div
