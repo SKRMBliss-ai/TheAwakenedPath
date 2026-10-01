@@ -535,7 +535,9 @@
      started carrying every answer. It has gone; that job is done twice
      already, in the strip and in the lit card.
 */
-.sl-panel{background:linear-gradient(#2a1b4759,#180f2d85),url('/mind-gym/story-lab/room-backdrop-v2.webp') center/cover}
+/* A wide card covers most of the room, so it is tinted glass over the room's
+   own backdrop rather than a second, darker copy of the picture. */
+.sl-panel{background:linear-gradient(#2a1b4724,#180f2d47)}
 .sl-panel-done{border-color:#8f70d0}
 .sl-panel-done .sl-ask-chirpy{opacity:1}
 

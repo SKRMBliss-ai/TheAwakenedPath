@@ -236,7 +236,7 @@ export function AdventureMap({ onExit, onGrownUp, onCorner }: { onExit: () => vo
 
   return (
     <main className={`am-room ${still ? 'am-still' : ''}`} style={{ fontFamily: FONT, '--story': story.color } as CSSProperties}>
-      <DoorHandle side="left" label="Mind Gym" onClick={onExit} accent={story.color} scale={0.4} bottomVh={62} />
+      <DoorHandle side="left" label="Mind Gym" onClick={onExit} accent={story.color} scale={0.65} bottomVh={62} />
       <header className="am-head">
         <h1>Story Map <span aria-hidden="true">{story.cover}</span></h1>
         <p>This week: <b>{story.title}</b></p>
