@@ -71,10 +71,10 @@ let voiceToken = 0;
  * heard only when the child's thoughts are being said out loud; the guide is a
  * deeper, slower voice for breathing and meditation in the reflection room.
  */
-export type Speaker = 'grownup' | 'mind' | 'guide';
-const VOICES: Record<Speaker, string> = { grownup: 'Enceladus', mind: 'Puck', guide: 'Orion' };
+export type Speaker = 'grownup' | 'mind' | 'guide' | 'storyteller';
+const VOICES: Record<Speaker, string> = { grownup: 'Enceladus', mind: 'Puck', guide: 'Orion', storyteller: 'Charon' };
 
-function browserVoice(text: string) {
+function browserVoice(text: string, who: Speaker = 'grownup') {
   if (!isVoiceSupported()) return;
   /*
     THE UTTERANCE CANNOT GO IN THE SAME TASK AS THE CANCEL.
@@ -99,7 +99,7 @@ function browserVoice(text: string) {
       // Lifting the pitch gets most of the way to young without the chipmunk
       // effect the old 1.15-on-a-default-voice had — the rate matters as much as
       // the pitch, so he stays slow.
-      speakCalmly(u, { rate: 0.9, pitch: 1.25 });
+      speakCalmly(u, who === 'storyteller' ? { rate: 0.8, pitch: 0.8 } : { rate: 0.9, pitch: 1.25 });
       window.speechSynthesis.speak(u);
     } catch { /* ignore — the line is still on screen */ }
   }, 60);
@@ -159,7 +159,7 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
   let fellBack = false;
   let resolved = false;
   const timeoutId: number | undefined = setTimeout(() => {
-    if (!resolved && speaking === text) { fellBack = true; browserVoice(text); }
+    if (!resolved && speaking === text) { fellBack = true; browserVoice(text, who); }
   }, fallbackDelay) as unknown as number;
 
   void fetch(VOICE_ENDPOINT, {
@@ -188,7 +188,7 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
       /* A non-OK response (429/503 budget or rate limit, a cold-start error)
          resolves normally with blob === null — the server gave us nothing, so
          fall back to the browser rather than leave the child in silence. */
-      if (!blob) { browserVoice(text); return; }
+      if (!blob) { browserVoice(text, who); return; }
       const url = URL.createObjectURL(blob);
       heard.set(key, url);
       /* Only if this is still the line on screen. A child who has moved on
@@ -199,7 +199,7 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
       if (resolved) return;
       resolved = true;
       if (timeoutId) clearTimeout(timeoutId);
-      if (!fellBack && speaking === text) browserVoice(text);
+      if (!fellBack && speaking === text) browserVoice(text, who);
     });
 }
 
@@ -246,15 +246,27 @@ function applyChildPitch(audio: HTMLAudioElement) {
   try { a.webkitPreservesPitch = false; } catch { /* not supported */ }
 }
 
+/* Slowing the storyteller with pitch preservation off drops him lower as
+   well, which is most of the depth a bedtime narrator needs. */
+function applyStorytellerDepth(audio: HTMLAudioElement) {
+  audio.playbackRate = 0.9;
+  type PitchPreserving = { preservesPitch?: boolean; mozPreservesPitch?: boolean; webkitPreservesPitch?: boolean };
+  const a = audio as unknown as PitchPreserving;
+  try { a.preservesPitch = false; } catch { /* not supported */ }
+  try { a.mozPreservesPitch = false; } catch { /* not supported */ }
+  try { a.webkitPreservesPitch = false; } catch { /* not supported */ }
+}
+
 function play(url: string, text: string, onEnd?: () => void, who: Speaker = 'grownup') {
   try {
     const audio = new Audio(url);
     if (who === 'mind') applyChildPitch(audio);
+    if (who === 'storyteller') applyStorytellerDepth(audio);
     if (onEnd) audio.onended = () => { if (current === audio) onEnd(); };
     current = audio;
     speaking = text;
-    void audio.play().catch(() => browserVoice(text));
-  } catch { browserVoice(text); }
+    void audio.play().catch(() => browserVoice(text, who));
+  } catch { browserVoice(text, who); }
 }
 
 export function stopSpeaking() {
