@@ -200,6 +200,10 @@
         }
       },
       {
+        "source": "/twinsouls{,/**}",
+        "destination": "/twinsouls/index.html"
+      },
+      {
         "source": "**/!(*.*)",
         "destination": "/index.html"
       }
