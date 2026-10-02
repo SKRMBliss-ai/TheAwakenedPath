@@ -50,6 +50,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   onGarden: () => void; onAdventure: () => void; onCorner: () => void;
 }) {
   const s = useKidStore();
+  const reflectionCount = s.savedReflections?.length ?? 0;
   const quiet = useQuiet();
   const diaryDone = useDiaryFilledToday();
   const reduced = useReducedMotion();
@@ -152,7 +153,6 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   const behaviour = BEHAVIOURS.find((b) => b.id === selected);
   const game = room ? roomGamesFor(room.id)[0] : undefined;
   const points = s.points;
-  const reflectionCount = s.savedReflections?.length ?? 0;
   /*
     WHAT TO DO FIRST, AND WHAT NEXT. Feel, practise, diary, play: the stones in
     the bubble say the order and the arrow points at the real thing to tap.
