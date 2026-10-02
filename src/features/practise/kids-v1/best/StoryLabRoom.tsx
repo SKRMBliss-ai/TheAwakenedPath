@@ -426,7 +426,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   onExit: () => void;
   onGrownUp: () => void;
   onSave: (answers: DeepDiveAnswers) => boolean;
-  /** Called when the child taps "See My Reflection Path" after saving. */
+  /** Called when the child steps through the door to the Reflection Room. */
   onReflectionPath?: () => void;
 }) {
   const quiet = useQuiet();
@@ -996,8 +996,10 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     </nav>
 
     <footer className="sl-stop">
+      <button className="chrome-fade" onClick={onExit}>Stop for now</button>
       <button className="chrome-fade" onClick={back}>← Back a step</button>
       {step >= 6 && !receiptGone && <button className="sl-save" onClick={save} disabled={saved}>{saved ? 'Journey saved ✓' : '✧ Save This Journey'}</button>}
+      {saved && onReflectionPath && <button className="sl-save sl-reflection-cta" onClick={onReflectionPath}>✦ My Reflection Room →</button>}
       {/* Not offered on step 5 — the "Another way" possibility is the whole
           point of the walk, so a child stays in the Story Lab, choosing
           among the reframes, rather than skipping past the one step this

@@ -51,6 +51,9 @@ const VOICE_ENDPOINT = 'https://awakened-path-2026.web.app/api/chirpy-voice';
 
 /** One line at a time — a new line always wins over the old one. */
 let current: HTMLAudioElement | null = null;
+
+/** The clip currently playing — carries a real duration and currentTime for the progress bar. */
+export function currentClip(): HTMLAudioElement | null { return current; }
 /** Which line he is on, so a late arrival can check it is still wanted. */
 let speaking: string | null = null;
 /**

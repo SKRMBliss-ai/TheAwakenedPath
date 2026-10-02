@@ -226,6 +226,8 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
       <p className="mg-blocks mg-blocks-right" aria-hidden="true"><span>KINDER</span><span>BRAVER</span><span>CALMER</span><span>HAPPIER YOU ♡</span></p>
 
       <footer className="mg-safety">
+        <button className="chrome-fade" onClick={onExitGym}>‹ Back</button>
+        {onReflectionPath && reflectionCount > 0 && <button className="mg-reflection-path-btn" onClick={onReflectionPath}>✦ My Reflection Room <span className="mg-reflection-count">{reflectionCount}</span></button>}
         <button className="chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button>
         {admin && <a className="mg-admin chrome-fade" href={ADMIN_PATH}>Admin</a>}
       </footer>
