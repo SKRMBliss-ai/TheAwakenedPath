@@ -145,20 +145,31 @@ export function FirstNight() {
                 transition={{ duration: 0.4 }}
                 className="flex flex-col items-center gap-4"
               >
-                {/* He is barely there. A shape in the dark that moves. */}
-                <motion.img
-                  src={chirpySprite('worried')}
-                  srcSet={chirpySrcSet('worried')}
-                  sizes="76px"
-                  alt=""
-                  aria-hidden
-                  draggable={false}
-                  className="select-none"
-                  animate={{ opacity: [0.13, 0.26, 0.13], y: [0, -5, 0] }}
-                  transition={{ repeat: Infinity, duration: 3.4, ease: 'easeInOut' }}
-                  /* Height only, width auto. It was h-N w-N, i.e. a ~240x290 drawing forced into a square — squashed flat, which is most of what made him look cheap. */
-                  style={{ height: 76, width: 'auto', filter: 'brightness(0.35)' }}
-                />
+                {/* Both of them, barely there — shapes in the dark. */}
+                <div className="flex items-end justify-center gap-4">
+                  <motion.img
+                    src="/mind-gym/home/boy_fullbody.webp"
+                    alt=""
+                    aria-hidden
+                    draggable={false}
+                    className="select-none"
+                    animate={{ opacity: [0.08, 0.16, 0.08], y: [0, -3, 0] }}
+                    transition={{ repeat: Infinity, duration: 4.1, ease: 'easeInOut' }}
+                    style={{ height: 110, width: 'auto', filter: 'brightness(0.28) saturate(0.4)' }}
+                  />
+                  <motion.img
+                    src={chirpySprite('worried')}
+                    srcSet={chirpySrcSet('worried')}
+                    sizes="96px"
+                    alt=""
+                    aria-hidden
+                    draggable={false}
+                    className="select-none"
+                    animate={{ opacity: [0.13, 0.26, 0.13], y: [0, -5, 0] }}
+                    transition={{ repeat: Infinity, duration: 3.4, ease: 'easeInOut' }}
+                    style={{ height: 96, width: 'auto', filter: 'brightness(0.35)' }}
+                  />
+                </div>
                 <p
                   className="text-[19px] font-extrabold leading-snug"
                   style={{ color: 'rgba(255,255,255,0.66)', textWrap: 'balance' }}
@@ -201,43 +212,43 @@ export function FirstNight() {
                 transition={{ duration: 0.5, delay: 1.5 }}
                 className="flex flex-col items-center gap-4"
               >
-                {/*
-                  HE IS THE THING THAT JUST HAPPENED, so he arrives rather
-                  than appears. The old version was a still image on the one
-                  beat of the app where a character is supposed to be
-                  overjoyed — the copy said "Oh! Oh, that's much better" over
-                  a bird standing perfectly still, which reads as the picture
-                  having failed to load.
-
-                  Two animations, deliberately: he pops in once (spring, so
-                  the landing overshoots the way a delighted thing does) and
-                  then keeps bouncing on a loop. One-shot alone leaves him
-                  frozen again a second later; loop alone means he was
-                  already bouncing before the light came on.
-                */}
-                <motion.img
-                  src={chirpySprite('excited')}
-                  srcSet={chirpySrcSet('excited')}
-                  sizes="112px"
-                  alt=""
-                  aria-hidden
-                  draggable={false}
-                  className="select-none"
-                  style={{ height: 112, width: 'auto', filter: 'drop-shadow(0 10px 22px rgba(0,0,0,0.55))' }}
-                  initial={{ scale: 0.5, opacity: 0, y: 18 }}
-                  animate={{
-                    scale: 1,
-                    opacity: 1,
-                    y: [0, -13, 0, -7, 0],
-                    rotate: [0, -5, 0, 5, 0],
-                  }}
-                  transition={{
-                    scale: { type: 'spring', stiffness: 340, damping: 13, delay: 1.5 },
-                    opacity: { duration: 0.3, delay: 1.5 },
-                    y: { repeat: Infinity, duration: 1.5, ease: 'easeInOut', delay: 1.9 },
-                    rotate: { repeat: Infinity, duration: 1.5, ease: 'easeInOut', delay: 1.9 },
-                  }}
-                />
+                {/* Both visible now — the boy revealed by the light, Chirpy celebrating. */}
+                <div className="flex items-end justify-center gap-3">
+                  <motion.img
+                    src="/mind-gym/home/boy_fullbody.webp"
+                    alt=""
+                    aria-hidden
+                    draggable={false}
+                    className="select-none"
+                    style={{ height: 140, width: 'auto', filter: 'drop-shadow(0 12px 24px rgba(0,0,0,0.5))' }}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 1.7 }}
+                  />
+                  <motion.img
+                    src={chirpySprite('excited')}
+                    srcSet={chirpySrcSet('excited')}
+                    sizes="140px"
+                    alt=""
+                    aria-hidden
+                    draggable={false}
+                    className="select-none"
+                    style={{ height: 140, width: 'auto', filter: 'drop-shadow(0 10px 22px rgba(0,0,0,0.55))' }}
+                    initial={{ scale: 0.5, opacity: 0, y: 18 }}
+                    animate={{
+                      scale: 1,
+                      opacity: 1,
+                      y: [0, -13, 0, -7, 0],
+                      rotate: [0, -5, 0, 5, 0],
+                    }}
+                    transition={{
+                      scale: { type: 'spring', stiffness: 340, damping: 13, delay: 1.5 },
+                      opacity: { duration: 0.3, delay: 1.5 },
+                      y: { repeat: Infinity, duration: 1.5, ease: 'easeInOut', delay: 1.9 },
+                      rotate: { repeat: Infinity, duration: 1.5, ease: 'easeInOut', delay: 1.9 },
+                    }}
+                  />
+                </div>
                 <p className="text-[22px] font-extrabold leading-snug" style={{ color: CHROME.text }}>
                   Oh! Oh, that’s much better.
                 </p>
