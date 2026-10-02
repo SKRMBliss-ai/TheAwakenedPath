@@ -1706,7 +1706,7 @@ const AI_DAILY_CAPS = {
       cache hit for every child), so this ceiling is really "new lines that
       may be synthesised in a day", not per-visit cost.
     */
-    chirpyVoice: 3000,
+    chirpyVoice: 20000,
     // Admin-only rewording ideas in the kids content pages; each line is cached once asked.
     kidsSuggest: 200,
 };
@@ -4824,26 +4824,6 @@ function mindTone(feeling) {
     return hit ? { name: hit[1], line: hit[2] } : { name: 'plain', line: '' };
 }
 
-/** Gemini returns headerless signed 16-bit LE PCM; nothing plays that. */
-function chirpyPcmToWav(pcm, rate, channels = 1, bits = 16) {
-    const blockAlign = (channels * bits) / 8;
-    const header = Buffer.alloc(44);
-    header.write('RIFF', 0);
-    header.writeUInt32LE(36 + pcm.length, 4);
-    header.write('WAVE', 8);
-    header.write('fmt ', 12);
-    header.writeUInt32LE(16, 16);
-    header.writeUInt16LE(1, 20);
-    header.writeUInt16LE(channels, 22);
-    header.writeUInt32LE(rate, 24);
-    header.writeUInt32LE(rate * blockAlign, 28);
-    header.writeUInt16LE(blockAlign, 32);
-    header.writeUInt16LE(bits, 34);
-    header.write('data', 36);
-    header.writeUInt32LE(pcm.length, 40);
-    return Buffer.concat([header, pcm]);
-}
-
 /** Hash text+voice for cache key — deterministic across runs. */
 /* Bumped whenever the directions change, so lines cached under the old
    performance are synthesised again rather than served forever. */
@@ -4913,34 +4893,27 @@ const CHIRPY_CACHE_ENABLED = true;
 /* Records one line with Gemini TTS. Throws on any TTS failure; callers decide
    what to do about that. A refusal keeps Gemini's reply on the error so the
    caller can tell a spent day from a busy minute. */
-async function chirpySynth({ text, voiceName, direction }) {
-    const response = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/'
-        + 'gemini-2.5-flash-preview-tts:generateContent',
-        {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': geminiKey.value() },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: `${direction}\n\n${text}` }] }],
-                generationConfig: {
-                    responseModalities: ['AUDIO'],
-                    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },
-                },
-            }),
-        },
-    );
-    if (!response.ok) {
-        const error = new Error(`Gemini TTS ${response.status}`);
-        error.status = response.status;
-        error.body = (await response.text().catch(() => '')).slice(0, 4000);
+/* Cloud Text-to-Speech (GA, billed to the project) rather than the Gemini
+   preview-tts models, whose per-day quota ran out regardless of billing and
+   left children with the browser voice. Chirp 3 HD carries the same named
+   voices (Enceladus etc.), so Chirpy keeps his voice. It takes no written
+   direction; `direction` is still part of the cache key upstream. */
+async function chirpySynth({ text, voiceName }) {
+    const name = /^[a-z]{2}-[A-Z]{2}-/.test(voiceName) ? voiceName : `en-US-Chirp3-HD-${voiceName}`;
+    try {
+        const [response] = await ttsClient.synthesizeSpeech({
+            input: { text },
+            voice: { languageCode: name.slice(0, 5), name },
+            audioConfig: { audioEncoding: 'LINEAR16', sampleRateHertz: 24000 },
+        });
+        if (!response.audioContent || !response.audioContent.length) throw new Error('Cloud TTS returned no audio');
+        return Buffer.from(response.audioContent);
+    } catch (e) {
+        const error = new Error(`Cloud TTS: ${e.message}`);
+        if (e.code === 8) error.status = 429;
+        error.body = String(e.details || e.message || '');
         throw error;
     }
-    const data = await response.json();
-    const part = data?.candidates?.[0]?.content?.parts?.[0]?.inlineData;
-    if (!part?.data) throw new Error('Gemini TTS returned no audio');
-
-    const rate = Number(/rate=(\d+)/.exec(part.mimeType || '')?.[1]) || 24000;
-    return chirpyPcmToWav(Buffer.from(part.data, 'base64'), rate);
 }
 
 /* Keeps one recording in Storage + Firestore so the next ask replays it. */
