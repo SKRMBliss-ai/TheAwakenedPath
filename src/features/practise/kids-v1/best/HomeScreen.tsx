@@ -57,7 +57,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   const dialog = useRef<HTMLDialogElement>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [mode, setMode] = useState<'reflect' | 'play' | 'learn'>('reflect');
-  const [mobile, setMobile] = useState<'feelings' | 'choices' | null>(null);
+  const [mobile, setMobile] = useState<'choices' | null>(null);
   const [saved, setSaved] = useState(false);
   /*
     THE SOUND SWITCH CAME BACK.
@@ -160,6 +160,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   */
   const world = useRef<HTMLDivElement>(null);
   const path = useTodayPath();
+  const enterFeelings = () => { sound.play('enterRoom'); onDeepDive(); };
   const go = (step: PathStepId) => {
     sound.play('enterRoom');
     if (step === 'feel') onDeepDive();
@@ -214,11 +215,19 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
           <button className={`mg-month ${diaryDone ? '' : 'mg-diary-waiting'}`} data-guide="diary" data-guide-rank="0" onClick={onReflection} aria-label={diaryDone ? 'Open My Inner Diary and browse months' : 'Today’s diary page is still empty. Open My Inner Diary'}><b>{new Date().toLocaleString('en', { month: 'short' }).toUpperCase()}</b><span>This month<small>{days} {days === 1 ? 'day' : 'days'} remembered</small><span aria-hidden="true">● ● ● ● ✦</span><span className={`mg-diary-flag ${diaryDone ? 'is-done' : ''}`}>{diaryDone ? '✓ Today is in your diary' : '✨ Today’s page is waiting'}</span></span></button></div>
       </header>
       <PathSteps path={path} title={hello} variant="strip" quiet={quiet} onGo={go} />
-      <div className="mg-mobile-doors"><button data-guide="feel" data-guide-rank="1" onClick={() => setMobile(mobile === 'feelings' ? null : 'feelings')} aria-expanded={mobile === 'feelings'}>Funny Feeling?<small>Step into your mind →</small></button><button data-guide="practise" data-guide-rank="1" onClick={() => setMobile(mobile === 'choices' ? null : 'choices')} aria-expanded={mobile === 'choices'}>My Good Choices<small>Open your seven rooms →</small></button><button className="mg-mobile-diary" data-guide="diary" data-guide-rank="1" onClick={onReflection}>📖 My Inner Diary<small>{diaryDone ? '✓ Today is in your diary' : 'Today’s page is waiting'}</small></button></div>
-      <section className={`mg-feelings ${mobile === 'feelings' ? 'mg-mobile-open' : ''}`} aria-label="Funny Feeling journey">
+      <div className="mg-mobile-doors"><button data-guide="feel" data-guide-rank="1" onClick={enterFeelings}>Funny Feeling?<small>Step into your mind →</small></button><button data-guide="practise" data-guide-rank="1" onClick={() => setMobile(mobile === 'choices' ? null : 'choices')} aria-expanded={mobile === 'choices'}>My Good Choices<small>Open your seven rooms →</small></button><button className="mg-mobile-diary" data-guide="diary" data-guide-rank="1" onClick={onReflection}>📖 My Inner Diary<small>{diaryDone ? '✓ Today is in your diary' : 'Today’s page is waiting'}</small></button></div>
+      {/*
+        THE PORTAL IS THE DOOR. The whole arch on the left goes into the
+        feelings journey, so there is no separate button to find: one clear
+        button covers it, and the six steps light up one after another down
+        the path into the words at the bottom, which shimmer. On a phone the
+        big Funny Feeling? button goes straight in.
+      */}
+      <section className={`mg-feelings ${path.current === 'feel' ? 'is-guided' : ''}`} aria-label="Funny Feeling journey">
         <h1>Funny Feeling?</h1><h2>Step into your mind.</h2><p className="mg-invitation">A guided journey to understand<br />your feelings and feel better.</p>
         <ol className="mg-steps">{STEPS.map(([icon, title, sub], i) => <li key={icon}><img src={`${A}icon_${icon}.webp`} alt="" /><div><b>{i + 1}. {title}</b><span>{sub}</span></div></li>)}</ol>
-        <button className="mg-start" data-guide="feel" data-guide-rank="2" onClick={() => { sound.play('enterRoom'); onDeepDive(); }}>Start My Journey <span aria-hidden="true">›</span></button>
+        <p className="mg-feelings-cta" data-guide="feel" data-guide-rank="2" aria-hidden="true">✨ Tap anywhere to step in ✨</p>
+        <button className="mg-feelings-go" data-guide-area="feel" onClick={enterFeelings} aria-label="Funny Feeling? Step into your mind: start the feelings journey" />
       </section>
       <section className="mg-character" aria-label="Your guide">
         <div className={`mg-greeting ${teaching ? '' : 'is-path'}`} aria-live="polite"><img src={`${A}boy_fullbody.webp`} alt="" />{teaching

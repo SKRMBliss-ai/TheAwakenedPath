@@ -6,7 +6,7 @@
 .mg-feelings{position:absolute;left:6%;top:15%;width:31%;height:76%;border:0;border-radius:46% 46% 20% 20% / 15% 15% 8% 8%;background:radial-gradient(ellipse at 45% 40%,#1356bcdc,#122960ba 65%,#081b5680);box-shadow:inset 0 0 25px #59ddff99,0 0 20px #30acff88;padding:25px 18px;display:flex;flex-direction:column;align-items:center;text-shadow:0 2px 4px #102357}
 .mg-feelings h1{font-size:clamp(28px,3vw,53px);font-weight:1000;white-space:nowrap;color:#f3fcff;text-shadow:0 0 10px #55dfff;line-height:1.15}.mg-feelings h2{font-size:clamp(17px,1.6vw,28px);font-weight:800}.mg-invitation{margin:14px 0 5px;border:1px solid #72e1ff;border-radius:30px;padding:8px 14px;font-size:clamp(12px,1.05vw,18px);line-height:1.2;text-align:center;background:#123b9a99;box-shadow:0 0 12px #158bff}
 .mg-steps{display:flex;flex-direction:column;flex:1;min-height:0;width:100%;padding:0;margin:0;list-style:none}.mg-steps li{display:flex;flex:1;align-items:center;gap:8px;min-height:0}.mg-steps li:nth-child(even){margin-left:14%}.mg-steps img{width:25%;height:100%;min-height:0;object-fit:contain;filter:drop-shadow(0 0 5px #80dfff)}.mg-steps b{display:block;font-size:clamp(14px,1.25vw,22px);line-height:1.1}.mg-steps span{display:block;font-size:clamp(11px,.95vw,16px);line-height:1.15;margin-top:4px}
-.mg-start{flex-shrink:0;width:95%;min-height:54px;border:2px solid #adffff;border-radius:38px;background:linear-gradient(#298bff,#002bd0);box-shadow:0 0 15px #6ffcff,inset 0 0 12px #71eeff;font-size:clamp(18px,1.8vw,30px);font-weight:900}.mg-start span{font-size:30px;margin-left:8px}
+
 .mg-character{position:absolute;left:36.7%;top:7%;width:21%;height:85%;pointer-events:none}.mg-greeting{position:relative;z-index:3;background:linear-gradient(#fff,#e4edff);border:0;border-radius:25px;padding:16px 12px;display:flex;gap:10px;color:#1622ab;width:116%;margin-left:-8%;box-shadow:0 7px 20px #201a6855}.mg-greeting:after{content:'';position:absolute;right:20%;top:100%;border:13px solid transparent;border-top-color:#e4edff;border-left-color:#e4edff}.mg-greeting>img{width:42px;height:65px;object-fit:cover;object-position:top;border-radius:50%}.mg-greeting b{font-size:clamp(15px,1.35vw,23px);line-height:1.12;display:block}.mg-greeting p{font-size:clamp(11px,.95vw,16px);line-height:1.15;margin-top:7px}.mg-boy-wrap{position:absolute;bottom:0;width:100%;height:76%}.mg-boy{position:absolute;bottom:0;width:100%;height:100%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 8px 7px #25102855)}.mg-chirpy{position:absolute;left:-6%;top:27%;width:35%;filter:drop-shadow(0 0 5px #6b3489)}.mg-chirpy-line{position:absolute;right:-1%;top:5%;transform:rotate(-12deg);font-size:clamp(12px,1.05vw,18px);font-weight:800;text-shadow:0 2px 6px #241144}
 .mg-choices{position:absolute;right:1.3%;top:12%;width:41%;height:79%}.mg-shelf-title{height:14%;min-height:85px;text-align:center;background:repeating-linear-gradient(3deg,#583016,#683b1b 18px,#38200f 20px,#653715 25px);border:0;border-radius:45% 38% 12% 14%;box-shadow:0 7px 7px #1c0b1599;position:relative;display:flex;flex-direction:column;justify-content:center}.mg-shelf-title>span{position:absolute;top:-28px;left:45%;font-size:44px;color:#ffda57;text-shadow:0 0 12px #ffaa00}.mg-shelf-title h2{font-size:clamp(25px,2.8vw,48px);font-weight:1000;color:#fff3b1;text-shadow:0 0 6px #ffa509,0 0 18px #f46900;line-height:1.05}.mg-shelf-title p{font-size:clamp(10px,.95vw,16px);margin:5px 0}
 .mg-shelf{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,minmax(0,1fr));height:86%;gap:3px 0;border:0;background:transparent}
@@ -322,8 +322,7 @@
   .mg-invitation{font-size:clamp(10px,.86vw,15px);margin:2.5% 0 1%;padding:6px 12px}
   .mg-steps b{font-size:clamp(11px,1.03vw,18px)}
   .mg-steps span{font-size:clamp(9px,.79vw,14px)}
-  .mg-start{font-size:clamp(14px,1.5vw,26px);min-height:0;height:9%}
-  .mg-start span{font-size:1.15em;margin-left:6px}
+  .mg-feelings-cta{height:9%}
   /* The swing is a sixth of the panel, not a quarter — a quarter left the even
      captions only half a column to wrap in. */
   .mg-steps li:nth-child(even){margin-left:16%}
@@ -566,5 +565,25 @@
   .mg-mobile-doors .mg-mobile-diary small{margin-top:4px}
   /* Room above each big button for the word today's path pins over it. */
   .mg-mobile-doors{row-gap:46px}
-  .mg-feelings.mg-mobile-open .mg-start{margin-top:30px}
 }
+
+/* ── The feelings portal is one big door ──────────────────────────────── */
+.mg-feelings{transition:box-shadow .3s,transform .3s}
+.mg-feelings:hover{box-shadow:inset 0 0 34px #6fe6ffcc,0 0 34px #3ab4ffcc;transform:scale(1.008)}
+.mg-feelings:active{transform:scale(.996)}
+.mg-feelings-go{position:absolute;inset:0;z-index:4;width:100%;height:100%;padding:0;border:0;border-radius:inherit;background:transparent}
+.mg-feelings-go:focus-visible{outline:3px solid #aef8ff;outline-offset:4px}
+/* The words at the foot of the path, with light running through them. */
+.mg-feelings-cta{flex-shrink:0;display:flex;align-items:center;justify-content:center;margin:4px 0 2px;font-size:clamp(13px,1.2vw,22px);font-weight:900;white-space:nowrap;text-align:center;text-shadow:none;
+  background:linear-gradient(100deg,#bdf3ff 20%,#fff 40%,#ffe9a6 50%,#fff 60%,#bdf3ff 80%);background-size:260% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 8px #3ab4ff);animation:mg-shimmer 3.2s linear infinite}
+@keyframes mg-shimmer{from{background-position:100% 0}to{background-position:-160% 0}}
+/* While feeling is the thing to do, the six bubbles light up one after
+   another down the path, like footsteps leading in. */
+.mg-feelings.is-guided .mg-steps img{animation:mg-step-chase 3.6s ease-in-out infinite}
+.mg-feelings.is-guided .mg-steps li:nth-child(2) img{animation-delay:.3s}
+.mg-feelings.is-guided .mg-steps li:nth-child(3) img{animation-delay:.6s}
+.mg-feelings.is-guided .mg-steps li:nth-child(4) img{animation-delay:.9s}
+.mg-feelings.is-guided .mg-steps li:nth-child(5) img{animation-delay:1.2s}
+.mg-feelings.is-guided .mg-steps li:nth-child(6) img{animation-delay:1.5s}
+@keyframes mg-step-chase{0%,26%,100%{transform:scale(1);filter:drop-shadow(0 0 5px #80dfff)}9%{transform:scale(1.15);filter:drop-shadow(0 0 12px #fff) drop-shadow(0 0 22px #6fe6ff) brightness(1.25)}}

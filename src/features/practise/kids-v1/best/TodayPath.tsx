@@ -147,10 +147,13 @@ const PILL_H = 34;
 const overlaps = (a: Box, b: Box) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
 
 /** Everything a child might tap, or read as part of a control, in room coordinates. */
-function obstaclesFor(world: HTMLElement, target: HTMLElement, wr: DOMRect): Box[] {
+function obstaclesFor(world: HTMLElement, target: HTMLElement, wr: DOMRect, step: PathStepId): Box[] {
   const out: Box[] = [];
   world.querySelectorAll<HTMLElement>('button, a, .mg-steps li, .mg-greeting, .tp-strip').forEach((el) => {
     if (el === target || el.contains(target) || target.contains(el) || el.closest('.gd-layer')) return;
+    /* A button laid over a whole area that is itself this step's way in
+       (the feelings portal) is where the arrow is meant to land. */
+    if (el.dataset.guideArea === step) return;
     const r = el.getBoundingClientRect();
     if (!el.getClientRects().length || r.width < 2 || r.height < 2) return;
     out.push({ left: r.left - wr.left, top: r.top - wr.top, right: r.right - wr.left, bottom: r.bottom - wr.top });
@@ -175,7 +178,7 @@ function placeArrow(world: HTMLElement, step: PathStepId, word: string): Placed 
   const cx = (t.left + t.right) / 2;
   const cy = (t.top + t.bottom) / 2;
   const mode = MODES[W < 761 ? 'narrow' : 'wide'][step];
-  const blocks = mode.sides.length ? obstaclesFor(world, target, wr) : [];
+  const blocks = mode.sides.length ? obstaclesFor(world, target, wr, step) : [];
   const onScreen = (b: Box) => b.left >= 4 && b.right <= W - 4 && b.top >= visTop + 4 && b.bottom <= visBottom - 4;
 
   for (const side of mode.sides) {
