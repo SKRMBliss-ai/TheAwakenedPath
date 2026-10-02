@@ -47,6 +47,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   onGarden: () => void; onAdventure: () => void; onCorner: () => void;
 }) {
   const s = useKidStore();
+  const reflectionCount = s.savedReflections?.length ?? 0;
   const quiet = useQuiet();
   const diaryDone = useDiaryFilledToday();
   const reduced = useReducedMotion();
