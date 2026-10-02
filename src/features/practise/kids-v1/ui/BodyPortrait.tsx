@@ -64,9 +64,13 @@ function useCoverRect(
   ref: React.RefObject<HTMLElement | null>,
   naturalW: number,
   naturalH: number,
-  /** When true, matches object-position:top — image anchored at top edge,
-   *  overflow goes below. Pass this whenever the <img> also uses top. */
-  topAnchor = false,
+  /** The painting's object-position Y as a fraction: 0 is `top`, 0.5 is
+   *  `center`, 1 is `bottom`. Must be whatever the <img> underneath uses, or
+   *  the overlay and the painting disagree about which part got cropped.
+   *  Ignored under 'contain', which never overflows and so always centres. */
+  focusY = 0.5,
+  /** Must match the object-fit the painting underneath is drawn with. */
+  fit: 'cover' | 'contain' = 'cover',
 ): CoverRect | null {
   const [rect, setRect] = useState<CoverRect | null>(null);
 
@@ -78,17 +82,30 @@ function useCoverRect(
       const cw = el.clientWidth;
       const ch = el.clientHeight;
       if (!cw || !ch) return;
-      const scale = Math.max(cw / naturalW, ch / naturalH);
+      /* The ONE line that has to agree with the <img>: max for cover, min for
+         contain. Everything below is the same centring either way, except
+         that a contained image has nothing to anchor to the top because it
+         never overflows. */
+      const scale = fit === 'contain'
+        ? Math.min(cw / naturalW, ch / naturalH)
+        : Math.max(cw / naturalW, ch / naturalH);
       const width = naturalW * scale;
       const height = naturalH * scale;
-      setRect({ width, height, left: (cw - width) / 2, top: topAnchor ? 0 : (ch - height) / 2 });
+      setRect({
+        width,
+        height,
+        left: (cw - width) / 2,
+        /* The same formula CSS uses for object-position: the overflow is
+           shared out in the focus fraction's proportion. At 0.5 it is the
+           plain centring a contained image also gets, which is why contain
+           can take this branch too. */
+        top: fit === 'cover' ? -(focusY * (height - ch)) : (ch - height) / 2,
+      });
     };
 
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
-    /* eslint-disable-next-line react-hooks/exhaustive-deps -- topAnchor is a
-       primitive; changes here invalidate the effect correctly via the dep array. */
     /*
       AND THE WINDOW ITSELF, which is what was actually missing.
 
@@ -111,7 +128,7 @@ function useCoverRect(
       window.removeEventListener('resize', measure);
       window.removeEventListener('orientationchange', measure);
     };
-  }, [ref, naturalW, naturalH, topAnchor]);
+  }, [ref, naturalW, naturalH, focusY, fit]);
 
   return rect;
 }
@@ -153,6 +170,21 @@ interface Ripple { id: number; cx: number; cy: number }
 let rippleSeq = 0;
 
 /**
+ * THE SMALLEST A TAP TARGET IS ALLOWED TO GET, in real screen pixels.
+ *
+ * The zones below are drawn in the painting's own 1024×1536 coordinates, and
+ * on a phone the whole painting renders at about a third of that. The throat
+ * is 110×76 art units, which lands at roughly 42×29 real pixels — under a
+ * fingertip, and the child taps it three times before deciding the picture is
+ * decorative.
+ *
+ * So the DRAWN outline stays exactly where it is, at the size that matches the
+ * painting, and an invisible target is stretched underneath it to at least
+ * this. The child sees the true shape and hits a generous one.
+ */
+const MIN_TAP_PX = 42;
+
+/**
  * The invisible layer. Rendered as a SIBLING of RoomScene, sharing its exact
  * full-bleed container — not inside the scrolling content column, which is
  * nowhere near where the painting actually put the boy.
@@ -162,19 +194,24 @@ export function BodyPortrait({
   selected,
   suggested,
   onToggle,
-  topAnchor = false,
+  focusY = 0.5,
+  fit = 'cover',
 }: {
   accent: string;
   selected: Set<BodyZoneId>;
   suggested: BodyZoneId | null;
   onToggle: (zone: BodyZoneId) => void;
-  /** Pass true when RoomScene is using objectPosition="top", so the SVG overlay
-   *  matches the same anchor and tap zones land on the painted boy. */
-  topAnchor?: boolean;
+  /** RoomScene's objectPosition Y as a fraction — 0 for `top`, 0.5 for
+   *  `center`. Must be the same number, or the tap zones land on whichever
+   *  part of the painting got cropped away. */
+  focusY?: number;
+  /** Must match the `fit` RoomScene is painting with, or every tap lands in
+   *  the wrong place. See useCoverRect. */
+  fit?: 'cover' | 'contain';
 }) {
   const m = useMotion();
   const containerRef = useRef<HTMLDivElement>(null);
-  const cover = useCoverRect(containerRef, ART_W, ART_H, topAnchor);
+  const cover = useCoverRect(containerRef, ART_W, ART_H, focusY, fit);
   const [ripples, setRipples] = useState<Ripple[]>([]);
 
   const tap = (zone: BodyZoneId, cx: number, cy: number) => {
@@ -185,6 +222,11 @@ export function BodyPortrait({
   };
 
   const suggestedZone = suggested ? ZONES.find((z) => z.id === suggested) : null;
+
+  /* One art unit is this many real pixels at the size we are actually drawn,
+     so MIN_TAP_PX converts back into the SVG's own coordinates. */
+  const drawnScale = cover ? cover.width / ART_W : 1;
+  const minR = (MIN_TAP_PX / 2) / drawnScale;
 
   return (
     <div ref={containerRef} className="pointer-events-none absolute inset-0 z-10">
@@ -294,14 +336,20 @@ export function BodyPortrait({
             />
           )}
 
+          {/*
+            Drawn last, so a tap always reaches these rather than the outline
+            or the glow underneath. Small zones sit above big ones in this
+            order (throat over head, hands over tummy), which is what stops a
+            grown target swallowing the one inside it.
+          */}
           {ZONES.map((z) =>
             z.targets.map((t, i) => (
               <ellipse
                 key={`${z.id}-${i}`}
                 cx={t.cx}
                 cy={t.cy}
-                rx={t.rx}
-                ry={t.ry}
+                rx={Math.max(t.rx, minR)}
+                ry={Math.max(t.ry, minR)}
                 fill="transparent"
                 className="pointer-events-auto"
                 onClick={() => tap(z.id, t.cx, t.cy)}

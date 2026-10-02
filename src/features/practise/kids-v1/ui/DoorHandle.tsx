@@ -60,22 +60,18 @@ const SEAM = '/ui/handles/seam.webp';
 /**
  * HOW BIG THE FITTING IS.
  *
- * 88px, which is what this was, is a thumbnail. It came from the old dark
- * plate, where making it bigger only made a bigger brown smudge — so the
- * size was chosen to keep it out of the way rather than to make it usable,
- * and then the room complained it could not be seen. A door handle is
- * something a child aims a whole hand at.
+ * A door handle is something a child aims a whole hand at.
  *
  * Two sizes rather than one: a phone has no room for a wide fitting beside a
  * column of text, and a desktop has nothing but room. Keep this in step with
  * the `sm:` width on the plate below — it is the `sizes` hint that decides
  * which file the browser fetches, and a stale one quietly ships the small
- * plate to a screen drawing it at 210px.
+ * plate to a screen drawing it at 240px.
  */
-const PLATE_W_WIDE = 210;
+const PLATE_W_WIDE = 240;
 
 /** The `big` fitting at `lg` and up — see the prop's note for why only there. */
-const PLATE_W_BIG = 268;
+const PLATE_W_BIG = 320;
 
 /** The lever swings this far when pressed. Small: it reads as weight, not spin. */
 const PRESS_DEG = 8;
@@ -86,6 +82,13 @@ const PIVOT = '24% 50%';
 /** How long the name hangs there on arrival before it fades back. */
 const TIP_MS = 2800;
 
+/** A back handle reminds the child where it is this often, for this long. */
+const REMIND_EVERY_MS = 60000;
+const REMIND_FOR_MS = 5000;
+
+/** Wave and wave the handle every N seconds to catch attention and show it's pressable. */
+const ATTN_BEAT_EVERY_MS = 5000;
+
 export function DoorHandle({
   side,
   label,
@@ -95,6 +98,8 @@ export function DoorHandle({
   bottomVh = 26,
   nudge = null,
   big = false,
+  scale = 1,
+  remind = side === 'left',
 }: {
   side: 'left' | 'right';
   /** Both the accessible name and the words on the tooltip. */
@@ -121,6 +126,10 @@ export function DoorHandle({
    */
   bottomVh?: number;
   /**
+   * Scale the entire fitting up or down proportionally (default 1).
+   */
+  scale?: number;
+  /**
    * A different way of saying what's behind this door, shown during the
    * attention beat instead of `label`. Picked by the caller (see
    * best/BestApp's DoorWall) rather than in here — this component has no
@@ -128,6 +137,9 @@ export function DoorHandle({
    * words come in already chosen.
    */
   nudge?: string | null;
+  /** Every minute, wave and say "go back from here" for a few seconds. On by
+      default for the left (back) handle; the hub turns it off for its doors. */
+  remind?: boolean;
 }) {
   const m = useMotion();
   const [awake, setAwake] = useState(false);
@@ -148,6 +160,31 @@ export function DoorHandle({
     return () => clearTimeout(t);
   }, []);
 
+  /* Every 5 seconds the handle waves briefly to show the child it's pressable,
+     catching attention and reminding them this is a control they can interact with. */
+  const [attnBeat, setAttnBeat] = useState(false);
+  useEffect(() => {
+    let clear = 0;
+    const every = window.setInterval(() => {
+      setAttnBeat(true);
+      clear = window.setTimeout(() => setAttnBeat(false), 800);
+    }, ATTN_BEAT_EVERY_MS);
+    return () => { window.clearInterval(every); window.clearTimeout(clear); };
+  }, []);
+
+  /* Children forget where the way out is, so a back handle waves and shows
+     its tip for a few seconds once a minute. */
+  const [reminding, setReminding] = useState(false);
+  useEffect(() => {
+    if (!remind) return;
+    let hide = 0;
+    const every = window.setInterval(() => {
+      setReminding(true);
+      hide = window.setTimeout(() => setReminding(false), REMIND_FOR_MS);
+    }, REMIND_EVERY_MS);
+    return () => { window.clearInterval(every); window.clearTimeout(hide); };
+  }, [remind]);
+
   // THE ATTENTION BEAT.
   //
   // The handles rest at the very edge of the screen on purpose, and the
@@ -161,9 +198,9 @@ export function DoorHandle({
   // lever sweeps inward, into the room. The right-hand fitting is the same
   // file mirrored, so both levers point into the room the child is in.
   const forward = side === 'right';
-  const live = awake || pressed;
-  const tip = introTip || awake || pressed || nudge !== null;
-  const tipText = awake || pressed ? label : (nudge ?? label);
+  const live = awake || pressed || reminding;
+  const tip = introTip || awake || pressed || reminding || nudge !== null;
+  const tipText = awake || pressed ? label : reminding ? '👋 Tap here to go back' : (nudge ?? label);
 
   function press() {
     if (pressed) return;
@@ -239,7 +276,7 @@ export function DoorHandle({
                 // would be hunting for a control that is hiding from them.
                 // Waking is still a clear event: full opacity, a warm bloom
                 // and motes, none of which the resting state has.
-                opacity: live ? 1 : [0.85, 0.66, 0.85],
+                opacity: live ? 1 : [0.45, 0.3, 0.45],
                 x: live ? (forward ? -5 : 5) : 0,
               }
         }
@@ -268,7 +305,7 @@ export function DoorHandle({
                 ? 'pointer-events-none absolute h-[86px] w-[86px] rounded-full sm:h-[136px] sm:w-[136px] lg:h-[236px] lg:w-[236px]'
                 : 'pointer-events-none absolute h-[86px] w-[86px] rounded-full sm:h-[136px] sm:w-[136px]'
             }
-            style={{ background: `radial-gradient(circle, ${accent}77 0%, ${accent}22 42%, transparent 70%)` }}
+            style={{ background: `radial-gradient(circle, ${accent}77 0%, ${accent}22 42%, transparent 70%)`, zoom: scale }}
             animate={{ scale: [1, 1.4, 1], opacity: [0.85, 0.25, 0.85] }}
             transition={{ repeat: Infinity, duration: 2.8, ease: 'easeInOut' }}
           />
@@ -301,6 +338,9 @@ export function DoorHandle({
           style={{
             transform: forward ? 'scaleX(-1)' : undefined,
             lineHeight: 0,
+            /* `scale` is applied as zoom, not transform: framer-motion rewrites the
+               button's transform for `x`, and zoom also shrinks the box a tap lands on. */
+            zoom: scale,
           }}
         >
           <motion.img
@@ -334,11 +374,13 @@ export function DoorHandle({
             */
             className={
               big
-                ? 'h-auto w-[124px] max-w-none select-none sm:w-[210px] lg:w-[300px]'
-                : 'h-auto w-[124px] max-w-none select-none sm:w-[210px]'
+                ? 'h-auto w-[140px] max-w-none select-none sm:w-[240px] lg:w-[340px]'
+                : 'h-auto w-[140px] max-w-none select-none sm:w-[240px]'
             }
-            animate={{ rotate: pressed ? PRESS_DEG : 0 }}
-            transition={{ type: 'spring', stiffness: 240, damping: 15 }}
+            animate={{ rotate: pressed ? PRESS_DEG : (reminding || attnBeat) && !m.quiet ? [0, 12, -6, 10, 0] : 0 }}
+            transition={(reminding || attnBeat) && !pressed && !m.quiet
+              ? { duration: 1.2, repeat: reminding ? 2 : 1, repeatDelay: reminding ? 0.6 : 0 }
+              : { type: 'spring', stiffness: 240, damping: 15 }}
             style={{
               transformOrigin: PIVOT,
               // The awake state, from the same pixels: brighter, and throwing

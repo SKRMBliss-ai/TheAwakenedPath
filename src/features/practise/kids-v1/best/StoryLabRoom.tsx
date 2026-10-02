@@ -1,15 +1,159 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Mic } from 'lucide-react';
 import { FONT } from '../ui/chrome';
 import { useQuiet } from '../ui/quiet';
+import { DoorHandle } from '../ui/DoorHandle';
+import { BadgeSlot } from './ChildBadge';
 import { MicButton } from '../ui/MicButton';
+import { useFloatingPosition } from '../ui/useFloatingPosition';
 import { chirpySprite } from '../ui/sprites';
 import { band } from '../kit/band';
+import { thoughtsFor, eventsFor, possibilitiesFor, type Option } from '../kit/storyLabContent';
+import { companionFor, COMPANY } from '../kit/feelingCompanions';
 import * as sound from '../kit/sound';
+import { speak, stopSpeaking } from '../kit/chirpyVoice';
+import { playThoughtAudios, stopThoughtAudio } from '../kit/thoughtAudioCache';
 import type { DeepDiveAnswers } from './DeepDive';
 import './StoryLabRoom.css';
 
+/*
+  THE BOY IS IN TWO PLACES, so the bubbles have to be too.
+
+  Under 900px `.sl-thinking-boy` sits inside the panel and the clouds are
+  directly above him, so the bubbles rise straight up. At 900px and over that
+  copy is hidden and `.sl-room-boy` takes over, sitting on the empty floor to
+  the LEFT of the filmstrip — there the bubbles have to travel up and across
+  to reach the panel, which is why the two streams below are not one component
+  with a flag. Each is only ever drawn at the width its boy exists at (see
+  .sl-panel-bubbles / .sl-room-bubbles in the stylesheet).
+*/
+const BUBBLE_ORIGINS = [
+  { left: 44, bottom: 134, size: 15 },
+  { left: 61, bottom: 122, size: 12 },
+  { left: 52, bottom: 141, size: 11 },
+  { left: 68, bottom: 117, size: 16 },
+  { left: 56, bottom: 129, size: 10 },
+  { left: 41, bottom: 124, size: 14 },
+  { left: 64, bottom: 137, size: 11 },
+  { left: 49, bottom: 119, size: 13 },
+  { left: 59, bottom: 132, size: 10 },
+  { left: 45, bottom: 127, size: 15 },
+];
+
+/** Straight up from the in-panel boy into the clouds above him (phone). */
+function ThoughtParticles({ show }: { show: boolean }) {
+  const still = useReducedMotion();
+  if (still || !show) return null;
+
+  return (
+    <div className="sl-panel-bubbles" aria-hidden="true">
+      {BUBBLE_ORIGINS.map((o, i) => {
+        const dir = i % 2 === 0 ? 1 : -1;
+        const spread = 10 + (i % 4) * 11;
+        return (
+          <motion.span
+            key={i}
+            className="sl-thought-particle"
+            style={{ left: o.left, bottom: o.bottom, width: o.size, height: o.size } as CSSProperties}
+            animate={{
+              opacity: [0, 0.95, 0.8, 0.5, 0.15, 0],
+              y: [0, -70, -150, -230, -300, -310],
+              x: [0, dir * spread * 0.25, dir * spread * 0.55, dir * spread * 0.8, dir * spread, dir * spread * 0.9],
+              scale: [0.45, 1, 0.95, 0.8, 0.55, 0.2],
+            }}
+            transition={{ duration: 2.4 + (i % 5) * 0.28, ease: 'easeOut', repeat: Infinity, delay: i * 0.35 }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+/*
+  Up and ACROSS, from the boy on the floor to the panel in the middle of the
+  room. The horizontal leg is in vw rather than px because the panel is centred
+  — the gap between the boy and its left edge grows with the window, and a
+  fixed pixel distance that lands on the clouds at 1280 stops well short of
+  them at 1800.
+*/
+const ROOM_BUBBLES = [
+  { size: 17, rise: 150, lift: 0 },
+  { size: 13, rise: 205, lift: 14 },
+  { size: 20, rise: 120, lift: -10 },
+  { size: 15, rise: 245, lift: 8 },
+  { size: 12, rise: 175, lift: -16 },
+  { size: 18, rise: 135, lift: 18 },
+  { size: 14, rise: 215, lift: -6 },
+  { size: 16, rise: 165, lift: 10 },
+  { size: 11, rise: 235, lift: -14 },
+  { size: 19, rise: 145, lift: 4 },
+];
+
+/**
+ * Aims the bubbles from wherever the boy is standing (he can be dragged) to
+ * the Thought panel. Both are re-measured a few times a second, which also
+ * covers window resizes and the filmstrip rescaling.
+ */
+function useBubblePath(show: boolean) {
+  const [path, setPath] = useState<{ x: number; y: number; dx: number; dy: number } | null>(null);
+  useEffect(() => {
+    if (!show) return;
+    const measure = () => {
+      const boy = document.querySelector('.sl-room-cast .sl-room-boy');
+      const panel = document.querySelector('[data-sl-panel="2"]');
+      const room = boy?.closest('.sl-room');
+      if (!boy || !panel || !room) return;
+      const r = room.getBoundingClientRect();
+      const bb = boy.getBoundingClientRect();
+      const pb = panel.getBoundingClientRect();
+      if (!bb.width || !pb.width) return;
+      const x = bb.left + bb.width / 2 - r.left;
+      const y = bb.top + bb.height * 0.2 - r.top;
+      const tx = Math.min(Math.max(bb.left + bb.width / 2, pb.left + 30), pb.right - 30) - r.left;
+      const ty = pb.top + pb.height * 0.45 - r.top;
+      setPath((p) => {
+        const next = { x, y, dx: tx - x, dy: ty - y };
+        return p && Math.abs(p.x - next.x) + Math.abs(p.y - next.y) + Math.abs(p.dx - next.dx) + Math.abs(p.dy - next.dy) < 40 ? p : next;
+      });
+    };
+    measure();
+    const id = window.setInterval(measure, 250);
+    return () => window.clearInterval(id);
+  }, [show]);
+  return show ? path : null;
+}
+
+function RoomThoughtParticles({ show }: { show: boolean }) {
+  const still = useReducedMotion();
+  const path = useBubblePath(show && !still);
+  if (still || !show || !path) return null;
+  const { dx, dy } = path;
+  /* A gentle arc: the bubbles lift off his head first, then drift across. */
+  const arc = -Math.max(40, Math.abs(dx) * 0.18);
+
+  return (
+    <div className="sl-room-bubbles" aria-hidden="true" style={{ left: path.x, top: path.y, bottom: 'auto' }}>
+      {ROOM_BUBBLES.map((b, i) => {
+        const wob = b.lift * 1.5;
+        return (
+          <motion.span
+            key={i}
+            className="sl-thought-particle"
+            style={{ left: 0, top: 0, width: b.size, height: b.size } as CSSProperties}
+            animate={{
+              opacity: [0, 0.95, 0.95, 0.9, 0.8, 0],
+              x: [0, dx * 0.12 + wob * 0.3, dx * 0.35 + wob, dx * 0.6, dx * 0.85 + wob * 0.5, dx],
+              y: [0, arc * 0.8, dy * 0.3 + arc, dy * 0.6 + arc * 0.6, dy * 0.85 + arc * 0.2, dy],
+              scale: [0.4, 1, 0.95, 0.85, 0.65, 0.3],
+            }}
+            transition={{ duration: 3.1 + (i % 5) * 0.32, ease: 'easeInOut', repeat: Infinity, delay: i * 0.42 }}
+          />
+        );
+      })}
+    </div>
+  );
+}
 /*
   THE WALK IS A FILMSTRIP NOW, which is what approved_reference_story_lab.png
   has been showing all along.
@@ -27,8 +171,37 @@ import './StoryLabRoom.css';
   number is measured from the space actually available (see useFilmScale), not
   guessed from the viewport, because the header above it reflows.
 */
-const PANEL_W = 386;
-const PANEL_H = 675;
+/*
+  THE OPEN STEP TAKES THE ROOM, AND GIVES IT BACK AS THE OTHERS ARRIVE.
+
+  One panel on a 1512px screen used to be 280px wide with 1200px of nothing
+  either side of it, because every panel was drawn on the sheet's portrait
+  386x675 card and the card's height is what the window limits. A single card
+  that shape can never fill a landscape window.
+
+  So the card changes shape with the company it keeps. Alone, it is wide and
+  low and takes most of the screen; the second one arrives and they halve it
+  between them; by the fourth they are the sheet's own proportions standing
+  side by side. The content inside is laid out in flow, so a wider card simply
+  gives the clouds more room to drift into rather than needing a second
+  layout.
+
+  A PHONE IS NOT A LANDSCAPE WINDOW. Chosen by panel count alone, the lone card
+  on a phone was the wide one shrunk to a third of its size — thought clouds
+  with five-pixel words. So the count says which card is meant, and a taller
+  card takes over when the window would draw it much bigger (TALLER_WINS_AT).
+*/
+const CANVAS = [
+  { card: 'wide', w: 1120, h: 530 },
+  { card: 'half', w: 790, h: 600 },
+  { card: 'third', w: 565, h: 650 },
+  { card: 'quarter', w: 440, h: 675 },
+] as const;
+type Canvas = (typeof CANVAS)[number];
+/* High enough that two panels on a desktop keep their halves of the screen
+   (a taller card would only be ~15% bigger there), low enough that a phone or
+   an upright tablet always gets a card it can read. */
+const TALLER_WINS_AT = 1.3;
 const PANEL_GAP = 30;
 
 /*
@@ -47,23 +220,28 @@ const TITLES = ['3. Thought', '4. What Happened?', '5. Story', '6. Another Way']
 const PROMPTS = ['What was your mind saying?', 'What actually happened?', "Here's the story your mind made…", "Could anything else be true?"];
 const SUBS = ['Tap a thought, or tell me in your own words.', "Let's look at what a little camera could see.", 'Your mind connects the pieces and tries to make sense of it.', "Let's see some other possible stories."];
 
-type Option = { text: string; icon: string; own?: boolean };
+/*
+  CHIRPY WAS SITTING ON HIS SHOULDER SAYING NOTHING.
 
-const THOUGHTS: Option[] = [
-  { text: "I can't do it.", icon: '☁' }, { text: "They don't like me.", icon: '☁' },
-  { text: "It's not fair.", icon: '☁' }, { text: 'What if…?', icon: '☁' },
-  { text: "I'm going to get in trouble.", icon: '☁' }, { text: "I'm not sure.", icon: '☁' },
+  The boy on the floor of the room carries Chirpy with him, and every other
+  room in the Mind Gym gives that pair a bubble. Here they just stood there
+  while the panel did all the talking, which reads as the bird having been
+  switched off. One short line per step, in his own words rather than the
+  panel's — repeating the question twice on one screen would be worse than
+  silence.
+*/
+const BOY_LINES = [
+  "That's my mind talking, up there.",
+  "Now — what would a camera have seen?",
+  "So that's the story I made out of it.",
+  "Maybe something else could be true too.",
+  'We walked the whole way. Nice one.',
 ];
-const EVENTS: Option[] = [
-  { text: 'Someone said something', icon: '☏' }, { text: 'I had to wait', icon: '◷' },
-  { text: "I didn't get to join", icon: '♧' }, { text: 'I made a mistake', icon: '✧' },
-  { text: 'Something changed', icon: '↝' },
-];
-const POSSIBILITIES: Option[] = [
-  { text: 'Maybe it only happened this time.', icon: '✳' },
-  { text: 'Maybe they were busy with something else.', icon: '❋' },
-  { text: 'Maybe I can try again in a different way.', icon: '✦' },
-];
+
+/** The confirm question rides Chirpy's bubble on the Story panel now, so the
+    panel is not asking the same thing twice in two different boxes. */
+const CONFIRM_SUB = 'Does this sound like what your mind was saying?';
+
 const SAY_IT: Option = { text: 'Say it your way', icon: 'mic', own: true };
 const SOMETHING_ELSE: Option = { text: 'Something else', icon: 'mic', own: true };
 const MY_OWN: Option = { text: 'My own idea…', icon: 'mic', own: true };
@@ -78,7 +256,8 @@ const MY_OWN: Option = { text: 'My own idea…', icon: 'mic', own: true };
  */
 function useFilmScale(count: number) {
   const box = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(0.5);
+  const meant = Math.min(count, CANVAS.length) - 1;
+  const [fit, setFit] = useState<{ scale: number; canvas: Canvas }>({ scale: 0.5, canvas: CANVAS[meant] });
   const measure = useCallback(() => {
     const node = box.current;
     if (!node) return;
@@ -90,8 +269,12 @@ function useFilmScale(count: number) {
     const height = node.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
     if (!width || !height) return;
     const usable = width - (count - 1) * PANEL_GAP - 8;
-    setScale(Math.max(0.2, Math.min(height / PANEL_H, usable / (count * PANEL_W))));
-  }, [count]);
+    const scaleOf = (c: Canvas) => Math.max(0.2, Math.min(height / c.h, usable / (count * c.w)));
+    const roomiest = CANVAS.slice(meant + 1).reduce((best, c) => (scaleOf(c) > scaleOf(best) ? c : best), CANVAS[meant]);
+    const canvas = scaleOf(roomiest) >= scaleOf(CANVAS[meant]) * TALLER_WINS_AT ? roomiest : CANVAS[meant];
+    const scale = scaleOf(canvas);
+    setFit((prev) => (prev.scale === scale && prev.canvas === canvas ? prev : { scale, canvas }));
+  }, [count, meant]);
   useLayoutEffect(() => {
     measure();
     const node = box.current;
@@ -100,7 +283,101 @@ function useFilmScale(count: number) {
     observer.observe(node);
     return () => observer.disconnect();
   }, [measure]);
-  return { box, scale };
+  return { box, scale: fit.scale, canvas: fit.canvas };
+}
+
+/**
+ * The room's foot, kept exactly as tall as the strip pinned over it.
+ *
+ * The strip is fixed to the bottom of the window and the room only leaves it
+ * `--sl-foot` of floor. That was a guessed 158px, and the lantern strip is
+ * taller than a guess — on a desktop the last row of the open card sat under
+ * it, on a phone or an upright tablet nearly two. So the strip is measured,
+ * and the room makes room for whatever height it actually comes out at.
+ */
+function useFootClearance() {
+  const room = useRef<HTMLElement>(null);
+  const rail = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    const node = room.current;
+    const strip = rail.current;
+    if (!node || !strip) return;
+    const fit = () => {
+      const foot = node.getBoundingClientRect().bottom - strip.getBoundingClientRect().top + 8;
+      node.style.setProperty('--sl-foot', `${Math.ceil(foot)}px`);
+    };
+    fit();
+    window.addEventListener('resize', fit);
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(fit);
+    observer?.observe(strip);
+    return () => { window.removeEventListener('resize', fit); observer?.disconnect(); };
+  }, []);
+  return { room, rail };
+}
+
+/* ── The options come round rather than all at once ────────────────────── *
+ *
+ * Both lists outgrew their panel. Twelve thoughts and a dozen situations were
+ * being drawn at the same time inside a box 386 wide and 675 tall, so on a
+ * desktop the top row was clipped, the bottom row ran under the panel's edge
+ * and "Say it your way" — the one option that is always true — was off the
+ * bottom where nobody could reach it. Making the type smaller to fit is the
+ * obvious fix and the wrong one: a child of six reads slowly, and a wall of
+ * thirteen small sentences is not scanned, it is given up on.
+ *
+ * So a handful sit there at a time and the rest come round. The child sees
+ * more of the list than they ever did, in pieces they can actually read.
+ */
+
+/**
+ * How many of the pool stand on screen at once, per panel. The Thought card is
+ * the one that gets drawn wide, and a wide card has the sky for three rows of
+ * five — so it shows nearly twice the thoughts, in bigger clouds, rather than
+ * the same eight spread thinner.
+ */
+const THOUGHT_WINDOW: Record<Canvas['card'], number> = { wide: 14, half: 11, third: 8, quarter: 8 };
+const EVENT_WINDOW = 5;
+const POSSIBILITY_WINDOW = 3;
+/** How long a set stays before the next comes round. */
+const ROTATE_MS = 30000;
+/** Long enough to read as drifting off rather than blinking out. */
+const FADE_MS = 430;
+
+/**
+ * A window onto `pool` that moves along every `ms`.
+ *
+ * `paused` is doing more work than it looks. It holds the list still while a
+ * child is reaching for one of them — pointer over the field, or a keyboard
+ * focus inside it — because an option that slides away from under a finger is
+ * the single worst thing this could do. It also holds while the writing form
+ * is open, once an answer is given, on any panel that is not the current one,
+ * and in the quiet state, where motion is the thing being turned off.
+ *
+ * Indices run past the end and are taken modulo, so a pool that changes size
+ * underneath this needs no reset — which is what keeps it out of an effect.
+ */
+function useRotatingWindow<T>(pool: T[], size: number, ms: number, paused: boolean) {
+  const [start, setStart] = useState(0);
+  const [fading, setFading] = useState(false);
+
+  useEffect(() => {
+    if (paused || pool.length <= size) return;
+    let swap: number | undefined;
+    const tick = window.setInterval(() => {
+      setFading(true);
+      swap = window.setTimeout(() => { setStart((s) => s + size); setFading(false); }, FADE_MS);
+    }, ms);
+    return () => { window.clearInterval(tick); if (swap !== undefined) window.clearTimeout(swap); };
+  }, [paused, pool, size, ms]);
+
+  const items = useMemo(() => {
+    if (pool.length <= size) return pool;
+    return Array.from({ length: size }, (_, i) => pool[(start + i) % pool.length]);
+  }, [pool, size, start]);
+
+  /* Never fade while paused: pausing mid-fade would otherwise leave the set
+     sitting there at nothing, which looks like the panel has broken. */
+  return { items, fading: fading && !paused };
 }
 
 /** True while the window is too narrow to stand more than one panel side by side. */
@@ -117,22 +394,26 @@ function useNarrow() {
 }
 
 /** The panel frame every step shares — the sheet's rounded window on the room. */
-function Panel({ index, step, chirpy, children, onBack, onHome }: {
+function Panel({ index, step, chirpy, children, onHome }: {
   index: number; step: number; chirpy: string;
-  children: ReactNode; onBack: () => void; onHome: () => void;
+  children: ReactNode; onHome: () => void;
 }) {
   const current = index === step;
   const done = index < step;
-  return <div className={`sl-panel ${current ? 'sl-panel-now' : ''} ${done ? 'sl-panel-done' : ''}`}>
+  const sub = index === 4 ? CONFIRM_SUB : SUBS[index - 2];
+  return <div data-sl-panel={index} className={`sl-panel ${current ? 'sl-panel-now' : ''} ${done ? 'sl-panel-done' : ''}`}>
     <div className="sl-panel-bar">
-      <button className="sl-panel-back" onClick={onBack} aria-label={`Back from ${TITLES[index - 2]}`}>←</button>
       <h2>{TITLES[index - 2]}</h2>
       <button className="sl-panel-home" onClick={onHome} aria-label="Back to Mind Gym">⌂</button>
     </div>
     <p className="sl-dots" aria-hidden="true">{STEPS.map((label, i) => <span key={label} className={i === index ? 'sl-dot-now' : i < index ? 'sl-dot-done' : ''} />)}</p>
+    {/* The Story panel used to skip this to save room, which left the one
+        panel that assembles the child's whole story with nobody explaining
+        it. It gets the bubble back and the confirm question moves into it,
+        so the panel gains a voice without gaining a box. */}
     <div className="sl-ask">
       <img className="sl-ask-chirpy" src={chirpy} alt={current ? 'Chirpy' : ''} aria-hidden={!current} />
-      <div className="sl-ask-bubble"><h3>{PROMPTS[index - 2]}</h3>{SUBS[index - 2] && <p>{SUBS[index - 2]}</p>}</div>
+      <div className="sl-ask-bubble"><h3>{PROMPTS[index - 2]}</h3>{sub && <p>{sub}</p>}</div>
     </div>
     <div className="sl-panel-body">{children}</div>
   </div>;
@@ -150,7 +431,15 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
 }) {
   const quiet = useQuiet();
   const reduced = useReducedMotion();
-  const still = quiet || reduced;
+  /* Only the OS-level reduced-motion flag stops the drift. Quiet mode means
+     say nothing, not hold still — a child who arrives angry was getting a
+     frozen grid of six sentences while a happy one got eight that floated. */
+  const still = !!reduced;
+  /* Stands off to the left of the Thought panel and high up the wall by
+     default — down at 78% he sat on the progress rail and his bubble had
+     nowhere to go. Wherever a child drags him is where he stays, for good;
+     see useFloatingPosition. */
+  const boyFloat = useFloatingPosition('story-lab:boy', { xPct: 8, yPct: 31 });
   const [ageBand] = useState(() => band());
   const [step, setStep] = useState(2);
   const [thought, setThought] = useState('');
@@ -161,11 +450,19 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   const [writing, setWriting] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [saved, setSaved] = useState(false);
+  /* "Journey saved ✓" is a receipt, not a control: it says its piece and then
+     gets off the screen rather than sitting in the footer for the rest of the
+     visit. */
+  const [receiptGone, setReceiptGone] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const savedOnce = useRef(false);
   const [sessionId] = useState(() => `story-${Date.now()}`);
   const heading = useRef<HTMLDivElement>(null);
   const moved = useRef(false);
+  const promptDone = useRef<(() => void) | null>(null);
+  /* Limit hover speak calls to avoid 502 errors accumulating in console —
+     after 10 thoughts have been read aloud on hover, disable further speaking. */
+  const hoverSpeakCount = useRef(0);
 
   /*
     ON A PHONE THERE IS ROOM FOR ONE PANEL.
@@ -178,7 +475,8 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   const narrow = useNarrow();
   const reached = Math.min(step, 5);
   const panels = narrow ? [reached] : [2, 3, 4, 5].filter(index => index <= reached);
-  const { box, scale } = useFilmScale(panels.length);
+  const { box, scale, canvas } = useFilmScale(panels.length);
+  const { room: footRoom, rail: footRail } = useFootClearance();
 
   /*
     EVERY ARRIVAL IS AUDIBLE, AND IT IS THE BIG SWOOSH.
@@ -221,9 +519,70 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     if (savedOnce.current) return;
     const ok = onSave({ ...carried, thought, eyes: event, story, other: alternative, sessionId });
     savedOnce.current = ok; setSaved(ok); setSaveError(!ok);
+    if (ok) setReceiptGone(false);
     if (ok && !quiet) sound.play('resolve');
   };
+  /* One step back through the walk, and out into the body room from the
+     first panel. The door handle is the way HOME now (see the footer), so
+     this is the footer's small back control rather than the door's. */
   const back = () => { if (step === 2) { onBody(); return; } if (!quiet) sound.play('exitRoom'); setStep(step - 1); };
+
+  /*
+    THE STORY LAB HAD NO VOICE, AND IT IS THE ROOM THAT NEEDED ONE MOST.
+
+    Every other screen reads Chirpy's line out loud — the hub, Help Chirpy,
+    the Reflection Room, and every room drawn by ui/scene, which speaks in the
+    Chirpy component itself. This room draws its own panels, so it never went
+    through that component and never spoke. Four of the six steps of the walk
+    happen in here, so a child who cannot yet read got the whole middle of the
+    journey in silence, including the two questions that ask them to say
+    something about themselves.
+
+    The sub-line goes with it. "Tap a thought, or tell me in your own words"
+    is the half that tells a pre-reader there is a way in that is not reading,
+    so speaking the question without it is the wrong half.
+
+    `speak` already returns early in the quiet state and honours the app's own
+    mute, so there is no second switch to find here. Stopping on the way out
+    matters as much as starting: the cleanup runs on every step change too, so
+    a child who moves on quickly is not talked over by the question they have
+    already answered.
+  */
+  /* The child's own mind (Chirpy) asks for the thought and reads back what
+     the mind said: the thought, the story it made, and the other way. The
+     grown-up voice only asks what actually happened. */
+  useEffect(() => {
+    const line = PROMPTS[step - 2];
+    const sub = SUBS[step - 2];
+    const prompt = line ? (sub ? `${line} ${sub}` : line) : '';
+    const who = step === 3 ? 'grownup' : 'mind';
+    const heard = step === 3 ? thought : step === 5 ? story : step === 6 ? alternative : '';
+    const feeling = carried.feeling || '';
+    const afterPrompt = step === 2 ? () => promptDone.current?.() : undefined;
+    const ask = () => { if (prompt) speak(prompt, quiet, who, afterPrompt, who === 'mind' ? feeling : ''); };
+    if (step === 4) speak(`${prompt} ${story}`, quiet, 'mind', undefined, feeling);
+    else if (heard && !heard.startsWith("I'm not sure")) speak(heard, quiet, 'mind', ask, feeling);
+    else ask();
+    return () => stopSpeaking();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- answers are read once, on arrival
+  }, [step, quiet]);
+
+  /*
+    AND A BED UNDER IT. The walk plays music in the Different Story reveal and
+    the Reflection Room sits in a forest lullaby, so the Story Lab was the one
+    long stretch where the sound simply stopped — a child walked out of the
+    body room into four silent panels and back into music at the end.
+
+    `playMusicWhenAllowed` rather than `playMusic`: the room is reached by
+    tapping, so the tab has been touched and it will usually start at once,
+    but the retry costs nothing and is the difference between a bed and
+    silence on a phone that has just been reloaded.
+  */
+  useEffect(() => {
+    if (quiet) return;
+    const cancel = sound.playMusicWhenAllowed('storyLabBed');
+    return () => { cancel(); sound.stopMusic(); };
+  }, [quiet]);
 
   /*
     THE END OF THE WALK IS A DOOR, NOT A BUTTON IN THE FOOTER.
@@ -240,17 +599,163 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
     child has to press a button to make true is not one. `save` is guarded by
     savedOnce, so running it here costs nothing if it has already happened.
   */
-  const [leftComplete, setLeftComplete] = useState(false);
   useEffect(() => {
     if (step >= 6 && !savedOnce.current) save();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- save is guarded by savedOnce
   }, [step]);
 
-  const thoughtOptions = quiet ? [...THOUGHTS.slice(0, 3), SAY_IT] : [...THOUGHTS, SAY_IT];
-  const eventOptions = quiet ? [...EVENTS.slice(0, 3), SOMETHING_ELSE] : [...EVENTS, SOMETHING_ELSE];
-  const otherOptions = [...POSSIBILITIES, MY_OWN];
+  useEffect(() => {
+    if (!saved) return;
+    const timer = setTimeout(() => setReceiptGone(true), 2000);
+    return () => clearTimeout(timer);
+  }, [saved]);
+
+  /*
+    THE CLOUDS COME FROM THE FEELING THEY BROUGHT IN, and the events come from
+    the thought they picked — see kit/storyLabContent. Both lists are shuffled
+    once per visit rather than on every render, so a cloud does not move house
+    under the finger going to press it.
+
+    Quiet mode still gets a short list: a dozen drifting clouds is exactly the
+    kind of busy the flag exists to turn off.
+  */
+  /*
+    THE BOY AT THE DESK IS THE CHILD'S OWN FEELING NOW.
+
+    This corner used to be thinking-boy-clean.webp — one drawing, the same
+    every visit, chin on hands, mildly pensive. A child who had just told the
+    Feelings Room they were scared walked into the Thought panel and found a
+    contented boy daydreaming at them, which quietly answers the question the
+    panel is about to ask, and answers it wrong.
+
+    The plates already existed: /feelings holds the same boy with Chirpy on
+    his shoulder wearing each of the twelve, cut for the floating companion
+    (kit/feelingCompanions). Same boy, same cap, same bird, so this reads as
+    the child's own figure having followed them in from the last room rather
+    than as a second character.
+
+    COMPANY is the fallback and claims nothing — a child can reach this panel
+    without naming a feeling at all (straight in from the hub), and the rule
+    that matters is never to put the wrong face on a real answer. No answer is
+    not a wrong answer, so the serene plate is fine there and only there.
+  */
+  const companion = companionFor(carried.feeling) ?? COMPANY;
+
+  const [thoughtPool] = useState(() => thoughtsFor(carried.feeling));
+  const eventPool = useMemo(() => eventsFor(thought, carried.feeling), [thought, carried.feeling]);
+  /* Which "Another way" reframes are on offer follows the same thought/theme
+     routing as the events pool above — a rejection story gets rejection
+     reframes, a pressure story gets pressure reframes. See possibilitiesFor. */
+  const possibilityPool = useMemo(() => possibilitiesFor(thought, carried.feeling), [thought, carried.feeling]);
+
+  /*
+    A child reaching for a cloud with a mouse or a keyboard stops the clock;
+    see useRotatingWindow. Touch has no hover to read, which is why the answer
+    itself also pauses it — the set the child tapped is the set that stays.
+  */
+  const [reaching, setReaching] = useState(false);
+  const hold = { onPointerEnter: () => setReaching(true), onPointerLeave: () => setReaching(false),
+                 onFocus: () => setReaching(true), onBlur: () => setReaching(false) };
+
+  const thoughtRoll = useRotatingWindow(thoughtPool, THOUGHT_WINDOW[canvas.card], ROTATE_MS,
+    still || writing || reaching || !!thought || step !== 2);
+  const eventRoll = useRotatingWindow(eventPool, EVENT_WINDOW, ROTATE_MS,
+    still || writing || reaching || !!event || step !== 3);
+  const possibilityRoll = useRotatingWindow(possibilityPool, POSSIBILITY_WINDOW, ROTATE_MS,
+    still || writing || reaching || !!alternative || step !== 5);
+
+  /* Once it is answered the panel shrinks into the filmstrip and shows what
+     the child said. The thought list stays as it was, though: it used to
+     collapse to just the one chosen card, and a child who wanted to change
+     their mind — or just look back at what else was there — found every
+     other cloud gone. The rotation is already frozen the moment an answer
+     is picked (see the `!!thought` flag below), so the window simply stays
+     on screen with the chosen one lit; if the answer came from outside that
+     window (typed, or from an earlier roll), it's added in rather than
+     dropped. */
+  const kept = (pool: Option[], text: string, icon: string): Option[] =>
+    [pool.find((o) => o.text === text) ?? { text, icon }];
+
+  const stillVisible = (items: Option[], pool: Option[], text: string, icon: string, trailing: Option): Option[] => {
+    if (!text) return [...items, trailing];
+    if (items.some((o) => o.text === text)) return [...items, trailing];
+    return [...kept(pool, text, icon), ...items, trailing];
+  };
+
+  const thoughtOptions = stillVisible(thoughtRoll.items, thoughtPool, thought, '☁', SAY_IT);
+
+  /*
+    TEN THOUGHTS, READ ALOUD AS THE THOUGHT PANEL OPENS.
+
+    Chirpy asks the question first; then the clouds are read one by one in the
+    child's feeling, the ones on screen first, ten at most. Nothing is fetched
+    ahead: each line is asked for when its turn comes. It stops when they move
+    on or pick one. The clouds are read as they stood when the panel opened.
+  */
+  useEffect(() => {
+    if (step !== 2 || quiet || !carried.feeling) return;
+    const feeling = carried.feeling;
+    const shown = thoughtRoll.items.map((o) => o.text);
+    const texts = [...shown, ...thoughtPool.map((o) => o.text).filter((t) => !shown.includes(t))];
+    let alive = true;
+    /* The thoughts follow when the question ends, or after a few seconds if it
+       was read by the fallback voice (which never reports that it finished). */
+    const asked = new Promise<void>((resolve) => {
+      promptDone.current = resolve;
+      window.setTimeout(resolve, 9000);
+    });
+    void asked.then(() => { if (alive) playThoughtAudios(texts, feeling); });
+    return () => {
+      alive = false;
+      promptDone.current = null;
+      stopThoughtAudio();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- read once, as the panel opens
+  }, [step, quiet, carried.feeling]);
+  const eventOptions = stillVisible(eventRoll.items, eventPool, event, '✧', SOMETHING_ELSE);
+  /* Once a possibility is chosen it is sitting in the "Another Possibility"
+     window a few pixels above, in bigger type. Leaving a button with the same
+     sentence on it underneath was the panel saying it twice, in the tightest
+     box in the room — so the options go and the windows get the space. */
+  const otherOptions = alternative ? [] : [...possibilityRoll.items, MY_OWN];
 
   const chosen = (index: number) => answers[index];
+  const boyLine = BOY_LINES[Math.min(Math.max(step - 2, 0), BOY_LINES.length - 1)];
+  /* Hovering (or focusing) anything with words on it has Chirpy read it out
+     in the mind voice. A short pause first, so sweeping the pointer across
+     the panel doesn't set off every card on the way. Limited to 10 to avoid
+     console spam from 502 errors on the voice endpoint. */
+  const hoverTimer = useRef<number | undefined>(undefined);
+  /*
+    THE VOICE BELONGS TO THE CARD, NOT TO WHATEVER STEP THE ROOM HAPPENS TO
+    BE ON.
+
+    This used to read the room's current `step` to decide grownup vs. mind —
+    which meant a card kept its meaning only while its own panel was the
+    active one. The Thought clouds stay on screen (in the filmstrip) after
+    the child moves on to "What happened?", and once `step` became 3 hovering
+    that same already-answered cloud started asking for the GROWN-UP voice
+    on a line that had only ever been cached under the mind voice. That's a
+    cache miss into a cold Gemini TTS call, which is the minute-long silence
+    it looked like a hang.
+
+    So each call site says which voice it wants, and only the "What
+    happened?" cards (the grown-up's question) pass 'grownup'; everything
+    else defaults to the mind, matching the line's real, stable cache key.
+  */
+  const say = (text: string) => ({
+    onPointerEnter: () => {
+      window.clearTimeout(hoverTimer.current);
+      if (hoverSpeakCount.current < 10) {
+        hoverTimer.current = window.setTimeout(() => {
+          hoverSpeakCount.current++;
+          speak(text, quiet, 'mind', undefined, carried.feeling || '');
+        }, 350);
+      }
+    },
+    onPointerLeave: () => window.clearTimeout(hoverTimer.current),
+  });
+
   const cardClass = (index: number, text: string) => {
     const value = chosen(index);
     if (!value) return '';
@@ -258,26 +763,27 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
   };
 
   /** The child's own words, in whichever panel asked for them. */
-  const ownForm = <form className="sl-own-form" onSubmit={e => { e.preventDefault(); capture(draft); }}>
+  const ownForm = <form className="sl-own-form" onSubmit={e => { e.preventDefault(); if (!quiet) sound.play('tap'); capture(draft); }}>
     <label htmlFor="sl-own-answer">{step === 4 ? 'The story my mind made' : 'Your own words'}</label>
     <textarea id="sl-own-answer" autoFocus value={draft} onChange={e => setDraft(e.target.value)} rows={2} maxLength={400} />
     <div><MicButton onText={text => setDraft(value => value ? `${value} ${text}` : text)} /><button type="submit" disabled={!draft.trim()}>Keep these words →</button><button type="button" onClick={() => setWriting(false)}>Cancel</button></div>
   </form>;
 
-  return <motion.main initial={still ? false : { opacity: 0, scale: .98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .7 }} className={`sl-room ${still ? 'sl-still' : ''} ${quiet ? 'sl-quiet' : ''}`} style={{ fontFamily: FONT }} data-step={step}>
+  return <motion.main ref={footRoom}initial={still ? false : { opacity: 0, scale: .98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .7 }} className={`sl-room ${still ? 'sl-still' : ''} ${quiet ? 'sl-quiet' : ''}`} style={{ fontFamily: FONT }} data-step={step} data-floating-room>
+    {/* The handle leaves the room altogether. Stepping back through the four
+        panels is a small thing and belongs in the footer; the door on the
+        wall is what a child reaches for when they want out. */}
+    <DoorHandle side="left" label="Mind Gym" onClick={onExit} accent="#c490ff" scale={0.5} bottomVh={26} />
     <header className="sl-header">
-      <button className="sl-back" onClick={back} aria-label="Previous journey step">←</button>
       <button className="sl-logo" onClick={onExit} aria-label="Back to Mind Gym">Mind<span>Gym</span><small>A BRIGHTER<br />YOU INSIDE</small></button>
       <p className="sl-header-books" aria-hidden="true"><span>THOUGHTS</span><span>STORIES</span><span>POSSIBILITIES</span></p>
       <div className="sl-title chrome-fade"><h1>Story Lab</h1><p>Explore your mind. Find new perspectives.</p></div>
-      <p className="sl-header-notes" aria-hidden="true">
-        <span>Different Thoughts<br />Create Brighter<br />Tomorrows ♡</span>
-        <span>Same You<br />Brighter<br />Views ♡</span>
-      </p>
+      <BadgeSlot />
       <button className="sl-grownup chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button>
     </header>
 
-    <div className="sl-film" ref={box} style={{ '--sl-scale': scale } as CSSProperties}>
+    <div className="sl-film" ref={box} data-card={canvas.card}
+      style={{ '--sl-scale': scale, '--sl-pw': `${canvas.w}px`, '--sl-ph': `${canvas.h}px` } as CSSProperties}>
       <div className="sl-film-row" tabIndex={-1} ref={heading}>
         <AnimatePresence initial={false}>
           {panels.map((index, position) => <motion.div
@@ -299,19 +805,65 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
             transition={still ? { duration: 0 } : { type: 'spring', stiffness: 170, damping: 20, mass: .9 }}
           >
             {position > 0 && <span className="sl-film-arrow" aria-hidden="true">›</span>}
-            <Panel index={index} step={step} onBack={back} onHome={onExit}
+            <Panel index={index} step={step} onHome={onExit}
               chirpy={index === 4 ? '/mind-gym/story-lab/chirpy-pointing.webp' : chirpySprite(index === 5 ? 'hopeful' : 'curious')}>
 
               {index === 2 && <div className="sl-thought-field">
-                <div className="sl-thought-clouds">{thoughtOptions.map((option, i) => <button
-                  key={option.text}
-                  className={`sl-thought-cloud ${option.own ? 'sl-cloud-own' : ''} ${cardClass(2, option.text)}`}
-                  style={{ '--drift-delay': `${i * -.7}s` } as CSSProperties}
-                  disabled={step !== 2}
-                  onClick={() => pick(option)}
-                >{option.own && <span className="sl-mic" aria-hidden="true"><Mic size={13} strokeWidth={2.6} /></span>}{option.text}</button>)}</div>
-                <img className="sl-thinking-boy" src="/mind-gym/story-lab/thinking-boy-clean.webp" alt="Your explorer thinking" />
-                <p className="sl-desk-note" aria-hidden="true">Your<br />Thoughts<br />Matter<br /><span>♡</span></p>
+                <ThoughtParticles show={!thought} />
+                <div className={`sl-thought-clouds ${thoughtRoll.fading ? 'sl-rolling-out' : ''}`} {...hold}>
+                  {thoughtOptions.map((option, i) => (
+                    /* Two wrappers give independent X and Y bounce: the span
+                       carries its own CSS animation for X, the button for Y.
+                       Both use `alternate` direction with coprime durations so
+                       each cloud traces a unique Lissajous-ish path, and
+                       negative delays spread them across the cycle. */
+                    <span
+                      key={option.text}
+                      className="sl-cloud-mover"
+                      style={{
+                        '--bx': `${9 + (i % 4) * 5}px`,
+                        '--bx-dur': `${6.2 + (i % 7) * 0.55}s`,
+                        '--bx-del': `${-(i % 7) * 0.92}s`,
+                      } as CSSProperties}
+                    >
+                      <button
+                        className={`sl-thought-cloud ${option.own ? 'sl-cloud-own' : ''} ${cardClass(2, option.text)}`}
+                        style={{
+                          '--by': `${5 + (i % 4) * 4}px`,
+                          '--by-dur': `${4.7 + (i % 5) * 0.9}s`,
+                          '--by-del': `${-(i % 5) * 1.1}s`,
+                        } as CSSProperties}
+                        disabled={step !== 2}
+                        onClick={() => pick(option)}
+                        {...say(option.text)}
+                      >
+                        {option.own && <span className="sl-mic" aria-hidden="true"><Mic size={14} strokeWidth={2.6} /></span>}
+                        {option.text}
+                      </button>
+                    </span>
+                  ))}
+                </div>
+
+                {/*
+                  HIS OWN WORDS ARE THE ONE CLOUD THAT NEVER LEAVES.
+
+                  "Say it your way" is the last cloud in every set: lit blue
+                  with a microphone, and pinned — it never fades when the
+                  others come round (see .sl-cloud-own), because it is the one
+                  option that is true whatever the sky is showing. It used to
+                  have a second copy on a shelf under the clouds, which no
+                  layout had room for: it sat clipped off the bottom of the
+                  card, invisible but still reachable by Tab.
+                */}
+                <img
+                  className="sl-thinking-boy"
+                  /* Keyed on the plate so a child who steps back and changes
+                     their feeling gets a fresh <img> and a fresh landing hop,
+                     rather than the new face fading in on a bird mid-bounce. */
+                  key={companion.src}
+                  src={companion.src}
+                  alt={carried.feeling ? `You, feeling ${carried.feeling.toLowerCase()}, with Chirpy` : 'You, with Chirpy'}
+                />
               </div>}
 
               {index === 3 && <>
@@ -319,7 +871,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
                   <img src="/mind-gym/story-lab/memory-illustration.webp" alt="An illustrated example of a moment in a school playground" />
                   <figcaption className="sr-only">{ageBand === 'older' ? 'What happened, before deciding what it meant?' : 'What would a little camera have seen?'}</figcaption>
                 </figure>
-                <div className="sl-cards">{eventOptions.map(option => <button key={option.text} className={`${option.own ? 'sl-card-own' : ''} ${cardClass(3, option.text)}`} disabled={step !== 3} onClick={() => pick(option)}>
+                <div className={`sl-cards ${eventRoll.fading ? 'sl-rolling-out' : ''}`} {...hold}>{eventOptions.map(option => <button key={option.text} className={`${option.own ? 'sl-card-own' : ''} ${cardClass(3, option.text)}`} disabled={step !== 3} onClick={() => pick(option)} {...say(option.own ? 'Something else? Tell me.' : option.text)}>
                   <span className="sl-card-icon" aria-hidden="true">{option.icon === 'mic' ? <Mic size={15} strokeWidth={2.6} /> : option.icon}</span>{option.text}
                 </button>)}</div>
               </>}
@@ -329,58 +881,53 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
                 <div className="sl-story-scene" aria-label="Your feeling, body, thought and event joining together">
                   <div className="sl-scene-center">
                     <img className="sl-scene-bubble" src="/mind-gym/story-lab/story-bubble-magic.png" alt="" aria-hidden="true" />
-                    <img className="sl-scene-boy" src="/mind-gym/story-lab/story-boy-sad.png" alt="A child sitting inside a glowing bubble" />
+                    {/* Was story-boy-sad.png, hard-coded: a child who had
+                        said "excited" four panels ago watched their story
+                        assemble around a boy who was plainly miserable. */}
+                    <img className="sl-scene-boy" key={companion.src} src={companion.src} alt={carried.feeling ? `You, feeling ${carried.feeling.toLowerCase()}, inside a glowing bubble` : 'A child sitting inside a glowing bubble'} />
                     {/* Top-left: Thought */}
-                    <div className="sl-badge sl-badge-thought">
+                    <div className="sl-badge sl-badge-thought" {...say(answers[2] || '')}>
                       <span className="sl-badge-label">Thought</span>
                       <span className="sl-badge-val">"{answers[2] || '…'}"</span>
                     </div>
                     {/* Top-right: What happened */}
-                    <div className="sl-badge sl-badge-event">
+                    <div className="sl-badge sl-badge-event" {...say(answers[3] || '')}>
                       <span className="sl-badge-label">What happened</span>
                       <span className="sl-badge-val">"{answers[3] || '…'}"</span>
-                    </div>
-                    {/* Left: Feeling */}
-                    <div className="sl-badge sl-badge-feeling">
-                      <span className="sl-badge-label">Feeling</span>
-                      <span className="sl-badge-val">{answers[0] || '…'}</span>
-                    </div>
-                    {/* Right: Body */}
-                    <div className="sl-badge sl-badge-body">
-                      <span className="sl-badge-label">Body</span>
-                      <span className="sl-badge-val">{answers[1] || '…'}</span>
                     </div>
                   </div>
                   <span className="sl-scene-arrow" aria-hidden="true">▼</span>
                 </div>
 
                 {/* ── Story book ───────────────────────────────────── */}
-                <div className="sl-story-book">
+                <div className="sl-story-book" {...say(story)}>
                   <img className="sl-book-frame" src="/mind-gym/story-lab/story-book-open.png" alt="" aria-hidden="true" />
                   <div className="sl-book-text">
                     <p className="sl-book-heading">Story my mind made:</p>
-                    <p className="sl-book-quote">"{story}"</p>
+                    <p className="sl-book-quote" key={story}>{story.split(' ').map((w, i) => <span key={i} style={{ animationDelay: `${i * 0.09}s` }}>{w} </span>)}</p>
                   </div>
                 </div>
 
-                <p className="sl-confirm-ask">Does this sound like what your mind was saying?</p>
                 <div className="sl-cards sl-confirm">
-                  <button disabled={step !== 4} onClick={() => { if (!quiet) sound.play('tap'); capture(story); }}><span className="sl-card-icon sl-icon-yes" aria-hidden="true">✓</span>Yes</button>
-                  <button disabled={step !== 4} onClick={showOwn}><span className="sl-card-icon sl-icon-almost" aria-hidden="true">◑</span>Almost</button>
-                  <button disabled={step !== 4} onClick={showOwn} className="sl-card-own"><span className="sl-card-icon" aria-hidden="true"><Mic size={15} strokeWidth={2.6} /></span>Change it</button>
-                  <button disabled={step !== 4} onClick={() => { if (!quiet) sound.play('tap'); capture("I'm not sure what story my mind made yet."); }}><span className="sl-card-icon sl-icon-unsure" aria-hidden="true">?</span>Not sure</button>
+                  <button disabled={step !== 4} {...say('Yes')} onClick={() => { if (!quiet) sound.play('tap'); capture(story); }}><span className="sl-card-icon sl-icon-yes" aria-hidden="true">✓</span>Yes</button>
+                  <button disabled={step !== 4} {...say('Almost')} onClick={showOwn}><span className="sl-card-icon sl-icon-almost" aria-hidden="true">◑</span>Almost</button>
+                  <button disabled={step !== 4} {...say('Change it')} onClick={showOwn} className="sl-card-own"><span className="sl-card-icon" aria-hidden="true"><Mic size={15} strokeWidth={2.6} /></span>Change it</button>
+                  <button disabled={step !== 4} {...say('Not sure')} onClick={() => { if (!quiet) sound.play('tap'); capture("I'm not sure what story my mind made yet."); }}><span className="sl-card-icon sl-icon-unsure" aria-hidden="true">?</span>Not sure</button>
                 </div>
               </div>}
 
               {index === 5 && <>
                 <div className="sl-possibility-windows">
-                  <div className="sl-window sl-original"><h4>Original Story</h4><img src="/mind-gym/story-lab/thinking-boy-clean.webp" alt="" /><p>"{story}"</p></div>
+                  <div className="sl-window sl-original" {...say(story)}><h4>Original Story</h4><img src="/mind-gym/story-lab/thinking-boy-clean.webp" alt="" /><p>"{story}"</p></div>
                   <div className="sl-window sl-another"><h4>Another Possibility</h4>{alternative ? <img src="/mind-gym/story-lab/thinking-boy-clean.webp" alt="" /> : <span className="sl-possibility-light" aria-hidden="true">✧</span>}<p>{alternative ? `"${alternative}"` : 'A little space for another way to see it…'}</p></div>
                 </div>
-                <div className="sl-cards sl-wide">{otherOptions.map(option => <button key={option.text} className={`${option.own ? 'sl-card-own' : ''} ${cardClass(5, option.text)}`} disabled={step !== 5} onClick={() => pick(option)}>
+                {otherOptions.length > 0 && <div className={`sl-cards sl-wide ${possibilityRoll.fading ? 'sl-rolling-out' : ''}`} {...hold}>{otherOptions.map(option => <button key={option.text} className={`${option.own ? 'sl-card-own' : ''} ${cardClass(5, option.text)}`} disabled={step !== 5} onClick={() => pick(option)} {...say(option.own ? 'My own idea' : option.text)}>
                   <span className="sl-card-icon" aria-hidden="true">{option.icon === 'mic' ? <Mic size={15} strokeWidth={2.6} /> : option.icon}</span>{option.text}
-                </button>)}</div>
-                <p className="sl-truth">More than one story can be true.<br />You get to choose what to believe.</p>
+                </button>)}</div>}
+                {/* Held back until there is a second story to hold against the
+                    first. Before that it is a claim about nothing, and it was
+                    taking room from the options it is meant to be about. */}
+                {alternative && <p className="sl-truth">More than one story can be true.<br />You get to choose what to believe.</p>}
               </>}
 
               {writing && step === index && ownForm}
@@ -392,61 +939,47 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
 
     {saveError && <p role="alert" className="sl-save-error">This device couldn't save your journey. Your words are still here; you can try again.</p>}
 
-    <AnimatePresence>
-      {step >= 6 && !leftComplete && <motion.section
-        className="sl-complete"
-        aria-labelledby="sl-complete-title"
-        initial={still ? false : { opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: still ? 0 : .5 }}
-      >
-        <motion.div
-          className="sl-complete-card"
-          initial={still ? false : { opacity: 0, y: 34, scale: .94 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={still ? { duration: 0 } : { type: 'spring', stiffness: 150, damping: 19, delay: .12 }}
-        >
-          <p className="sl-complete-kicker" id="sl-complete-title">Story Lab Complete!</p>
-          <h2 className="sl-complete-big">You did it!</h2>
-          <p className="sl-complete-said">You explored a new perspective and found another way.</p>
-          <p className="sl-complete-grow">Your brighter stories are ready to keep growing.</p>
 
-          <div className="sl-complete-chirpy">
-            <img src={chirpySprite('hopeful')} alt="" aria-hidden="true" />
-            <p role="status">{saved
-              ? 'Your reflections are saved and waiting for you!'
-              : 'Your words are safe here with me.'}</p>
-          </div>
+    {/*
+      HE SITS IN THE ROOM, NOT IN THE PANEL.
 
-          <div className="sl-portal">
-            <img src="/mind-gym/reflection/reflection_portal.png" alt="" aria-hidden="true"
-              onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-            <span className="sl-portal-label">Reflection<br />Room <b aria-hidden="true">♡</b></span>
-          </div>
+      The panel is 386 by 675 before scaling and holds a question, a dozen
+      drifting clouds and a way to type your own — there was never room in it
+      for a figure as well, which is why the old desk boy was 130px in a
+      corner with clouds landing on his cap. The room around the filmstrip is
+      mostly empty floor, so that is where he goes: big enough to read, off to
+      the left where nothing is ever drawn, bouncing.
 
-          <ol className="sl-complete-steps" aria-label="What you did">
-            <li>Feel</li><li>Explore</li><li>Find Another Way</li><li>Keep Growing</li>
-          </ol>
+      The in-panel copy below is still rendered and takes over under 900px,
+      where the panel fills the window and there is no floor to sit on.
+    */}
+    <div className="sl-room-cast" {...boyFloat.dragHandlers}>
+      <img
+        className="sl-room-boy"
+        key={companion.src}
+        src={companion.src}
+        alt={carried.feeling ? `You, feeling ${carried.feeling.toLowerCase()}, with Chirpy` : 'You, with Chirpy'}
+        draggable={false}
+      />
+      <div className="sl-room-bubble" aria-live="polite"><p>{boyLine}</p></div>
+    </div>
+    <RoomThoughtParticles show={step === 2 && !thought} />
 
-          {onReflectionPath && <button className="sl-enter-reflection" onClick={() => { if (!quiet) sound.play('enterRoom'); onReflectionPath(); }}>
-            <span aria-hidden="true">⌸</span> Enter Reflection Room <span aria-hidden="true">›</span>
-          </button>}
-          <p className="sl-continues">Your journey continues…</p>
-
-          <p className="sl-complete-signs" aria-hidden="true">
-            <span>Same You, Brighter Views</span><span>Kinder Thoughts</span><span>Bigger Tomorrows</span>
-          </p>
-
-          <button className="chrome-fade sl-look-again" onClick={() => setLeftComplete(true)}>Look at my stories again</button>
-        </motion.div>
-      </motion.section>}
-    </AnimatePresence>
-
-    <nav className="sl-rail" aria-label="Journey progress">
+    {/*
+      The ribbon of light runs bright as far as the step they are standing on
+      and dim beyond it, so the strip shows progress with light rather than
+      only with ticks. One number, set here because only the component knows
+      how far along the walk is.
+    */}
+    <nav ref={footRail} className="sl-rail" aria-label="Journey progress"
+      style={{ '--sl-lit': `${(Math.min(step, LAST_STEP) / LAST_STEP) * 100}%` } as CSSProperties}>
       <ol>{STEPS.map((label, i) => {
         const door = i === LAST_STEP;
-        return <li key={label} className={`${i === step ? 'sl-current' : i < step ? 'sl-collected' : ''} ${door ? 'sl-step-door' : ''}`} aria-current={i === step ? 'step' : undefined}>
+        const ready = door && step >= 6 && !!onReflectionPath;
+        const Tag = ready ? 'button' : 'span';
+        return <li key={label} className={`${i === step ? 'sl-current' : i < step ? 'sl-collected' : ''} ${door ? 'sl-step-door' : ''} ${ready ? 'sl-door-ready' : ''}`} aria-current={i === step ? 'step' : undefined}>
+          <Tag className="sl-step-inner" {...(ready ? { type: 'button' as const, onClick: () => { if (!quiet) sound.play('enterRoom'); onReflectionPath?.(); }, 'aria-label': 'Go to the Reflection Room next' } : {})}>
+          {ready && <span className="sl-door-next" aria-hidden="true">Go here next!</span>}
           <span className="sl-step-symbol" aria-hidden="true">
             <img src={door ? '/mind-gym/reflection/reflection_portal.png' : `/mind-gym/home/icon_${STEP_ART[i]}.webp`} alt=""
               onError={(e) => { e.currentTarget.style.display = 'none'; }} />
@@ -457,16 +990,21 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
             ? 'Rest, listen, grow'
             : i === step ? 'You are here' : answers[i] || (i < 2 ? '(In its own room)' : '')}</span>
           <span className="sr-only">{i < step ? ' — collected' : i === step ? ' — current step' : ' — coming up'}</span>
+          </Tag>
         </li>;
       })}</ol>
-      <p className={`sl-rail-badge ${step >= 6 ? 'sl-rail-done' : ''}`}><span aria-hidden="true">★</span>You've Explored<br />New Perspectives!</p>
     </nav>
 
     <footer className="sl-stop">
       <button className="chrome-fade" onClick={onExit}>Stop for now</button>
-      {step >= 6 && <button className="sl-save" onClick={save} disabled={saved}>{saved ? 'Journey saved ✓' : '✧ Save This Journey'}</button>}
+      <button className="chrome-fade" onClick={back}>← Back a step</button>
+      {step >= 6 && !receiptGone && <button className="sl-save" onClick={save} disabled={saved}>{saved ? 'Journey saved ✓' : '✧ Save This Journey'}</button>}
       {saved && onReflectionPath && <button className="sl-save sl-reflection-cta" onClick={onReflectionPath}>✦ My Reflection Room →</button>}
-      {step < 6 && step !== 4 && <button className="chrome-fade" onClick={() => capture("I'm not sure yet.")}>{"I'm not sure — keep going"}</button>}
+      {/* Not offered on step 5 — the "Another way" possibility is the whole
+          point of the walk, so a child stays in the Story Lab, choosing
+          among the reframes, rather than skipping past the one step this
+          room exists for. Every earlier step still has its own skip. */}
+      {step < 6 && step !== 4 && step !== 5 && <button className="chrome-fade" onClick={() => capture("I'm not sure yet.")}>{"I'm not sure — keep going"}</button>}
     </footer>
   </motion.main>;
 }

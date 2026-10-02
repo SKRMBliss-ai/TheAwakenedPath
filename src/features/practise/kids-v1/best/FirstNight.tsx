@@ -43,7 +43,7 @@ type Beat = 'dark' | 'lit' | 'name' | 'who';
 export function FirstNight() {
   const completeOnboarding = useKidStore((s) => s.completeOnboarding);
   const [beat, setBeat] = useState<Beat>('dark');
-  const [name, setName] = useState('');
+  const [name, setName] = useState(() => useKidStore.getState().name);
   const [avatar, setAvatar] = useState<string | null>(null);
 
   const lit = beat !== 'dark';

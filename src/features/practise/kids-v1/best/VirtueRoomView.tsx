@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useLiveContent } from '../kit/liveContent';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { useKidStore } from '../../../kids/store';
@@ -11,7 +12,7 @@ import { DIM } from '../ui/scenery';
 import { gamesInRoom } from '../games/library';
 import { roomGamesFor, type RoomGame } from './roomGames';
 import { RoomGamePlayer } from './RoomGamePlayer';
-import { artRoomFor, VIRTUE_ROOMS, type VirtueRoom } from './rooms';
+import { roomText, artRoomFor, VIRTUE_ROOMS, type VirtueRoom } from './rooms';
 import { CaughtFirefly } from './CaughtFirefly';
 import { GardenTree } from './GardenTree';
 import { HungDrawing } from './HungDrawing';
@@ -39,7 +40,7 @@ import * as sound from '../kit/sound';
  * describing the child and starts describing what they think the app wants.
  */
 export function VirtueRoomView({
-  room,
+  room: baseRoom,
   reporting,
   journey,
   onExit,
@@ -64,6 +65,8 @@ export function VirtueRoomView({
   /** Continue to the next room. Present only on the journey. */
   onNext?: () => void;
 }) {
+  const texts = useLiveContent((s) => s.texts);
+  const room = useMemo(() => roomText(baseRoom, texts), [baseRoom, texts]);
   const completions = useKidStore((s) => s.completions);
   const pointsByBehaviour = useKidStore((s) => s.pointsByBehaviour);
   const setBehaviourOn = useKidStore((s) => s.setBehaviourOn);
@@ -115,7 +118,7 @@ export function VirtueRoomView({
       {/* The way out is a fitting on the left wall, the same one on every
           screen in the app. No chevron in the corner any more: a child who
           learns one door learns them all. */}
-      <DoorHandle side="left" label="Back" onClick={onExit} accent={accent} />
+      <DoorHandle side="left" label="Back" onClick={onExit} accent={accent}  scale={0.5} />
 
       <RoomScene room={art} dim={playing ? DIM.play : DIM.content} />
 

@@ -9,25 +9,15 @@
  * didn't notice they were gone, which is a different unkindness from the one
  * the streak was doing.
  *
- * So: after a real absence, Chirpy is pleased to see them, and says
- * absolutely nothing about the gap.
+ * So: after a real absence, Chirpy is pleased to see them and says so. He
+ * may say he missed them and that it has been a while, and he may ask what
+ * they have been up to. He never asks WHY they were away: a child who stopped
+ * coming because things were bad is the likeliest returner, and having to
+ * explain the gap is the one thing that makes coming back cost something.
+ * Nothing was lost while they were gone, so he never implies it was.
  *
- * THE RULES THIS KEEPS, WHICH ARE MOSTLY ABOUT WHAT IT NEVER SAYS:
- *
- *   · It never names the length of the absence. No "three weeks!", no "where
- *     have you been?", no "we missed you" — every one of those is an
- *     invoice, and a six-year-old hears the bill in it.
- *   · It never implies anything was lost, because nothing was. The sky, the
- *     jars and the shelf are exactly as they were left; that is the whole
- *     design of them.
- *   · It never asks why. A child who stopped coming because things were bad
- *     is the likeliest returner, and "where did you get to?" is the one
- *     question guaranteed to make coming back cost something.
- *
- * WHAT IT DOES INSTEAD: Chirpy has been getting on with his own week. He
- * mentions what he's been up to, the way a friend does when they see you
- * again — which quietly says both "you weren't being waited on" and "I'm
- * glad you're here", without a word of either.
+ * He still has his own small news, the way a friend does when they see you
+ * again.
  */
 
 const KEY = 'mindgym.kidsv1.away';
@@ -40,18 +30,13 @@ const KEY = 'mindgym.kidsv1.away';
  */
 const AWAY_DAYS = 10;
 
-/**
- * The line is Chirpy's own news, deliberately about HIS week rather than
- * theirs. Nothing here is a lesson, an encouragement, or a hint that they
- * should come more often — he is a friend with his own business, not a
- * retention mechanic with a face.
- */
+/** Glad they're back, and a bit of his own news. Never a lesson, and never a reason to come more often. */
 const NEWS = [
-  'Oh — you’re here. I’ve been mostly asleep, if I’m honest.',
-  'You’re here! I found a really good stick. I kept it, obviously.',
-  'There you are. I’ve been counting the ceiling. There’s a lot of it.',
-  'Oh good, it’s you. I taught myself a new noise. I’ll do it later.',
-  'You’re back. I moved a chair about four inches. Big week.',
+  'You’re back! I missed you. I found a really good stick while you were away. I kept it, obviously.',
+  'There you are! It’s been a while. I missed you! What have you been up to?',
+  'Oh good, it’s you! I missed you. I taught myself a new noise. I’ll do it later.',
+  'You’re here! It’s been ages. I moved a chair about four inches. Big week. What did I miss?',
+  'Hello again! I missed you. I’ve been mostly asleep, if I’m honest.',
 ];
 
 interface Away {

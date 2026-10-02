@@ -1,4 +1,5 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useDiaryFilledToday } from '../kit/diaryToday';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useKidStore } from '../../../kids/store';
 import { BEHAVIOURS } from '../../../kids/data';
@@ -6,10 +7,12 @@ import { FONT } from '../ui/chrome';
 import { useQuiet } from '../ui/quiet';
 import { MicButton } from '../ui/MicButton';
 import { HearYourself } from '../ui/HearYourself';
+import { DoorHandle } from '../ui/DoorHandle';
 import { allLinks, linkClip } from '../kit/voiceStore';
 import * as sound from '../kit/sound';
 import { band } from '../kit/band';
 import './DiaryRoom.css';
+import './DiaryNudge.css';
 
 /*
   MY INNER DIARY, drawn against approved_reference_diary.png.
@@ -74,9 +77,15 @@ const dayKey = (d: Date, day: number) => `${monthKey(d)}-${String(day).padStart(
 const daysIn = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
 const shift = (d: Date, by: number) => new Date(d.getFullYear(), d.getMonth() + by, 1);
 
-export function DiaryRoom({ onExit, onOlder }: { onExit: () => void; onOlder: () => void }) {
+export function DiaryRoom({ onExit, onOlder, openToday = false }: { onExit: () => void; onOlder: () => void; openToday?: boolean }) {
   const s = useKidStore();
+  const filledToday = useDiaryFilledToday();
   const quiet = useQuiet();
+  useEffect(() => {
+    if (quiet) { sound.stopMusic(); return; }
+    const cancel = sound.playMusicWhenAllowed('diaryBed');
+    return () => { cancel(); sound.stopMusic(); };
+  }, [quiet]);
   const reduced = useReducedMotion();
   const still = quiet || !!reduced;
   const today = new Date();
@@ -86,6 +95,20 @@ export function DiaryRoom({ onExit, onOlder }: { onExit: () => void; onOlder: ()
   const [clips, setClips] = useState(allLinks);
   const [selectedDay, setSelectedDay] = useState<{ day: number; behaviour: string } | null>(null);
   const dayDialog = useRef<HTMLDialogElement>(null);
+  /*
+    THE MONTH LIVES IN THE BOOK.
+
+    Seven rows of thirty-one dots is a spreadsheet, and it read as one: a child
+    opening their own diary met a grid before they met anything else. It is the
+    same grid — same rows, same taps, same data — but it now comes OUT of the
+    book on the page, one day at a time, and goes back into it when shut.
+
+    `flight` is bumped on every open and on every month change so the stagger
+    replays; it keys the grid, which is what makes React mount a fresh set of
+    dots rather than re-using the ones already sitting still.
+  */
+  const [bookOpen, setBookOpen] = useState(true);
+  const [flight, setFlight] = useState(0);
   const questions = QUESTIONS[band() === 'young' ? 'young' : 'older'];
 
   const key = monthKey(month);
@@ -107,7 +130,7 @@ export function DiaryRoom({ onExit, onOlder }: { onExit: () => void; onOlder: ()
   const go = (by: number) => {
     const next = shift(month, by);
     if (next > new Date(today.getFullYear(), today.getMonth(), 1)) return;
-    setMonth(next); setSaved(false);
+    setMonth(next); setSaved(false); setFlight(f => f + 1);
     if (!quiet) sound.play('exitRoom');
   };
   const write = (k: string, value: string) => { s.setMonthReview(key, k, value); setSaved(false); setSaveError(''); };
@@ -122,12 +145,29 @@ export function DiaryRoom({ onExit, onOlder }: { onExit: () => void; onOlder: ()
         throw new Error('Diary could not be persisted');
       }
       setSaved(true); setSaveError('');
+      useKidStore.getState().noteActivity({ kind: 'diary' });
       if (!quiet) sound.play('resolve');
     } catch {
       setSaved(false);
       setSaveError('Your words are still here, but this device could not save them. Keep this page open and ask a grown-up for help.');
     }
   };
+
+  /* A child who followed a reminder here came to write today, so the page
+     they came for is already open. Once today is written, the diary just opens. */
+  useEffect(() => {
+    if (!openToday || filledToday) return;
+    setSelectedDay({ day: today.getDate(), behaviour: 'kind' });
+    dayDialog.current?.showModal();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const openTodayPage = () => {
+    setMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+    setSelectedDay({ day: today.getDate(), behaviour: 'kind' });
+    dayDialog.current?.showModal();
+    if (!quiet) sound.play('discovery');
+  };
+  const isTodayOpen = !!selectedDay && thisMonth && selectedDay.day === today.getDate();
 
   /* The three months behind this one, as the spines on the shelf. */
   const behind = [1, 2, 3].map(n => shift(month, -n));
@@ -136,10 +176,9 @@ export function DiaryRoom({ onExit, onOlder }: { onExit: () => void; onOlder: ()
     initial={still ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: .6 }}
     className={`dy-room ${still ? 'dy-still' : ''}`} style={{ fontFamily: FONT }}
   >
+    <DoorHandle side="left" label="Back to Mind Gym" onClick={onExit} accent="#ff5f8f"  scale={0.5} />
     <div className="dy-page">
       <header className="dy-top">
-        <button className="dy-back" onClick={onExit}><span aria-hidden="true">←</span><span>Back<small>to Mind Gym</small></span></button>
-
         {/* The friend leaning on her books, from the sheet's own art. */}
         <div className="dy-friend" aria-hidden="true">
           <img className="dy-bust" src="/mind-gym/diary/character-bust.webp" alt="" />
@@ -155,15 +194,47 @@ export function DiaryRoom({ onExit, onOlder }: { onExit: () => void; onOlder: ()
           <button className="dy-arrow" onClick={() => go(-1)} aria-label="Earlier month">‹</button>
           <ol>
             <li className="dy-month-now"><span><i aria-hidden="true">★</i><b>{MONTHS[month.getMonth()]}</b><small>{month.getFullYear()}</small></span></li>
-            {behind.map(d => <li key={monthKey(d)}><button onClick={() => { setMonth(d); setSaved(false); if (!quiet) sound.play('exitRoom'); }}><b>{MONTHS[d.getMonth()]}</b><small>{d.getFullYear()}</small></button></li>)}
+            {behind.map(d => <li key={monthKey(d)}><button onClick={() => { setMonth(d); setSaved(false); setFlight(f => f + 1); if (!quiet) sound.play('exitRoom'); }}><b>{MONTHS[d.getMonth()]}</b><small>{d.getFullYear()}</small></button></li>)}
           </ol>
           <button className="dy-arrow" onClick={() => go(1)} aria-label="Later month" disabled={thisMonth}>›</button>
           <p className="dy-tagline" aria-hidden="true">Small steps<br />make a brighter you <span>♡</span></p>
         </div>
       </header>
 
-      <section className="dy-grid-panel" aria-label={`Good choices in ${MONTHS[month.getMonth()]} ${month.getFullYear()}`}>
-        <div className="dy-grid" style={{ ['--dy-days' as string]: total }}>
+      {!filledToday && <button className="dy-today-invite" onClick={openTodayPage}>
+        <span aria-hidden="true">✨</span>
+        <span><b>Today’s page is still empty</b><small>Tap here and tell your diary how today went.</small></span>
+        <span aria-hidden="true">→</span>
+      </button>}
+
+      <section className={`dy-grid-panel ${bookOpen ? 'dy-book-open' : 'dy-book-shut'}`} aria-label={`Good choices in ${MONTHS[month.getMonth()]} ${month.getFullYear()}`}>
+        {/*
+          THE BOOK IS THE SWITCH, and it is a real one rather than a picture
+          with a button next to it — the whole thing is the control, because a
+          shut book that cannot be opened by pressing it is a lie a child
+          notices immediately.
+        */}
+        <button
+          type="button"
+          className="dy-book"
+          aria-expanded={bookOpen}
+          aria-controls="dy-month-grid"
+          onClick={() => {
+            const next = !bookOpen;
+            setBookOpen(next);
+            if (next) setFlight(f => f + 1);
+            if (!quiet) sound.play(next ? 'discovery' : 'exitRoom');
+          }}
+        >
+          <img src="/mind-gym/reflection/open_magic_book.png" alt="" aria-hidden="true"
+            onError={e => { e.currentTarget.style.display = 'none'; }} />
+          <span className="dy-book-label">
+            {bookOpen ? 'Close the month' : `Open ${FULL[month.getMonth()]}`}
+          </span>
+          <span className="dy-book-sparks" aria-hidden="true" />
+        </button>
+
+        <div id="dy-month-grid" key={flight} className="dy-grid" hidden={!bookOpen} style={{ ['--dy-days' as string]: total }}>
           <div className="dy-row dy-head-row">
             <span className="dy-row-name">Day</span>
             {days.map(day => <span key={day} className="dy-daynum">{day}</span>)}
@@ -179,6 +250,7 @@ export function DiaryRoom({ onExit, onOlder }: { onExit: () => void; onOlder: ()
                 return <button
                   key={day}
                   className={`dy-dot ${done(day, row.id) ? 'dy-on' : ''} ${isToday ? 'dy-today' : ''}`}
+                  style={{ ['--dy-delay' as string]: `${(day * 9) + (ROWS.findIndex(r => r.id === row.id) * 34)}ms` }}
                   disabled={ahead}
                   onClick={() => { setSelectedDay({ day, behaviour: row.id }); dayDialog.current?.showModal(); }}
                   aria-pressed={done(day, row.id)}
@@ -190,14 +262,19 @@ export function DiaryRoom({ onExit, onOlder }: { onExit: () => void; onOlder: ()
             </div>;
           })}
         </div>
-        <p className="dy-grid-foot"><span aria-hidden="true">✨</span>Tap a day to remember a choice or read your words. Blank days are okay.<span aria-hidden="true">✨</span></p>
+        {bookOpen && <p className="dy-grid-foot"><span aria-hidden="true">✨</span>Tap a day to remember a choice or read your words. Blank days are okay.<span aria-hidden="true">✨</span></p>}
       </section>
 
       <section className="dy-learn" aria-label="Look Back &amp; Learn">
+        {/* The crystal the four lanterns rise out of. Scenery — the cards
+            below are the controls, and there is nothing here to press. */}
+        <img className="dy-crystal" src="/mind-gym/reflection/crystal_cluster.png" alt="" aria-hidden="true"
+          onError={e => { e.currentTarget.style.display = 'none'; }} />
         <h2><span aria-hidden="true">✦</span>Look Back &amp; Learn<span aria-hidden="true">✦</span></h2>
         <p className="dy-learn-sub">Your thoughts matter. Be honest, be you. <span aria-hidden="true">💜</span></p>
         <div className="dy-cards">
-          {questions.map(q => <div key={`${key}:${q.key}`} className="dy-card">
+          {questions.map((q, qi) => <div key={`${key}:${q.key}`} className="dy-card"
+            style={{ ['--dy-lantern' as string]: `${qi * 130}ms` }}>
             <label htmlFor={`dy-${q.key}`}><span className="dy-card-icon" aria-hidden="true">{q.icon}</span>{q.q}</label>
             <textarea id={`dy-${q.key}`} rows={2} placeholder="Write your thoughts…" value={review[q.key] ?? ''} onChange={e => write(q.key, e.target.value)} />
             <MicButton className="dy-card-mic" accent="#663398" onText={text => write(q.key, review[q.key] ? `${review[q.key]} ${text}` : text)} onVoice={clip => {
@@ -224,7 +301,9 @@ export function DiaryRoom({ onExit, onOlder }: { onExit: () => void; onOlder: ()
     <dialog ref={dayDialog} className="dy-day-dialog" aria-labelledby="dy-day-heading" onClose={() => setSelectedDay(null)}>
       {selectedDay && <>
         <header><h2 id="dy-day-heading">{FULL[month.getMonth()]} {selectedDay.day}, {month.getFullYear()}</h2><button autoFocus aria-label="Close diary day" onClick={() => dayDialog.current?.close()}>×</button></header>
-        <p>Remember a small choice. You can change your mind.</p>
+        <p>{isTodayOpen
+          ? 'How did today go? Tap any good choice you made, and write a little about your day if you like.'
+          : 'Remember a small choice. You can change your mind.'}</p>
         <div className="dy-day-choices">{BEHAVIOURS.map(b => <button key={b.id} aria-pressed={done(selectedDay.day, b.id)} onClick={() => toggle(selectedDay.day, b.id)}>
           {b.icon} {b.title} {done(selectedDay.day, b.id) ? '✓' : ''}
         </button>)}</div>
@@ -234,6 +313,7 @@ export function DiaryRoom({ onExit, onOlder }: { onExit: () => void; onOlder: ()
         </select>
         <label htmlFor="dy-day-words">My words</label>
         <textarea id="dy-day-words" rows={4} value={review[`${dayKey(month, selectedDay.day)}:${selectedDay.behaviour}`] ?? ''} onChange={e => write(`${dayKey(month, selectedDay.day)}:${selectedDay.behaviour}`, e.target.value)} />
+        {isTodayOpen && filledToday && <p className="dy-today-done" role="status">⭐ Today is in your diary. Well done!</p>}
         <button onClick={() => dayDialog.current?.close()}>Back to my diary</button>
       </>}
     </dialog>

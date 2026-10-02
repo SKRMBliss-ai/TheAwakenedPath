@@ -7,6 +7,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const textToSpeech = require("@google-cloud/text-to-speech");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
+const { buildNarrationDirection } = require("./narration");
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
 
@@ -43,6 +44,7 @@ const geminiKey = defineSecret("AWAKENED_PATH_GEMINI_KEY");
 const razorpayKeyId = defineSecret("RAZORPAY_KEY_ID");
 const razorpayKeySecret = defineSecret("RAZORPAY_KEY_SECRET");
 const emailUser = defineSecret("EMAIL_USER");
+const adminToken = defineSecret("ADMIN_TOKEN");
 const emailPass = defineSecret("EMAIL_PASS");
 const youtubeApiKey = defineSecret("YOUTUBE_API_KEY");
 // Razorpay webhook signing secret — was hard-coded as "YOUR_WEBHOOK_SECRET" before, breaking all webhook signature checks
@@ -1676,13 +1678,37 @@ exports.razorpayWebhook = onRequest({ secrets: [razorpayKeyId, razorpayKeySecret
  * =========================================================================== */
 const AI_RATE_WINDOW_MS = 60_000;
 const AI_RATE_MAX = 12;         // per caller, per endpoint, per minute, per instance
+/*
+  Some endpoints legitimately burst. Entering the Story Lab preloads every
+  thought for the child's feeling at once (a dozen short lines) so they can
+  play back instantly, and the Reflection Room warms every affirmation the
+  same way — both well over 12/min. chirpyVoice lines are short and, once
+  synthesised, are served from the Firestore/Storage cache BEFORE this limit
+  is even checked, so a burst only ever bills for the first hearing of each
+  line. A tight burst cap here is what stopped the cache from ever filling:
+  the preload tripped it, the lines 429'd, nothing cached, and every visit
+  started from the same empty cache. Give the cached endpoints room to warm.
+*/
+const AI_RATE_MAX_BY_ENDPOINT = {
+    chirpyVoice: 90,
+};
 const AI_DAILY_CAPS = {
     textToSpeech: 150,       // sharpest cost: Gemini script + neural TTS synthesis
     witnessPresence: 300,
     getGrounding: 300,
     getDailyMeditation: 150, // one call can be reused by every visitor that day — see below
     analyzeEmotion: 500,     // cheapest per call (one word out), used most often
-    chirpyVoice: 400,        // short lines, heavily cached at the edge — see below
+    /*
+      Raised from 400. The Story Lab thoughts alone are hundreds of unique
+      lines across the nine feelings, and at 400/day the cache could never
+      finish warming — a child kept hitting un-synthesised lines that came
+      back silent. Every line is billed only ONCE (then it is a permanent
+      cache hit for every child), so this ceiling is really "new lines that
+      may be synthesised in a day", not per-visit cost.
+    */
+    chirpyVoice: 3000,
+    // Admin-only rewording ideas in the kids content pages; each line is cached once asked.
+    kidsSuggest: 200,
 };
 const aiHits = new Map(); // "endpoint:key" -> number[] of request timestamps
 
@@ -1697,7 +1723,7 @@ function aiRateLimited(endpoint, key) {
             if (!v.length || now - v[v.length - 1] > AI_RATE_WINDOW_MS) aiHits.delete(k);
         }
     }
-    return hits.length > AI_RATE_MAX;
+    return hits.length > (AI_RATE_MAX_BY_ENDPOINT[endpoint] || AI_RATE_MAX);
 }
 
 /**
@@ -4755,11 +4781,48 @@ exports.notifyAdminOnKidsRegistration = onDocumentCreated({
  * one place it must never drift is the one thing children recognise him by.
  * =========================================================================== */
 
-const CHIRPY_DIRECTION =
-    'Read this as a small friendly bird talking to a six-year-old friend. ' +
-    'Light, warm and curious, never instructive and never sing-song. ' +
-    'Slightly quicker and higher than an adult reading voice, but calm. ' +
-    'Let questions lift gently at the end. Let the pauses breathe:';
+/* The narrator's own lines get their direction from the narration director
+   (functions/narration.js), which reads the scene. The child's thoughts and
+   the breathing guide keep fixed directions below, in the same voice. */
+const MIND_DIRECTION =
+    'These are a child\'s own private thoughts, told by the same warm, confident storyteller, fully voiced at a normal, clear speaking volume. ' +
+    'Gentle and close, a little slower than usual, as if gently putting the child\'s feeling into words for them. ' +
+    'Never a child impression or sing-song; always kind and reassuring. ' +
+    'Let the feeling come through honestly in the pace and emphasis rather than by dropping the voice';
+
+/* A calm guide for breathing and meditation in the reflection room. Deep,
+   slow, and soothing. Deliberately paced with meaningful pauses. */
+const GUIDE_DIRECTION =
+    'Read this as a calm, warm guide leading breathing and meditation for a child, fully voiced at a normal, clear speaking volume. ' +
+    'Slow and steady, with natural pauses between phrases. ' +
+    'Grounded and reassuring, like someone kindly inviting stillness. Never rushed; let each phrase settle:';
+
+/* Chirpy is the child's own mind, so he sounds the way the child said they
+   feel. Matched loosely on the feeling's name; only the matched tone reaches
+   the cache key, so a free-typed feeling can't multiply cache entries. */
+const MIND_TONES = [
+    [/sad|grief|lonely|hurt|disappoint|miss|cry|down|left out/i, 'sad',
+        'The child feels sad: slower and heavier, with a small catch of feeling, still warm and clearly spoken.'],
+    [/excit|happy|joy|proud|glad|great|fun/i, 'happy',
+        'The child feels happy and excited: brighter and quicker, with a smile in the voice.'],
+    [/angry|mad|cross|frustrat|annoy|unfair/i, 'angry',
+        'The child feels angry: firmer and clipped, with strong emphasis on the unfair part, never shouting.'],
+    [/scar|worr|nervous|afraid|anxious|fear/i, 'worried',
+        'The child feels worried: unsure and hesitant, with small pauses, while the voice itself stays steady and reassuring.'],
+    [/asham|embarrass|shy/i, 'shy',
+        'The child feels embarrassed: gentle and a little hesitant, trailing off kindly at the end.'],
+    [/jealous|envy/i, 'jealous',
+        'The child feels jealous: a little sulky and grumbly, in a light, understanding way.'],
+    [/bored/i, 'bored',
+        'The child feels bored: flatter and drawn out, with a long, easy sigh in the pacing.'],
+    [/calm|peace|okay|fine|relax/i, 'calm',
+        'The child feels calm: easy, settled and unhurried.'],
+];
+function mindTone(feeling) {
+    const f = String(feeling || '').slice(0, 40).toLowerCase();
+    const hit = MIND_TONES.find(([re]) => re.test(f));
+    return hit ? { name: hit[1], line: hit[2] } : { name: 'plain', line: '' };
+}
 
 /** Gemini returns headerless signed 16-bit LE PCM; nothing plays that. */
 function chirpyPcmToWav(pcm, rate, channels = 1, bits = 16) {
@@ -4781,6 +4844,172 @@ function chirpyPcmToWav(pcm, rate, channels = 1, bits = 16) {
     return Buffer.concat([header, pcm]);
 }
 
+/** Hash text+voice for cache key — deterministic across runs. */
+/* Bumped whenever the directions change, so lines cached under the old
+   performance are synthesised again rather than served forever. */
+const CHIRPY_VOICE_VERSION = 'director1';
+function chirpyCacheKey(text, voice) {
+    return crypto.createHash('sha256').update(`${text}|${voice}|${CHIRPY_VOICE_VERSION}`).digest('hex').slice(0, 16);
+}
+
+/*
+  Works out the written direction and the cache key for one line, the same way
+  whether the line is asked for live or warmed ahead of time on a schedule.
+  Both paths MUST land on the same key or the warmed copy never gets found.
+*/
+function chirpyResolve({ text, voiceName, character, feeling, context }) {
+    let direction;
+    let toneName = 'plain';
+    if (character === 'mind') {
+        const tone = mindTone(feeling);
+        toneName = tone.name;
+        direction = `${MIND_DIRECTION}${tone.line ? `. ${tone.line}` : ''}:`;
+    } else if (character === 'guide') {
+        direction = GUIDE_DIRECTION;
+    } else {
+        const narration = buildNarrationDirection(context, text);
+        toneName = narration.mode;
+        direction = narration.direction;
+    }
+    /* The direction itself is part of the key: the same words read after a
+       different page are a different performance. */
+    const directionHash = crypto.createHash('sha256').update(direction).digest('hex').slice(0, 10);
+    return { direction, toneName, cacheKey: chirpyCacheKey(text, `${voiceName}|${character}|${toneName}|${directionHash}`) };
+}
+
+/** Story context from the client, trimmed: it only steers the performance. */
+function chirpyContext(raw) {
+    if (!raw || typeof raw !== 'object') return {};
+    const str = (v, n) => (typeof v === 'string' ? v.slice(0, n) : undefined);
+    return { title: str(raw.title, 120), previous: str(raw.previous, 400), next: str(raw.next, 400), mode: str(raw.mode, 20) };
+}
+
+/* Returns the cached WAV buffer for a key, or null if nothing usable is stored.
+   Checks `storagePath` — the field the cache actually writes. It used to check
+   `storageUrl`, which is never written, so every request fell through to a
+   fresh synthesis and the stored audio was never once served. */
+async function chirpyCached(cacheKey) {
+    const snap = await db.collection('chirpyVoiceCache').doc(cacheKey).get();
+    if (snap.exists && snap.data().storagePath) {
+        try {
+            const buf = await admin.storage().bucket().file(snap.data().storagePath).download();
+            return buf[0];
+        } catch (e) {
+            console.warn(`[chirpyVoice] cache doc but file gone: ${cacheKey} (${e.message})`);
+        }
+    }
+    return null;
+}
+
+/*
+  THE VOICE STORE. Each line is recorded the first time a child hears it, kept in
+  Storage + Firestore (chirpyVoiceCache), and replayed from there for every child
+  after that, so the small daily Gemini allowance is only spent on lines nobody
+  has heard yet. Nothing is recorded ahead of time (the warm-up job is off).
+  Set to false to record every line live and store nothing.
+*/
+const CHIRPY_CACHE_ENABLED = true;
+
+/* Records one line with Gemini TTS. Throws on any TTS failure; callers decide
+   what to do about that. A refusal keeps Gemini's reply on the error so the
+   caller can tell a spent day from a busy minute. */
+async function chirpySynth({ text, voiceName, direction }) {
+    const response = await fetch(
+        'https://generativelanguage.googleapis.com/v1beta/models/'
+        + 'gemini-2.5-flash-preview-tts:generateContent',
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': geminiKey.value() },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: `${direction}\n\n${text}` }] }],
+                generationConfig: {
+                    responseModalities: ['AUDIO'],
+                    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },
+                },
+            }),
+        },
+    );
+    if (!response.ok) {
+        const error = new Error(`Gemini TTS ${response.status}`);
+        error.status = response.status;
+        error.body = (await response.text().catch(() => '')).slice(0, 4000);
+        throw error;
+    }
+    const data = await response.json();
+    const part = data?.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+    if (!part?.data) throw new Error('Gemini TTS returned no audio');
+
+    const rate = Number(/rate=(\d+)/.exec(part.mimeType || '')?.[1]) || 24000;
+    return chirpyPcmToWav(Buffer.from(part.data, 'base64'), rate);
+}
+
+/* Keeps one recording in Storage + Firestore so the next ask replays it. */
+async function chirpyStore({ text, voiceName, cacheKey, character = 'grownup', emotion = 'plain' }, wav) {
+    const storagePath = `chirpy-voice-cache/${voiceName}/${cacheKey}.wav`;
+    await admin.storage().bucket().file(storagePath).save(wav, {
+        metadata: { contentType: 'audio/wav', cacheControl: 'public, max-age=2592000, immutable' },
+    });
+    await db.collection('chirpyVoiceCache').doc(cacheKey).set({
+        text,
+        voice: voiceName,
+        character,
+        emotion,
+        storagePath,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        usageCount: 0,
+    }, { merge: true });
+}
+
+async function chirpySynthAndStore(line) {
+    const wav = await chirpySynth(line);
+    await chirpyStore(line, wav);
+    return wav;
+}
+
+function chirpyLogMiss(cacheKey, fields, reason) {
+    db.collection('chirpyVoiceMisses').doc(cacheKey).set({
+        ...fields,
+        reason,
+        count: admin.firestore.FieldValue.increment(1),
+        lastAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true }).catch(() => { /* logging must never break the voice */ });
+}
+
+function chirpyLogUsage(character, voice, status, context, feeling) {
+    const docId = `${new Date().toISOString().split('T')[0]}-${Math.random().toString(36).slice(2, 9)}`;
+    const room = context?.title || 'unknown';
+    db.collection('chirpyVoiceUsage').doc(docId).set({
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        character,
+        voice,
+        status,
+        room,
+        feeling: feeling || 'not recorded',
+    }).catch(() => { /* logging must never break the voice */ });
+}
+
+/* Two requests for the same new line at once share one recording instead of
+   paying for two. */
+const chirpyInflight = new Map(); // cacheKey -> Promise<Buffer>
+/* After Gemini refuses for quota, stop asking for a while: every attempt until
+   then would only fail. A spent day waits for the allowance to come back at
+   midnight Pacific time; a per-minute limit only the wait Gemini names. Per
+   instance, which is enough. */
+let chirpyQuotaPausedUntil = 0;
+function chirpyMsUntilPacificMidnight(now = new Date()) {
+    const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/Los_Angeles', hourCycle: 'h23', hour: 'numeric', minute: 'numeric', second: 'numeric',
+    }).formatToParts(now);
+    const part = (type) => Number(parts.find((p) => p.type === type).value);
+    return ((24 - part('hour')) * 3600 - part('minute') * 60 - part('second')) * 1000;
+}
+function chirpyQuotaPause(body) {
+    if (/PerDay/i.test(body)) return { ms: chirpyMsUntilPacificMidnight(), why: 'Gemini daily allowance spent (429)', status: 'gemini_daily_limit' };
+    const secs = Number(/"retryDelay":\s*"(\d+(?:\.\d+)?)s"/.exec(body)?.[1]);
+    if (!(secs > 0)) return { ms: 60 * 1000, why: 'Gemini limit reached (429)', status: 'gemini_limit' };
+    return { ms: Math.min(secs, 300) * 1000, why: 'Gemini per-minute limit (429)', status: 'gemini_minute_limit' };
+}
+
 exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances: 3 }, async (req, res) => {
     const text = String((req.body && req.body.text) || '').trim();
     /* Chirpy's lines are one or two sentences. A long body is either a bug or
@@ -4788,60 +5017,558 @@ exports.chirpyVoice = onRequest({ secrets: [geminiKey], cors: true, maxInstances
     if (!text) return res.status(400).send('No line to say.');
     if (text.length > 400) return res.status(413).send('That line is too long for Chirpy.');
 
-    if (aiRateLimited('chirpyVoice', callerKey(req))) {
-        return res.status(429).send('Too many requests — please wait a moment.');
-    }
-    if (!(await reserveAiBudget('chirpyVoice'))) {
-        return res.status(503).send('Chirpy is resting his voice.');
-    }
-
-    /* Auditioned in scripts/chirpy-voice-audition.mjs. Overridable so the
-       audition's winner can be switched without a redeploy of the client. */
-    const voiceName = String((req.body && req.body.voice) || 'Puck');
+    const voiceName = String((req.body && req.body.voice) || 'Enceladus');
+    const character = req.body && req.body.character === 'mind' ? 'mind'
+        : req.body && req.body.character === 'guide' ? 'guide'
+        : 'grownup';
+    const context = chirpyContext(req.body && req.body.context);
+    const { direction, toneName, cacheKey } = chirpyResolve({
+        text, voiceName, character, feeling: req.body && req.body.feeling, context,
+    });
+    const usage = (status) => chirpyLogUsage(character, voiceName, status, context, toneName);
 
     try {
-        const response = await fetch(
-            'https://generativelanguage.googleapis.com/v1beta/models/'
-            + 'gemini-2.5-flash-preview-tts:generateContent',
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-goog-api-key': geminiKey.value(),
-                },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: `${CHIRPY_DIRECTION}\n\n${text}` }] }],
-                    generationConfig: {
-                        responseModalities: ['AUDIO'],
-                        speechConfig: {
-                            voiceConfig: { prebuiltVoiceConfig: { voiceName } },
-                        },
-                    },
-                }),
-            },
-        );
+        const cachedWav = CHIRPY_CACHE_ENABLED ? await chirpyCached(cacheKey) : null;
+        if (cachedWav) {
+            console.log(`[chirpyVoice] Cache hit: ${cacheKey} (${voiceName})`);
+            usage('cache_hit');
+            res.set('Content-Type', 'audio/wav');
+            res.set('Cache-Control', 'public, max-age=2592000, immutable');
+            res.set('X-Chirpy-Cache', 'HIT');
+            return res.send(cachedWav);
+        }
 
-        if (!response.ok) throw new Error(`Gemini TTS ${response.status}`);
-        const data = await response.json();
-        const part = data?.candidates?.[0]?.content?.parts?.[0]?.inlineData;
-        if (!part?.data) throw new Error('Gemini TTS returned no audio');
+        if (CHIRPY_CACHE_ENABLED) console.log(`[chirpyVoice] Cache miss: ${cacheKey} (${voiceName})`);
+        const fields = { text, voice: voiceName, character, emotion: toneName };
+        const sendWav = (wav, status) => {
+            usage(status);
+            res.set('Content-Type', 'audio/wav');
+            res.set('Cache-Control', CHIRPY_CACHE_ENABLED ? 'public, max-age=2592000, immutable' : 'no-store');
+            res.set('X-Chirpy-Cache', CHIRPY_CACHE_ENABLED ? 'MISS' : 'LIVE');
+            return res.send(wav);
+        };
+        /* The reason goes in the body for whoever opens the request in the
+           browser's network tab, and Retry-After tells the app how long to stop
+           asking, so a room reading ten lines doesn't send ten doomed requests. */
+        const refuse = (status, message, reason, usageStatus, retryMs = 0) => {
+            chirpyLogMiss(cacheKey, fields, reason);
+            usage(usageStatus);
+            if (retryMs > 0) {
+                res.set('Retry-After', String(Math.ceil(retryMs / 1000)));
+                res.set('Access-Control-Expose-Headers', 'Retry-After');
+            }
+            return res.status(status).send(`${message} ${reason}`);
+        };
 
-        /* The sample rate comes off the response's own mimeType rather than a
-           constant: a hardcoded header would silently pitch-shift Chirpy if the
-           model ever returned something other than 24 kHz, which is the one
-           failure that would be heard but not noticed. */
-        const rate = Number(/rate=(\d+)/.exec(part.mimeType || '')?.[1]) || 24000;
-        const wav = chirpyPcmToWav(Buffer.from(part.data, 'base64'), rate);
+        /* Rides on a recording already under way: no second Gemini call. */
+        const inflight = chirpyInflight.get(cacheKey);
+        if (inflight) {
+            try { return sendWav(await inflight, 'shared'); }
+            catch { return refuse(502, 'Chirpy lost his voice for a moment.', 'shared synthesis failed (502)', 'synthesis_error'); }
+        }
+        if (aiRateLimited('chirpyVoice', callerKey(req))) {
+            return refuse(429, 'Too many requests — please wait a moment.', 'rate limited (429)', 'rate_limited', 60 * 1000);
+        }
+        if (Date.now() < chirpyQuotaPausedUntil) {
+            return refuse(503, 'Chirpy is resting his voice.', 'waiting out a Gemini limit (paused)', 'paused_for_gemini_limit', chirpyQuotaPausedUntil - Date.now());
+        }
 
-        /* His lines repeat all evening and across children, and they never
-           change for a given text — so let the CDN carry the second one. */
-        res.set('Content-Type', 'audio/wav');
-        res.set('Cache-Control', 'public, max-age=86400, s-maxage=604800, immutable');
-        return res.send(wav);
+        /* Registered before the first await, so a second ask arriving while the
+           budget is being checked shares this one rather than starting its own. */
+        const line = { text, voiceName, direction, cacheKey, character, emotion: toneName };
+        const job = (async () => {
+            if (!(await reserveAiBudget('chirpyVoice'))) throw Object.assign(new Error('daily budget spent'), { budget: true });
+            return CHIRPY_CACHE_ENABLED ? chirpySynthAndStore(line) : chirpySynth(line);
+        })();
+        chirpyInflight.set(cacheKey, job);
+        let wav;
+        try {
+            wav = await job;
+        } catch (error) {
+            if (error.budget) {
+                const utcMidnight = new Date();
+                utcMidnight.setUTCHours(24, 0, 0, 0);
+                return refuse(503, 'Chirpy is resting his voice.', 'daily budget spent (503)', 'budget_exhausted', utcMidnight - Date.now());
+            }
+            console.error('Chirpy voice failure:', error.message);
+            if (error.status === 429) {
+                const pause = chirpyQuotaPause(error.body || '');
+                chirpyQuotaPausedUntil = Date.now() + pause.ms;
+                return refuse(503, 'Chirpy is resting his voice.', pause.why, pause.status, pause.ms);
+            }
+            return refuse(502, 'Chirpy lost his voice for a moment.', `synthesis failed (502): ${String(error.message).slice(0, 200)}`, 'synthesis_error');
+        } finally {
+            chirpyInflight.delete(cacheKey);
+        }
+        console.log(`[chirpyVoice] ${CHIRPY_CACHE_ENABLED ? 'Cached new' : 'Recorded live'}: ${cacheKey}`);
+        db.collection('chirpyVoiceMisses').doc(cacheKey).delete().catch(() => {});
+        return sendWav(wav, 'synthesized');
     } catch (error) {
         console.error('Chirpy voice failure:', error.message);
-        /* 502 rather than a silent empty body: the client falls back to the
-           browser's own voice on any non-OK, and a child hears SOMETHING. */
+        chirpyLogMiss(cacheKey, { text, voice: voiceName, character, emotion: toneName }, `synthesis failed (502): ${String(error.message).slice(0, 200)}`);
+        usage('synthesis_error');
         return res.status(502).send('Chirpy lost his voice for a moment.');
     }
+});
+
+/*
+  WARM THE CACHE AHEAD OF THE CHILDREN.
+
+  Every Story Lab thought, for every feeling, synthesised once and stored so
+  the first child to reach any of them hears it instantly rather than waiting
+  on a fresh synthesis. chirpyWarmList.json is generated from the Story Lab
+  content (the thoughtsFor lists across all nine feelings) — regenerate it when
+  those change. Requested exactly as the room requests them: the 'mind' voice
+  (Puck), in each line's feeling, so the warmed key matches the live key.
+
+  Already-cached lines are skipped for free, so after the first full pass this
+  costs almost nothing and just tops up whatever is new. It stops the moment
+  the daily budget is spent and picks up the rest on the next run, so one quiet
+  daily pass converges without ever blowing the cap.
+*/
+const CHIRPY_WARM_LIST = [{"feeling":"happy","text":"Today went well."},{"feeling":"happy","text":"Someone was kind to me."},{"feeling":"happy","text":"I did something I was proud of."},{"feeling":"happy","text":"I felt like I belonged."},{"feeling":"happy","text":"I made someone else smile."},{"feeling":"happy","text":"I'm lucky to have my people."},{"feeling":"happy","text":"Something good happened for once."},{"feeling":"happy","text":"I hope it stays like this."},{"feeling":"happy","text":"I wonder if it will last."},{"feeling":"happy","text":"I want to tell someone about it."},{"feeling":"happy","text":"I felt properly myself today."},{"feeling":"happy","text":"That was worth it."},{"feeling":"happy","text":"I want to remember this bit."},{"feeling":"happy","text":"That was a good surprise."},{"feeling":"happy","text":"Somebody chose me."},{"feeling":"happy","text":"I laughed properly today."},{"feeling":"happy","text":"I feel lighter than I did."},{"feeling":"happy","text":"They asked me to play."},{"feeling":"happy","text":"I did it by myself."},{"feeling":"happy","text":"My grown-up came back."},{"feeling":"happy","text":"Someone shared with me."},{"feeling":"happy","text":"I made something I like."},{"feeling":"happy","text":"We laughed together."},{"feeling":"happy","text":"I finally learned how to do it."},{"feeling":"happy","text":"Someone saved me a place."},{"feeling":"happy","text":"My friend came looking for me."},{"feeling":"happy","text":"I helped and it made a difference."},{"feeling":"happy","text":"I was brave enough to try."},{"feeling":"happy","text":"Today felt easy to be myself."},{"feeling":"happy","text":"I handled something that used to be hard for me."},{"feeling":"happy","text":"I felt included without having to try so hard."},{"feeling":"happy","text":"Someone trusted me with something important."},{"feeling":"happy","text":"I am proud of how I treated someone."},{"feeling":"happy","text":"I did better because I kept practising."},{"feeling":"happy","text":"I had a day where I wasn't comparing myself."},{"feeling":"happy","text":"I felt accepted without having to change myself."},{"feeling":"happy","text":"I did something difficult and stayed true to myself."},{"feeling":"happy","text":"A friendship felt easy and mutual today."},{"feeling":"happy","text":"I noticed that I have actually improved."},{"feeling":"happy","text":"I enjoyed something without worrying how I looked doing it."},{"feeling":"happy","text":"I handled a disagreement better than I used to."},{"feeling":"excited","text":"I can't wait for it."},{"feeling":"excited","text":"Something great is coming."},{"feeling":"excited","text":"I want to tell everyone."},{"feeling":"excited","text":"I hope it's as good as I imagine."},{"feeling":"excited","text":"What if it doesn't happen?"},{"feeling":"excited","text":"I've been waiting ages for this."},{"feeling":"excited","text":"I can't sit still."},{"feeling":"excited","text":"This is going to be brilliant."},{"feeling":"excited","text":"What if I mess it up?"},{"feeling":"excited","text":"I want to be really good at it."},{"feeling":"excited","text":"Finally something for me."},{"feeling":"excited","text":"I keep thinking about it."},{"feeling":"excited","text":"I keep imagining how it will go."},{"feeling":"excited","text":"I want it to be tomorrow already."},{"feeling":"excited","text":"I've got butterflies, the good kind."},{"feeling":"excited","text":"Everyone is going to be there."},{"feeling":"excited","text":"I hope I get a turn."},{"feeling":"excited","text":"Is it time yet?"},{"feeling":"excited","text":"I want to go now!"},{"feeling":"excited","text":"I get to try something new."},{"feeling":"excited","text":"I hope I get a turn."},{"feeling":"excited","text":"I want to show everyone."},{"feeling":"excited","text":"I have happy butterflies."},{"feeling":"excited","text":"I keep imagining what it will be like."},{"feeling":"excited","text":"I want to tell my friend straight away."},{"feeling":"excited","text":"I hope I get chosen."},{"feeling":"excited","text":"I have so much energy I can't sit still."},{"feeling":"excited","text":"This could be really fun."},{"feeling":"excited","text":"What if it is even better than I think?"},{"feeling":"excited","text":"This feels like a chance to do something new."},{"feeling":"excited","text":"I keep thinking about who will be there."},{"feeling":"excited","text":"I really want this to go well."},{"feeling":"excited","text":"I can't stop planning what I might do."},{"feeling":"excited","text":"I hope I get the part or place I want."},{"feeling":"excited","text":"I feel nervous and excited at the same time."},{"feeling":"excited","text":"This feels like a real opportunity for me."},{"feeling":"excited","text":"I'm excited, but I also really want it to go well."},{"feeling":"excited","text":"I keep imagining all the ways this could unfold."},{"feeling":"excited","text":"I want to share this with people who will get why it matters."},{"feeling":"excited","text":"I hope I can enjoy it without overthinking it."},{"feeling":"excited","text":"I feel nervous because I care about this."},{"feeling":"calm","text":"Things are alright just now."},{"feeling":"calm","text":"I don't need to rush."},{"feeling":"calm","text":"I can handle what comes."},{"feeling":"calm","text":"It's quiet in my head."},{"feeling":"calm","text":"I feel safe here."},{"feeling":"calm","text":"I'm glad I have this moment."},{"feeling":"calm","text":"Nothing needs fixing right now."},{"feeling":"calm","text":"I did what I could today."},{"feeling":"calm","text":"I wonder how long this will last."},{"feeling":"calm","text":"I'd like to feel like this more often."},{"feeling":"calm","text":"I'm okay with not knowing yet."},{"feeling":"calm","text":"I can breathe properly."},{"feeling":"calm","text":"Nothing is pulling at me."},{"feeling":"calm","text":"I like it being this quiet."},{"feeling":"calm","text":"I don't have to be anywhere."},{"feeling":"calm","text":"Today was enough."},{"feeling":"calm","text":"I feel steady."},{"feeling":"calm","text":"I feel cosy here."},{"feeling":"calm","text":"I like this quiet bit."},{"feeling":"calm","text":"I can take my time."},{"feeling":"calm","text":"My body feels soft and slow."},{"feeling":"calm","text":"I know what happens next."},{"feeling":"calm","text":"I am okay right now."},{"feeling":"calm","text":"I know I don't have to hurry."},{"feeling":"calm","text":"I can hear myself think."},{"feeling":"calm","text":"I feel safe with these people."},{"feeling":"calm","text":"I finished what I needed to do."},{"feeling":"calm","text":"I can wait and see."},{"feeling":"calm","text":"Nothing needs fixing this minute."},{"feeling":"calm","text":"I can leave some things unfinished for tomorrow."},{"feeling":"calm","text":"I don't need everyone to agree with me right now."},{"feeling":"calm","text":"My brain feels less crowded."},{"feeling":"calm","text":"I know what I can control today."},{"feeling":"calm","text":"I can wait for more information."},{"feeling":"calm","text":"I feel settled even though everything isn't perfect."},{"feeling":"calm","text":"I don't have to solve everything tonight."},{"feeling":"calm","text":"I can let someone else's opinion be theirs."},{"feeling":"calm","text":"I know what matters to me in this moment."},{"feeling":"calm","text":"I can wait before deciding what something means."},{"feeling":"calm","text":"I feel steady enough to choose instead of react."},{"feeling":"calm","text":"I am okay with not having every answer yet."},{"feeling":"sad","text":"Nobody wants me around."},{"feeling":"sad","text":"I don't belong here."},{"feeling":"sad","text":"Nobody understands me."},{"feeling":"sad","text":"I'm all on my own."},{"feeling":"sad","text":"I miss how things used to be."},{"feeling":"sad","text":"It's never going to get better."},{"feeling":"sad","text":"I'm not good enough."},{"feeling":"sad","text":"I can't do anything right."},{"feeling":"sad","text":"I ruined everything."},{"feeling":"sad","text":"Everything is going wrong."},{"feeling":"sad","text":"It's not fair."},{"feeling":"sad","text":"I wish today hadn't happened."},{"feeling":"sad","text":"I don't want to talk to anyone."},{"feeling":"sad","text":"Everything feels heavy today."},{"feeling":"sad","text":"I let everyone down."},{"feeling":"sad","text":"Nobody even noticed."},{"feeling":"sad","text":"I just want today to be over."},{"feeling":"sad","text":"They didn't play with me."},{"feeling":"sad","text":"I wanted them to stay."},{"feeling":"sad","text":"My picture didn't work."},{"feeling":"sad","text":"I miss my grown-up."},{"feeling":"sad","text":"Nobody picked my game."},{"feeling":"sad","text":"I wanted today to be different."},{"feeling":"sad","text":"They played without me."},{"feeling":"sad","text":"I tried hard and it still went wrong."},{"feeling":"sad","text":"My friend didn't sit with me today."},{"feeling":"sad","text":"Something I was looking forward to got cancelled."},{"feeling":"sad","text":"I feel like nobody noticed I was upset."},{"feeling":"sad","text":"I wish I could start the day again."},{"feeling":"sad","text":"It feels like my group has moved on without me."},{"feeling":"sad","text":"I worked hard and I'm still disappointed."},{"feeling":"sad","text":"I miss how close we used to be."},{"feeling":"sad","text":"I feel invisible when everyone is together."},{"feeling":"sad","text":"I wish I hadn't said that."},{"feeling":"sad","text":"I thought today would matter more than it did."},{"feeling":"sad","text":"I feel like I'm drifting away from people I used to be close to."},{"feeling":"sad","text":"I keep wondering whether I matter to this group."},{"feeling":"sad","text":"I put a lot into this and it still wasn't enough."},{"feeling":"sad","text":"I miss how uncomplicated things used to feel."},{"feeling":"sad","text":"I feel left out even when I'm technically there."},{"feeling":"sad","text":"I wish I could undo that conversation."},{"feeling":"angry","text":"It's not fair."},{"feeling":"angry","text":"They did that on purpose."},{"feeling":"angry","text":"Nobody ever listens to me."},{"feeling":"angry","text":"They started it."},{"feeling":"angry","text":"I always get the blame."},{"feeling":"angry","text":"They should have known better."},{"feeling":"angry","text":"I want to shout at someone."},{"feeling":"angry","text":"Everyone else gets what they want."},{"feeling":"angry","text":"They're being mean to me."},{"feeling":"angry","text":"Why does this always happen to me?"},{"feeling":"angry","text":"I hate this."},{"feeling":"angry","text":"Nobody is on my side."},{"feeling":"angry","text":"Nobody asked me first."},{"feeling":"angry","text":"They never say sorry."},{"feeling":"angry","text":"I'm sick of being told what to do."},{"feeling":"angry","text":"Why am I the only one who cares?"},{"feeling":"angry","text":"I want to shout and not stop."},{"feeling":"angry","text":"They took my turn."},{"feeling":"angry","text":"They grabbed my toy."},{"feeling":"angry","text":"I said stop and they didn't."},{"feeling":"angry","text":"I wanted to choose."},{"feeling":"angry","text":"They knocked it down."},{"feeling":"angry","text":"I don't want to wait."},{"feeling":"angry","text":"They changed the rules when I was winning."},{"feeling":"angry","text":"I got blamed before anyone asked me."},{"feeling":"angry","text":"They kept interrupting me."},{"feeling":"angry","text":"My sibling used my thing without asking."},{"feeling":"angry","text":"I did the work and they got the praise."},{"feeling":"angry","text":"They laughed when I was being serious."},{"feeling":"angry","text":"They decided what happened without hearing me."},{"feeling":"angry","text":"They shared my business with other people."},{"feeling":"angry","text":"I was told to calm down before anyone listened."},{"feeling":"angry","text":"They got credit for something I helped with."},{"feeling":"angry","text":"They keep making the same joke after I asked them to stop."},{"feeling":"angry","text":"I feel like the rules are different for me."},{"feeling":"angry","text":"They made a decision about me without including me."},{"feeling":"angry","text":"Someone shared something private that wasn't theirs to share."},{"feeling":"angry","text":"I feel controlled when nobody explains the reason."},{"feeling":"angry","text":"They keep pushing the same boundary after I said no."},{"feeling":"angry","text":"I was expected to take responsibility for everyone else's part."},{"feeling":"angry","text":"People are judging my reaction instead of what happened."},{"feeling":"scared","text":"Something bad is going to happen."},{"feeling":"scared","text":"I'm going to get in trouble."},{"feeling":"scared","text":"I can't do it."},{"feeling":"scared","text":"Everyone will be looking at me."},{"feeling":"scared","text":"I'll get it wrong in front of everyone."},{"feeling":"scared","text":"I want to run away from this."},{"feeling":"scared","text":"I don't feel safe."},{"feeling":"scared","text":"What if nobody helps me?"},{"feeling":"scared","text":"It's too big for me."},{"feeling":"scared","text":"I don't know what's coming."},{"feeling":"scared","text":"They'll laugh at me."},{"feeling":"scared","text":"I can't tell anyone."},{"feeling":"scared","text":"I want somebody with me."},{"feeling":"scared","text":"My heart is going too fast."},{"feeling":"scared","text":"What if I can't get out of it?"},{"feeling":"scared","text":"I don't want to go."},{"feeling":"scared","text":"I keep looking at the door."},{"feeling":"scared","text":"I don't want to be by myself."},{"feeling":"scared","text":"That noise was too big."},{"feeling":"scared","text":"What if my grown-up doesn't come back yet?"},{"feeling":"scared","text":"I don't know this place."},{"feeling":"scared","text":"I think I might get told off."},{"feeling":"scared","text":"I want someone to stay with me."},{"feeling":"scared","text":"What if I have to do it in front of everyone?"},{"feeling":"scared","text":"What if I can't find my grown-up?"},{"feeling":"scared","text":"I don't know anyone there."},{"feeling":"scared","text":"What if I get the answer wrong?"},{"feeling":"scared","text":"What if they laugh at me?"},{"feeling":"scared","text":"I don't know what the teacher is going to say."},{"feeling":"scared","text":"What if I freeze when everyone is watching?"},{"feeling":"scared","text":"What if I don't fit in with this group?"},{"feeling":"scared","text":"What if I mess up something people are counting on me for?"},{"feeling":"scared","text":"I don't know what that message means."},{"feeling":"scared","text":"What if I ask for help and people think I'm silly?"},{"feeling":"scared","text":"What if things at home are changing?"},{"feeling":"scared","text":"What if I don't belong in this new group?"},{"feeling":"scared","text":"What if one mistake follows me around?"},{"feeling":"scared","text":"I don't know what people will think if I say what I really think."},{"feeling":"scared","text":"What if I let everyone down when it matters?"},{"feeling":"scared","text":"I don't know what this change means for me."},{"feeling":"scared","text":"What if I ask for help and it becomes a big deal?"},{"feeling":"worried","text":"What if it all goes wrong?"},{"feeling":"worried","text":"I keep thinking about it."},{"feeling":"worried","text":"I'm going to forget something important."},{"feeling":"worried","text":"I should have done it differently."},{"feeling":"worried","text":"Everyone is expecting a lot from me."},{"feeling":"worried","text":"What if they're upset with me?"},{"feeling":"worried","text":"There isn't enough time."},{"feeling":"worried","text":"I'm not ready."},{"feeling":"worried","text":"Something feels off and I don't know why."},{"feeling":"worried","text":"What if I let someone down?"},{"feeling":"worried","text":"I can't stop my brain."},{"feeling":"worried","text":"What if I made it worse?"},{"feeling":"worried","text":"I might have got it wrong already."},{"feeling":"worried","text":"What if nobody tells me what is happening?"},{"feeling":"worried","text":"I keep checking it over and over."},{"feeling":"worried","text":"It has to be perfect."},{"feeling":"worried","text":"I don't want to make a fuss."},{"feeling":"worried","text":"What if I forget what to do?"},{"feeling":"worried","text":"What if they say no?"},{"feeling":"worried","text":"What if I can't do it?"},{"feeling":"worried","text":"What if we are late?"},{"feeling":"worried","text":"What if my toy is lost?"},{"feeling":"worried","text":"I keep thinking about it."},{"feeling":"worried","text":"What if I forgot my homework?"},{"feeling":"worried","text":"What if my friend is cross with me?"},{"feeling":"worried","text":"What if I don't finish in time?"},{"feeling":"worried","text":"I keep wondering if I did it wrong."},{"feeling":"worried","text":"What if the plan changes again?"},{"feeling":"worried","text":"I want to check one more time."},{"feeling":"worried","text":"What if I missed something everyone else understood?"},{"feeling":"worried","text":"I keep replaying what I said."},{"feeling":"worried","text":"What if they are talking about me?"},{"feeling":"worried","text":"There are too many things to remember."},{"feeling":"worried","text":"I don't know how this is going to turn out."},{"feeling":"worried","text":"What if I disappoint someone who trusts me?"},{"feeling":"worried","text":"I keep checking for a reply because I don't know where I stand."},{"feeling":"worried","text":"What if I'm falling behind and everyone else can tell?"},{"feeling":"worried","text":"There is always something else I should be doing."},{"feeling":"worried","text":"I keep analysing whether I said the wrong thing."},{"feeling":"worried","text":"What if this friendship is changing?"},{"feeling":"worried","text":"I don't know which choice I'll regret less."},{"feeling":"jealous","text":"They have what I want."},{"feeling":"jealous","text":"Why not me?"},{"feeling":"jealous","text":"Everyone likes them more."},{"feeling":"jealous","text":"They're better at it than me."},{"feeling":"jealous","text":"I got left out again."},{"feeling":"jealous","text":"It should have been my turn."},{"feeling":"jealous","text":"They didn't even have to try."},{"feeling":"jealous","text":"I'll never catch up."},{"feeling":"jealous","text":"They took my friend away."},{"feeling":"jealous","text":"Nobody notices what I do."},{"feeling":"jealous","text":"It's not fair that they got it."},{"feeling":"jealous","text":"I wish I was more like them."},{"feeling":"jealous","text":"They make it look easy."},{"feeling":"jealous","text":"I wanted to be the one who did that."},{"feeling":"jealous","text":"Everyone was talking about them."},{"feeling":"jealous","text":"I worked harder and got nothing."},{"feeling":"jealous","text":"I don't want to be pleased for them."},{"feeling":"jealous","text":"I wanted that toy too."},{"feeling":"jealous","text":"Why did they get the first turn?"},{"feeling":"jealous","text":"I wanted the grown-up to watch me."},{"feeling":"jealous","text":"They got the bigger piece."},{"feeling":"jealous","text":"My friend is playing with them."},{"feeling":"jealous","text":"I wanted to win."},{"feeling":"jealous","text":"They got picked for the job I wanted."},{"feeling":"jealous","text":"Everyone keeps talking about what they did."},{"feeling":"jealous","text":"My friend chose someone else as their partner."},{"feeling":"jealous","text":"They got a reward and I didn't."},{"feeling":"jealous","text":"I wanted that turn to be mine."},{"feeling":"jealous","text":"They seem to get attention without even trying."},{"feeling":"jealous","text":"I feel replaced when my friend is with them."},{"feeling":"jealous","text":"Their work looks better than mine."},{"feeling":"jealous","text":"They got the opportunity I wanted."},{"feeling":"jealous","text":"I hate that I care so much about their score."},{"feeling":"jealous","text":"I wish people noticed my effort too."},{"feeling":"jealous","text":"Their life looks easier from where I'm standing."},{"feeling":"jealous","text":"I feel pushed aside when my friend is closer to someone else."},{"feeling":"jealous","text":"They got recognised for something I wanted to be known for."},{"feeling":"jealous","text":"I keep comparing my progress to theirs."},{"feeling":"jealous","text":"I wish I could be happy for them without feeling bad about myself."},{"feeling":"jealous","text":"It feels unfair that we worked differently and got the same result."},{"feeling":"other","text":"I can't do it."},{"feeling":"other","text":"They don't like me."},{"feeling":"other","text":"It's not fair."},{"feeling":"other","text":"What if something goes wrong?"},{"feeling":"other","text":"I'm going to get in trouble."},{"feeling":"other","text":"I always mess things up."},{"feeling":"other","text":"Nobody understands me."},{"feeling":"other","text":"I got left out."},{"feeling":"other","text":"I should have done better."},{"feeling":"other","text":"Everyone else finds it easy."},{"feeling":"other","text":"I don't know what to do."},{"feeling":"other","text":"Something good happened."},{"feeling":"other","text":"I'm not sure what I'm feeling."},{"feeling":"other","text":"Something is on my mind."},{"feeling":"other","text":"I wish today had gone differently."},{"feeling":"other","text":"I did my best anyway."},{"feeling":"other","text":"I need a bit of space."},{"feeling":"other","text":"I don't know what this feeling is."},{"feeling":"other","text":"I want a little space."},{"feeling":"other","text":"Something feels different."},{"feeling":"other","text":"I want my grown-up."},{"feeling":"other","text":"I did something hard."},{"feeling":"other","text":"I don't know what to do next."},{"feeling":"other","text":"Part of me wants to go and part of me doesn't."},{"feeling":"other","text":"I feel funny but I can't name it."},{"feeling":"other","text":"I want to be left alone for a bit."},{"feeling":"other","text":"Something from earlier is still in my head."},{"feeling":"other","text":"I think I handled that better than before."},{"feeling":"other","text":"I need help figuring out what happened."},{"feeling":"other","text":"I have two feelings at once."},{"feeling":"other","text":"Something feels off but I don't know what part."},{"feeling":"other","text":"I need time before I talk about it."},{"feeling":"other","text":"I keep switching between caring and not caring."},{"feeling":"other","text":"I think I learned something about myself."},{"feeling":"other","text":"I need to work out what is fact and what I'm guessing."},{"feeling":"other","text":"I can't tell whether I'm upset, tired, or just overwhelmed."},{"feeling":"other","text":"I feel different around different people."},{"feeling":"other","text":"I need some space before I know what I think."},{"feeling":"other","text":"Part of me cares a lot and part of me wants to switch off."},{"feeling":"other","text":"I think this matters to me more than I expected."},{"feeling":"other","text":"I want to understand my reaction before I act on it."}];
+const CHIRPY_MIND_VOICE = 'Enceladus';
+/* Switched off, and not deployed: on a free Gemini allowance, recording ahead
+   used most of the day's allowance before a child had asked for anything. The
+   code stays. To bring it back (with CHIRPY_CACHE_ENABLED on): set
+   CHIRPY_WARM_ENABLED to true and export it again with
+
+     exports.warmChirpyVoiceCache = onSchedule(
+         { schedule: '30 2 * * *', timeZone: 'Etc/UTC', secrets: [geminiKey], timeoutSeconds: 540, memory: '512MiB' },
+         warmChirpyVoiceCache,
+     );
+
+   It records at most CHIRPY_WARM_PER_RUN lines a run. */
+const CHIRPY_WARM_ENABLED = false;
+const CHIRPY_WARM_PER_RUN = 8;
+
+async function warmChirpyVoiceCache() {
+    if (!CHIRPY_WARM_ENABLED || !CHIRPY_CACHE_ENABLED) {
+        console.log('[warmChirpyVoiceCache] switched off; nothing recorded ahead.');
+        return;
+    }
+    let synthesised = 0;
+    let skipped = 0;
+    let failed = 0;
+    let stoppedForBudget = false;
+
+    for (const { feeling, text } of CHIRPY_WARM_LIST) {
+        if (synthesised >= CHIRPY_WARM_PER_RUN) break;
+        const { direction, toneName, cacheKey } = chirpyResolve({
+            text, voiceName: CHIRPY_MIND_VOICE, character: 'mind', feeling,
+        });
+        if (await chirpyCached(cacheKey)) { skipped++; continue; }
+        if (!(await reserveAiBudget('chirpyVoice'))) { stoppedForBudget = true; break; }
+        try {
+            await chirpySynthAndStore({ text, voiceName: CHIRPY_MIND_VOICE, direction, cacheKey, character: 'mind', emotion: toneName });
+            synthesised++;
+        } catch (e) {
+            if (e.message?.includes('429')) {
+                console.log(`[warmChirpyVoiceCache] hit rate limit (429). Stopping to preserve budget. Resumes next run.`);
+                break;
+            }
+            failed++;
+            console.warn(`[warmChirpyVoiceCache] failed "${text.slice(0, 40)}": ${e.message}`);
+        }
+        /* Respect Gemini rate limits — 60s between every attempt (success or failure). */
+        await new Promise((r) => setTimeout(r, 60000));
+    }
+
+    console.log(`[warmChirpyVoiceCache] done — synthesised ${synthesised}, `
+        + `already cached ${skipped}, failed ${failed}`
+        + `${stoppedForBudget ? ', stopped on daily budget (resumes next run)' : ''}`);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   ADMIN CACHE ENDPOINTS — inspect and manage voice cache
+   ───────────────────────────────────────────────────────────────────────── */
+
+function verifyAdminToken(request) {
+    const token = (request.headers['x-admin-token'] || '').trim();
+    const expected = (adminToken.value() || '').trim();
+    return !!expected && token === expected;
+}
+
+exports.cacheStats = onRequest({ cors: true, secrets: [adminToken] }, async (req, res) => {
+    if (!verifyAdminToken(req)) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+        const cacheCol = db.collection('chirpyVoiceCache');
+        const snapshot = await cacheCol.get();
+
+        const stats = {
+            totalEntries: snapshot.size,
+            byCharacter: {},
+            byEmotion: {},
+            oldestEntry: null,
+            newestEntry: null,
+        };
+
+        const entries = [];
+        let oldest = null;
+        let newest = null;
+
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            const cacheKey = doc.id;
+
+            /* Lines cached before character/emotion were recorded have neither
+               field. Guessing 'grownup · plain' for those mislabelled every old
+               Puck thought, so the speaker comes from the voice and the emotion
+               is shown as unknown. Raw feelings from older warm runs ('scared')
+               are folded into the tone the voice was actually directed with. */
+            const character = data.character
+                || (data.voice === 'Puck' || data.voice === 'Leda' ? 'mind' : data.voice === 'Orion' ? 'guide' : 'grownup');
+            const emotion = !data.emotion ? 'not recorded'
+                : character === 'mind' ? mindTone(data.emotion).name : data.emotion;
+            const createdAt = data.createdAt?.toDate?.().toISOString() || data.createdAt || new Date().toISOString();
+
+            // Track by character and emotion
+            stats.byCharacter[character] = (stats.byCharacter[character] || 0) + 1;
+            stats.byEmotion[emotion] = (stats.byEmotion[emotion] || 0) + 1;
+
+            // Track oldest/newest
+            const time = new Date(createdAt).getTime();
+            if (!oldest || time < oldest.time) oldest = { cacheKey, time, date: createdAt };
+            if (!newest || time > newest.time) newest = { cacheKey, time, date: createdAt };
+
+            entries.push({ id: cacheKey, text: data.text || '', voice: data.voice || '', character, emotion, createdAt });
+        });
+
+        stats.oldestEntry = oldest?.date || null;
+        stats.newestEntry = newest?.date || null;
+
+        entries.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+        const missSnap = await db.collection('chirpyVoiceMisses').get();
+        const misses = missSnap.docs.map((d) => {
+            const m = d.data();
+            return {
+                id: d.id, text: m.text || '', character: m.character || '', emotion: m.emotion || '',
+                reason: m.reason || '', count: m.count || 1,
+                lastAt: m.lastAt?.toDate?.().toISOString() || '',
+            };
+        }).sort((a, b) => (a.lastAt < b.lastAt ? 1 : -1));
+        res.json({ stats, entries, misses });
+    } catch (error) {
+        console.error('[cacheStats] error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+exports.cacheClear = onRequest({ cors: true, secrets: [adminToken] }, async (req, res) => {
+    if (req.method !== 'POST' || !verifyAdminToken(req)) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+        const { daysOld } = req.body;
+        if (!daysOld || daysOld < 0) {
+            return res.status(400).json({ error: 'Invalid daysOld' });
+        }
+
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+
+        const batch = db.batch();
+        const cacheCol = db.collection('chirpyVoiceCache');
+        const snapshot = await cacheCol.where('createdAt', '<', admin.firestore.Timestamp.fromDate(cutoffDate)).get();
+
+        let deletedCount = 0;
+        snapshot.forEach((doc) => {
+            batch.delete(doc.ref);
+            deletedCount++;
+        });
+
+        if (deletedCount > 0) {
+            await batch.commit();
+        }
+
+        console.log(`[cacheClear] deleted ${deletedCount} entries older than ${daysOld} days`);
+        res.json({ deletedCount });
+    } catch (error) {
+        console.error('[cacheClear] error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+/* Gemini performs the same direction differently from take to take, and a flat
+   take stays cached for good. Deleting one line lets the next play record it
+   again. */
+exports.cacheDeleteOne = onRequest({ cors: true, secrets: [adminToken] }, async (req, res) => {
+    if (req.method !== 'POST' || !verifyAdminToken(req)) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const id = String((req.body && req.body.id) || '');
+    if (!/^[0-9a-f]{16}$/.test(id)) return res.status(400).json({ error: 'Invalid id' });
+    try {
+        const ref = db.collection('chirpyVoiceCache').doc(id);
+        const snap = await ref.get();
+        if (!snap.exists) return res.json({ deleted: false });
+        const path = snap.data().storagePath;
+        if (path) await admin.storage().bucket().file(path).delete({ ignoreNotFound: true });
+        await ref.delete();
+        res.json({ deleted: true });
+    } catch (error) {
+        console.error('[cacheDeleteOne] error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+exports.cacheByEmotion = onRequest({ cors: true, secrets: [adminToken] }, async (req, res) => {
+    if (req.method !== 'POST' || !verifyAdminToken(req)) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+        const { emotion } = req.body;
+        if (!emotion) {
+            return res.status(400).json({ error: 'Missing emotion' });
+        }
+
+        const batch = db.batch();
+        const cacheCol = db.collection('chirpyVoiceCache');
+        const snapshot = await cacheCol.where('emotion', '==', emotion).get();
+
+        let deletedCount = 0;
+        snapshot.forEach((doc) => {
+            batch.delete(doc.ref);
+            deletedCount++;
+        });
+
+        if (deletedCount > 0) {
+            await batch.commit();
+        }
+
+        console.log(`[cacheByEmotion] deleted ${deletedCount} entries for emotion: ${emotion}`);
+        res.json({ deletedCount });
+    } catch (error) {
+        console.error('[cacheByEmotion] error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+exports.voiceUsageStats = onRequest({ cors: true, secrets: [adminToken] }, async (req, res) => {
+    if (!verifyAdminToken(req)) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+        const usageCol = db.collection('chirpyVoiceUsage');
+        const snapshot = await usageCol.get();
+
+        const stats = {
+            totalCalls: snapshot.size,
+            byStatus: {},
+            byCharacter: {},
+            byVoice: {},
+            byRoom: {},
+            today: 0,
+            statusTrend: {},
+        };
+
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            const timestamp = data.timestamp?.toDate?.().getTime() || 0;
+
+            stats.byStatus[data.status] = (stats.byStatus[data.status] || 0) + 1;
+            stats.byCharacter[data.character] = (stats.byCharacter[data.character] || 0) + 1;
+            stats.byVoice[data.voice] = (stats.byVoice[data.voice] || 0) + 1;
+            stats.byRoom[data.room] = (stats.byRoom[data.room] || 0) + 1;
+
+            if (timestamp >= todayStart) {
+                stats.today += 1;
+            }
+
+            const date = new Date(timestamp).toISOString().split('T')[0];
+            stats.statusTrend[data.status] = (stats.statusTrend[data.status] || 0) + 1;
+        });
+
+        const usageList = snapshot.docs.map((doc) => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                timestamp: data.timestamp?.toDate?.().toISOString() || '',
+                character: data.character || 'unknown',
+                voice: data.voice || 'unknown',
+                status: data.status || 'unknown',
+                room: data.room || 'unknown',
+                feeling: data.feeling || 'not recorded',
+            };
+        }).sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1)).slice(0, 100);
+
+        res.json({ stats, usageList });
+    } catch (error) {
+        console.error('[voiceUsageStats] error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+/* ===========================================================================
+ * KIDS CONTENT — what the Mind Gym for Kids admin pages add or change, shared
+ * by every child.
+ *
+ * One collection, `kidsContent`, one document per item:
+ *   { kind, id, data, updatedAt, updatedBy }
+ * kinds: story · feeling · thought · game · text (a changed teaching line).
+ *
+ * Every read and write goes through this function and the Admin SDK rather
+ * than the client SDK. CI deploys functions on every push to main but never
+ * deploys firestore.rules, so a rule written for a new collection would sit in
+ * the repo undeployed and every child's read would be refused.
+ *
+ *   get      anyone — the kids app loads this on start (cached ~1 min here)
+ *   whoami   anyone — whether the signed-in account may edit
+ *   save     admins — create or replace one item
+ *   delete   admins — remove one item
+ *   suggest  admins — Gemini proposes better wordings for a line (cached)
+ * =========================================================================== */
+const KIDS_CONTENT = "kidsContent";
+const KIDS_CONTENT_KINDS = ["story", "feeling", "thought", "game", "text"];
+const KIDS_CONTENT_MAX_BYTES = 200 * 1024;
+const KIDS_CONTENT_ID = /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$/;
+let kidsContentCache = null; // { at, items } — per instance
+
+/* Who may edit the kids content: every admin, plus anyone added here. A scoped
+   grant like canCuratePractice in firestore.rules: editing stories and games
+   doesn't need the rest of what ADMIN_EMAILS unlocks (user data, email blasts).
+   Mirrored in src/config/admin.ts, which only decides whether the app shows the
+   way in. */
+const KIDS_CONTENT_EDITORS = [...ADMIN_EMAILS];
+function canEditKidsContent(request) {
+    const tok = request && request.auth && request.auth.token;
+    return !!tok && tok.email_verified === true && KIDS_CONTENT_EDITORS.includes((tok.email || "").toLowerCase());
+}
+
+async function loadKidsContent() {
+    const snap = await db.collection(KIDS_CONTENT).get();
+    return snap.docs
+        .map((d) => {
+            const x = d.data();
+            return {
+                kind: x.kind,
+                id: x.id,
+                data: x.data,
+                updatedAt: x.updatedAt ? x.updatedAt.toMillis() : null,
+                updatedBy: x.updatedBy || null,
+            };
+        })
+        .filter((x) => KIDS_CONTENT_KINDS.includes(x.kind) && typeof x.id === "string"
+            && x.data && typeof x.data === "object");
+}
+
+const KIDS_HOUSE_RULES = [
+    "You are helping edit the words in Mind Gym for Kids, an app for children aged about 4 to 12, guided by a friendly bird called Chirpy.",
+    "House rules for every line:",
+    "- Short, concrete, everyday words a 6-year-old understands when the line is read aloud.",
+    "- Warm and curious, never preachy. Never spell out the moral; let the child notice it.",
+    "- No shame, no 'good child / bad child', no pressure to do more or come back more.",
+    "- Believable for a child: avoid grand claims a child would not say about themselves.",
+    "- Keep any {name} placeholder exactly as written.",
+].join("\n");
+
+exports.kidsContent = onCall({ secrets: [geminiKey], maxInstances: 5 }, async (request) => {
+    const body = request.data || {};
+    const action = body.action;
+    const isAdmin = canEditKidsContent(request);
+
+    if (action === "get") {
+        if (isAdmin && body.fresh) return { items: await loadKidsContent() };
+        if (!kidsContentCache || Date.now() - kidsContentCache.at > 60_000) {
+            kidsContentCache = { at: Date.now(), items: await loadKidsContent() };
+        }
+        // Who changed what is for the editors, not for every child's device.
+        return { items: isAdmin ? kidsContentCache.items : kidsContentCache.items.map(({ updatedBy, ...rest }) => rest) };
+    }
+
+    if (action === "whoami") {
+        const tok = request.auth && request.auth.token;
+        return { admin: isAdmin, email: (tok && tok.email) || null, verified: !!(tok && tok.email_verified) };
+    }
+
+    if (!isAdmin) throw new HttpsError("permission-denied", "Only Mind Gym admins can change this.");
+    const by = request.auth.token.email;
+
+    if (action === "save" || action === "delete") {
+        const { kind, id } = body;
+        if (!KIDS_CONTENT_KINDS.includes(kind)) throw new HttpsError("invalid-argument", "Unknown kind of content.");
+        if (typeof id !== "string" || !KIDS_CONTENT_ID.test(id)) throw new HttpsError("invalid-argument", "That id can't be used.");
+        const ref = db.collection(KIDS_CONTENT).doc(`${kind}__${id}`);
+        if (action === "delete") {
+            await ref.delete();
+        } else {
+            const data = body.data;
+            if (!data || typeof data !== "object" || Array.isArray(data)) throw new HttpsError("invalid-argument", "Nothing to save.");
+            if (Buffer.byteLength(JSON.stringify(data)) > KIDS_CONTENT_MAX_BYTES) {
+                throw new HttpsError("invalid-argument", "That is too big to save in one go.");
+            }
+            await ref.set({ kind, id, data, updatedAt: admin.firestore.FieldValue.serverTimestamp(), updatedBy: by });
+        }
+        kidsContentCache = null;
+        return { ok: true, updatedBy: by, updatedAt: Date.now() };
+    }
+
+    if (action === "suggest") {
+        const text = typeof body.text === "string" ? body.text.trim().slice(0, 600) : "";
+        const where = typeof body.where === "string" ? body.where.trim().slice(0, 200) : "";
+        const guide = typeof body.guide === "string" ? body.guide.trim().slice(0, 600) : "";
+        if (!text) throw new HttpsError("invalid-argument", "There is no line to improve.");
+
+        const key = crypto.createHash("sha1").update(`${where}\n${guide}\n${text}`).digest("hex");
+        const cacheRef = db.collection("kidsContentSuggestions").doc(key);
+        if (!body.again) {
+            const hit = await cacheRef.get();
+            if (hit.exists && Array.isArray(hit.data().suggestions)) return { suggestions: hit.data().suggestions, cached: true };
+        }
+        if (!(await reserveAiBudget("kidsSuggest"))) {
+            throw new HttpsError("resource-exhausted", "Today's suggestion limit is used up. Try again tomorrow.");
+        }
+
+        const prompt = [
+            KIDS_HOUSE_RULES,
+            "",
+            `Where this line appears: ${where || "in the app"}`,
+            guide ? `Guidance for this kind of line: ${guide}` : "",
+            "",
+            "The current line:",
+            `"""${text}"""`,
+            "",
+            "Suggest up to 3 better versions. Each must fully replace the line, in the same voice, no longer than it, keeping its meaning.",
+            "If the line is already very good, offer one gentle variation instead.",
+            "For each, give a reason a parent would understand, under 15 words.",
+            'Reply only with JSON: {"suggestions":[{"text":"...","why":"..."}]}',
+        ].filter((line) => line !== "").join("\n");
+
+        let parsed;
+        try {
+            const genAI = new GoogleGenerativeAI(geminiKey.value());
+            const model = genAI.getGenerativeModel({
+                model: "gemini-2.0-flash",
+                generationConfig: { responseMimeType: "application/json", temperature: 0.9 },
+            });
+            const result = await model.generateContent(prompt);
+            parsed = JSON.parse(result.response.text());
+        } catch (e) {
+            console.error("kidsContent suggest failed:", e.message);
+            throw new HttpsError("unavailable", "Suggestions aren't available right now. Try again in a minute.");
+        }
+        const list = Array.isArray(parsed) ? parsed : (parsed && Array.isArray(parsed.suggestions) ? parsed.suggestions : []);
+        const suggestions = list
+            .map((x) => ({
+                text: String((x && x.text) || "").trim().slice(0, 600),
+                why: String((x && x.why) || "").trim().slice(0, 300),
+            }))
+            .filter((x) => x.text && x.text !== text)
+            .slice(0, 3);
+        if (suggestions.length) {
+            await cacheRef.set({ suggestions, text, where, at: admin.firestore.FieldValue.serverTimestamp() });
+        }
+        return { suggestions, cached: false };
+    }
+
+    throw new HttpsError("invalid-argument", "Unknown action.");
 });

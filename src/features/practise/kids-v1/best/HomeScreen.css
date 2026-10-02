@@ -1,7 +1,7 @@
 /* Layered home: no full-screen UI screenshot, no invisible hotspots. */
 .mg-home{background:#25132f;color:#fff;min-height:100svh}.mg-home button{cursor:pointer}.mg-home button:focus-visible{outline:3px solid #aef8ff;outline-offset:3px}
 .mg-world{position:relative;max-width:1920px;margin:auto;min-height:820px;height:max(100svh,62vw);background:url('/mind-gym/closed-home/environment.webp') center/cover}
-.mg-top{position:absolute;inset:14px 20px auto;display:flex;justify-content:space-between;z-index:5}.mg-logo{font-size:clamp(30px,3vw,48px);font-weight:1000;line-height:.9;text-shadow:0 3px 4px #211327}.mg-logo span{display:block;color:#ffe769}.mg-logo small{display:block;font-size:9px;line-height:1.35;letter-spacing:1.4px;margin-top:8px}
+.mg-top{position:absolute;inset:14px 20px auto;display:flex;justify-content:space-between;z-index:5}.mg-brand{display:flex;flex-direction:column;align-items:flex-start;gap:12px}.mg-logo{font-size:clamp(30px,3vw,48px);font-weight:1000;line-height:.9;text-shadow:0 3px 4px #211327}.mg-logo span{display:block;color:#ffe769}.mg-logo small{display:block;font-size:9px;line-height:1.35;letter-spacing:1.4px;margin-top:8px}
 .mg-tools{display:flex;gap:8px;align-items:flex-start}.mg-points,.mg-month{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#171641e8;border:1px solid #b8a5d5;border-radius:15px;font-size:12px}.mg-points>span:first-child{font-size:30px}.mg-points b{font-size:20px}.mg-tools small{display:block}.mg-month>b{border:1px solid #cbbef2;padding:6px;border-radius:6px}.mg-month span>span{display:block;color:#71dbff;letter-spacing:2px}
 .mg-feelings{position:absolute;left:6%;top:15%;width:31%;height:76%;border:0;border-radius:46% 46% 20% 20% / 15% 15% 8% 8%;background:radial-gradient(ellipse at 45% 40%,#1356bcdc,#122960ba 65%,#081b5680);box-shadow:inset 0 0 25px #59ddff99,0 0 20px #30acff88;padding:25px 18px;display:flex;flex-direction:column;align-items:center;text-shadow:0 2px 4px #102357}
 .mg-feelings h1{font-size:clamp(28px,3vw,53px);font-weight:1000;white-space:nowrap;color:#f3fcff;text-shadow:0 0 10px #55dfff;line-height:1.15}.mg-feelings h2{font-size:clamp(17px,1.6vw,28px);font-weight:800}.mg-invitation{margin:14px 0 5px;border:1px solid #72e1ff;border-radius:30px;padding:8px 14px;font-size:clamp(12px,1.05vw,18px);line-height:1.2;text-align:center;background:#123b9a99;box-shadow:0 0 12px #158bff}
@@ -24,12 +24,12 @@
 .mg-open-invitation button:last-child{background:linear-gradient(#f0d1eb,#c49fda);color:#30157e}
 .mg-preview-close{position:absolute;right:0;top:0;z-index:3;width:30px;height:30px;border:0;border-radius:50%;background:#39234fe8;color:white;font-size:23px}
 .mg-shelf-note{align-self:center;text-align:center;font-weight:800;font-size:clamp(12px,1vw,18px);text-shadow:0 2px 4px #130711;padding:8px}.mg-shelf-note button{display:block;margin:10px auto 0;padding:9px;border-radius:12px;background:#432462;border:1px solid #ffda7c;min-height:44px}
-.mg-safety{position:absolute;bottom:12px;left:18px;right:18px;display:flex;justify-content:space-between;z-index:5}.mg-safety button{min-height:44px;border:0;background:#32205de8;border-radius:30px;padding:8px 18px;font-weight:800}.mg-mobile-doors{display:none}
+.mg-safety{position:absolute;bottom:12px;left:18px;right:18px;display:flex;justify-content:space-between;z-index:5}.mg-safety button{min-height:44px;border:0;background:#32205de8;border-radius:30px;padding:8px 18px;font-weight:800}.mg-safety .mg-admin{display:inline-flex;align-items:center;min-height:44px;padding:8px 16px;border-radius:30px;background:#1d1446b8;color:#ffffffb3;font-size:13px;font-weight:800;text-decoration:none}.mg-mobile-doors{display:none}
 .mg-room-dialog{color:white;background:linear-gradient(140deg,#45266b,#191332);border:2px solid #e3b667;border-radius:24px;padding:24px;width:min(520px,calc(100vw - 28px));max-height:85svh;overflow:auto;margin:auto;box-shadow:0 12px 60px #12081e}.mg-room-dialog::backdrop{background:#12091dcc;backdrop-filter:blur(4px)}.mg-room-dialog header{display:flex;align-items:center;justify-content:space-between;gap:12px}.mg-room-dialog h2{font-size:24px;font-weight:900}.mg-room-dialog header button{font-size:30px;min-width:44px;min-height:44px}.mg-room-dialog nav,.mg-day-options{display:flex;gap:8px;margin:16px 0}.mg-room-dialog nav button,.mg-day-options button{min-height:44px;border:1px solid #dcb8ff;padding:8px 14px;border-radius:20px}.mg-room-dialog button[aria-pressed=true]{background:#8b46b6}.mg-room-dialog p{margin:14px 0;line-height:1.5}.mg-room-dialog textarea{display:block;width:100%;border:1px solid #dac0ff;background:#f4ecff;color:#321354;border-radius:12px;padding:10px;margin:8px 0}.mg-save{display:block;background:#9654ca;border-radius:18px;min-height:46px;padding:10px 18px;margin:12px 0}.mg-dialog-grownup{display:block;min-height:44px;text-decoration:underline;margin-top:14px}.mg-room-dialog h3{font-size:19px;font-weight:900;margin-top:20px}
 .mg-home h1,.mg-home h2,.mg-home h3{font-family:inherit}
 @keyframes mg-reveal{from{opacity:0;scale:.96}to{opacity:1;scale:1}}
 @media(min-width:761px) and (max-width:1100px){.mg-world{min-height:860px}.mg-feelings{left:2%;width:33%;padding:20px 10px}.mg-character{left:34%;width:23%;top:14%;height:78%}.mg-greeting>img{display:none}.mg-choices{right:1%;width:42%;top:16%;height:76%}.mg-feelings h1{font-size:28px}.mg-shelf-title h2{font-size:27px}.mg-open-invitation{width:44%}.mg-open-invitation p{font-size:10px}}
-@media(max-width:760px){.mg-world{height:auto;min-height:100svh;padding:100px 12px 80px;display:flex;flex-direction:column;background-attachment:fixed}.mg-top{inset:12px 12px auto}.mg-logo{font-size:29px}.mg-logo small{font-size:7px}.mg-tools{gap:4px}.mg-points{padding:6px;font-size:9px}.mg-points>span:first-child{font-size:20px}.mg-points b{font-size:16px}.mg-month{font-size:9px;padding:5px;gap:5px}.mg-month>b{padding:3px}
+@media(max-width:760px){.mg-world{height:auto;min-height:100svh;padding:120px 12px 80px;display:flex;flex-direction:column;background-attachment:fixed}.mg-top{inset:12px 12px auto}.mg-brand{gap:6px}.mg-logo{font-size:29px}.mg-logo small{font-size:7px}.mg-tools{gap:4px}.mg-points{padding:6px;font-size:9px}.mg-points>span:first-child{font-size:20px}.mg-points b{font-size:16px}.mg-month{font-size:9px;padding:5px;gap:5px}.mg-month>b{padding:3px}
 .mg-mobile-doors{display:grid;grid-template-columns:1fr 1fr;gap:12px;order:0;margin-top:16px}.mg-mobile-doors button{min-height:100px;border:0;border-radius:34% 34% 15% 15%;background:radial-gradient(ellipse,#1c81d8d9,#17216ba6);box-shadow:0 0 18px #5ebcff66,inset 0 0 15px #66cfff44;font-weight:900;font-size:21px;text-shadow:0 0 9px #399bff;padding:12px 8px;line-height:1.1}.mg-mobile-doors button+button{background:linear-gradient(#915823df,#4b250ca6);box-shadow:0 0 18px #ffa83b44;text-shadow:0 0 8px #ffb322}.mg-mobile-doors small{display:block;font-size:12px;font-weight:700;margin-top:9px}
 .mg-feelings,.mg-choices{display:none;position:relative;left:auto;right:auto;top:auto;width:100%;height:auto;order:1;border:0;box-shadow:none;background:none}.mg-mobile-open{display:block;margin:24px auto}.mg-feelings.mg-mobile-open{display:flex;padding:12px 10px;max-width:430px;background:radial-gradient(ellipse,#143cae99,transparent 75%);border:0}.mg-feelings h1{font-size:32px}.mg-feelings h2{font-size:20px}.mg-invitation{font-size:14px;border:0;background:#12357599}.mg-steps{padding:12px 0}.mg-steps li{min-height:77px}.mg-steps img{width:75px;height:75px}.mg-steps b{font-size:18px}.mg-steps span{font-size:14px}.mg-start{font-size:23px}
 .mg-character{position:relative;left:auto;top:auto;width:min(310px,90%);height:520px;margin:28px auto 0;order:2}.mg-greeting{width:100%;margin:0;padding:14px}.mg-greeting b{font-size:19px}.mg-greeting p{font-size:13px}.mg-boy-wrap{height:380px}.mg-chirpy-line{font-size:15px}.mg-shelf-title{height:90px;min-height:0;margin-top:22px;border:0;background:transparent;box-shadow:none}.mg-shelf-title h2{font-size:30px}.mg-shelf-title p{font-size:12px}.mg-shelf{height:auto;grid-template-columns:1fr 1fr;grid-template-rows:none;gap:10px 3px;border:0;background:none}.mg-cabinet{aspect-ratio:4/3}.mg-cabinet.is-open{grid-column:1/-1;aspect-ratio:1.75}.mg-open-invitation{top:25%;right:1%;bottom:5%;width:41%;gap:6px;padding:7px}.mg-open-invitation p{font-size:13px}.mg-open-invitation button{min-height:44px;font-size:17px}.mg-preview-close{width:36px;height:36px;font-size:26px}.mg-shelf-note{font-size:13px;padding:8px}.mg-safety{bottom:14px;left:12px;right:12px}.mg-safety button{font-size:12px;padding:8px 12px}}
@@ -518,7 +518,40 @@
   }
 }
 
-/* ── My Reflection Path entry, kept from the Reflection Path work ─────── */
-.mg-reflection-path-btn{background:linear-gradient(135deg,rgba(139,92,246,0.25),rgba(109,40,217,0.3));border:1px solid rgba(139,92,246,0.45);border-radius:999px;color:#e0d0ff;font-size:.78rem;font-weight:800;padding:.4rem 1rem;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem;transition:background .18s}
-.mg-reflection-path-btn:hover{background:rgba(139,92,246,0.4)}
-.mg-reflection-count{background:rgba(139,92,246,0.6);color:#fff;border-radius:999px;padding:0 .4rem;font-size:.68rem;font-weight:900}
+
+/* ── The six steps stop squashing each other ───────────────────────────── */
+/*
+  THE ICON COLUMN WAS RESERVING WIDTH IT NEVER DREW IN.
+
+  `.mg-steps img` was `width:22%; height:100%; object-fit:contain`. The panel
+  is 23.2% of the room, so on a 1512px window a row is about 340px and 22% of
+  it is 75px — but `contain` pins the bubble to the row's HEIGHT, which is a
+  sixth of the list, about 45px. So every step handed 30px of its width to
+  blank space beside its own icon, and the even rows, already swung 19% to the
+  right, had the least to spare. The captions wrapped, and because each row is
+  an equal share of a fixed height with nothing allowed to grow, a wrapped row
+  overflowed its box and printed on top of the row under it — and the last one
+  printed on top of Start My Journey. That is the squashing.
+
+  Sized by height with the width following, the bubble is drawn at exactly the
+  size it was being drawn at before and the row keeps the rest. The swing comes
+  in a little as well, which is the other half of the width the even rows were
+  missing; the zigzag still reads, and the lit path between the steps still
+  lands on them because it is hung off each row rather than drawn as one line.
+
+  Last block in the file on purpose. Four earlier rules already set these
+  properties (see the 24%, 16% and 19% swings above, each correcting the one
+  before) and the cascade, not specificity, is what decides between them.
+*/
+@media(min-width:761px){
+  .mg-steps li{gap:10px}
+  .mg-steps img{width:auto;height:100%;max-height:clamp(30px,3vw,50px);aspect-ratio:1}
+  /* Without this the text block refuses to shrink below its longest word's
+     line and pushes itself out of the row instead of wrapping inside it. */
+  .mg-steps li>div{min-width:0}
+  .mg-steps li:nth-child(even){margin-left:13%}
+}
+
+/* Greeting bubble blends into the scene instead of sitting on it like a card. */
+.mg-greeting{background:linear-gradient(#ffffff2e,#c9d8ff1f);backdrop-filter:blur(3px);border:1px solid #ffffff40;color:#fff;box-shadow:none;text-shadow:0 2px 6px #1a0f4a}
+.mg-greeting:after{border-top-color:#ffffff2e;border-left-color:#ffffff2e}

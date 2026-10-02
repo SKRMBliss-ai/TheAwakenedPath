@@ -5,7 +5,6 @@ import { recollectionForToday, type ChirpyRecollection } from './chirpyMemory';
 import { guessingGameForToday, type GuessingGame } from './guessingGame';
 import { teachingForToday, type Teaching } from './teachings';
 import { missionToGive, missionToReport, type Mission } from './missions';
-import { bandUnknown } from './band';
 
 /**
  * ONE THING. THE HUB SHOWS ONE THING.
@@ -61,8 +60,6 @@ export type HubMoment =
   | { kind: 'arc'; beat: ArcBeat }
   | { kind: 'memory'; recollection: ChirpyRecollection }
   | { kind: 'teaching'; teaching: Teaching }
-  /** How old are you — asked once, ever. See best/HowOld. */
-  | { kind: 'age' }
   /** A secret game to go and play out in the world. */
   | { kind: 'mission'; mission: Mission }
   /** Asking how the one they're carrying went. */
@@ -107,18 +104,6 @@ export function hubMoment(
   const recollection = recollectionForToday();
   if (recollection) return { kind: 'memory', recollection };
 
-  /*
-    HOW OLD ARE YOU — once, and above both of the things it decides.
-
-    Ten of the eighteen teaching moves and three of the eight secret games are
-    banded, and until Chirpy knows which band he is talking to, every one of
-    them is held back (see kit/band). So this question is worth more than any
-    single evening's move: answering it roughly doubles the library. It goes
-    above them both for that reason, and it can only ever appear once —
-    bandUnknown goes false the moment a child taps a number OR says they'd
-    rather not, and there is no path that asks twice.
-  */
-  if (bandUnknown()) return { kind: 'age' };
 
   /*
     A NEW SECRET GAME, ABOVE THE TEACHING MOVES AND NOT BELOW THEM.

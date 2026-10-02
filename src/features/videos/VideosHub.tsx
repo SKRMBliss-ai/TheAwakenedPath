@@ -182,7 +182,7 @@ export function VideosHub({ isAccessValid = false, isPremiumUser = false, deduct
                 // Fallback: YouTube's own playlist player (still works even if our
                 // video-list API is unavailable — just won't filter out Shorts).
                 <iframe
-                  src={`https://www.youtube.com/embed/videoseries?list=${activePlaylist.id}&rel=0&modestbranding=1`}
+                  src={`https://www.youtube.com/embed/videoseries?list=${activePlaylist.id}&rel=0&modestbranding=1&autoplay=1&mute=0`}
                   title={activePlaylist.title}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
@@ -191,7 +191,7 @@ export function VideosHub({ isAccessValid = false, isPremiumUser = false, deduct
               ) : activeVideo ? (
                 <iframe
                   key={activeVideo.id}
-                  src={`https://www.youtube.com/embed/${activeVideo.id}?rel=0&modestbranding=1`}
+                  src={`https://www.youtube.com/embed/${activeVideo.id}?rel=0&modestbranding=1&autoplay=1&mute=0`}
                   title={activeVideo.title}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen

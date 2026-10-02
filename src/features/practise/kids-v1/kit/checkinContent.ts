@@ -25,3 +25,16 @@ export {
   type SituationDef,
   type BodyZoneId,
 } from '../../kids/checkin/content';
+
+import { feelingsForAge as builtInFeelingsForAge, type FeelingDef } from '../../kids/checkin/content';
+import { useLiveContent } from './liveContent';
+
+/** The feeling balls a child of this age is offered, with any feelings added on the admin page after them. */
+export function feelingsForAge(age: number | undefined): FeelingDef[] {
+  const builtIn = builtInFeelingsForAge(age);
+  const added = useLiveContent.getState().feelings
+    .filter((f) => !builtIn.some((b) => b.id === f.id))
+    .filter((f) => f.minAge === undefined || (age !== undefined && age >= f.minAge))
+    .map((f): FeelingDef => ({ id: f.id, label: f.label, ok: f.ok, hue: f.hue, face: f.ok ? 'happy' : 'worried', minAge: f.minAge }));
+  return [...builtIn, ...added];
+}

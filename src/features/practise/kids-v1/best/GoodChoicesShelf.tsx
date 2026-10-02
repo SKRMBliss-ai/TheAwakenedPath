@@ -13,9 +13,10 @@ const ROOMS = [
   ['mindheart', 'mind_heart_time', 'Want a quiet moment to breathe or reflect?'],
 ];
 
-export function GoodChoicesShelf({ onAction, onDiary }: {
+export function GoodChoicesShelf({ onAction, onDiary, diaryWaiting = false }: {
   onAction: (id: string, mode: 'play' | 'learn') => void;
   onDiary: () => void;
+  diaryWaiting?: boolean;
 }) {
   const quiet = useQuiet();
   const [hovered, setHovered] = useState<string | null>(null);
@@ -73,6 +74,6 @@ export function GoodChoicesShelf({ onAction, onDiary }: {
         </div>
       </article>;
     })}
-    <div className="mg-shelf-note">Little Choices<br />Make a Brighter Tomorrow<button onClick={onDiary}>📖 My Inner Diary</button></div>
+    <div className="mg-shelf-note">Little Choices<br />Make a Brighter Tomorrow<button className={diaryWaiting ? 'mg-diary-waiting' : ''} onClick={onDiary}>📖 My Inner Diary{diaryWaiting && <span className="mg-diary-flag">Today’s page is waiting</span>}</button></div>
   </div>;
 }

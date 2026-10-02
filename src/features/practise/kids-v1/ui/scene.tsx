@@ -49,11 +49,23 @@ import { DIM, GAITS, ROOM_PROPS, type BoyGait, type RoomProp } from './scenery';
  */
 const SETTLE_MS = 3000;
 
+/**
+ * Soft on all four sides, so a contained backdrop has no edge at all.
+ *
+ * One radial rather than a horizontal and a vertical gradient: mask layers
+ * composite as a UNION by default, so two crossed linear fades would leave
+ * every edge opaque wherever the other one was — the exact opposite of the
+ * job. A single ellipse fades all four sides with nothing to compose.
+ */
+const FEATHER_MASK = 'radial-gradient(ellipse 86% 90% at 50% 50%, #000 58%, transparent 100%)';
+
 export function RoomScene({
   room,
   dim = DIM.content,
   art,
   objectPosition = 'center',
+  fit = 'cover',
+  feather = false,
 }: {
   room: RoomConfig;
   dim?: number;
@@ -73,6 +85,32 @@ export function RoomScene({
    * or landscape screens — the overflow goes to the bottom instead.
    */
   objectPosition?: string;
+  /**
+   * 'cover' (the default) fills the screen and crops whatever does not fit.
+   * 'contain' fits the whole painting on screen instead, and is there for the
+   * one room where the painting is also the control.
+   *
+   * The Body Detective asks the child to point at a place on a painted boy.
+   * Under cover that boy was cropped differently on every screen: a phone in
+   * portrait threw his right hand past the right edge, and a laptop in
+   * landscape cut his legs off below the fold. The tap targets went with
+   * them — they are measured against the painting, so they were correct and
+   * off-screen at the same time, which reads exactly like a broken control.
+   *
+   * Contain cannot crop, so every zone is always reachable. The letterbox it
+   * would otherwise leave is filled by a blurred, scaled copy of the same
+   * painting underneath, so the room still runs to the edges of the screen.
+   */
+  fit?: 'cover' | 'contain';
+  /**
+   * Melt a contained painting's left and right edges into the blurred bed
+   * beneath it, instead of ending at two hard vertical lines.
+   *
+   * For a room that is only a backdrop. The Body Detective must NOT use this:
+   * its painting is the control, and fading the sides of it would fade the
+   * edge of the thing a child is being asked to point at.
+   */
+  feather?: boolean;
 }) {
   const mood = SCENE_MOODS[room.scene];
   const quiet = useQuiet();
@@ -112,12 +150,60 @@ export function RoomScene({
         style={{ background: `linear-gradient(165deg, ${mood.ground[0]} 0%, ${mood.ground[1]} 100%)` }}
       />
 
+      {/* The bed under a contained painting, so 'fits on screen' does not
+          also mean 'two black bars'. Same image, blurred past legibility and
+          scaled out, which is the trick the feelings film already uses. */}
+      {room.painted && fit === 'contain' && (
+        <img
+          aria-hidden
+          src={art ?? roomArt(room.id)}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+          style={{ filter: 'blur(34px) saturate(1.15) brightness(0.55)', transform: 'scale(1.18)' }}
+          draggable={false}
+          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+        />
+      )}
+
       {room.painted && (
+        /*
+          FEATHERED BACKDROPS GET THEIR OWN ELEMENT, and the reason is subtle:
+          a mask on a full-bleed `object-fit:contain` image fades the ELEMENT's
+          edges, which under contain are the far sides of the screen — nowhere
+          near where the picture actually stops. So the fade did nothing and
+          the two hard vertical seams stayed exactly where they were.
+
+          Constrained by max-width and max-height instead, with no width or
+          height of its own, the element ends up exactly the size of the
+          drawn picture. The mask then lands on the picture's own edges at
+          every window size, which is the whole point.
+        */
+        feather && fit === 'contain' ? (
+          <div className="absolute inset-0 grid place-items-center overflow-hidden">
+            <img
+              key={art ?? room.id}
+              src={art ?? roomArt(room.id)}
+              alt=""
+              draggable={false}
+              style={{
+                maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto',
+                WebkitMaskImage: FEATHER_MASK,
+                maskImage: FEATHER_MASK,
+              }}
+              onError={(e) => {
+                const img = e.currentTarget;
+                if (img.dataset.fallback) { img.style.display = 'none'; return; }
+                img.dataset.fallback = 'true';
+                img.src = storageFallback(`kids-rooms/${room.id}.webp`);
+              }}
+            />
+          </div>
+        ) : (
         <img
           key={art ?? room.id}
           src={art ?? roomArt(room.id)}
           alt=""
-          className="absolute inset-0 h-full w-full object-cover"
+          className={`absolute inset-0 h-full w-full ${fit === 'contain' ? 'object-contain' : 'object-cover'}`}
           style={{ objectPosition }}
           draggable={false}
           onError={(e) => {
@@ -127,6 +213,7 @@ export function RoomScene({
             img.src = storageFallback(`kids-rooms/${room.id}.webp`);
           }}
         />
+        )
       )}
 
       {/* The warm light source. Non-negotiable — see §2.3 above. */}

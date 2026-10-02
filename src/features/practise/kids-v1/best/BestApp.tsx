@@ -29,7 +29,6 @@ import { ChirpyArc } from './ChirpyArc';
 import { GuessWhat } from './GuessWhat';
 import { TeachingMoment } from './TeachingMoment';
 import { SecretGameBack, SecretGameGiven } from './SecretGame';
-import { HowOld } from './HowOld';
 import { ReleasedSky } from './LetThemGo';
 import { TheVisitor } from './TheVisitor';
 import { NoteFound } from './NoteFound';
@@ -37,8 +36,14 @@ import { LeaveANote } from './LeaveANote';
 import { OneMinute } from './OneMinute';
 import { SeasonEnd } from './SeasonEnd';
 import { FirstNight } from './FirstNight';
+import { useKidAccountSync } from '../kit/kidAccount';
+import { loadLiveContent } from '../kit/liveContentApi';
 import { HomeScreen } from './HomeScreen';
-import { BehaviourPracticeRoom } from './BehaviourPracticeRoom';
+import { GamesRoom } from './GamesRoom';
+import { Garden } from './Garden';
+import { MyCorner } from './MyCorner';
+import { AdventureMap } from './AdventureMap';
+import { ChildBadge } from './ChildBadge';
 import { ROOM_PILLARS } from '../kit/behaviourPractice';
 import { seasonJustEnded, type Keepsake } from '../kit/seasons';
 import { reportingDay, type ReportingDay } from '../kit/reportingDay';
@@ -90,7 +95,8 @@ type View =
   | { at: 'reflectionpath' }
   /** The room the painting's Different Story dome has always pointed at. */
   | { at: 'story' }
-  | { at: 'reflection' }
+  /** `today` opens straight onto today's page, for a child who came to fill it in. */
+  | { at: 'reflection'; today?: boolean }
   | { at: 'friends' }
   | { at: 'rewards' }
   | { at: 'grownup' }
@@ -99,7 +105,11 @@ type View =
    *  safety screen — see LeaveANote's note on why they must not be conflated. */
   | { at: 'leavenote' }
   /** The short way in, for an evening with nothing in the tank. */
-  | { at: 'oneminute' };
+  | { at: 'oneminute' }
+  /* The three places off the home-page floor — see kids/delight. */
+  | { at: 'garden' }
+  | { at: 'corner' }
+  | { at: 'adventure' };
 
 /**
  * WALKING THROUGH, NOT FADING THROUGH.
@@ -144,6 +154,9 @@ function archWipe(plain: boolean) {
 }
 
 export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
+  useKidAccountSync();
+  /* Stories, feelings, games and words added on the admin pages, shared by every child. */
+  useEffect(() => { void loadLiveContent(); }, []);
   const onboarded = useKidStore((s) => s.onboarded);
   const name = useKidStore((s) => s.name);
   const completions = useKidStore((s) => s.completions);
@@ -244,17 +257,24 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
             {view.at === 'map' && (
               <HomeScreen
                 name={name}
-                onReflection={() => setView({ at: 'reflection' })}
+                onReflection={() => setView({ at: 'reflection', today: true })}
                 onReflectionPath={() => setView({ at: 'reflectionpath' })}
                 onOpenRoom={(r) => setView({ at: 'room', room: r, step: null })}
                 onPractice={(room) => setView({ at: 'practice', room })}
                 onDeepDive={() => setView({ at: 'deep' })}
                 onExitGym={onExitGym}
                 onGrownUp={() => setView({ at: 'grownup' })}
+                onGarden={() => setView({ at: 'garden' })}
+                onAdventure={() => setView({ at: 'adventure' })}
+                onCorner={() => setView({ at: 'corner' })}
               />
             )}
 
-            {view.at === 'practice' && <BehaviourPracticeRoom key={view.room.id}
+            {view.at === 'garden' && <Garden onExit={back} onGrownUp={() => setView({ at: 'grownup' })} />}
+            {view.at === 'corner' && <MyCorner onExit={back} onGrownUp={() => setView({ at: 'grownup' })} />}
+            {view.at === 'adventure' && <AdventureMap onExit={back} onGrownUp={() => setView({ at: 'grownup' })} onCorner={() => setView({ at: 'corner' })} />}
+
+            {view.at === 'practice' && <GamesRoom key={view.room.id}
               room={view.room} pillar={ROOM_PILLARS[view.room.id]} onExit={back}
               onGrownUp={() => setView({ at: 'grownup' })} />}
 
@@ -313,6 +333,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                   setStoryAnswers(answers);
                   const ok = saveCase(answers);
                   if (ok) useKidStore.getState().addSavedReflection(buildSavedReflection(answers));
+                  useKidStore.getState().noteActivity({ kind: 'story', detail: answers.feeling });
                   return ok;
                 }}
               />
@@ -329,7 +350,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
               none of that is on the diary's own page.
             */}
             {view.at === 'reflection' && (
-              <DiaryRoom onExit={back} onOlder={() => setView({ at: 'observatory' })} />
+              <DiaryRoom openToday={view.today} onExit={back} onOlder={() => setView({ at: 'observatory' })} />
             )}
             {view.at === 'observatory' && (
               <ReflectionRoom
@@ -365,6 +386,8 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
           RewardPerch. Friends moved behind the blue door with the rooms; it is
           somewhere you go and look, not something you practise.
         */}
+
+        <ChildBadge />
       </div>
     </QuietProvider>
   );
@@ -730,6 +753,7 @@ export function LegacyRoomMap({
                 cover but sky.
               */
               bottomVh={80}
+              remind={false}
               onClick={sp.onClick}
             />
           ))}
@@ -818,11 +842,6 @@ export function LegacyRoomMap({
                 teaching={said.teaching}
                 onDone={() => setMoment(null)}
               />
-            )}
-            {/* Asked once, ever, and it unlocks two-thirds of the teaching
-                library — see kit/band. */}
-            {said?.kind === 'age' && (
-              <HowOld key="age" onDone={() => setMoment(null)} />
             )}
 
             {/* The two halves of a secret game — handing one over, and

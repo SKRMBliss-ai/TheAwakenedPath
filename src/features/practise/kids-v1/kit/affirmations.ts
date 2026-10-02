@@ -1,4 +1,5 @@
 import type { ReflectionTag } from '../../../kids/store';
+import { addedLines, liveText, type LiveText } from './liveContent';
 
 /**
  * THE LINE A CHILD TAKES AWAY, AND WHY IT IS WRITTEN RATHER THAN GENERATED.
@@ -244,3 +245,20 @@ export function affirmationChoices(tag: ReflectionTag, seed: string, count = 3):
   }
   return picked;
 }
+
+export const affirmationId = (tag: ReflectionTag, i: number) => `affirm:${tag}:${i}`;
+
+/** Every affirmation as the app says it: changed on the admin page, plus any added there. */
+export function liveAffirmations(texts?: Record<string, LiveText>): string[] {
+  const all = (Object.keys(AFFIRMATIONS) as ReflectionTag[])
+    .flatMap((tag) => AFFIRMATIONS[tag].map((line, i) => liveText(affirmationId(tag, i), line, texts)));
+  return [...all, ...addedLines('affirm:new:', texts).map((t) => t.text)];
+}
+
+/** Every affirmation across every tag — a stone can carry any tag. */
+export function allAffirmations(): string[] {
+  return [...new Set(Object.values(AFFIRMATIONS).flat())];
+}
+
+/** Compat alias — callers on main used this name. */
+export const getAffirmationsForTag = (tag: ReflectionTag) => AFFIRMATIONS[tag] ?? AFFIRMATIONS.other;

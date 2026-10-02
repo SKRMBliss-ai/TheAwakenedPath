@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
+import { Volume2, VolumeX } from 'lucide-react';
 import { useQuiet } from '../ui/quiet';
 import { isMuted } from '../../../../lib/sfx';
 import { needsDailyWelcome, rememberDailyWelcome } from '../kit/dailyWelcome';
@@ -29,15 +30,23 @@ export function DailyWelcome() {
     rememberDailyWelcome();
     dialog.current?.showModal();
     const player = video.current;
+    const cleanup: (() => void)[] = [];
     if (!reduced && !quiet) {
       player?.play().catch(() => {
-        /* Autoplay with sound was refused. Mute and try once more, so the
-           film still runs — rather than a still frame and no explanation. */
-        setMuted(true);
-        void player.play().catch(() => { /* Native play control remains available. */ });
+        /* Autoplay with sound was refused by browser. The first tap/click is a
+           gesture, so sound unmutes automatically on interaction without needing
+           a separate "Enable sound" button. */
+        const rescue = () => {
+          const el = video.current;
+          if (!el) return;
+          el.muted = false;
+          void el.play().catch(() => { /* native controls remain available */ });
+        };
+        dialog.current?.addEventListener('pointerdown', rescue, { once: true });
+        cleanup.push(() => dialog.current?.removeEventListener('pointerdown', rescue));
       });
     }
-    return () => { player?.pause(); };
+    return () => { player?.pause(); cleanup.forEach((fn) => fn()); };
   }, [visible, reduced, quiet]);
 
   const finish = () => {
@@ -51,6 +60,6 @@ export function DailyWelcome() {
     <header><h2 id="mg-welcome-title">Welcome to Mind Gym</h2><button autoFocus onClick={finish}>Skip welcome →</button></header>
     <video ref={video} src="/mind-gym/welcome/welcomevideo.mp4" controls playsInline muted={silent || muted}
       preload="metadata" onEnded={finish} onError={finish} aria-label="Mind Gym welcome video" />
-    <footer><p>A little hello to start your day.</p>{!silent && <button onClick={() => setMuted(value => !value)}>{muted ? 'Enable sound' : 'Mute sound'}</button>}</footer>
+    <footer><p>A little hello to start your day.</p>{!silent && <button onClick={() => setMuted(value => !value)} aria-label={muted ? 'Turn sound on' : 'Turn sound off'}>{muted ? <VolumeX size={18} /> : <Volume2 size={18} />}</button>}</footer>
   </dialog>;
 }

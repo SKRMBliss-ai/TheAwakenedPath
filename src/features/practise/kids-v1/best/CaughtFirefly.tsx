@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
+import { useLiveContent } from '../kit/liveContent';
 import { motion } from 'framer-motion';
 import { CHROME, Cta, FONT } from '../ui/chrome';
 import { useMotion } from '../ui/quiet';
 import { Chirpy } from '../ui/scene';
 import { FireflyJar } from './FireflyJar';
-import { accentFor, type VirtueRoom } from './rooms';
+import { roomText, accentFor, type VirtueRoom } from './rooms';
 
 /**
  * The beat right after a firefly goes in the jar.
@@ -36,7 +37,7 @@ import { accentFor, type VirtueRoom } from './rooms';
  * next room at a child is worse than the button ever was.
  */
 export function CaughtFirefly({
-  room,
+  room: baseRoom,
   caught,
   onNext,
   onStay,
@@ -49,6 +50,8 @@ export function CaughtFirefly({
   onStay: () => void;
   isLast: boolean;
 }) {
+  const texts = useLiveContent((s) => s.texts);
+  const room = useMemo(() => roomText(baseRoom, texts), [baseRoom, texts]);
   const m = useMotion();
 
   /*

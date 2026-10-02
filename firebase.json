@@ -109,6 +109,34 @@
         }
       },
       {
+        "source": "/api/admin/cache-stats",
+        "function": {
+          "functionId": "cacheStats",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/admin/cache-clear",
+        "function": {
+          "functionId": "cacheClear",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/admin/cache-delete",
+        "function": {
+          "functionId": "cacheDeleteOne",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/admin/cache-by-emotion",
+        "function": {
+          "functionId": "cacheByEmotion",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/api/chirpy-voice",
         "function": {
           "functionId": "chirpyVoice",

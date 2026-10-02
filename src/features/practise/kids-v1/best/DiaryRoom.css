@@ -309,3 +309,83 @@ li.dy-month-now{all:unset;display:flex}
   .dy-title{padding-left:12px;padding-right:12px}
   .dy-day-choices{grid-template-columns:1fr}
 }
+
+/*
+  ── THE MONTH COMES OUT OF THE BOOK ──────────────────────────────────────
+
+  Seven rows of thirty-one dots is a spreadsheet, and it read as one. Same
+  grid, same taps, same data — but the days now arrive one at a time out of
+  the book on the page, in reading order, and go back into it when it shuts.
+
+  The stagger is per-dot custom property set in DiaryRoom.tsx, and the grid is
+  keyed on a counter so every open and every month change replays it.
+*/
+.dy-grid-panel{position:relative}
+
+/* `hidden` is a display:none rule, and .dy-grid sets display:flex, which wins
+   on specificity — so the shut book still showed the whole month. This is the
+   one line that actually closes it. */
+.dy-grid[hidden]{display:none}
+
+.dy-book{
+  position:relative;display:flex;align-items:center;gap:.7rem;
+  margin:0 auto .9rem;padding:.45rem .95rem .45rem .5rem;
+  background:linear-gradient(135deg,rgba(124,58,237,.24),rgba(76,29,149,.3));
+  border:1px solid rgba(167,139,250,.5);border-radius:16px;
+  color:#ecdcff;font:inherit;font-size:.84rem;font-weight:850;cursor:pointer;
+  box-shadow:0 8px 22px -12px rgba(60,20,120,.95);
+  transition:transform .2s,border-color .2s,background .2s;
+}
+.dy-book:hover{transform:translateY(-1px);border-color:rgba(200,170,255,.8)}
+.dy-book:focus-visible{outline:3px solid #cbb2ff;outline-offset:3px}
+.dy-book img{width:58px;height:auto;display:block;filter:drop-shadow(0 0 12px rgba(190,150,255,.65));transition:transform .45s ease}
+.dy-book-shut .dy-book img{transform:scale(.88) rotate(-4deg)}
+.dy-book-open .dy-book img{transform:scale(1) rotate(0)}
+.dy-book-label{white-space:nowrap}
+
+/* A little breath of light off the book while the month is out. */
+.dy-book-sparks{
+  position:absolute;inset:-6px;border-radius:20px;pointer-events:none;opacity:0;
+  background:radial-gradient(60% 70% at 18% 50%,rgba(214,180,255,.5),transparent 70%);
+}
+.dy-book-open .dy-book-sparks{opacity:1;animation:dy-sparks 4.5s ease-in-out infinite}
+@keyframes dy-sparks{50%{opacity:.35}}
+
+/* Each day flies out and settles. */
+.dy-book-open .dy-dot{
+  animation:dy-fly .52s cubic-bezier(.22,.9,.3,1.1) backwards;
+  animation-delay:var(--dy-delay,0ms);
+}
+@keyframes dy-fly{
+  from{opacity:0;transform:translate(-26px,14px) scale(.4)}
+  to{opacity:1;transform:none}
+}
+
+/* The four questions rise as lanterns off the crystal. */
+.dy-learn{position:relative}
+.dy-crystal{
+  position:absolute;left:-6px;top:-10px;width:78px;height:auto;z-index:0;
+  opacity:.75;filter:drop-shadow(0 0 16px rgba(150,200,255,.55));
+  animation:dy-crystal-glow 6s ease-in-out infinite;
+}
+@keyframes dy-crystal-glow{50%{opacity:.95;filter:drop-shadow(0 0 24px rgba(180,220,255,.75))}}
+.dy-learn>*:not(.dy-crystal){position:relative;z-index:1}
+.dy-card{animation:dy-lantern .6s ease-out backwards;animation-delay:var(--dy-lantern,0ms)}
+@keyframes dy-lantern{
+  from{opacity:0;transform:translateY(22px) scale(.96)}
+  to{opacity:1;transform:none}
+}
+
+/* None of the above in the quiet state or for reduced motion — a distressed
+   child gets the diary standing still, and the data is identical either way. */
+.dy-still .dy-dot,.dy-still .dy-card,.dy-still .dy-crystal,.dy-still .dy-book-sparks{animation:none}
+.dy-still .dy-book img{transition:none}
+@media (prefers-reduced-motion: reduce){
+  .dy-dot,.dy-card,.dy-crystal,.dy-book-sparks{animation:none!important}
+  .dy-book img{transition:none}
+}
+
+@media (max-width:640px){
+  .dy-book img{width:44px}
+  .dy-crystal{width:54px;left:-2px;top:-6px;opacity:.5}
+}

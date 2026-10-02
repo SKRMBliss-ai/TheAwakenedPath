@@ -51,6 +51,9 @@ const VOICE_ENDPOINT = 'https://awakened-path-2026.web.app/api/chirpy-voice';
 
 /** One line at a time — a new line always wins over the old one. */
 let current: HTMLAudioElement | null = null;
+
+/** The clip currently playing — carries a real duration and currentTime for the progress bar. */
+export function currentClip(): HTMLAudioElement | null { return current; }
 /** Which line he is on, so a late arrival can check it is still wanted. */
 let speaking: string | null = null;
 /**
@@ -60,35 +63,54 @@ let speaking: string | null = null;
  */
 const heard = new Map<string, string>();
 
-/*
-  WHO IS LISTENING FOR THE END OF THE LINE.
+/**
+ * Bumped by every stop and every new line, so a queued utterance can tell
+ * whether it is still the one wanted by the time it actually runs.
+ */
+let voiceToken = 0;
 
-  A player that shows time has to stop when the voice stops, and both paths
-  here end differently: the Gemini clip fires `ended` on its <audio>, the
-  browser voice fires `onend` on its utterance. Callers register once and are
-  told either way, so nothing has to guess with a timer. Cleared whenever a
-  new line starts or speech is cancelled, so a stale screen is never notified.
-*/
-let endListener: (() => void) | null = null;
-function finished() { const fn = endListener; endListener = null; fn?.(); }
+/**
+ * Three speakers. The grown-up narrates the app; Chirpy is the child's own mind,
+ * heard only when the child's thoughts are being said out loud; the guide is a
+ * deeper, slower voice for breathing and meditation in the reflection room.
+ */
+export type Speaker = 'grownup' | 'mind' | 'guide';
 
-/** The clip currently playing, when there is one — it carries a real duration
- *  and a real currentTime, which the browser voice does not. */
-export function currentClip(): HTMLAudioElement | null { return current; }
+/**
+ * Where a line sits in a story, so the server's narration director can carry
+ * the mood over from the page before instead of starting each page cold.
+ * `mode` forces a reading (e.g. 'bedtime' for a story's last line).
+ */
+export interface NarrationContext { title?: string; previous?: string; next?: string; mode?: string }
+const VOICES: Record<Speaker, string> = { grownup: 'Enceladus', mind: 'Enceladus', guide: 'Enceladus' };
 
 function browserVoice(text: string) {
   if (!isVoiceSupported()) return;
-  try {
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.onend = () => { if (speaking === text) finished(); };
-    u.onerror = () => { if (speaking === text) finished(); };
-    // Lifting the pitch gets most of the way to young without the chipmunk
-    // effect the old 1.15-on-a-default-voice had — the rate matters as much as
-    // the pitch, so he stays slow.
-    speakCalmly(u, { rate: 0.9, pitch: 1.25 });
-    window.speechSynthesis.speak(u);
-  } catch { /* ignore — the line is still on screen */ }
+  /*
+    THE UTTERANCE CANNOT GO IN THE SAME TASK AS THE CANCEL.
+
+    Every caller reaches here just after stopSpeaking(), which calls
+    speechSynthesis.cancel() — and Chrome drops an utterance queued in the
+    same task as a cancel. This function used to note that hazard and then
+    queue synchronously anyway, so the line was dropped on the spot. In the
+    Story Lab it was dropped twice per step: React runs the previous effect's
+    cleanup (a cancel) and the next effect's body (a cancel and a speak) in
+    one commit, so Chirpy went silent for the whole walk.
+
+    A turn of the event loop is enough for the cancel to have settled. The
+    token is what keeps the delay honest — a child who moves on within those
+    few milliseconds must not be caught up by the previous panel's question.
+  */
+  const token = ++voiceToken;
+  setTimeout(() => {
+    if (token !== voiceToken || isMuted() || speaking !== text) return;
+    try {
+      const u = new SpeechSynthesisUtterance(text);
+      // Unhurried and natural, close to the narrator it stands in for.
+      speakCalmly(u, { rate: 0.92, pitch: 0.95 });
+      window.speechSynthesis.speak(u);
+    } catch { /* ignore — the line is still on screen */ }
+  }, 60);
 }
 
 /**
@@ -96,56 +118,145 @@ function browserVoice(text: string) {
  * ever says one thing at a time, so a new line always wins over the old one
  * rather than queueing behind it.
  */
-export function speak(text: string, quiet: boolean, onEnd?: () => void) {
-  if (isMuted() || quiet || !text) { onEnd?.(); return; }
+export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', onEnd?: () => void, feeling = '', context?: NarrationContext) {
+  if (isMuted() || quiet || !text) return;
   stopSpeaking();
-  endListener = onEnd ?? null;
-  speaking = text;
-
-  const cached = heard.get(text);
-  if (cached) { play(cached, text); return; }
 
   /*
-    The browser starts immediately and Gemini takes over when it arrives.
-    Waiting silently for a network round trip before a six-year-old hears
-    anything is worse than a plainer voice starting on time — and on the
-    common path (a line he has said before) the cache hits and this never runs.
-  */
-  browserVoice(text);
+    CLAIM THE LINE HERE, and this is the bug that made him mute the first
+    time he was asked for anything.
 
-  void fetch(VOICE_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text }),
-  })
-    .then((r) => (r.ok ? r.blob() : null))
-    .then((blob) => {
-      if (!blob) return;
-      const url = URL.createObjectURL(blob);
-      heard.set(text, url);
-      /* Only if this is still the line on screen. A child who has moved on
-         must not be caught up by the previous screen's audio. */
-      if (!isMuted() && speaking === text) { stopSpeaking(); play(url, text); }
-    })
-    .catch(() => { /* the browser voice already said it */ });
+    `speaking` was only ever assigned inside `play()`. On the uncached path —
+    which is every line the first time it is heard — `speak` called
+    `stopSpeaking()` (setting it to null), then `browserVoice()`, which never
+    touched it. So when the fetch came back, the guard below read
+    `null === text` and threw the audio away. The line was synthesised, paid
+    for, cached, and dropped; only a SECOND request for the same text ever
+    played it, off the cache.
+
+    Which meant the real voice never spoke on first hearing, and on any device
+    where speechSynthesis has no usable voice loaded, the first press of Play
+    was simply silent.
+  */
+  speaking = text;
+
+  const key = `${who}|${feeling}|${context ? JSON.stringify(context) : ''}|${text}`;
+  const cached = heard.get(key);
+  if (cached) { play(cached, text, onEnd); return; }
+  if (Date.now() < restingUntil) { browserVoice(text); return; }
+
+  /*
+    GEMINI FIRST, BROWSER ONLY AS A LAST RESORT — AND LATE ENOUGH NEVER TO
+    PRE-EMPT IT.
+
+    Chirpy's real voice is Gemini; for the child's own mind (`who === 'mind'`)
+    it also carries the feeling (scared, excited, sad...). Two failures have to
+    be avoided at once:
+
+      - the browser's flat adult voice jumping in and reading over Chirpy on
+        every slow line (the "mature lady everywhere, no feeling" regression), and
+      - total silence when the server is genuinely down or out of budget.
+
+    Now that a line is cached after its first hearing and served straight back,
+    the real voice returns in well under a second for anything heard before —
+    so a long fallback delay almost never fires. The browser voice only speaks
+    when the server truly does not answer, where a low, slow browser voice beats
+    nothing. The mind voice is given the longer leash, since its feeling is the
+    whole point and it is worth waiting for.
+  */
+  const fallbackDelay = who === 'mind' ? 10000 : 8000;
+  let fellBack = false;
+  let resolved = false;
+  const timeoutId: number | undefined = setTimeout(() => {
+    if (!resolved && speaking === text) { fellBack = true; browserVoice(text); }
+  }, fallbackDelay) as unknown as number;
+
+  void fetchLine(key, { text, voice: VOICES[who], character: who, feeling, context }).then((url) => {
+    if (resolved) return;
+    if (timeoutId) clearTimeout(timeoutId);
+    resolved = true;
+    if (fellBack) {
+      /* The browser had already started reading. Swap in the real voice if
+         it is still the line on screen and the browser hasn't finished. */
+      const stillReading = typeof window !== 'undefined' && window.speechSynthesis?.speaking;
+      if (url && stillReading && !isMuted() && speaking === text) {
+        stopSpeaking(); speaking = text; play(url, text, onEnd);
+      }
+      return;
+    }
+    /* A non-OK response (429/503 budget or rate limit, a cold-start error) or
+       no network at all — the server gave us nothing, so fall back to the
+       browser rather than leave the child in silence. */
+    if (!url) { browserVoice(text); return; }
+    /* Only if this is still the line on screen. A child who has moved on
+       must not be caught up by the previous screen's audio. */
+    if (!isMuted() && speaking === text) { stopSpeaking(); speaking = text; play(url, text, onEnd); }
+  });
 }
 
-function play(url: string, text: string) {
+/*
+  NOTHING IS FETCHED AHEAD ANY MORE. Lines used to be pre-fetched in bulk (every
+  thought for a feeling, every affirmation), which on a free Gemini allowance
+  spent most of the day recording lines nobody heard. A line is fetched only
+  when it is about to be spoken, and two asks for the same line at once share
+  one request.
+*/
+const pending = new Map<string, Promise<string | null>>();
+/*
+  WHEN THE SERVER SAYS HE IS RESTING — a 503 once Gemini's allowance is spent,
+  or a 429 for asking too fast — nothing is asked again until the wait it names
+  is over. Every line until then goes straight to the browser voice; a room
+  reading ten lines used to send ten requests that were sure to be refused.
+*/
+let restingUntil = 0;
+
+function fetchLine(key: string, body: Record<string, unknown>): Promise<string | null> {
+  const waiting = pending.get(key);
+  if (waiting) return waiting;
+  const job = fetch(VOICE_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+    .then((r) => {
+      if (r.ok) return r.blob();
+      if (r.status === 503 || r.status === 429) {
+        const wait = Number(r.headers.get('Retry-After'));
+        restingUntil = Date.now() + (wait > 0 ? wait * 1000 : r.status === 429 ? 60_000 : 5 * 60_000);
+      }
+      void r.text().then((why) => console.warn(`[chirpy-voice] ${r.status}: ${why.slice(0, 120)}`)).catch(() => {});
+      return null;
+    })
+    .then((blob) => {
+      if (!blob) return null;
+      const url = URL.createObjectURL(blob);
+      heard.set(key, url);
+      return url;
+    })
+    .catch(() => null)
+    .finally(() => pending.delete(key));
+  pending.set(key, job);
+  return job;
+}
+
+function play(url: string, text: string, onEnd?: () => void) {
   try {
     const audio = new Audio(url);
+    if (onEnd) audio.onended = () => { if (current === audio) onEnd(); };
     current = audio;
     speaking = text;
-    audio.addEventListener('ended', () => { if (speaking === text) finished(); });
-    audio.addEventListener('error', () => browserVoice(text));
     void audio.play().catch(() => browserVoice(text));
   } catch { browserVoice(text); }
 }
 
 export function stopSpeaking() {
+  /* Abandons any utterance still waiting out the cancel in browserVoice —
+     without this, a line stopped within those few milliseconds would go on
+     to speak over whatever replaced it. */
+  voiceToken += 1;
   try { window.speechSynthesis.cancel(); } catch { /* ignore */ }
   if (current) { try { current.pause(); } catch { /* ignore */ } current = null; }
   speaking = null;
-  endListener = null;
 }
 
 /**

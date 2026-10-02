@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { getRoom, type RoomId } from '../rooms';
+import { getRoom, roomArt, type RoomId } from '../rooms';
 import { CHROME, Cta, FONT, GrownUpExit, Pill, Question, SceneLine } from '../ui/chrome';
 import { DoorHandle } from '../ui/DoorHandle';
 import { Chirpy, RoomScene } from '../ui/scene';
@@ -11,14 +11,15 @@ import { BOY_SRC, BOY_SRCSET } from '../ui/sprites';
 import { BodyPortrait } from '../ui/BodyPortrait';
 import { BODY_ZONE_LABEL, type BodyZoneId } from '../ui/bodyZones';
 import { DrawingCanvas, type DrawingCanvasHandle } from '../ui/DrawingCanvas';
-import { THOUGHTS, MAYBES, FEELINGS } from '../kit/checkinContent';
+import { THOUGHTS, MAYBES } from '../kit/checkinContent';
 import { STEADY, STEADY_GROWNUP } from '../kit/steady';
 import { Steady } from '../ui/Steady';
 import { FeelingBalls } from './FeelingBalls';
-import { SizeBalloons } from './SizeBalloons';
 import { FeelingsIntro } from './FeelingsIntro';
+import { stopFeelingsFilm } from './feelingsFilmControl';
 import { FloatingFeeling } from '../ui/FloatingFeeling';
 import { setTodaysFeeling } from '../kit/todaysFeeling';
+import { logKidEvent } from '../kit/kidAccount';
 import * as sound from '../kit/sound';
 import { StoryLabRoom } from './StoryLabRoom';
 import { saveCase } from '../kit/cases';
@@ -62,6 +63,84 @@ const STEPS: Step[] = [
   { id: 'eyes', room: 'thought', chirpy: 'Now the tricky bit. What did your EYES actually see?', question: 'What actually happened?', hint: 'Just the bit a camera would have caught. No guessing what it meant.' },
   { id: 'other', room: 'story', chirpy: 'Go on then — teach me a happier one.', question: 'What else could be true?', hint: 'Any of these. Or none, if none of them fit.' },
 ];
+
+/**
+ * WHERE THIS FEELING OFTEN SITS — offered, never asserted.
+ *
+ * A child who has never been asked where a feeling lives usually cannot
+ * answer, because nobody has ever suggested that feelings live anywhere at
+ * all. So the room points at one place and says other people notice it there,
+ * which turns an impossible question into one with a worked example.
+ *
+ * It stays a suggestion in every direction: the ring is dashed rather than
+ * solid, every other zone stays tappable, and the wording is "some people",
+ * never "you". A child whose anger sits in their throat rather than their
+ * hands must not be told they have it wrong — see bodyZones.ts.
+ *
+ * This logic already existed in CheckIn.tsx, which nothing mounts any more,
+ * so the live walk never had it.
+ */
+function suggestedBodyZone(feeling: string | undefined): BodyZoneId | null {
+  switch ((feeling ?? '').trim().toLowerCase()) {
+    case 'worried':
+    case 'scared':  return 'tummy';
+    case 'angry':   return 'hands';
+    case 'sad':     return 'chest';
+    case 'excited': return 'chest';
+    case 'happy':   return 'chest';
+    default:        return null;
+  }
+}
+
+/* ── How the body room is framed ───────────────────────────────────────── *
+ *
+ * Both numbers are read off the hologram boy's position in
+ * public/rooms/body.webp, which is 1024x1536. He runs from about row 265
+ * (top of the hair) to about row 1230 (the soles on the disc): 965 rows, and
+ * every tap zone in ui/BodyPortrait sits between them. Re-paint the room and
+ * both of these move — measure them again rather than nudging.
+ */
+
+/**
+ * The widest the stage may be, as a multiple of its own height.
+ *
+ * Under `cover` a stage this shape shows 1024/1.05 ≈ 975 of the painting's
+ * rows, whatever size the window is — the boy's 965 with ten to spare. Any
+ * wider and the scale goes up, the visible band shrinks, and his head or his
+ * feet leave the screen along with the zones on them.
+ */
+const BODY_STAGE_MAX_ASPECT = 1.05;
+
+/**
+ * Where to hold that band. The boy sits slightly above the painting's middle,
+ * so plain centring clips his hair on the tightest stage; 0.46 puts the 975
+ * visible rows at about 258–1233 and holds him whole all the way down to a
+ * square-ish stage, where there is slack to spare either side.
+ */
+const BODY_FOCUS_Y = 0.46;
+
+/**
+ * Is the window a shape `cover` can frame the whole boy in?
+ *
+ * Below about half as wide as it is tall there is no vertical crop left to
+ * trade — cover starts cropping the SIDES instead, and his right hand is the
+ * first thing to go. A portrait phone is the case that matters here, and it
+ * keeps `contain`, which is what it has always had and what it should have:
+ * the letterbox nobody minds on a phone is exactly the bars that made a
+ * desktop look like one.
+ */
+function useCoverableStage() {
+  const [ok, setOk] = useState(() =>
+    typeof window === 'undefined' ? true : window.matchMedia('(min-aspect-ratio: 53/100)').matches);
+  useEffect(() => {
+    const query = window.matchMedia('(min-aspect-ratio: 53/100)');
+    const sync = () => setOk(query.matches);
+    sync();
+    query.addEventListener('change', sync);
+    return () => query.removeEventListener('change', sync);
+  }, []);
+  return ok;
+}
 
 const EYES_OPTIONS = [
   'Someone said something',
@@ -127,25 +206,6 @@ export function DeepDive({
   /** Set the instant a feeling ball is tapped, so the room blooms with it. */
   const [orbFlash, setOrbFlash] = useState(false);
   /**
-   * AN UNPLEASANT FEELING PICKED, WAITING ON "HOW BIG".
-   *
-   * §18's quiet state has no trigger anywhere in the live app — CheckIn.tsx
-   * has one but CheckIn.tsx is a dead shell nothing mounts any more, so a
-   * distressed child was never actually asked, and the app never actually
-   * went quiet. This is the live trigger.
-   *
-   * ONLY UNPLEASANT FEELINGS ASK. A child who picked Happy or Excited has
-   * nothing here to check the size of — the intensity question exists to
-   * catch a child in real distress, not to interrogate every feeling.
-   *
-   * Held here rather than folded into `answer('feeling', …)` because the
-   * feeling isn't recorded yet — the room needs one more tap first, and a
-   * child who is asked "how big" before their feeling has visibly landed
-   * would be answering a question about something the app hasn't
-   * acknowledged yet.
-   */
-  const [bigCheck, setBigCheck] = useState<{ id: string; label: string } | null>(null);
-  /**
    * The opening film. It used to be a per-device flag: the cinematic played
    * once ever, and every visit after got a separate, deliberately silent
    * loop instead. Which meant the sound worked exactly once and then looked
@@ -195,6 +255,18 @@ export function DeepDive({
   const caseComplete = !!(answers.feeling && answers.body && answers.story && answers.eyes);
   const onFeelingStep = step.id === 'feeling' && phase === 'ask';
 
+  /** The one step where the painting is also the control. */
+  const bodyAsk = step.id === 'body' && phase === 'ask';
+  /* One value, read by the painting and by the overlay that has to line up
+     with it. Two literals here is how they drift apart. */
+  const bodyFit = useCoverableStage() ? 'cover' : 'contain';
+
+  /** Chirpy's line on the body step, when the feeling has a usual home. */
+  const bodySuggestion = step.id === 'body' ? suggestedBodyZone(answers.feeling) : null;
+  const bodyHint = bodySuggestion
+    ? `Some people notice ${(answers.feeling ?? 'it').toLowerCase()} in their ${BODY_ZONE_LABEL[bodySuggestion]}. Where do you notice yours?`
+    : null;
+
   /* No longer read anywhere — the film used to gate the ask content until
      it finished (see below), and that gate is gone. FeelingsIntro still
      needs an onDone to fade its own soundtrack out and settle into its
@@ -213,33 +285,19 @@ export function DeepDive({
    */
   const leave = () => { onQuiet(false); onFinish(answers); };
 
-  /**
-   * The feeling ball was tapped. Pleasant feelings answer immediately, same
-   * as before. An unpleasant one pauses on the intensity check — see
-   * `bigCheck` above.
-   */
-  const pickFeeling = (id: string, label: string) => {
+  /** The feeling ball was tapped; every feeling answers straight away. */
+  const pickFeeling = (_id: string, label: string) => {
     setTodaysFeeling(label);
-    const def = FEELINGS.find((f) => f.id === id);
-    if (def && !def.ok) { setBigCheck({ id, label }); return; }
-    answer('feeling', label);
-  };
-
-  /**
-   * How big it is, answered. "Really" is the quiet-state trigger — see
-   * kit/steady for what changes once it fires. Every size still records the
-   * feeling and moves the walk on; the size itself is never stored, only
-   * used once, right here.
-   */
-  const sizeFeeling = (sizeId: string) => {
-    if (!bigCheck) return;
-    if (sizeId === 'really') onQuiet(true);
-    const { label } = bigCheck;
-    setBigCheck(null);
+    logKidEvent('feeling', { feeling: label });
+    useKidStore.getState().noteActivity({ kind: 'feeling', detail: label });
     answer('feeling', label);
   };
 
   const answer = (key: keyof DeepDiveAnswers, value: string | string[]) => {
+    /* The feelings film is the room for step one, and the walk cross-fades
+       rooms over most of a second — long enough for its soundtrack to play
+       under the Body Detective if nothing cuts it. See stopFeelingsFilm. */
+    if (key === 'feeling') stopFeelingsFilm();
     setAnswers((a) => ({ ...a, [key]: value }));
     setStepIndex((i) => i + 1);
   };
@@ -266,6 +324,8 @@ export function DeepDive({
     onSave={(a) => {
       const ok = saveCase(a);
       if (ok) useKidStore.getState().addSavedReflection(buildSavedReflection(a));
+      useKidStore.getState().noteActivity({ kind: 'story', detail: a.feeling });
+      logKidEvent('storyLab', { ...a });
       return ok;
     }} />;
 
@@ -288,29 +348,74 @@ export function DeepDive({
               other step keeps its painted still. */}
           {onFeelingStep
             ? <FeelingsIntro onDone={finishFeelingIntro} flash={orbFlash} />
-            : <RoomScene
-                room={art}
-                dim={phase === 'ask' ? DIM.content : turned ? DIM.arrive : DIM.play}
-                objectPosition={step.id === 'body' ? 'top' : 'center'}
-              />}
+            : bodyAsk
+              /*
+                THE BODY ROOM IS A STAGE, NOT THE WHOLE WINDOW.
 
-          {/* The invisible tap layer for "where do you feel it?", registered
-              against the SAME full-bleed box RoomScene just painted into —
-              see BodyPortrait's own doc comment for why that's what keeps it
-              lined up with the boy on every screen shape. */}
-          {step.id === 'body' && phase === 'ask' && (
-            <BodyPortrait
-              accent={accent}
-              suggested={null}
-              selected={bodyZones}
-              topAnchor
-              onToggle={(z) => {
-                setBodyZones(new Set([z]));
-                sound.play('tap');
-                answer('body', [BODY_ZONE_LABEL[z]]);
-              }}
-            />
-          )}
+                Fitting the painting to the viewport kept every tap zone
+                reachable and turned a desktop into a phone: body.webp is
+                1024x1536, so on a 1512x850 window `contain` drew it 567px
+                wide and filled the remaining thousand pixels with blur. A
+                portrait strip down the middle of a landscape screen.
+
+                It cannot be solved by cropping less. To fill 1512px from a
+                1024px-wide painting you have to scale it 1.48x, which leaves
+                542 of its 1536 rows on screen — and the hologram boy alone is
+                965 rows tall. Whole boy and full width cannot both be had.
+
+                So the painting gets a stage of its own, no wider than
+                BODY_STAGE_MAX_ASPECT times its height, and fills it with
+                `cover`. At that shape cover shows 1024/1.05 ≈ 975 rows, which
+                is the boy plus ten to spare, and the stage is 892px on that
+                same window rather than 567. The room carries on past its
+                edges as the blurred bed below, so there is no seam — what was
+                a phone on a desk is now a lit examination panel in a wider
+                room.
+              */
+              ? <>
+                  <img
+                    aria-hidden
+                    alt=""
+                    src={roomArt(art.id)}
+                    draggable={false}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    style={{ filter: 'blur(34px) saturate(1.15) brightness(0.5)', transform: 'scale(1.18)' }}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                  <div className="absolute inset-0 flex justify-center">
+                    {/* RoomScene and BodyPortrait are siblings in THIS box, so
+                        the overlay measures the same width and height the
+                        painting was drawn into — which is the whole reason the
+                        tap zones land on the boy. Moving one without the other
+                        is how they came apart before. */}
+                    <div className="relative h-full" style={{ width: `min(100%, ${BODY_STAGE_MAX_ASPECT * 100}svh)` }}>
+                      <RoomScene
+                        room={art}
+                        dim={DIM.content}
+                        objectPosition={`center ${BODY_FOCUS_Y * 100}%`}
+                        fit={bodyFit}
+                      />
+                      <BodyPortrait
+                        accent={accent}
+                        suggested={bodySuggestion}
+                        selected={bodyZones}
+                        fit={bodyFit}
+                        focusY={BODY_FOCUS_Y}
+                        onToggle={(z) => {
+                          setBodyZones(new Set([z]));
+                          sound.play('tap');
+                          answer('body', [BODY_ZONE_LABEL[z]]);
+                        }}
+                      />
+                    </div>
+                  </div>
+                </>
+              : <RoomScene
+                  room={art}
+                  dim={phase === 'ask' ? DIM.content : turned ? DIM.arrive : DIM.play}
+                  objectPosition="center"
+                  fit="cover"
+                />}
         </motion.div>
       </AnimatePresence>
 
@@ -340,7 +445,7 @@ export function DeepDive({
 
       {/* The way back out, as a fitting on the left wall rather than a
           chevron in the corner. Present the whole time, asking nothing. */}
-      <DoorHandle side="left" label="Leave" onClick={leave} accent={accent} />
+      <DoorHandle side="left" label="Leave" onClick={leave} accent={accent}  scale={0.5} />
 
       {/* Padded clear of both handles so nothing ever sits under them. */}
       <div className="relative mx-auto flex min-h-[100svh] w-full max-w-xl flex-col px-[68px] pb-10 pt-4 sm:px-20">
@@ -480,7 +585,18 @@ export function DeepDive({
                 Three instructions, two of them about a choice the child had
                 already made.
               */}
-              {!bigCheck && <Chirpy pose={step.id === 'other' ? 'hopeful' : 'curious'} line={step.chirpy} align="left" />}
+              {/*
+                ON THE BODY STEP CHIRPY OFFERS A PLACE, because "where do you
+                notice it?" is unanswerable for a child who has never been
+                told feelings live anywhere. Naming one that other people
+                report turns it into a question with a worked example. It is
+                always "some people", never "you" — see suggestedBodyZone.
+              */}
+              <Chirpy
+                pose={step.id === 'other' ? 'hopeful' : 'curious'}
+                line={bodyHint ?? step.chirpy}
+                align="left"
+              />
               {/*
                 SOMEBODY IS STILL HERE. Chirpy has already gone silent by
                 this point — he self-suppresses in the quiet state, see
@@ -494,46 +610,16 @@ export function DeepDive({
                 : step.id === 'eyes' ? STEADY.situation
                 : null
               } />
-              {!bigCheck && <Question room={art}>{step.question}</Question>}
-              {step.hint && !bigCheck && <SceneLine>{step.hint}</SceneLine>}
+              <Question room={art}>{step.question}</Question>
+              {step.hint && <SceneLine>{step.hint}</SceneLine>}
 
-              {step.id === 'feeling' && !bigCheck && (
+              {step.id === 'feeling' && (
                 <FeelingBalls
                   onPick={pickFeeling}
                   onBurst={() => setOrbFlash(true)}
                 />
               )}
 
-              {/*
-                §18's TRIGGER, LIVE. The one screen in the walk that decides
-                whether the rest of it stays clever or goes quiet.
-
-                Chirpy still speaks here — the quiet state hasn't started
-                yet, this IS the question that starts it — so this keeps his
-                voice rather than Steady's, which only speaks once quiet is
-                already on.
-              */}
-              {step.id === 'feeling' && bigCheck && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.35 }}
-                  className="flex flex-col gap-3.5"
-                >
-                  <Chirpy pose="worried" line="Okay. How big is it?" align="left" />
-                  <Question room={art}>How big does {bigCheck.label.toLowerCase()} feel right now?</Question>
-                  {/*
-                    Popped, not picked from a list. The question one step
-                    earlier is answered by bursting a balloon, and answering
-                    this one off a menu made the walk change its grammar
-                    halfway through — see SizeBalloons.
-                  */}
-                  <SizeBalloons
-                    hue={FEELINGS.find((f) => f.id === bigCheck.id)?.hue ?? 280}
-                    onPick={sizeFeeling}
-                  />
-                </motion.div>
-              )}
 
               {/*
                 POINTING IS THE ANSWER. There is no confirm button under the
@@ -677,6 +763,7 @@ export function DeepDive({
                 label="Go on"
                 onClick={() => { sound.play('resolve'); leave(); }}
                 accent={accent}
+                scale={0.5}
               />
             </motion.div>
           )}

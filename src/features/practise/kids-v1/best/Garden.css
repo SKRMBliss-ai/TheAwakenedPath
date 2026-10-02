@@ -1,0 +1,259 @@
+/* My Garden — see Garden.tsx. A twilight garden behind the treehouse. */
+
+.gd-room {
+  --gd-front: min(94vw, 1300px);
+  position: relative; height: 100svh; min-height: 560px; overflow: hidden;
+  background: #120c34; color: #fff;
+  user-select: none; -webkit-user-select: none;
+}
+
+/* ── Sky, moon, stars ─────────────────────────────────────────────────────── */
+
+.gd-sky {
+  position: absolute; inset: 0;
+  background: linear-gradient(#120c34 0%, #2a1c66 26%, #5b3a92 44%, #b4628f 56%, #f0a070 64%, #f6c48a 68%);
+}
+.gd-moon {
+  position: absolute; top: 9%; right: 13%;
+  width: clamp(64px, 8vw, 132px); aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(circle at 38% 34%, #fffdf2, #fff1c2 46%, #f5d38a 100%);
+  box-shadow: 0 0 40px 10px #fff3c466, 0 0 120px 40px #ffd98a33;
+}
+.gd-moon::after {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle at 62% 60%, #e9c27a66 0 9%, transparent 10%), radial-gradient(circle at 40% 66%, #e9c27a55 0 6%, transparent 7%), radial-gradient(circle at 66% 36%, #e9c27a44 0 5%, transparent 6%);
+}
+.gd-stars {
+  position: absolute; inset: 0 0 45% 0;
+  background:
+    radial-gradient(1.6px 1.6px at 8% 18%, #fff, transparent), radial-gradient(1.2px 1.2px at 21% 9%, #fff, transparent),
+    radial-gradient(1.8px 1.8px at 33% 26%, #fff, transparent), radial-gradient(1.2px 1.2px at 46% 12%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 58% 30%, #fff, transparent), radial-gradient(1.2px 1.2px at 69% 8%, #fff, transparent),
+    radial-gradient(1.7px 1.7px at 92% 22%, #fff, transparent), radial-gradient(1.2px 1.2px at 15% 42%, #fff, transparent),
+    radial-gradient(1.3px 1.3px at 40% 48%, #ffffffcc, transparent), radial-gradient(1.2px 1.2px at 78% 44%, #ffffffcc, transparent);
+  animation: gd-twinkle-sky 5s ease-in-out infinite;
+}
+@keyframes gd-twinkle-sky { 50% { opacity: .55; } }
+
+.gd-hills { position: absolute; left: 0; bottom: 0; width: 100%; height: 66%; display: block; }
+
+/* A fence along the back of the lawn, strung with lights. */
+.gd-fence {
+  position: absolute; left: 0; right: 0; bottom: 37%; height: 7%;
+  background:
+    linear-gradient(#a8744a, #6b4426) 0 22% / 100% 9% no-repeat,
+    linear-gradient(#a8744a, #6b4426) 0 62% / 100% 9% no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 calc(5.4% - 12px), #9a6a42 calc(5.4% - 12px) 5.4%);
+  opacity: .85;
+  -webkit-mask: linear-gradient(transparent, #000 12%);
+          mask: linear-gradient(transparent, #000 12%);
+}
+.gd-lights {
+  position: absolute; left: 0; right: 0; top: -6px; height: 14px;
+  background: radial-gradient(circle, #fff3b0 0 3px, #ffd86b88 4px, transparent 7px) 0 0 / 46px 14px repeat-x;
+  filter: drop-shadow(0 0 6px #ffd86b);
+  animation: gd-lights 2.6s ease-in-out infinite;
+}
+@keyframes gd-lights { 50% { opacity: .55; } }
+
+.gd-fireflies i {
+  position: absolute; width: 6px; height: 6px; border-radius: 50%;
+  background: #fff7b0; box-shadow: 0 0 10px 3px #ffe86b99;
+  animation: gd-firefly 6s ease-in-out infinite alternate;
+}
+@keyframes gd-firefly {
+  0% { transform: translate(0, 0); opacity: .2; }
+  40% { opacity: 1; }
+  100% { transform: translate(34px, -26px); opacity: .35; }
+}
+
+/* ── Title and tools ──────────────────────────────────────────────────────── */
+
+.gd-head { position: absolute; z-index: 6; top: clamp(12px, 2.4vh, 26px); left: clamp(16px, 2.2vw, 34px); max-width: 52vw; }
+.gd-head h1 {
+  margin: 0; font-family: inherit; font-size: clamp(26px, 3.4vw, 50px); font-weight: 900; line-height: 1;
+  color: #fff6e0; text-shadow: 0 3px 0 #2a1450, 0 0 24px #ffd98a88;
+}
+.gd-head h1 span { color: #ffb9d8; }
+.gd-head p { margin: 6px 0 0; font-size: clamp(12px, 1.25vw, 17px); font-weight: 800; color: #ffeec7; text-shadow: 0 2px 6px #1a0a2e; }
+
+.gd-tools {
+  position: absolute; z-index: 6; top: clamp(12px, 2.4vh, 26px); right: clamp(14px, 2vw, 30px);
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.gd-pouch {
+  display: grid; gap: 5px; padding: 8px 14px; border-radius: 18px;
+  background: #1d1446d9; border: 1px solid #ffd98a66; box-shadow: 0 8px 20px -10px #000;
+}
+.gd-pouch b { font-size: 12px; font-weight: 900; color: #ffe6a2; letter-spacing: .03em; }
+.gd-pouch > span { display: flex; gap: 5px; }
+.gd-pouch i { width: 13px; height: 16px; border-radius: 50% 50% 46% 46%; background: #ffffff22; border: 1.5px solid #ffffff44; }
+.gd-pouch i.is-in { background: radial-gradient(circle at 35% 30%, #ffe0a8, #9a5a28); border-color: #ffd98a; box-shadow: 0 0 8px #ffd98a88; }
+.gd-can, .gd-grownup {
+  min-height: 48px; border: 0; cursor: pointer; color: #fff; font-family: inherit; font-weight: 900;
+  border-radius: 24px; box-shadow: 0 8px 20px -10px #000;
+}
+.gd-can {
+  display: flex; align-items: center; gap: 6px; padding: 4px 16px 4px 8px;
+  background: linear-gradient(#2c7d74, #1a4d4a); border: 1.5px solid #9eeee6; font-size: 15px;
+  transition: transform .2s ease;
+}
+.gd-can svg { width: 46px; height: 36px; transition: transform .3s ease; }
+.gd-can:hover svg, .gd-raining .gd-can svg { transform: rotate(-24deg) translateY(4px); }
+.gd-can:focus-visible, .gd-grownup:focus-visible { outline: 3px solid #ffe9a6; outline-offset: 3px; }
+.gd-grownup { padding: 8px 16px; background: #32205de8; font-size: 13px; }
+
+/* ── The beds ─────────────────────────────────────────────────────────────── */
+
+.gd-beds { position: absolute; inset: 0; pointer-events: none; }
+.gd-row {
+  --w: var(--gd-front); --box: calc(var(--w) * .045); --soil: calc(var(--w) * .05);
+  position: absolute; left: 50%; translate: -50% 0; width: var(--w); bottom: 2.5%;
+  height: calc(var(--box) + var(--soil)); z-index: 4;
+}
+.gd-row-1 { --w: calc(var(--gd-front) * .82); bottom: 29%; z-index: 3; filter: brightness(.88) saturate(.95); }
+.gd-row-2 { --w: calc(var(--gd-front) * .68); bottom: 48%; z-index: 2; filter: brightness(.78) saturate(.9); }
+.gd-soil {
+  position: absolute; left: 1.2%; right: 1.2%; bottom: calc(var(--box) - var(--soil) * .25); height: var(--soil);
+  border-radius: 50% / 46%;
+  background:
+    radial-gradient(2px 2px at 20% 40%, #b98a62, transparent), radial-gradient(2px 2px at 64% 55%, #b98a62, transparent),
+    radial-gradient(1.6px 1.6px at 42% 30%, #c89a70, transparent), radial-gradient(1.6px 1.6px at 84% 42%, #c89a70, transparent),
+    radial-gradient(ellipse at 50% 35%, #6b4428, #3a2214 75%);
+  box-shadow: inset 0 4px 10px #00000066;
+}
+.gd-box {
+  position: absolute; left: 0; right: 0; bottom: 0; height: var(--box); border-radius: 10px 10px 14px 14px;
+  background:
+    linear-gradient(#ffffff26, transparent 30%),
+    repeating-linear-gradient(90deg, #9a6236 0 calc(14.28% - 4px), #6b3e1f calc(14.28% - 4px) 14.28%),
+    #8a5530;
+  box-shadow: 0 10px 24px -8px #000c, inset 0 -6px 0 #00000033, inset 0 2px 0 #ffd9a055;
+}
+.gd-plots {
+  position: absolute; left: 1.5%; right: 1.5%; bottom: calc(var(--box) + var(--soil) * .2);
+  display: grid; grid-template-columns: repeat(var(--per), 1fr); align-items: end;
+  margin: 0; padding: 0; list-style: none;
+}
+.gd-plot { display: grid; justify-items: center; align-items: end; pointer-events: auto; }
+.gd-plot.is-empty { pointer-events: none; }
+.gd-plot.is-empty span {
+  width: 46%; aspect-ratio: 2.6; border-radius: 50%; margin-bottom: 4%;
+  background: radial-gradient(ellipse, #2a170c, #3a2214 60%, transparent 70%);
+}
+.gd-plot.is-next span { border: 2px dashed #ffe6a299; background: #ffe6a214; animation: gd-next 2.2s ease-in-out infinite; }
+@keyframes gd-next { 50% { border-color: #ffe6a2; box-shadow: 0 0 14px #ffe6a266; } }
+
+.gd-plant {
+  position: relative; width: 94%; padding: 0; border: 0; background: none; cursor: pointer;
+  transform-origin: 50% 96%; animation: gd-sway var(--sway, 4s) ease-in-out infinite alternate; animation-delay: var(--sway-delay, 0s);
+  -webkit-tap-highlight-color: transparent;
+}
+.gd-plant-svg { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 6px 6px #0b041855); }
+@keyframes gd-sway { from { rotate: -2.2deg; } to { rotate: 2.2deg; } }
+.gd-plant:hover .gd-plant-svg, .gd-plant:focus-visible .gd-plant-svg, .gd-plant.is-picked .gd-plant-svg {
+  filter: drop-shadow(0 0 10px #fff3b0cc) drop-shadow(0 6px 6px #0b041855);
+}
+.gd-plant:focus-visible { outline: 3px solid #ffe9a6; outline-offset: 2px; border-radius: 16px; }
+.gd-raining .gd-plant { animation: gd-drink .5s ease-in-out 4; }
+@keyframes gd-drink { 50% { transform: scale(1.04, .95); } }
+
+.gd-halo { animation: gd-halo 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.gd-halo-magic { animation-duration: 1.8s; }
+@keyframes gd-halo { 50% { opacity: .55; transform: scale(1.12); } }
+.gd-twinkle { animation: gd-twinkle 1.8s ease-in-out infinite; }
+.gd-twinkle-b { animation-delay: .9s; }
+@keyframes gd-twinkle { 50% { opacity: .15; } }
+.gd-sparkles { animation: gd-twinkle 1.4s ease-in-out infinite; }
+
+/* Something that grew overnight comes up out of the soil on arrival, glowing. */
+.gd-grew .gd-plant-svg { animation: gd-grow 1.1s cubic-bezier(.2, 1.4, .4, 1) both, gd-grew-glow 2.4s ease-in-out 1.1s 3; transform-origin: 50% 96%; }
+@keyframes gd-grow { from { transform: scale(.55, .3); opacity: .3; } to { transform: none; opacity: 1; } }
+@keyframes gd-grew-glow { 50% { filter: drop-shadow(0 0 16px #fff3b0) drop-shadow(0 6px 6px #0b041855); } }
+.gd-grew-tag {
+  position: absolute; left: 50%; top: -6%; translate: -50% 0; z-index: 2;
+  padding: 2px 10px; border-radius: 12px; background: #ff7fb5; border: 1.5px solid #fff;
+  font-size: clamp(10px, .9vw, 13px); font-weight: 1000; color: #fff; white-space: nowrap;
+  box-shadow: 0 4px 10px #0007; animation: gd-tag 1.2s ease-out 1s both;
+}
+@keyframes gd-tag { from { opacity: 0; translate: -50% 10px; } to { opacity: 1; translate: -50% 0; } }
+/* Just above whatever is actually drawn: a sprout is short, a flower is tall. */
+.gd-stage-1 .gd-grew-tag { top: 56%; }
+.gd-stage-2 .gd-grew-tag { top: 20%; }
+.gd-stage-3 .gd-grew-tag { top: -4%; }
+
+.gd-head .gd-meadow-note {
+  display: inline-block; margin: 8px 0 0; padding: 3px 12px; border-radius: 12px;
+  background: #12302bcc; border: 1px solid #7fd69a66;
+  font-size: 12px; font-weight: 800; color: #d6ffe2; text-shadow: none;
+}
+
+/* ── Chirpy, the plant card, the rain ─────────────────────────────────────── */
+
+.gd-chirpy {
+  position: absolute; z-index: 5; left: clamp(10px, 2vw, 34px); bottom: 39%;
+  display: flex; align-items: flex-end; gap: 4px; pointer-events: none;
+}
+.gd-chirpy img { width: clamp(64px, 7vw, 110px); height: auto; filter: drop-shadow(0 6px 10px #0008); animation: gd-hop 3.4s ease-in-out infinite; }
+@keyframes gd-hop { 0%, 70%, 100% { transform: translateY(0); } 80% { transform: translateY(-10px); } 90% { transform: translateY(0); } }
+.gd-bubble {
+  position: relative; margin: 0 0 clamp(30px, 5vw, 70px); max-width: min(330px, 32vw);
+  padding: 10px 14px; border-radius: 18px; background: linear-gradient(#ffffff, #f1e9ff);
+  color: #2b1750; font-size: clamp(12px, 1.1vw, 15px); font-weight: 850; line-height: 1.28;
+  box-shadow: 0 8px 22px -8px #0b0418cc;
+}
+.gd-bubble::before {
+  content: ''; position: absolute; left: -9px; bottom: 14px;
+  border: 9px solid transparent; border-right-color: #f6f0ff; border-left: 0;
+}
+
+.gd-card {
+  position: absolute; z-index: 8; left: 50%; translate: -50% 0; bottom: clamp(14px, 3vh, 30px);
+  display: flex; align-items: center; gap: 14px; width: min(480px, 92vw); padding: 12px 46px 12px 12px;
+  border-radius: 24px; border: 2px solid #ffd98a; background: linear-gradient(#3b2465f5, #1f1240f8);
+  box-shadow: 0 18px 40px -12px #000, 0 0 30px -10px #ffd98a99;
+}
+.gd-card-art { flex: 0 0 auto; width: 84px; }
+.gd-card-text { display: grid; gap: 3px; }
+.gd-card h2 { margin: 0; font-family: inherit; font-size: 21px; font-weight: 1000; color: #fff3cf; }
+.gd-card p { margin: 0; font-size: 14px; font-weight: 750; line-height: 1.3; color: #eadfff; }
+.gd-card .gd-card-next { color: #ffe08a; font-weight: 900; }
+.gd-chip { justify-self: start; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 1000; letter-spacing: .04em; text-transform: uppercase; color: #2b1750; background: #ffe08a; }
+.gd-chip-0 { background: #e0b48a; } .gd-chip-1 { background: #b6f5b0; } .gd-chip-2 { background: #ffc6e4; }
+.gd-card-close {
+  position: absolute; top: 8px; right: 8px; width: 34px; height: 34px; border-radius: 50%;
+  border: 1px solid #c9aef8; background: #4a2c79; color: #fff; font-size: 13px; cursor: pointer;
+}
+
+.gd-rain { position: absolute; inset: 0; z-index: 7; pointer-events: none; overflow: hidden; }
+.gd-rain i {
+  position: absolute; top: 14%; width: 4px; height: 22px; border-radius: 4px;
+  background: linear-gradient(transparent, #e2f8ff); box-shadow: 0 0 6px #9fe6ff; opacity: 0;
+  animation: gd-drop .8s linear 2 both;
+}
+@keyframes gd-drop { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: .9; } 100% { transform: translateY(62vh); opacity: 0; } }
+
+/* ── Phones ───────────────────────────────────────────────────────────────── */
+
+@media (max-width: 699px) {
+  .gd-room { --gd-front: 96vw; }
+  .gd-head { max-width: 62vw; top: 12px; }
+  .gd-head p { font-size: 11.5px; }
+  .gd-tools { top: 10px; right: 10px; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .gd-grownup { display: none; }
+  .gd-pouch { padding: 6px 10px; }
+  .gd-can { min-height: 40px; padding: 2px 12px 2px 6px; font-size: 13px; }
+  .gd-can svg { width: 36px; height: 28px; }
+  .gd-row-1 { bottom: 23%; }
+  .gd-row-2 { bottom: 41%; }
+  .gd-fence { bottom: 52%; }
+  /* The door handle has the left edge on a phone, so Chirpy perches on the right. */
+  .gd-chirpy { bottom: auto; top: 19%; left: auto; right: 6px; flex-direction: row-reverse; }
+  .gd-bubble { max-width: 58vw; margin-bottom: 10px; }
+  .gd-bubble::before { left: auto; right: -9px; border-right: 0; border-left: 9px solid #f6f0ff; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gd-room *, .gd-room *::before, .gd-room *::after { animation: none !important; transition: none !important; }
+}
+.gd-still *, .gd-still *::before, .gd-still *::after { animation: none !important; }

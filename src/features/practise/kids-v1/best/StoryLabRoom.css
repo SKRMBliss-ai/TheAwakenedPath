@@ -20,7 +20,6 @@
 /* ── The header band ───────────────────────────────────────────────────── */
 
 .sl-header{display:flex;align-items:center;gap:14px;max-width:1600px;margin:auto;flex:0 0 auto;width:100%}
-.sl-back{width:46px;height:46px;flex:0 0 auto;border:1px solid #c6b2ff;background:linear-gradient(#a776ee,#452684);border-radius:50%;font-size:28px;box-shadow:0 0 15px #a98bff}
 .sl-logo{flex:0 0 auto;font-size:26px;font-weight:1000;line-height:.9;text-align:left;text-shadow:0 2px 5px #10081c}
 .sl-logo span{display:block;color:#ffe371}
 .sl-logo small{display:block;font-size:8px;line-height:1.35;letter-spacing:1.3px;margin-top:6px;color:#f0e2ff}
@@ -87,21 +86,24 @@
   box-shadow:0 12px 30px -10px #0b0418;
   transform:scale(var(--sl-scale));transform-origin:center center;
   margin:calc((675px * var(--sl-scale) - 675px) / 2) calc((386px * var(--sl-scale) - 386px) / 2);
-  transition:border-color .4s,box-shadow .4s;
+  transition:border-color .4s,box-shadow .4s,opacity .6s ease;
 }
-/* The one being answered is lit; the ones already answered stand quietly. */
-.sl-panel-now{border-color:#ecd7ff;box-shadow:0 0 30px -2px #b784ff,0 12px 30px -10px #0b0418}
-.sl-panel-done{border-color:#6f5aa4}
+/* The one being answered is lit; the ones already answered stand quietly —
+   and fade, so the strip reads at a glance as "done → done → HERE" rather
+   than four equally bright boxes competing for the eye. */
+.sl-panel-now{border-color:#ecd7ff;box-shadow:0 0 30px -2px #b784ff,0 12px 30px -10px #0b0418;opacity:1}
+.sl-panel-done{border-color:#6f5aa4;opacity:.58}
+.sl-panel-done:hover,.sl-panel-done:focus-within{opacity:.92}
 .sl-panel-done .sl-ask-chirpy{opacity:.5}
 
 .sl-panel-bar{display:flex;align-items:center;gap:8px;height:40px;flex:0 0 auto}
 .sl-panel-bar h2{flex:1;text-align:center;font-size:19px;font-weight:900;text-shadow:0 2px 5px #150a2c}
-.sl-panel-back,.sl-panel-home{
+.sl-panel-home{
   width:36px;height:36px;min-height:36px;flex:0 0 auto;
   border-radius:50%;border:1px solid #c6b2ff;background:linear-gradient(#a776ee,#452684);
   font-size:18px;line-height:1;box-shadow:0 0 10px #a98bff88;
 }
-.sl-panel-done .sl-panel-back,.sl-panel-done .sl-panel-home{opacity:.55}
+.sl-panel-done .sl-panel-home{opacity:.55}
 
 .sl-dots{display:flex;justify-content:center;gap:7px;margin:0;flex:0 0 auto;height:14px;align-items:center}
 .sl-dots span{width:9px;height:9px;border-radius:50%;background:#6d5a99}
@@ -137,18 +139,29 @@
 /* ── Step 3 · Thought ──────────────────────────────────────────────────── */
 
 .sl-thought-field{position:relative;flex:1 1 auto;min-height:0}
-/* The clouds finish above the boy's head — he is drawn into the bottom-left
+/* The clouds start clear of the boy's head — he is drawn into the top-left
    of this panel, and a cloud landing on his cap is the one thing the sheet
    never does. */
-.sl-thought-clouds{position:relative;z-index:2;display:flex;flex-wrap:wrap;align-content:space-evenly;justify-content:center;gap:6px;padding-bottom:78px;height:100%}
+/* A dozen clouds need the room the boy was taking, so they use the full
+   height and tighten up. Scroll is there for the longest lists rather than
+   letting a cloud fall off the bottom of the panel. */
+.sl-thought-clouds{
+  position:relative;z-index:2;display:flex;flex-wrap:wrap;
+  align-content:center;justify-content:center;gap:5px;
+  padding-top:78px;height:100%;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;
+  transition:padding-top .6s ease;
+}
+.sl-thought-clouds::-webkit-scrollbar{display:none}
 .sl-thought-cloud{
   position:relative;isolation:isolate;
-  width:112px;min-height:58px!important;padding:12px 8px;
+  width:97px;min-height:48px!important;padding:8px 6px;
   color:#31408f;background:none;border:0;
-  font-weight:850;line-height:1.12;font-size:12.5px;
+  font-weight:850;line-height:1.08;font-size:10.8px;
   filter:drop-shadow(0 0 5px #ffffffdd) drop-shadow(0 0 11px #8fc0ff88);
-  animation:sl-drift 5s ease-in-out infinite;animation-delay:var(--drift-delay);
+  animation:sl-drift var(--drift-dur,5s) ease-in-out infinite;animation-delay:var(--drift-delay);
+  transition:scale .25s ease,filter .25s ease;
 }
+.sl-thought-cloud:hover:not(:disabled){scale:1.06;filter:drop-shadow(0 0 7px #fff) drop-shadow(0 0 16px #a9d4ffcc)}
 .sl-thought-cloud:before{
   content:'';position:absolute;inset:0;z-index:-1;
   background:radial-gradient(ellipse at 50% 34%,#fff,#e9f4ff 82%);
@@ -167,8 +180,95 @@
   filter:none;animation:none;
 }
 .sl-cloud-own:before{display:none}
-.sl-mic{display:inline-grid;place-items:center;width:23px;height:23px;margin-right:7px;border-radius:50%;background:#2f57c4;vertical-align:-6px}
-.sl-thinking-boy{position:absolute;z-index:1;bottom:-4px;left:-12px;width:130px;height:146px;object-fit:contain;object-position:bottom;filter:drop-shadow(0 8px 9px #25132799)}
+.sl-mic{display:inline-grid;place-items:center;width:23px;height:23px;margin-right:7px;border-radius:50%;background:#2f57c4;color:#fff;vertical-align:-6px}
+/*
+  The boy in the corner, wearing whatever the child brought in — the plate is
+  chosen in StoryLabRoom's `companion`. These are the chest-up /feelings cuts
+  (420x504) rather than the old full-length desk drawing, so the box is a
+  little taller and object-fit does the rest.
+
+  HE BOUNCES because the panel he sits in is otherwise perfectly still while a
+  dozen clouds drift above him, and a motionless figure under moving weather
+  reads as a sticker. The hop is small and lands with a slight squash, on a
+  long enough cycle that it is company rather than a demand for attention.
+  `.sl-still *` and the reduced-motion block above stop it dead, as they do
+  everything else in this room.
+*/
+.sl-thinking-boy{position:absolute;z-index:1;top:-4px;left:-12px;width:136px;height:162px;object-fit:contain;object-position:top;filter:drop-shadow(0 8px 9px #25132799);transform-origin:50% 0%;animation:sl-boy-bounce 3.1s ease-in-out infinite}
+
+/*
+  THE BOY IN THE ROOM.
+
+  Sits on the floor to the left of the filmstrip, wearing whatever feeling the
+  child brought in from the Feelings Room (StoryLabRoom's `companion`). Held
+  clear of the foot rail by --sl-foot, so he stands on the floor rather than
+  behind the step strip.
+
+  DRAGGABLE — left/top come from useFloatingPosition as inline style, not
+  from here, and wherever a child leaves him is where he comes back, every
+  session. He used to be pointer-events:none ("company, not a control");
+  that's now only true of the bounce animation, not of him as a whole.
+
+  The hop lands with a slight squash and runs on a long cycle: a figure that
+  never moves under a dozen drifting clouds reads as a sticker, and one that
+  moves any harder than this is demanding attention the question needs.
+  `.sl-still *` and the reduced-motion block below stop it dead.
+*/
+/*
+  HE AND THE BIRD TRAVEL TOGETHER, so they are one draggable box now rather
+  than a loose image — the bubble has to come with him wherever a child leaves
+  him, and a bubble positioned against the room would not.
+*/
+.sl-room-cast{
+  display:none;position:absolute;z-index:8;
+  /* Above the filmstrip panel and rail so a drag always reaches him first. */
+  pointer-events:auto;cursor:grab;touch-action:none;user-select:none;
+  transform:translate(-50%,-50%);
+}
+.sl-room-cast:active{cursor:grabbing}
+.sl-room-cast.gr-floating-drag{transition:none!important}
+.sl-room-cast:not(.gr-floating-drag){transition:left .18s ease-out,top .18s ease-out}
+.sl-room-boy{
+  display:block;position:relative;z-index:1;
+  height:clamp(150px,22vh,260px);width:auto;object-fit:contain;object-position:bottom;
+  filter:drop-shadow(0 12px 16px #1b0a2799);
+  transform-origin:50% 100%;animation:sl-boy-bounce 3.1s ease-in-out infinite;
+}
+
+/*
+  CHIRPY'S BUBBLE. Same white rounded box the Games Room gives the pair, so
+  the bird reads as the same character across the app — and so this corner of
+  the room stops looking like two people standing in silence.
+*/
+.sl-room-bubble{
+  position:absolute;z-index:2;left:64%;bottom:72%;
+  width:max-content;max-width:min(240px,22vw);
+  background:linear-gradient(#ffffff,#f1e9ff);border-radius:18px;
+  box-shadow:0 6px 16px #0b041866;pointer-events:none;
+}
+.sl-room-bubble:after{
+  content:'';position:absolute;left:13%;top:100%;
+  border:10px solid transparent;border-top-color:#f1e9ff;border-right-color:#f1e9ff;
+}
+.sl-room-bubble p{
+  margin:0;padding:10px 13px;
+  font-size:clamp(11px,1.05vw,14px);font-weight:850;line-height:1.24;
+  color:#2b1750;text-align:center;
+}
+/* Wide enough to have floor either side of the panel: he moves out of the
+   panel and the clouds take back the 78px that was being held for him. */
+@media(min-width:900px){
+  .sl-room-cast{display:block}
+  .sl-thinking-boy{display:none}
+  .sl-thought-clouds{padding-top:14px}
+  .sl-desk-note{left:8px}
+}
+@keyframes sl-boy-bounce{
+  0%,58%,100%{transform:translateY(0) scale(1,1)}
+  16%{transform:translateY(-10px) scale(.985,1.015)}
+  40%{transform:translateY(0) scale(1.03,.955)}
+  48%{transform:translateY(0) scale(1,1)}
+}
 .sl-desk-note{
   position:absolute;z-index:2;bottom:6px;left:118px;margin:0;
   padding:7px 9px;border-radius:2px;transform:rotate(-2deg);
@@ -301,15 +401,14 @@
   overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;
   -webkit-box-orient:vertical;overflow:hidden;
 }
-.sl-confirm-ask{flex:0 0 auto;margin:0;padding:4px 10px;border-radius:11px;background:#2b1a4bc4;text-align:center;font-weight:800;font-size:11px}
 
 /* ── Step 6 · Another way ──────────────────────────────────────────────── */
 
 .sl-possibility-windows{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.sl-window{min-width:0;min-height:0;display:flex;flex-direction:column;border:4px solid #6b5a4e;border-radius:15px;padding:7px 7px 9px;background:linear-gradient(#2c2441cc,#544660cc);text-align:center;box-shadow:0 5px 14px #170b2599}
-.sl-window h4{flex:0 0 auto;font-size:13px;font-weight:900;margin:0 0 4px;text-shadow:0 2px 4px #281333}
+.sl-window{min-width:0;min-height:0;display:flex;flex-direction:column;border:4px solid #6b5a4e;border-radius:15px;padding:4px 4px 5px;background:linear-gradient(#2c2441cc,#544660cc);text-align:center;box-shadow:0 5px 14px #170b2599}
+.sl-window h4{flex:0 0 auto;font-size:16px;font-weight:900;margin:0 0 2px;text-shadow:0 2px 4px #281333}
 .sl-window>img{flex:1 1 auto;min-height:0;width:100%;object-fit:contain;filter:grayscale(1)}
-.sl-window p{flex:0 0 auto;font-size:11.5px;font-weight:800;line-height:1.22;overflow-wrap:anywhere;background:#fff4dcf2;color:#311d58;padding:7px 5px;border-radius:8px;margin:5px 0 0}
+.sl-window p{flex:0 0 auto;font-size:15px;font-weight:800;line-height:1.22;overflow-wrap:anywhere;background:#fff4dcf2;color:#311d58;padding:5px 3px;border-radius:8px;margin:3px 0 0}
 .sl-another{border-color:#ffd071;background:linear-gradient(#7d5ab84a,#e0a84a33);box-shadow:0 0 20px #ffce6f99}
 .sl-another>img{filter:none}
 .sl-possibility-light{flex:1 1 auto;display:grid;place-items:center;font-size:54px;color:#fff5a9;text-shadow:0 0 22px #fff5a9}
@@ -372,7 +471,11 @@
 .sl-stop .sl-save{background:linear-gradient(#b45dff,#6341b2);border-color:#ddc2fa;font-size:15px;font-weight:900;padding:8px 22px;box-shadow:0 0 20px #c895ff}
 .sl-stop .sl-save:disabled{opacity:.7;cursor:default}
 
-@keyframes sl-drift{50%{translate:0 -5px}}
+@keyframes sl-drift{
+  33%{translate:var(--drift-x,0) var(--drift-y,-5px);rotate:var(--drift-rot,0deg)}
+  66%{translate:calc(var(--drift-x,0px) * -1) calc(var(--drift-y,-5px) * .45);rotate:calc(var(--drift-rot,0deg) * -.6)}
+}
+
 @keyframes sl-breathe{50%{scale:1.035;filter:drop-shadow(0 0 22px #b7eeffaa)}}
 .sl-still *{animation:none!important;transition:none!important}
 .sl-quiet .sl-grownup{border:3px solid #fff0ae}
@@ -389,7 +492,6 @@
 }
 @media(max-width:700px){
   .sl-room{--sl-foot:150px;padding:10px 10px var(--sl-foot);background-position:52% center}
-  .sl-back{width:40px;height:40px;min-height:40px!important;font-size:24px}
   .sl-logo{font-size:20px}
   .sl-logo small{display:none}
   .sl-grownup{font-size:11px;padding:7px 11px}
@@ -433,7 +535,9 @@
      started carrying every answer. It has gone; that job is done twice
      already, in the strip and in the lit card.
 */
-.sl-panel{background:linear-gradient(#2a1b4759,#180f2d85),url('/mind-gym/story-lab/room-backdrop-v2.webp') center/cover}
+/* A wide card covers most of the room, so it is tinted glass over the room's
+   own backdrop rather than a second, darker copy of the picture. */
+.sl-panel{background:linear-gradient(#2a1b4724,#180f2d47)}
 .sl-panel-done{border-color:#8f70d0}
 .sl-panel-done .sl-ask-chirpy{opacity:1}
 
@@ -562,16 +666,18 @@
    footer, which is where they were stopping.
    ══════════════════════════════════════════════════════════════════════ */
 
+/* NOT A POPUP. This used to be a fixed, full-screen modal that threw itself
+   over the room the moment step 6 was reached and put "Enter Reflection
+   Room" in front of a child who hadn't asked to leave yet. It is a normal
+   card in the page now — it appears where the panel it replaces was, the
+   room stays visible around it, and going to the Reflection Room is still
+   there as a button whenever the child actually wants it. */
 .sl-complete{
-  position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;
-  padding:18px;overflow-y:auto;
-  background:
-    radial-gradient(60% 45% at 50% 42%, #7a4bd655 0%, transparent 70%),
-    rgba(14,7,28,.86);
-  backdrop-filter:blur(7px);
+  display:flex;align-items:center;justify-content:center;
+  padding:18px 0;
 }
 .sl-complete-card{
-  position:relative;width:min(520px,100%);max-height:100%;overflow-y:auto;
+  position:relative;width:min(520px,100%);
   display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;
   padding:22px 22px 18px;
   background:linear-gradient(165deg,#43266fee,#241145ee 60%,#1a0d35ee);
@@ -666,4 +772,455 @@
   .sl-complete-card{padding:16px 14px 14px;gap:6px;border-radius:20px}
   .sl-complete-chirpy img{width:42px}
   .sl-portal img{width:60%}
+}
+
+/* ── The options coming round ──────────────────────────────────────────── */
+/*
+  A set drifts off, the next drifts on. See useRotatingWindow in
+  StoryLabRoom.tsx for when it happens and — more to the point — when it does
+  not: a child reaching for one of these stops the clock.
+
+  Opacity only on the way out. The clouds already run a drift animation on
+  their own transform, and a second rule animating the same property would
+  either fight it or stop it dead mid-float.
+
+  The pinned option is pinned. "Say it your way" and "Something else" are the
+  ones that are true whatever the list is showing, so they never fade and
+  never rotate — a child who does not recognise any of the sentences on
+  screen must not have to wait for their way out to come back round.
+*/
+.sl-rolling-out .sl-thought-cloud:not(.sl-cloud-own),
+.sl-rolling-out > button:not(.sl-card-own){
+  opacity:0;transition:opacity .43s ease;pointer-events:none;
+}
+/*
+  Two-wrapper bounce: outer span carries X, inner button carries Y.
+  Coprime durations per cloud mean every cloud traces a different path.
+  animation-direction:alternate avoids the snapping reset you get from
+  a single keyframe cycle — it just reverses, smoothly, end to end.
+*/
+.sl-cloud-mover{
+  display:inline-flex;
+  animation:sl-bounce-x var(--bx-dur,7s) ease-in-out var(--bx-del,0s) infinite alternate;
+}
+@keyframes sl-bounce-x{
+  from{transform:translateX(calc(var(--bx,18px)*-1))}
+  to{transform:translateX(var(--bx,18px))}
+}
+/*
+  No fill-mode on the way in, and that is not a detail. A finished animation
+  holding its `to` state outranks a plain declaration, so `both` here would
+  pin every option at opacity 1 and the fade-out above would never be seen.
+  Without it the element falls back to its own opacity the moment the entrance
+  finishes, which is exactly what the fade-out then needs to take hold of.
+*/
+.sl-thought-clouds .sl-thought-cloud{
+  animation:sl-cloud-arrive .45s ease-out,
+            sl-bounce-y var(--by-dur,5s) ease-in-out var(--by-del,0s) infinite alternate;
+}
+@keyframes sl-bounce-y{
+  from{transform:translateY(calc(var(--by,14px)*-1))}
+  to{transform:translateY(var(--by,14px))}
+}
+@keyframes sl-cloud-arrive{from{opacity:0}}
+.sl-cards > button{animation:sl-roll-in .5s ease-out}
+@keyframes sl-roll-in{from{opacity:0}}
+
+/*
+  Bubble particles rising from the boy's head toward the thought clouds.
+  Each is a small translucent circle — border + faint fill give it that
+  soap-bubble look without needing an image.
+*/
+.sl-thought-particle{
+  position:absolute;
+  border-radius:50%;
+  border:2px solid rgba(214,198,255,.98);
+  background:radial-gradient(circle at 34% 32%,rgba(255,255,255,.85),rgba(205,185,255,.4) 46%,rgba(150,120,250,.16));
+  box-shadow:inset 0 0 7px rgba(235,225,255,.65),0 0 14px rgba(190,165,255,.8),0 0 30px rgba(165,125,255,.4);
+  pointer-events:none;
+}
+
+/*
+  Each stream is drawn only at the width its boy is drawn at — see the pair of
+  components in the .tsx. Below 900px the boy is in the panel; at 900px and up
+  he is on the room floor and the panel copy is hidden, so a panel stream there
+  would be bubbles rising out of nothing.
+*/
+.sl-panel-bubbles{position:absolute;inset:0;pointer-events:none;z-index:3}
+.sl-room-bubbles{display:none}
+@media(min-width:900px){
+  .sl-panel-bubbles{display:none}
+  .sl-room-bubbles{
+    display:block;position:absolute;pointer-events:none;z-index:2;
+    /* His head, not his feet: the room boy is anchored bottom-left, so this
+       starts one head-width in and the full sprite height up from his base. */
+    left:calc(clamp(8px,3vw,64px) + clamp(52px,7vw,92px));
+    bottom:calc(var(--sl-foot) - 12px + clamp(104px,15vh,180px));
+  }
+}
+
+/* ── Step 7 becomes the way on once the walk is done ─────────────────── */
+.sl-step-inner{display:contents}
+button.sl-step-inner{
+  all:unset;display:flex;flex-direction:column;align-items:center;gap:3px;width:100%;
+  cursor:pointer;border-radius:16px;padding:4px 2px;
+}
+button.sl-step-inner:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.sl-door-ready{z-index:3}
+.sl-door-ready .sl-step-symbol{
+  animation:sl-door-pop .9s cubic-bezier(.3,1.6,.5,1) both, sl-door-glow 1.6s ease-in-out .9s infinite alternate;
+}
+.sl-door-ready .sl-step-label{color:#4b1c96}
+.sl-door-next{
+  position:absolute;top:-34px;left:50%;translate:-50% 0;white-space:nowrap;
+  padding:5px 11px;border-radius:999px;font-size:12px;font-weight:900;color:#3b1f00;
+  background:linear-gradient(#ffe38a,#ffc23d);box-shadow:0 4px 14px #0006;
+  animation:sl-door-hint 1.2s ease-in-out infinite alternate;
+}
+.sl-door-next:after{content:'';position:absolute;left:50%;bottom:-6px;margin-left:-6px;border:6px solid transparent;border-bottom:0;border-top-color:#ffc23d}
+@keyframes sl-door-pop{0%{transform:scale(1)}45%{transform:scale(1.9) translateY(-10px)}100%{transform:scale(1.35) translateY(-4px)}}
+@keyframes sl-door-glow{from{filter:drop-shadow(0 0 6px #fff) drop-shadow(0 0 14px #ffd35a)}to{filter:drop-shadow(0 0 12px #fff) drop-shadow(0 0 28px #ffb627)}}
+@keyframes sl-door-hint{from{transform:translateY(0)}to{transform:translateY(-6px)}}
+
+/* ── Step 5: two big boxes, a big living story ───────────────────────── */
+.sl-story-scene .sl-badge{max-width:49%;padding:11px 12px;gap:4px}
+.sl-story-scene .sl-badge-thought,.sl-story-scene .sl-badge-event{top:0;width:49%;min-height:74px}
+.sl-story-scene .sl-badge-thought{left:0}
+.sl-story-scene .sl-badge-event{right:0}
+.sl-story-scene .sl-badge-label{font-size:13.5px}
+.sl-story-scene .sl-badge-val{font-size:13.5px;line-height:1.25;-webkit-line-clamp:4}
+.sl-story-scene .sl-scene-center{min-height:230px;padding-top:70px}
+.sl-story-scene .sl-badge{cursor:default}
+.sl-story-book{cursor:default}
+.sl-book-text{top:18%;bottom:26%;left:16%;right:16%}
+.sl-book-heading{font-size:14px}
+.sl-book-quote{font-size:22px;line-height:1.28;-webkit-line-clamp:4}
+.sl-book-quote span{display:inline-block;white-space:pre;animation:sl-word-in .5s ease-out both}
+@keyframes sl-word-in{from{opacity:0;transform:translateY(8px) scale(.85)}to{opacity:1;transform:none}}
+
+/* ── Step 3: little bubbles float up out of the thought clouds ───────── */
+.sl-panel-now .sl-thought-cloud:not(.sl-not-chosen)::after,
+.sl-panel-now .sl-cloud-mover::after{
+  content:'';position:absolute;z-index:2;pointer-events:none;
+  width:9px;height:9px;border-radius:50%;
+  border:1.5px solid rgba(214,198,255,.95);
+  background:radial-gradient(circle at 34% 32%,#fffc,#cdb9ff66 50%,#9678fa22);
+  box-shadow:0 0 10px #bea5ffcc;
+  animation:sl-cloud-bubble 3.4s ease-out infinite;animation-delay:var(--by-del,0s);
+}
+.sl-panel-now .sl-thought-cloud:not(.sl-not-chosen)::after{left:62%;top:6px}
+.sl-panel-now .sl-cloud-mover{position:relative}
+.sl-panel-now .sl-cloud-mover::after{left:28%;top:4px;width:6px;height:6px;animation-duration:4.1s;animation-delay:var(--bx-del,0s)}
+@keyframes sl-cloud-bubble{
+  0%{opacity:0;transform:translate(0,0) scale(.4)}
+  15%{opacity:1}
+  60%{opacity:.8;transform:translate(6px,-34px) scale(1)}
+  100%{opacity:0;transform:translate(-4px,-62px) scale(.5)}
+}
+@media (prefers-reduced-motion: reduce){
+  .sl-panel-now .sl-thought-cloud::after,.sl-panel-now .sl-cloud-mover::after{display:none}
+  .sl-book-quote span,.sl-door-ready .sl-step-symbol,.sl-door-next{animation:none}
+}
+
+
+/* ── HOVER BRINGS IT FORWARD ──────────────────────────────────────────── *
+ *
+ * A panel is drawn at 386x675 and then scaled to fit four of them across the
+ * room, which on most screens lands somewhere near half size — so a card's
+ * 11.5px type is being read at about 6px. Making the type bigger is not
+ * available: the panel's proportions are the reference sheet's proportions,
+ * and every number in here is measured against them.
+ *
+ * So whatever is under the pointer comes to full size for as long as it is
+ * under the pointer. It lifts above its neighbours, it takes a warm rim so it
+ * is obvious which one is forward, and the panel stops clipping while one of
+ * its children is out — otherwise anything near an edge grows into the border
+ * and is cut in half.
+ *
+ * `scale` rather than a transform, throughout. The clouds and the boy are
+ * mid-animation on `transform`, and a transform here would silently replace
+ * theirs; the separate property composes with it instead.
+ *
+ * Pointer-only. On a touch screen there is no hover, the first tap would be
+ * spent on the growing rather than on the answer, and the answer is the point.
+ */
+@media (hover:hover) and (pointer:fine){
+  .sl-room :is(
+    .sl-cards button,.sl-window,.sl-story-book,.sl-truth,
+    .sl-panel-answer,.sl-ask-bubble,.sl-screen,
+    .sl-rail .sl-step-inner
+  ):hover{
+    scale:1.16;
+    opacity:1;
+    filter:none;
+    z-index:20;
+    box-shadow:0 0 0 2px #ffe9a6cc,0 16px 34px -10px #0b0418e0;
+    transition:scale .2s cubic-bezier(.2,1.25,.4,1),box-shadow .2s ease,
+               opacity .2s ease,filter .2s ease;
+  }
+  /* Stacking needs a position, and these are all static by default. The
+     badges are left out on purpose — they are already absolutely placed
+     around the bubble and giving them a new one moves them. */
+  .sl-room :is(.sl-cards button,.sl-window,.sl-story-book,
+               .sl-truth,.sl-panel-answer,.sl-screen):hover{
+    position:relative;
+  }
+  .sl-story-scene .sl-badge:hover{scale:1.2;z-index:20;opacity:1}
+  /* The clouds had their own smaller lift; same idea, further. */
+  .sl-thought-cloud:hover:not(:disabled){
+    scale:1.22;z-index:20;opacity:1;
+    filter:drop-shadow(0 0 8px #fff) drop-shadow(0 0 20px #a9d4ffdd);
+  }
+  /*
+    And the panel lets go while something is out. Its own background stays
+    inside the rounded corners — that is painted on the panel itself — so all
+    this frees is the children.
+  */
+  .sl-panel:has(:is(
+    .sl-cards button,.sl-window,.sl-story-book,.sl-truth,
+    .sl-panel-answer,.sl-screen,.sl-badge,.sl-ask-bubble
+  ):hover){
+    overflow:visible;
+  }
+}
+@media (prefers-reduced-motion: reduce){
+  .sl-room :is(.sl-cards button,.sl-thought-cloud,.sl-window,.sl-story-book,
+               .sl-badge,.sl-rail .sl-step-inner):hover{
+    transition:none;
+  }
+}
+
+/* ── The Story panel's Chirpy runs small ──────────────────────────────── *
+ *
+ * He is back on panel 4 (the walk's fifth step), where he used to be left out
+ * altogether to save room. The room he costs is real — the assembly below him
+ * is a scene, a book and four buttons in one 675px column — so he is a size
+ * down from the other panels' Chirpy and his bubble is tighter. The confirm
+ * question moved into that bubble, so the panel gives up a box to get him.
+ */
+[data-sl-panel="4"] .sl-ask{gap:6px}
+
+/* ── Step 3: Make cards wider on larger screens ─────────────────────────── */
+@media(min-width:1400px){
+  .sl-cards:not(.sl-confirm):not(.sl-wide){grid-template-columns:repeat(4,1fr)}
+}
+[data-sl-panel="4"] .sl-ask-chirpy{width:48px;height:54px}
+[data-sl-panel="4"] .sl-ask-bubble{padding:6px 10px;border-radius:14px}
+[data-sl-panel="4"] .sl-ask-bubble h3{font-size:13px}
+[data-sl-panel="4"] .sl-ask-bubble p{font-size:10.5px;margin-top:2px}
+
+/*
+  BIGGER WORDS FOR SMALL READERS. Most of the reading text in this room had
+  drifted down to 8-12px while the panels were being fitted, which is too
+  small for a child to read. These come last so they win over the sizes above.
+*/
+.sl-ask-bubble h3,[data-sl-panel="4"] .sl-ask-bubble h3{font-size:clamp(17px,1.5vw,21px);line-height:1.2}
+.sl-ask-bubble p,[data-sl-panel="4"] .sl-ask-bubble p{font-size:clamp(14px,1.15vw,16px);line-height:1.3}
+.sl-panel-answer{font-size:clamp(15px,1.2vw,17px)}
+.sl-thought-cloud{font-size:clamp(14px,1.2vw,17px);line-height:1.2}
+.sl-room-bubble p{font-size:clamp(15px,1.3vw,18px)}
+.sl-desk-note{font-size:14px}
+.sl-cards button{font-size:clamp(14px,1.15vw,16px);line-height:1.2}
+.sl-badge{font-size:12px}
+.sl-badge-label{font-size:13px}
+.sl-badge-val{font-size:12px}
+.sl-truth{font-size:15px}
+.sl-rail li{font-size:15px}
+.sl-step-answer{font-size:13px}
+.sl-orbit-clue{font-size:13px}
+.sl-orbit-clue b{font-size:14px}
+.sl-own-form label{font-size:15px}
+.sl-own-form textarea{font-size:16px}
+.sl-own-form button{font-size:15px}
+.sl-complete-said{font-size:17px}
+.sl-complete-grow,.sl-complete-chirpy p{font-size:15.5px}
+.sl-continues{font-size:14px}
+.sl-look-again{font-size:15px}
+.sl-stop button{font-size:15px}
+.sl-panel-bar h2{font-size:22px}
+
+@media(max-width:760px){
+  .sl-rail li{font-size:12.5px}
+  .sl-step-answer{font-size:11px}
+  .sl-stop button{font-size:13.5px}
+}
+
+/* ── The card changes shape with the company it keeps ──────────────────── */
+
+/*
+  The design size is no longer a constant — see CANVAS in StoryLabRoom.tsx. One
+  panel is wide and low and takes most of the screen; four are the sheet's own
+  portrait cards standing side by side. The negative margins still make the row
+  measure the SCALED size rather than the drawn one.
+*/
+.sl-panel{
+  flex:0 0 var(--sl-pw);width:var(--sl-pw);height:var(--sl-ph);
+  margin:calc((var(--sl-ph) * var(--sl-scale) - var(--sl-ph)) / 2) calc((var(--sl-pw) * var(--sl-scale) - var(--sl-pw)) / 2);
+}
+
+/*
+  WHAT A WIDE CARD DOES WITH THE ROOM IT GAINS.
+
+  Nothing needs a second layout — the contents are in flow — but a few pieces
+  are drawn at a size that suits a 440px card and looks lost on an 1120px one.
+  So while a step is alone or paired, the boy, the screen, the ring and the
+  type all come up a size, and the choices spread across the width instead of
+  stacking in a narrow column.
+*/
+.sl-film[data-card="wide"] .sl-ask-bubble,
+.sl-film[data-card="half"] .sl-ask-bubble{max-width:62%}
+.sl-film[data-card="wide"] .sl-ask-bubble h3{font-size:21px}
+.sl-film[data-card="wide"] .sl-ask-bubble p{font-size:14px}
+.sl-film[data-card="wide"] .sl-ask-chirpy{width:88px;height:98px}
+
+/*
+  NO LEFT GUTTER FOR A BOY WHO IS NOT IN THERE. Above 900px the panel's own
+  copy of him is hidden and .sl-room-boy stands on the floor beside the strip
+  instead, so reserving a column for him inside the card just left a hole. The
+  clouds get the whole width, and only their size changes.
+*/
+.sl-film[data-card="wide"] .sl-thought-clouds{padding-bottom:4px;gap:8px 14px}
+.sl-film[data-card="half"] .sl-thought-clouds{padding-bottom:8px;gap:8px 11px}
+
+/*
+  THREE ROWS OF FIVE ON THE WIDE CARD, THREE OF FOUR ON THE HALF.
+
+  The wide card shows fourteen thoughts and the pinned "Say it your way" (see
+  THOUGHT_WINDOW), the half card eleven and the pin. The widths are what make
+  the rows come out even: at 196px six will not fit across the wide card, so
+  the sky settles into fives instead of a ragged six-six-three, and every
+  sentence gets a wider cloud to wrap in — three short lines rather than five.
+*/
+.sl-film[data-card="wide"] .sl-thought-cloud:not(.sl-cloud-own){width:196px;min-height:78px!important;font-size:15.5px;line-height:1.15;padding:12px 16px}
+.sl-film[data-card="half"] .sl-thought-cloud:not(.sl-cloud-own){width:172px;min-height:76px!important;font-size:14.5px;line-height:1.15;padding:12px 13px}
+.sl-film:is([data-card="wide"],[data-card="half"]) .sl-cloud-own{width:auto;align-self:center;white-space:nowrap;font-size:15.5px;padding:12px 22px}
+
+/*
+  THE BOY STANDS IN THE WIDE CARD'S CORNER. Above 900px he is on the floor
+  beside the strip — but a lone wide card covers that floor, so at his usual
+  spot he and his bubble sat on the start of the question. The question moves
+  along to clear him, and keeps its own Chirpy.
+*/
+@media(min-width:900px){
+  .sl-film[data-card="wide"] .sl-ask{padding-left:25%}
+}
+
+.sl-film[data-card="wide"] .sl-screen{height:230px}
+/* 150, not 190: with two cards up, the second row of "what happened" choices
+   ran off the bottom of the half card. */
+.sl-film[data-card="half"] .sl-screen{height:150px}
+.sl-film[data-card="wide"] .sl-cards{grid-template-columns:repeat(6,1fr)}
+.sl-film[data-card="wide"] .sl-cards button{font-size:13px}
+.sl-film[data-card="wide"] .sl-cards.sl-confirm{grid-template-columns:repeat(4,1fr);width:62%;margin:0 auto}
+.sl-film[data-card="wide"] .sl-cards.sl-wide{grid-template-columns:repeat(4,1fr)}
+
+.sl-film[data-card="wide"] .sl-orbit-clue{width:22%;min-width:132px;font-size:11.5px}
+.sl-film[data-card="wide"] .sl-orbit-clue b{font-size:12.5px}
+.sl-film[data-card="wide"] .sl-book{width:min(100%,560px);margin-left:auto;margin-right:auto}
+.sl-film[data-card="wide"] .sl-book p{font-size:19px}
+.sl-film[data-card="wide"] .sl-window p,
+.sl-film[data-card="half"] .sl-window p{font-size:14px}
+.sl-film[data-card="wide"] .sl-possibility-windows{width:min(100%,660px);margin:0 auto}
+.sl-film[data-card="wide"] .sl-truth{font-size:14px;width:min(100%,620px)}
+
+/* ── The strip: a ribbon of light on a lantern string ──────────────────── */
+
+/*
+  CHOSEN FROM FIVE MOCKED AGAINST THE REAL BACKDROP — the ribbon, with the
+  lantern string from the fourth.
+
+  The old strip was an opaque lavender slab across the foot of a painted room:
+  the one thing on the screen that still said "app". This one is glass. The
+  room shows through it, a rope runs along the top with each step hanging from
+  it on a short cord, and a ribbon of light runs through the middle — bright as
+  far as the step the child is standing on, dim beyond it. Progress is told in
+  light before it is told in ticks.
+
+  Every number that decides how far the light reaches comes from the component
+  (--sl-lit); nothing here counts steps.
+*/
+.sl-rail{
+  background:linear-gradient(90deg,#8ce4ff1f,#c79bff17 55%,#ffffff0a);
+  backdrop-filter:blur(13px) saturate(1.25);
+  -webkit-backdrop-filter:blur(13px) saturate(1.25);
+  border:1px solid #ffffff26;border-radius:34px;
+  box-shadow:0 12px 34px -18px #000,inset 0 1px 0 #ffffff26;
+}
+.sl-rail ol{padding:22px 26px 10px}
+
+/* The rope the lanterns hang from. */
+.sl-rail ol:before{
+  content:'';position:absolute;z-index:0;left:1%;right:1%;top:-10px;height:2px;
+  border-radius:2px;opacity:1;
+  background:linear-gradient(90deg,#5f4126,#b98a52 18%,#c99a62 50%,#b98a52 82%,#5f4126);
+  box-shadow:0 1px 0 #00000066;
+}
+/* The ribbon itself: lit to --sl-lit, then a faint rail the rest of the way. */
+.sl-rail ol:after{
+  content:'';position:absolute;z-index:0;left:4%;right:4%;top:44px;height:6px;
+  border-radius:6px;border:0;opacity:1;
+  background:linear-gradient(90deg,#8ce4ffd9 0 var(--sl-lit,0%),#ffffff1f var(--sl-lit,0%));
+  box-shadow:0 0 16px #8ce4ff7a;
+  transition:background .6s ease;
+}
+/* The arrows between stops belonged to the slab; the ribbon says it instead. */
+.sl-rail li:not(:last-child):after{display:none}
+/* The cord from the rope down to each lantern. */
+.sl-rail li:before{
+  content:'';position:absolute;z-index:0;top:-12px;left:50%;translate:-50% 0;
+  width:1.5px;height:14px;background:#b98a52;
+}
+
+/*
+  ONE LIT DISC PER STEP, COLOURED BY STEP, with the existing art inside it at
+  reduced opacity.
+
+  The six source icons were drawn for the home page's list, not as a family —
+  pink faces, a green figure, a blue cloud, a red query, a book, a bulb — so
+  side by side they never read as one set. Sitting them in a common disc and
+  letting the disc carry the colour is what makes them a set.
+
+  Masking the art to a flat silhouette instead was mocked and rejected: these
+  files are full-bleed circular artwork with no transparent background, so the
+  mask resolves to a plain filled circle and every step comes out identical.
+*/
+.sl-step-symbol{
+  width:50px;height:50px;border-radius:50%;
+  background:radial-gradient(circle at 38% 30%,#ffffff33,var(--sl-dot,#7a93f0) 62%,#00000033);
+  border:1.5px solid #ffffff66;
+  box-shadow:0 0 16px -2px var(--sl-dot,#7a93f0),inset 0 2px 6px #ffffff40;
+  transition:box-shadow .4s ease,scale .4s ease;
+}
+.sl-step-symbol img{width:34px;height:34px;opacity:.72;border-radius:0;filter:none}
+.sl-rail li:nth-child(1){--sl-dot:#f0609a}
+.sl-rail li:nth-child(2){--sl-dot:#2fbf8f}
+.sl-rail li:nth-child(3){--sl-dot:#7a93f0}
+.sl-rail li:nth-child(4){--sl-dot:#e0574f}
+.sl-rail li:nth-child(5){--sl-dot:#9a6ae0}
+.sl-rail li:nth-child(6){--sl-dot:#f0b128}
+.sl-rail li:nth-child(7){--sl-dot:#56c8e0}
+/* The one they are on is the brightest lantern on the string. */
+.sl-current .sl-step-symbol{
+  scale:1.1;
+  box-shadow:0 0 26px -2px var(--sl-dot),0 0 44px -8px #ffffff,inset 0 2px 8px #ffffff66;
+  filter:none;
+}
+.sl-current .sl-step-symbol img{opacity:.9}
+.sl-step-symbol>b{right:-3px;bottom:-2px;border:1.5px solid #ffffff88}
+
+/* Glass wants its words brighter than a lavender slab did. */
+.sl-rail li{color:#fffdfb;text-shadow:0 2px 7px #19082c,0 0 12px #00000080}
+.sl-rail .sl-current{color:#ffffff}
+.sl-rail .sl-collected{color:#eafff6}
+.sl-step-answer{color:#dff2ff;opacity:.95}
+.sl-current .sl-step-answer{color:#bdf0ff}
+.sl-collected .sl-step-answer{color:#b9f2da}
+.sl-rail-badge{
+  background:linear-gradient(#ffffff2e,#ffffff12);
+  backdrop-filter:blur(8px);border:1px solid #ffffff3d;color:#fffdfb;
+  text-shadow:0 2px 6px #19082c;
+}
+.sl-rail-done{
+  background:linear-gradient(#ffe9b84d,#ffd98a26);border-color:#ffe9b8;
+  box-shadow:0 0 24px -4px #ffd98a;
 }
