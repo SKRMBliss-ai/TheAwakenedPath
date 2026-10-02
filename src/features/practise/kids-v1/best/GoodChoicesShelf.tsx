@@ -13,10 +13,12 @@ const ROOMS = [
   ['mindheart', 'mind_heart_time', 'Want a quiet moment to breathe or reflect?'],
 ];
 
-export function GoodChoicesShelf({ onAction, onDiary, diaryWaiting = false }: {
+export function GoodChoicesShelf({ onAction, onDiary, diaryWaiting = false, guideDoor }: {
   onAction: (id: string, mode: 'play' | 'learn') => void;
   onDiary: () => void;
   diaryWaiting?: boolean;
+  /** The door today's path is pointing at, if it is pointing at the shelf. */
+  guideDoor?: string;
 }) {
   const quiet = useQuiet();
   const [hovered, setHovered] = useState<string | null>(null);
@@ -52,12 +54,12 @@ export function GoodChoicesShelf({ onAction, onDiary, diaryWaiting = false }: {
     {ROOMS.map(([id, , prompt]) => {
       const title = BEHAVIOURS.find(b => b.id === id)!.title;
       const isOpen = opened === id;
-      return <article key={id} className={`mg-cabinet mg-cabinet-${id} ${isOpen ? 'is-open' : ''} ${hovered === id ? 'is-hovered' : ''}`}
+      return <article key={id} className={`mg-cabinet mg-cabinet-${id} ${isOpen ? 'is-open' : ''} ${hovered === id ? 'is-hovered' : ''} ${guideDoor === id ? 'is-suggested' : ''}`}
         onPointerEnter={e => { if (e.pointerType !== 'touch') approach(id); }}
         onPointerLeave={e => { if (e.pointerType !== 'touch' && !e.currentTarget.contains(document.activeElement)) leave(id); }}
         onFocus={e => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) approach(id); }}
         onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) leave(id); }}>
-        <button className="mg-cabinet-door" data-door={id} aria-label={`${title} room. Click to open preview.`} aria-expanded={isOpen}
+        <button className="mg-cabinet-door" data-door={id} data-guide={guideDoor === id ? 'practise' : undefined} data-guide-rank="2" aria-label={`${title} room. Click to open preview.`} aria-expanded={isOpen}
           aria-controls={`preview-${id}`} tabIndex={isOpen ? -1 : 0} onClick={() => pin(id)}>
           <img src={`/mind-gym/closed-home/door-${id}-clean.webp`} alt="" />
         </button>
@@ -74,6 +76,6 @@ export function GoodChoicesShelf({ onAction, onDiary, diaryWaiting = false }: {
         </div>
       </article>;
     })}
-    <div className="mg-shelf-note">Little Choices<br />Make a Brighter Tomorrow<button className={diaryWaiting ? 'mg-diary-waiting' : ''} onClick={onDiary}>📖 My Inner Diary{diaryWaiting && <span className="mg-diary-flag">Today’s page is waiting</span>}</button></div>
+    <div className="mg-shelf-note"><button className={diaryWaiting ? 'mg-diary-waiting' : ''} data-guide="diary" data-guide-rank="2" onClick={onDiary}>📖 My Inner Diary{diaryWaiting && <span className="mg-diary-flag">Today’s page is waiting</span>}</button></div>
   </div>;
 }

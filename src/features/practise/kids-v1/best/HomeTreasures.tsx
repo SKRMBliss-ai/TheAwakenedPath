@@ -61,7 +61,7 @@ export function HomeTreasures({ onGarden, onAdventure, onCorner }: {
   return (
     <div className="tr-floor">
       <GardenPaints />
-      <button className="tr tr-garden" onClick={go(onGarden)}
+      <button className="tr tr-garden" data-guide="play" data-guide-rank="1" onClick={go(onGarden)}
         aria-label={`My Garden. ${plants.length} ${plants.length === 1 ? 'plant' : 'plants'}${grew ? `, and ${grew} grew overnight` : ''}.`}>
         <span className="tr-art">
           <span className="tr-planter-plants">
@@ -84,7 +84,7 @@ export function HomeTreasures({ onGarden, onAdventure, onCorner }: {
 
       <div className="tr tr-egg"><EggNest onCorner={onCorner} /></div>
 
-      <button className="tr tr-corner" onClick={go(onCorner)}
+      <button className="tr tr-corner" data-guide="play" data-guide-rank="2" onClick={go(onCorner)}
         aria-label={friend ? `My Corner. ${friend.name} is waiting there.` : 'My Corner of the treehouse'}>
         <span className="tr-art">
           <img src="/mind-gym/corner/beanbag.webp" alt="" draggable={false} />

@@ -23,6 +23,9 @@ import { isMuted, setMuted } from '../../../../lib/sfx';
 import { useDiaryFilledToday } from '../kit/diaryToday';
 import { rememberedGreeting } from '../../../kids/delight';
 import { HomeTreasures } from './HomeTreasures';
+import { GuideArrow, PathSteps } from './TodayPath';
+import { useTodayPath } from '../kit/useTodayPath';
+import type { PathStepId } from '../kit/todayPath';
 import './HomeScreen.css';
 import './DiaryNudge.css';
 
@@ -108,6 +111,10 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   }, []);
   const [teaching, setTeaching] = useState<string | null>(null);
   const lastTeaching = useRef('');
+  /* A kind word stays in the bubble for a while, then the bubble goes back to
+     showing the way. */
+  const teachingTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(teachingTimer.current), []);
   const sayTeaching = () => {
     const pool = liveAffirmations();
     if (!pool.length) return;
@@ -121,6 +128,8 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     }
     lastTeaching.current = line;
     setTeaching(line);
+    window.clearTimeout(teachingTimer.current);
+    teachingTimer.current = window.setTimeout(() => setTeaching(null), 12_000);
     sound.play('tap');
     speak(line, quiet);
   };
@@ -143,6 +152,24 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   const behaviour = BEHAVIOURS.find((b) => b.id === selected);
   const game = room ? roomGamesFor(room.id)[0] : undefined;
   const points = s.points;
+  const reflectionCount = s.savedReflections?.length ?? 0;
+  /*
+    WHAT TO DO FIRST, AND WHAT NEXT. Feel, practise, diary, play: the stones in
+    the bubble say the order and the arrow points at the real thing to tap.
+    See kit/todayPath for the order and best/TodayPath for the arrow.
+  */
+  const world = useRef<HTMLDivElement>(null);
+  const path = useTodayPath();
+  const go = (step: PathStepId) => {
+    sound.play('enterRoom');
+    if (step === 'feel') onDeepDive();
+    else if (step === 'practise') {
+      const practiceRoom = VIRTUE_ROOMS.find((r) => r.id === path.room);
+      if (practiceRoom) onPractice(practiceRoom);
+    } else if (step === 'diary') onReflection();
+    else onCorner();
+  };
+  const hello = greeting?.title ?? `Hello${name ? `, ${name}` : ''}!`;
   const month = today.slice(0, 7);
   const days = Object.entries(s.completions).filter(([date, values]) => date.startsWith(month) && Object.values(values).some(Boolean)).length;
   const noteKey = `${today}:${selected ?? ''}`;
@@ -172,7 +199,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   return <main className={`mg-home ${quiet || reduced ? 'mg-still' : ''}`} style={{ fontFamily: FONT }}>
     <DailyWelcome />
     {askAge && <AgePopup onDone={() => setAskAge(false)} />}
-    <div className="mg-world">
+    <div className="mg-world" ref={world}>
       <header className="mg-top">
         <div className="mg-brand">
           <button className="mg-logo" onClick={onExitGym} aria-label="Leave Mind Gym">Mind<span>Gym</span><small>A BRIGHTER<br />YOU INSIDE</small></button>
@@ -184,22 +211,19 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
             aria-pressed={!mutedState}
             aria-label={mutedState ? 'Sounds are off. Turn sounds on.' : 'Sounds are on. Turn sounds off.'}
           ><span aria-hidden="true">{mutedState ? '🔇' : '🔊'}</span></button><span className="mg-points"><span aria-hidden="true">⭐</span><span><b>{points}</b><small>Mind Stars</small></span></span>
-          <button className={`mg-month ${diaryDone ? '' : 'mg-diary-waiting'}`} onClick={onReflection} aria-label={diaryDone ? 'Open My Inner Diary and browse months' : 'Today’s diary page is still empty. Open My Inner Diary'}><b>{new Date().toLocaleString('en', { month: 'short' }).toUpperCase()}</b><span>This month<small>{days} {days === 1 ? 'day' : 'days'} remembered</small><span aria-hidden="true">● ● ● ● ✦</span><span className={`mg-diary-flag ${diaryDone ? 'is-done' : ''}`}>{diaryDone ? '✓ Today is in your diary' : '✨ Today’s page is waiting'}</span></span></button></div>
+          <button className={`mg-month ${diaryDone ? '' : 'mg-diary-waiting'}`} data-guide="diary" data-guide-rank="0" onClick={onReflection} aria-label={diaryDone ? 'Open My Inner Diary and browse months' : 'Today’s diary page is still empty. Open My Inner Diary'}><b>{new Date().toLocaleString('en', { month: 'short' }).toUpperCase()}</b><span>This month<small>{days} {days === 1 ? 'day' : 'days'} remembered</small><span aria-hidden="true">● ● ● ● ✦</span><span className={`mg-diary-flag ${diaryDone ? 'is-done' : ''}`}>{diaryDone ? '✓ Today is in your diary' : '✨ Today’s page is waiting'}</span></span></button></div>
       </header>
-      <div className="mg-mobile-doors"><button onClick={() => setMobile(mobile === 'feelings' ? null : 'feelings')} aria-expanded={mobile === 'feelings'}>Funny Feeling?<small>Step into your mind →</small></button><button onClick={() => setMobile(mobile === 'choices' ? null : 'choices')} aria-expanded={mobile === 'choices'}>My Good Choices<small>Open your seven rooms →</small></button></div>
+      <PathSteps path={path} title={hello} variant="strip" quiet={quiet} onGo={go} />
+      <div className="mg-mobile-doors"><button data-guide="feel" data-guide-rank="1" onClick={() => setMobile(mobile === 'feelings' ? null : 'feelings')} aria-expanded={mobile === 'feelings'}>Funny Feeling?<small>Step into your mind →</small></button><button data-guide="practise" data-guide-rank="1" onClick={() => setMobile(mobile === 'choices' ? null : 'choices')} aria-expanded={mobile === 'choices'}>My Good Choices<small>Open your seven rooms →</small></button><button className="mg-mobile-diary" data-guide="diary" data-guide-rank="1" onClick={onReflection}>📖 My Inner Diary<small>{diaryDone ? '✓ Today is in your diary' : 'Today’s page is waiting'}</small></button></div>
       <section className={`mg-feelings ${mobile === 'feelings' ? 'mg-mobile-open' : ''}`} aria-label="Funny Feeling journey">
         <h1>Funny Feeling?</h1><h2>Step into your mind.</h2><p className="mg-invitation">A guided journey to understand<br />your feelings and feel better.</p>
         <ol className="mg-steps">{STEPS.map(([icon, title, sub], i) => <li key={icon}><img src={`${A}icon_${icon}.webp`} alt="" /><div><b>{i + 1}. {title}</b><span>{sub}</span></div></li>)}</ol>
-        <button className="mg-start" onClick={() => { sound.play('enterRoom'); onDeepDive(); }}>Start My Journey <span aria-hidden="true">›</span></button>
+        <button className="mg-start" data-guide="feel" data-guide-rank="2" onClick={() => { sound.play('enterRoom'); onDeepDive(); }}>Start My Journey <span aria-hidden="true">›</span></button>
       </section>
       <section className="mg-character" aria-label="Your guide">
-        <div className="mg-greeting" aria-live="polite"><img src={`${A}boy_fullbody.webp`} alt="" /><div>{teaching
-          ? <><b>{teaching}</b><p>Tap me again for another one.</p></>
-          : greeting
-            ? <><b>{greeting.title}</b><p>{greeting.line}</p>{!diaryDone && <button className="mg-greet-diary" onClick={onReflection}>📖 Write in my diary</button>}</>
-          : diaryDone
-            ? <><b>Hello{name ? `, ${name}` : ''}!<br />How would you like<br />to begin today?</b><p>You can explore your feelings<br />or make good choices!</p></>
-            : <><b>Hello{name ? `, ${name}` : ''}!<br />How did today go?</b><p>Your Inner Diary is keeping<br />a page for today.</p><button className="mg-greet-diary" onClick={onReflection}>📖 Write in my diary</button></>}</div></div>
+        <div className={`mg-greeting ${teaching ? '' : 'is-path'}`} aria-live="polite"><img src={`${A}boy_fullbody.webp`} alt="" />{teaching
+          ? <div><b>{teaching}</b><p>Tap me again for another one.</p></div>
+          : <PathSteps path={path} title={hello} variant="card" quiet={quiet} onGo={go} />}</div>
         <button className={`mg-boy-wrap ${teaching ? 'mg-boy-said' : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you">
           <img className="mg-boy" src={`${A}boy_fullbody.webp`} alt="Your red-cap explorer" />
           <img className="mg-chirpy" src={chirpySprite(teaching ? 'excited' : 'curious')} alt="Chirpy" />
@@ -209,22 +233,18 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
       </section>
       <section className={`mg-choices ${mobile === 'choices' ? 'mg-mobile-open' : ''}`} aria-label="My Good Choices">
         <header className="mg-shelf-title"><span aria-hidden="true">☀</span><h2>My Good Choices</h2><p>Small choices. Big growth. A brighter you.</p></header>
-        <GoodChoicesShelf onAction={open} onDiary={onReflection} diaryWaiting={!diaryDone} />
+        <GoodChoicesShelf onAction={open} onDiary={onReflection} diaryWaiting={!diaryDone}
+          guideDoor={path.current === 'practise' ? path.room : undefined} />
       </section>
       <HomeTreasures onGarden={onGarden} onAdventure={onAdventure} onCorner={onCorner} />
       {/*
-        THE PAINTED LETTERING IN THE CORNERS.
-
-        Both are in the approved reference and in neither shipped background —
-        the clean environment asset is the room only, so these were lost in the
-        hand-off. They are scenery, not controls: stacked wooden blocks on the
-        left under the Feelings portal, and the four words the gym is for on
-        the right by the sleeping dog. aria-hidden, because a child gains
-        nothing from a screen reader listing the furniture.
+        THE PAINTED LETTERING BY THE SLEEPING DOG: the four words the gym is
+        for. Scenery, not a control, so aria-hidden. (The two wooden blocks that
+        stood bottom-left came out: they took the corner the arrow now uses.)
       */}
-      <p className="mg-blocks mg-blocks-left" aria-hidden="true"><span>Brighter<br />Feelings</span><span>Brighter<br />Tomorrows</span></p>
       <p className="mg-blocks mg-blocks-right" aria-hidden="true"><span>KINDER</span><span>BRAVER</span><span>CALMER</span><span>HAPPIER YOU ♡</span></p>
 
+      <GuideArrow worldRef={world} path={path} still={quiet || !!reduced} />
       <footer className="mg-safety">
         <button className="chrome-fade" onClick={onExitGym}>‹ Back</button>
         {onReflectionPath && reflectionCount > 0 && <button className="mg-reflection-path-btn" onClick={onReflectionPath}>✦ My Reflection Room <span className="mg-reflection-count">{reflectionCount}</span></button>}

@@ -79,7 +79,7 @@
 }
 
 /*
-  THE LETTERING IN THE CORNERS — wooden blocks left, word blocks right.
+  THE LETTERING BY THE DOG — the word blocks, bottom right.
   Scenery: no pointer events, and hidden from screen readers at the markup.
 
   Held well clear of the bottom edge because .mg-world is `max(100svh,62vw)`
@@ -92,10 +92,14 @@
   box-shadow:0 3px 6px #170b1f88,inset 0 1px 0 #ffffff26;
   text-shadow:0 2px 3px #1b0d24;
 }
-.mg-blocks-left{left:1.2%;bottom:13.5%;flex-direction:column;gap:7px;font-size:clamp(9px,.82vw,15px);color:#f1e7ff}
-.mg-blocks-left span{background:linear-gradient(#6b4aa8,#432b74);border:1px solid #9c7fd8}
 .mg-blocks-right{right:.7%;bottom:10.5%;flex-direction:column;gap:5px;align-items:flex-end;font-size:clamp(8px,.72vw,13px);letter-spacing:.06em;color:#fff6e2}
 .mg-blocks-right span{background:linear-gradient(#4b4fc0,#2f2f86);border:1px solid #8f93e8}
+
+/* The header runs the full width of the room but only has things at its two
+   ends; the empty middle let no tap through, so the top of the bubble under it
+   (the path's stones, the diary button before them) could not be pressed. */
+.mg-top{pointer-events:none}
+.mg-top>*{pointer-events:auto}
 
 /* The sound switch, back in the corner where the rest of the chrome lives. */
 .mg-sound{
@@ -555,3 +559,12 @@
 /* Greeting bubble blends into the scene instead of sitting on it like a card. */
 .mg-greeting{background:linear-gradient(#ffffff2e,#c9d8ff1f);backdrop-filter:blur(3px);border:1px solid #ffffff40;color:#fff;box-shadow:none;text-shadow:0 2px 6px #1a0f4a}
 .mg-greeting:after{border-top-color:#ffffff2e;border-left-color:#ffffff2e}
+
+/* ── A phone's three big doors: feelings, choices, and the diary under them ── */
+@media(max-width:760px){
+  .mg-mobile-doors .mg-mobile-diary{grid-column:1/-1;min-height:62px;border-radius:22px;background:linear-gradient(#6c3ca0,#3d1f6b);box-shadow:0 0 16px #c79bff55,inset 0 0 12px #c79bff33;font-size:19px;text-shadow:0 0 8px #b98bff}
+  .mg-mobile-doors .mg-mobile-diary small{margin-top:4px}
+  /* Room above each big button for the word today's path pins over it. */
+  .mg-mobile-doors{row-gap:46px}
+  .mg-feelings.mg-mobile-open .mg-start{margin-top:30px}
+}

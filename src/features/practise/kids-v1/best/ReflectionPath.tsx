@@ -193,7 +193,7 @@ function PlaybackView({ reflection, onBack, onGrownUp, onShuffle, onPlayFavourit
       const clip = currentClip();
       if (clip && Number.isFinite(clip.duration) && clip.duration > 0) setTotal(clip.duration);
     }, 200);
-    speak(line, quiet, () => { clearInterval(ticker.current); setSpeaking(false); setElapsed(0); setTotal(null); });
+    speak(line, quiet, 'grownup', () => { clearInterval(ticker.current); setSpeaking(false); setElapsed(0); setTotal(null); });
   };
 
   const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;

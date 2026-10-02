@@ -1,0 +1,77 @@
+/* ── Today's path: the stepping stones ─────────────────────────────────── */
+
+/* A solid card, like the badges in the header: this is the one thing on the
+   page that has to be read, so it does not melt into the painted room. */
+.mg-greeting.is-path{background:linear-gradient(#2d1d66f2,#1b1346ee);border:1px solid #c9b2ff7a;box-shadow:0 8px 22px #0d062299;text-shadow:none}
+.mg-greeting.is-path:after{border-top-color:#1b1346ee;border-left-color:#1b1346ee}
+.tp{display:flex;flex-direction:column;gap:6px;min-width:0;flex:1;color:#fff}
+/* The bubble lives in the boy's column, which lets taps fall through to the
+   room; the path inside it has to take them. */
+.mg-greeting .tp{pointer-events:auto}
+.tp-title{display:block;color:#fff}
+.tp-say{display:flex;align-items:center;gap:6px;margin:0;font-size:clamp(13px,1.05vw,17px);font-weight:800;line-height:1.2;color:#ffe9a6}
+.tp-say span{flex:1;min-width:0}
+.tp-hear{flex:none;width:30px;height:30px;border-radius:50%;border:1px solid #ffffff40;background:#ffffff1f;font-size:14px;display:grid;place-items:center}
+
+.tp-stones{display:flex;align-items:flex-start;list-style:none;margin:4px 0 0;padding:0}
+.tp-stone{position:relative;flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px}
+/* The dotted trail from one stone to the next; gold once the stone before it is done. */
+.tp-stone+.tp-stone:before{content:'';position:absolute;top:20px;left:calc(-50% + 24px);right:calc(50% + 24px);border-top:3px dotted #8f7fd6}
+.tp-stone.is-done+.tp-stone:before{border-top:3px solid #f2b53a}
+.tp-stone button{position:relative;width:40px;height:40px;padding:0;border-radius:50%;border:2px solid #8f7fd6;background:#3b2d7c;display:grid;place-items:center;font-size:19px;line-height:1;transition:transform .2s}
+.tp-stone button:hover{transform:translateY(-2px)}
+.tp-icon{display:grid;place-items:center}
+.tp-icon img{width:28px;height:28px;object-fit:contain}
+.tp-stone.is-done button{background:#5b4416;border-color:#f2b53a}
+.tp-stone.is-later button{opacity:.62;filter:saturate(.6)}
+.tp-stone.is-now button{border:3px solid #ffb21e;background:radial-gradient(circle at 50% 40%,#fff,#ffe2a0);box-shadow:0 0 0 4px #ffd36a55,0 0 18px #ffae2a;animation:tp-bounce 1.5s ease-in-out infinite}
+.tp-tick,.tp-again{position:absolute;right:-6px;top:-6px;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:900;color:#fff;box-shadow:0 1px 3px #0007}
+.tp-tick{background:#25a862}
+.tp-again{background:#8a4fd6}
+.tp-label{font-size:11px;font-weight:800;color:#d9ceff;white-space:nowrap}
+.tp-stone.is-done .tp-label{color:#ffd981}
+.tp-stone.is-now .tp-label{color:#ffd45c;font-size:12px}
+@keyframes tp-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+
+/* On a phone the path is the first thing under the header. */
+.tp-strip{display:none}
+@media(max-width:760px){
+  .tp-strip{display:flex;order:-1;margin:4px 0 46px;padding:12px 14px 10px;border-radius:22px;background:linear-gradient(#2d1d66f2,#1b1346ee);border:1px solid #c9b2ff7a;box-shadow:0 7px 20px #0d062299}
+  .tp-strip .tp-title{font-size:19px;line-height:1.1}
+  .tp-strip .tp-say{font-size:14px}
+  .tp-strip .tp-stone button{width:46px;height:46px;font-size:22px}
+  .tp-strip .tp-stone+.tp-stone:before{top:23px;left:calc(-50% + 27px);right:calc(50% + 27px)}
+  .tp-strip .tp-label{font-size:12px}
+  /* The bubble over the boy says the same thing, so on a phone it only speaks
+     when he is tapped. */
+  .mg-greeting.is-path{display:none}
+}
+
+/* ── The arrow ─────────────────────────────────────────────────────────── */
+
+.gd-layer{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:visible}
+.gd-svg{position:absolute;left:0;top:0;overflow:visible}
+.gd-halo{fill:#ffd45c14;stroke:#ffd45c;stroke-width:4;stroke-dasharray:14 9;stroke-linecap:round;filter:drop-shadow(0 0 6px #ffb21e) drop-shadow(0 0 12px #ff8bd1aa);animation:gd-halo 1.6s ease-in-out infinite,gd-march 3s linear infinite}
+.gd-glow{fill:none;stroke:#ffae2a;stroke-width:15;stroke-linecap:round;opacity:.35;filter:blur(5px)}
+.gd-line{fill:none;stroke:#ffd45c;stroke-width:7;stroke-linecap:round}
+/* Sparkles running down the arrow towards the thing to tap. */
+.gd-trail{fill:none;stroke:#fffbe6;stroke-width:4;stroke-linecap:round;stroke-dasharray:.5 13;animation:gd-flow .8s linear infinite}
+.gd-head{fill:#ffd45c;stroke:#fff6cf;stroke-width:2.5;stroke-linejoin:round;filter:drop-shadow(0 0 4px #ff9f1a)}
+.gd-nudge{animation:gd-nudge 1.1s ease-in-out infinite}
+.gd-pill{position:absolute;padding:7px 14px;border-radius:999px;background:linear-gradient(#ffe68a,#ffb21e);color:#3a1d00;font-weight:900;font-size:15px;line-height:20px;white-space:nowrap;box-shadow:0 5px 14px #3a1d0080,0 0 0 3px #fffbe6cc;animation:gd-pop .45s cubic-bezier(.3,1.6,.6,1) both}
+/* A tag is the word pinned onto its target, with a pointer at it, bobbing. */
+.gd-tag{animation:gd-pop .45s cubic-bezier(.3,1.6,.6,1) both,gd-bob 1.2s ease-in-out .45s infinite}
+.gd-tag:after{content:'';position:absolute;left:50%;margin-left:-9px;border:9px solid transparent}
+.gd-tag-top:after{top:100%;border-top-color:#ffb21e;border-bottom:0}
+.gd-tag-inside:after{bottom:100%;border-bottom-color:#ffe68a;border-top:0}
+@keyframes gd-bob{0%,100%{translate:0 0}50%{translate:0 -5px}}
+@keyframes gd-flow{to{stroke-dashoffset:-27}}
+@keyframes gd-march{to{stroke-dashoffset:-46}}
+@keyframes gd-nudge{0%,100%{transform:translate(-8px,0)}50%{transform:translate(0,0)}}
+@keyframes gd-halo{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes gd-pop{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
+.gd-still *{animation:none!important}
+@media(prefers-reduced-motion:reduce){.gd-layer *,.tp-stone button{animation:none!important}}
+
+/* The door the path is pointing at today, lifted a little off the shelf. */
+.mg-cabinet.is-suggested{filter:drop-shadow(0 0 8px #ffd877);z-index:2}
