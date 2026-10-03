@@ -36,6 +36,8 @@
 .hb-short { display: none; }
 
 /* The buddy on the floor of the room, between the feelings portal and the boy. */
+.hb-floor { animation: hb-fade 3s ease forwards; }
+@keyframes hb-fade { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
 .hb-floor { position: absolute; z-index: 4; left: 27%; bottom: 5%; width: clamp(130px, 11.5vw, 190px); display: grid; justify-items: center; gap: 2px; pointer-events: none; }
 .hb-floor > * { pointer-events: auto; }
 .hb-floor-art { width: 100%; aspect-ratio: 1; padding: 0; border: 0; background: none; cursor: pointer; transform-origin: 50% 92%; -webkit-tap-highlight-color: transparent; }

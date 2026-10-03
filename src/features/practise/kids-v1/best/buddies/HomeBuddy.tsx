@@ -22,6 +22,14 @@ import './HomeBuddy.css';
   tapped, and the tag under it opens the whole collection.
 */
 
+/** Anything new on the home page shows itself for three seconds, then steps
+    out of the way: the home page stays as uncluttered as it was. */
+function useBriefly(ms = 3000): boolean {
+  const [on, setOn] = useState(true);
+  useEffect(() => { const t = window.setTimeout(() => setOn(false), ms); return () => window.clearTimeout(t); }, [ms]);
+  return on;
+}
+
 /** The star total, counting up to its new value rather than jumping. */
 function useCountUp(target: number, still: boolean): number {
   const [shown, setShown] = useState(target);
@@ -53,6 +61,7 @@ export function BuddyHud({ name, onOpen }: { name: string; onOpen: () => void })
   const [picking, setPicking] = useState(false);
   useEffect(() => { loadGameFont(); }, []);
   const noun = b.world?.plural === 'dinos' ? 'dino' : 'friend';
+  const showPill = useBriefly();
   const gaining = shown !== b.stars;
   return (
     <div className="hb-hud-wrap">
@@ -66,7 +75,7 @@ export function BuddyHud({ name, onOpen }: { name: string; onOpen: () => void })
             <span className="hb-stars" style={{ fontFamily: GAME_FONT }}><span aria-hidden="true">⭐</span> {shown}</span>
           </span>
           <span className="hb-bar"><i style={{ width: `${b.level.progress * 100}%` }} /></span>
-          {b.ready > 0 ? (
+          {b.ready > 0 && showPill ? (
             <button className="hb-hatch" style={{ fontFamily: GAME_FONT }}
               aria-label={b.starting ? 'Choose your buddy' : `Hatch your new ${noun}${b.ready > 1 ? `: ${b.ready} eggs waiting` : ''}`}
               onClick={() => { if (!quiet) sound.play('roomCard'); if (b.starting) setPicking(true); else setHatching(true); }}>
@@ -98,6 +107,7 @@ export function FloorBuddy({ onOpen }: { onOpen: () => void }) {
   const [picking, setPicking] = useState(false);
   const [mystery, setMystery] = useState(0);
   const timer = useRef<number | undefined>(undefined);
+  const shown = useBriefly();
   useEffect(() => () => window.clearTimeout(timer.current), []);
   useEffect(() => {
     if (!b.starting || still) return;
@@ -109,6 +119,8 @@ export function FloorBuddy({ onOpen }: { onOpen: () => void }) {
      turns this from the mystery into the buddy, and the hatch has to keep
      playing through that change rather than vanish with the mystery. */
   const picker = picking && <WorldPicker onClose={() => setPicking(false)} onCollection={() => { setPicking(false); onOpen(); }} />;
+
+  if (!shown) return picker || null;
 
   if (b.starting || !b.buddyId || !b.buddy) {
     return (

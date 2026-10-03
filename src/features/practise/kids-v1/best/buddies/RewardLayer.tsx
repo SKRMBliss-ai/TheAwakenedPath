@@ -45,7 +45,7 @@ export function RewardLayer({ quiet }: { quiet: boolean }) {
       starChime(Math.min(4, Math.ceil((s.points - prev.points) / 5)));
       if (up) window.setTimeout(() => sound.play('levelUp'), 420);
       window.clearTimeout(hide.current);
-      hide.current = window.setTimeout(() => setGain(null), up ? 4800 : 2900);
+      hide.current = window.setTimeout(() => setGain(null), 3000);
     });
     return () => { unsub(); window.clearTimeout(hide.current); };
   }, []);
