@@ -148,3 +148,6 @@
   font-weight: 800; font-size: clamp(15px, 1.6vw, 19px); text-align: center; box-shadow: 0 8px 22px -10px #0b0418; }
 .cn-affirm button { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 2px solid #ffd98a;
   background: #2a1b47c4; font-size: 18px; cursor: pointer; }
+
+/* Chirpy's egg nest in the corner. */
+.cn-egg-nest { position: absolute; bottom: calc(var(--tray) + 12px); right: 20px; z-index: 3; --egg-w: clamp(100px, 12vw, 160px); }

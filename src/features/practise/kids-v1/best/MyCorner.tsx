@@ -1,5 +1,6 @@
 import { RoomLinks } from './RoomLinks';
 import { FeelingKeepsakes } from './FeelingKeepsakes';
+import { EggNest } from './SurpriseEgg';
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useKidStore } from '../../../kids/store';
@@ -211,6 +212,7 @@ export function MyCorner({ onExit, onGrownUp, onStoryLab, onGarden, onAdventure,
       <div className="cn-glow" aria-hidden="true" />
 
       <FeelingKeepsakes fresh={fresh} />
+      <div className="cn-egg-nest"><EggNest onCorner={onExit} /></div>
       <RoomLinks items={[{ label: 'My Garden', icon: '🌱', onClick: onGarden }, { label: 'Story Map', icon: '🗺️', onClick: onAdventure }, { label: 'Story Lab', icon: '📜', onClick: onStoryLab }]} />
       <DoorHandle side="left" label="Mind Gym" onClick={onExit} accent="#ffd98a" scale={0.4} bottomVh={66} />
 

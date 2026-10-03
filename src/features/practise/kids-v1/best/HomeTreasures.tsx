@@ -5,7 +5,6 @@ import {
 } from '../../../kids/delight';
 import * as sound from '../kit/sound';
 import { GardenPaints, PlantArt } from './Garden';
-import { EggNest } from './SurpriseEgg';
 import './HomeTreasures.css';
 
 /*
@@ -81,8 +80,6 @@ export function HomeTreasures({ onGarden, onAdventure, onCorner, onStoryLab }: {
         {waiting > 0 && <span className="tr-badge" aria-hidden="true">New chapter!</span>}
         <span className="tr-tag" aria-hidden="true">Story Map</span>
       </button>
-
-      <div className="tr tr-egg"><EggNest onCorner={onCorner} /></div>
 
       {onStoryLab && (
         <button className="tr tr-storylab" onClick={go(onStoryLab)}
