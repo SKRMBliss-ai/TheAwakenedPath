@@ -173,7 +173,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     } else if (step === 'diary') onReflection();
     else onCorner();
   };
-  const hello = greeting?.title ?? `Hello${name ? `, ${name}` : ''}!`;
+  const hello = greeting?.title ?? 'Hello!';
   const month = today.slice(0, 7);
   const noteKey = `${today}:${selected ?? ''}`;
   const note = s.monthReviews[month]?.[noteKey] ?? '';
