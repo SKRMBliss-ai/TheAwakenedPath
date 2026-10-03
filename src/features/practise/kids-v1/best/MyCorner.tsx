@@ -70,7 +70,7 @@ function nameOf(id: string): string {
   return CORNER_ITEM_BY_ID[id]?.name ?? 'Thing';
 }
 
-export function MyCorner({ onExit, onGrownUp, onStoryLab, onGarden, onAdventure, fresh }: { fresh?: boolean; onExit: () => void; onGrownUp: () => void; onStoryLab?: () => void; onGarden?: () => void; onAdventure?: () => void }) {
+export function MyCorner({ onExit, onGrownUp, onGarden, onAdventure, fresh }: { fresh?: boolean; onExit: () => void; onGrownUp: () => void; onGarden?: () => void; onAdventure?: () => void }) {
   const quiet = useQuiet();
   const reduced = useReducedMotion();
   const still = quiet || !!reduced;
@@ -130,6 +130,10 @@ export function MyCorner({ onExit, onGrownUp, onStoryLab, onGarden, onAdventure,
 
   const [tab, setTab] = useState<Tab>(() => (newCount.friends ? 'friends' : 'things'));
   const [trayOpen, setTrayOpen] = useState(true);
+  useEffect(() => {
+    const t = window.setTimeout(() => setTrayOpen(false), 3000);
+    return () => window.clearTimeout(t);
+  }, []);
   const [selected, setSelected] = useState<string | null>(null);
   const [hint, setHint] = useState(placed.length
     ? 'Drag your things anywhere. Tap one to change it.'
@@ -212,9 +216,10 @@ export function MyCorner({ onExit, onGrownUp, onStoryLab, onGarden, onAdventure,
       <div className="cn-glow" aria-hidden="true" />
 
       <FeelingKeepsakes fresh={fresh} />
-      {/* Already in the corner, so "Visit My Corner" just closes the egg. */}
-      <div className="cn-egg-nest"><EggNest onCorner={() => setTab('friends')} /></div>
-      <RoomLinks items={[{ label: 'My Garden', icon: '🌱', onClick: onGarden }, { label: 'Story Map', icon: '🗺️', onClick: onAdventure }, { label: 'Story Lab', icon: '📜', onClick: onStoryLab }]} />
+      {/* Already in the corner, so "Visit My Corner" opens the tray at the
+          friends, where the one just hatched is waiting to be placed. */}
+      <div className="cn-egg-nest"><EggNest onCorner={() => { setTab('friends'); setTrayOpen(true); }} /></div>
+      <RoomLinks side="right" items={[{ label: 'My Garden', icon: '🌱', onClick: onGarden }, { label: 'Story Map', icon: '🗺️', onClick: onAdventure }]} />
       <DoorHandle side="left" label="Mind Gym" onClick={onExit} accent="#ffd98a" scale={0.4} bottomVh={66} />
 
       <header className="cn-head">

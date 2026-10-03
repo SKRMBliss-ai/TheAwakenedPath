@@ -278,14 +278,13 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                 onDeepDive={() => setView({ at: 'deep' })}
                 onExitGym={onExitGym}
                 onGrownUp={() => setView({ at: 'grownup' })}
-                onCorner={() => setView({ at: 'corner' })}
                 onBuddies={() => setView({ at: 'buddies' })}
               />
             )}
             {view.at === 'buddies' && <BuddiesRoom onExit={back} />}
 
             {view.at === 'garden' && <Garden onExit={back} onGrownUp={() => setView({ at: 'grownup' })} />}
-            {view.at === 'corner' && <MyCorner fresh={view.fresh} onExit={back} onGrownUp={() => setView({ at: 'grownup' })} onStoryLab={() => setView({ at: 'story' })} onGarden={() => setView({ at: 'garden' })} onAdventure={() => setView({ at: 'adventure' })} />}
+            {view.at === 'corner' && <MyCorner fresh={view.fresh} onExit={back} onGrownUp={() => setView({ at: 'grownup' })} onGarden={() => setView({ at: 'garden' })} onAdventure={() => setView({ at: 'adventure' })} />}
             {view.at === 'adventure' && <AdventureMap onExit={back} onGrownUp={() => setView({ at: 'grownup' })} onCorner={() => setView({ at: 'corner' })} />}
 
             {view.at === 'practice' && <GamesRoom key={view.room.id}
@@ -339,7 +338,6 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
             {view.at === 'story' && (
               <StoryLabRoom
                 carried={storyAnswers}
-                onBody={back}
                 onExit={back}
                 onGrownUp={() => setView({ at: 'grownup' })}
                 onKeepsakes={() => setView({ at: 'corner', fresh: true })}

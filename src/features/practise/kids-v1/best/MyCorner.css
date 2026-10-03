@@ -150,4 +150,5 @@
   background: #2a1b47c4; font-size: 18px; cursor: pointer; }
 
 /* Chirpy's egg nest in the corner. */
-.cn-egg-nest { position: absolute; bottom: calc(var(--tray) + 12px); right: 20px; z-index: 3; --egg-w: clamp(100px, 12vw, 160px); }
+/* Bottom left: the garden and story map links stand on the right. */
+.cn-egg-nest { position: absolute; bottom: calc(var(--tray) + 24px); left: clamp(14px, 2vw, 30px); z-index: 3; --egg-w: clamp(100px, 11vw, 150px); transition: bottom .35s ease; }

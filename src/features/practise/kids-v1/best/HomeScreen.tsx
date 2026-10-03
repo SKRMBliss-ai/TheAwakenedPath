@@ -20,11 +20,7 @@ import { useLiveContent } from '../kit/liveContent';
 import { speak } from '../kit/chirpyVoice';
 import { isMuted, setMuted } from '../../../../lib/sfx';
 import { useDiaryFilledToday } from '../kit/diaryToday';
-import { rememberedGreeting } from '../../../kids/delight';
-import { GuideArrow, PathSteps } from './TodayPath';
-import { useTodayPath } from '../kit/useTodayPath';
 import { BuddyHud, FloorBuddy } from './buddies/HomeBuddy';
-import type { PathStepId } from '../kit/todayPath';
 import './HomeScreen.css';
 import './DiaryNudge.css';
 
@@ -43,12 +39,11 @@ const STEPS = [
 /** Composed from the approved two-flow home handoff; all controls are semantic. */
 const CHIRPY_MOODS: ChirpyPose[] = ['curious', 'calm', 'excited', 'thinking', 'hopeful', 'confused', 'sad', 'calm'];
 
-export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp, onExitGym, onReflection, onKeepsakes, onCorner, onBuddies }: {
+export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp, onExitGym, onReflection, onKeepsakes, onBuddies }: {
   name: string; onDeepDive: () => void; onOpenRoom: (room: VirtueRoom) => void;
   onPractice: (room: VirtueRoom) => void;
   onGrownUp: () => void; onExitGym: () => void; onReflection: () => void;
   onKeepsakes?: () => void;
-  onCorner: () => void;
   onBuddies: () => void;
 }) {
   const s = useKidStore();
@@ -149,32 +144,11 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     spoken to; see delight.rememberedGreeting for what he will and will not
     say about a child coming back.
   */
-  const greeting = rememberedGreeting({
-    name, today, memories: s.memories,
-    eggReady: s.eggHatchedOn !== today && s.activeDays.includes(today),
-  });
   const room = VIRTUE_ROOMS.find((r) => r.id === selected);
   const texts = useLiveContent((st) => st.texts);
   const words = room && roomText(room, texts);
   const behaviour = BEHAVIOURS.find((b) => b.id === selected);
   const game = room ? roomGamesFor(room.id)[0] : undefined;
-  /*
-    WHAT TO DO FIRST, AND WHAT NEXT. Feel, practise, diary, play: the stones in
-    the bubble say the order and the arrow points at the real thing to tap.
-    See kit/todayPath for the order and best/TodayPath for the arrow.
-  */
-  const world = useRef<HTMLDivElement>(null);
-  const path = useTodayPath();
-  const go = (step: PathStepId) => {
-    sound.play('enterRoom');
-    if (step === 'feel') onDeepDive();
-    else if (step === 'practise') {
-      const practiceRoom = VIRTUE_ROOMS.find((r) => r.id === path.room);
-      if (practiceRoom) onPractice(practiceRoom);
-    } else if (step === 'diary') onReflection();
-    else onCorner();
-  };
-  const hello = greeting?.title ?? 'Hello!';
   const month = today.slice(0, 7);
   const noteKey = `${today}:${selected ?? ''}`;
   const note = s.monthReviews[month]?.[noteKey] ?? '';
@@ -203,7 +177,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   return <main className={`mg-home ${quiet || reduced ? 'mg-still' : ''}`} style={{ fontFamily: FONT }}>
     <DailyWelcome />
     {askAge && <AgePopup onDone={() => setAskAge(false)} />}
-    <div className="mg-world" ref={world}>
+    <div className="mg-world">
       <header className="mg-top">
         <div className="mg-brand">
           <button className="mg-logo" onClick={onExitGym} aria-label="Leave Mind Gym">Mind<span>Gym</span><small>A BRIGHTER<br />YOU INSIDE</small></button>
@@ -222,7 +196,6 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
           <BuddyHud name={name} onOpen={onBuddies} /></div>
 
       </header>
-      <PathSteps path={path} title={hello} variant="strip" quiet={quiet} onGo={go} />
       <div className="mg-mobile-doors"><button data-guide="feel" data-guide-rank="1" onClick={() => setMobile(mobile === 'feelings' ? null : 'feelings')} aria-expanded={mobile === 'feelings'}>Funny Feeling?<small>Step into your mind →</small></button><button data-guide="practise" data-guide-rank="1" onClick={() => setMobile(mobile === 'choices' ? null : 'choices')} aria-expanded={mobile === 'choices'}>My Good Choices<small>Open your seven rooms →</small></button><button className="mg-mobile-diary" data-guide="diary" data-guide-rank="1" onClick={onReflection}>📖 My Inner Diary<small>{diaryDone ? '✓ Today is in your diary' : 'Today’s page is waiting'}</small></button></div>
       <FloorBuddy onOpen={onBuddies} />
       <section className={`mg-feelings ${mobile === 'feelings' ? 'mg-mobile-open' : ''}`} aria-label="Funny Feeling journey" role="button" tabIndex={0} onClick={() => { sound.play('enterRoom'); onDeepDive(); }} onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); sound.play('enterRoom'); onDeepDive(); } }}>
@@ -231,9 +204,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
         <button className="mg-start" data-guide="feel" data-guide-rank="2" onClick={(e) => { e.stopPropagation(); sound.play('enterRoom'); onDeepDive(); }}>Start My Journey <span aria-hidden="true">›</span></button>
       </section>
       <section className="mg-character" aria-label="Your guide">
-        <div className={`mg-greeting ${teaching ? '' : 'is-path'}`} aria-live="polite"><img src={`${A}boy_fullbody.webp`} alt="" />{teaching
-          ? <div><b>{teaching}</b><p>Tap me again for another one.</p></div>
-          : <PathSteps path={path} title={hello} variant="card" quiet={quiet} onGo={go} />}</div>
+        {teaching && <div className="mg-greeting" aria-live="polite"><img src={`${A}boy_fullbody.webp`} alt="" /><div><b>{teaching}</b><p>Tap me again for another one.</p></div></div>}
         <button className={`mg-boy-wrap ${teaching ? 'mg-boy-said' : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you">
           <img className="mg-boy" src={`${A}boy_fullbody.webp`} alt="Your red-cap explorer" />
           <img className="mg-chirpy" src={chirpySprite(teaching ? 'excited' : CHIRPY_MOODS[mood])} alt="Chirpy" />
@@ -243,8 +214,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
       </section>
       <section className={`mg-choices ${mobile === 'choices' ? 'mg-mobile-open' : ''}`} aria-label="My Good Choices">
         <header className="mg-shelf-title"><span aria-hidden="true">☀</span><h2>My Good Choices</h2><p>Small choices. Big growth. A brighter you.</p></header>
-        <GoodChoicesShelf onAction={open} onDiary={onReflection} diaryWaiting={!diaryDone}
-          guideDoor={path.current === 'practise' ? path.room : undefined} />
+        <GoodChoicesShelf onAction={open} onDiary={onReflection} diaryWaiting={!diaryDone} />
       </section>
       {/*
         THE PAINTED LETTERING BY THE SLEEPING DOG: the four words the gym is
@@ -253,7 +223,6 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
       */}
       <p className="mg-blocks mg-blocks-right" aria-hidden="true"><span>KINDER</span><span>BRAVER</span><span>CALMER</span><span>HAPPIER YOU ♡</span></p>
 
-      <GuideArrow worldRef={world} path={path} still={quiet || !!reduced} />
       <footer className="mg-safety">
         <button className="chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button>
       </footer>

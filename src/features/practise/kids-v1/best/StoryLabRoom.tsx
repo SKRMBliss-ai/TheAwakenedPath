@@ -420,9 +420,8 @@ function Panel({ index, step, chirpy, children, onHome }: {
 }
 
 /** One mounted room: four panels that arrive in turn and then stand together. */
-export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onKeepsakes }: {
+export function StoryLabRoom({ carried, onExit, onGrownUp, onSave, onKeepsakes }: {
   carried: DeepDiveAnswers;
-  onBody: () => void;
   onExit: () => void;
   onGrownUp: () => void;
   onSave: (answers: DeepDiveAnswers) => boolean;
@@ -521,11 +520,8 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onKee
     savedOnce.current = ok; setSaved(ok); setSaveError(!ok);
     if (ok) setReceiptGone(false);
     if (ok && !quiet) sound.play('resolve');
+    if (ok && onKeepsakes) window.setTimeout(onKeepsakes, quiet ? 400 : 1400);
   };
-  /* One step back through the walk, and out into the body room from the
-     first panel. The door handle is the way HOME now (see the footer), so
-     this is the footer's small back control rather than the door's. */
-  const back = () => { if (step === 2) { onBody(); return; } if (!quiet) sound.play('exitRoom'); setStep(step - 1); };
 
   /*
     THE STORY LAB HAD NO VOICE, AND IT IS THE ROOM THAT NEEDED ONE MOST.
@@ -996,10 +992,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onKee
     </nav>
 
     <footer className="sl-stop">
-      <button className="chrome-fade" onClick={onExit}>Stop for now</button>
-      <button className="chrome-fade" onClick={back}>← Back a step</button>
       {step >= 6 && !receiptGone && <button className="sl-save" onClick={save} disabled={saved}>{saved ? 'Journey saved ✓' : '✧ Save This Journey'}</button>}
-      {saved && onKeepsakes && <button className="sl-save sl-reflection-cta" onClick={onKeepsakes}>✦ See it in My Corner →</button>}
       {/* Not offered on step 5 — the "Another way" possibility is the whole
           point of the walk, so a child stays in the Story Lab, choosing
           among the reframes, rather than skipping past the one step this
