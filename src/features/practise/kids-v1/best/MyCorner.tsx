@@ -1,3 +1,4 @@
+import { RoomLinks } from './RoomLinks';
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useKidStore } from '../../../kids/store';
@@ -68,7 +69,7 @@ function nameOf(id: string): string {
 }
 
 // @ts-expect-error onReflectionPath and onStoryLab will be used when buttons are added to rooms
-export function MyCorner({ onExit, onGrownUp, onReflectionPath, onStoryLab }: { onExit: () => void; onGrownUp: () => void; onReflectionPath?: () => void; onStoryLab?: () => void }) {
+export function MyCorner({ onExit, onGrownUp, onReflectionPath, onStoryLab, onGarden, onAdventure }: { onExit: () => void; onGrownUp: () => void; onReflectionPath?: () => void; onStoryLab?: () => void; onGarden?: () => void; onAdventure?: () => void }) {
   const quiet = useQuiet();
   const reduced = useReducedMotion();
   const still = quiet || !!reduced;
@@ -209,6 +210,7 @@ export function MyCorner({ onExit, onGrownUp, onReflectionPath, onStoryLab }: { 
       <img className="cn-backdrop" src={ROOM} alt="" draggable={false} style={{ filter: wallFilter }} />
       <div className="cn-glow" aria-hidden="true" />
 
+      <RoomLinks items={[{ label: 'My Garden', icon: '🌱', onClick: onGarden }, { label: 'Story Map', icon: '🗺️', onClick: onAdventure }, { label: 'Story Lab', icon: '📜', onClick: onStoryLab }]} />
       <DoorHandle side="left" label="Mind Gym" onClick={onExit} accent="#ffd98a" scale={0.4} bottomVh={66} />
 
       <header className="cn-head">

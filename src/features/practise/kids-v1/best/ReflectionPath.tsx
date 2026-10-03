@@ -1,3 +1,4 @@
+import { RoomLinks } from './RoomLinks';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import { useKidStore, type SavedReflection } from '../../../kids/store';
@@ -336,13 +337,14 @@ function PlaybackView({ reflection, onBack, onGrownUp, onShuffle, onPlayFavourit
   find. The room IS the archive now: the calm opening (Chirpy, Play one for me,
   Shuffle) sits above the child's whole shelf, filtered in place.
 */
-function RoomView({ onPlay, onPlayOne, onShuffle, onPath, onExit, onGrownUp, still }: {
+function RoomView({ onPlay, onPlayOne, onShuffle, onPath, onExit, onGrownUp, onCorner, still }: {
   onPlay: (r: SavedReflection) => void;
   onPlayOne: () => void;
   onShuffle: () => void;
   onPath: () => void;
   onExit: () => void;
   onGrownUp: () => void;
+  onCorner?: () => void;
   still: boolean;
 }) {
   const reflections = useKidStore((s) => s.savedReflections);
@@ -366,6 +368,7 @@ function RoomView({ onPlay, onPlayOne, onShuffle, onPath, onExit, onGrownUp, sti
 
   return (
     <div className="rp-room rp-roomview" style={{ fontFamily: FONT }}>
+      <RoomLinks items={[{ label: 'My Corner', icon: '🛋️', onClick: onCorner }]} />
       <Decor variant="room" still={still} />
       <header className="rp-header">
         <button className="rp-back" onClick={onExit} aria-label="Back to Mind Gym">←</button>
@@ -452,9 +455,10 @@ function RoomView({ onPlay, onPlayOne, onShuffle, onPath, onExit, onGrownUp, sti
 
 /** ── The path of bricks ──────────────────────────────────────────────── */
 
-export function ReflectionPath({ onExit, onGrownUp }: {
+export function ReflectionPath({ onExit, onGrownUp, onCorner }: {
   onExit: () => void;
   onGrownUp: () => void;
+  onCorner?: () => void;
 }) {
   const quiet = useQuiet();
   const reduced = useReducedMotion();
@@ -553,6 +557,7 @@ export function ReflectionPath({ onExit, onGrownUp }: {
         onPath={() => go('path')}
         onExit={onExit}
         onGrownUp={onGrownUp}
+        onCorner={onCorner}
         still={still}
       />
     );

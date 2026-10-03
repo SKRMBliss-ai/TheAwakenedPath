@@ -277,20 +277,17 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                 onDeepDive={() => setView({ at: 'deep' })}
                 onExitGym={onExitGym}
                 onGrownUp={() => setView({ at: 'grownup' })}
-                onGarden={() => setView({ at: 'garden' })}
-                onAdventure={() => setView({ at: 'adventure' })}
                 onCorner={() => setView({ at: 'corner' })}
-                onStoryLab={() => setView({ at: 'story' })}
               />
             )}
 
             {view.at === 'garden' && <Garden onExit={back} onGrownUp={() => setView({ at: 'grownup' })} onReflectionPath={() => setView({ at: 'reflectionpath' })} />}
-            {view.at === 'corner' && <MyCorner onExit={back} onGrownUp={() => setView({ at: 'grownup' })} onReflectionPath={() => setView({ at: 'reflectionpath' })} onStoryLab={() => setView({ at: 'story' })} />}
+            {view.at === 'corner' && <MyCorner onExit={back} onGrownUp={() => setView({ at: 'grownup' })} onReflectionPath={() => setView({ at: 'reflectionpath' })} onStoryLab={() => setView({ at: 'story' })} onGarden={() => setView({ at: 'garden' })} onAdventure={() => setView({ at: 'adventure' })} />}
             {view.at === 'adventure' && <AdventureMap onExit={back} onGrownUp={() => setView({ at: 'grownup' })} onCorner={() => setView({ at: 'corner' })} onReflectionPath={() => setView({ at: 'reflectionpath' })} />}
 
             {view.at === 'practice' && <GamesRoom key={view.room.id}
               room={view.room} pillar={ROOM_PILLARS[view.room.id]} onExit={back}
-              onGrownUp={() => setView({ at: 'grownup' })} onReflectionPath={() => setView({ at: 'reflectionpath' })} />}
+              onGrownUp={() => setView({ at: 'grownup' })} onReflectionPath={() => setView({ at: 'reflectionpath' })} onCorner={() => setView({ at: 'corner' })} />}
 
             {/*
               THE TRUTH LAB IS ITS OWN ROOM, and the branch is here rather
@@ -355,7 +352,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
               />
             )}
             {view.at === 'reflectionpath' && (
-              <ReflectionPath onExit={back} onGrownUp={() => setView({ at: 'grownup' })} />
+              <ReflectionPath onExit={back} onGrownUp={() => setView({ at: 'grownup' })} onCorner={() => setView({ at: 'corner' })} />
             )}
             {/*
               MY INNER DIARY is the month itself — the dot grid, the four

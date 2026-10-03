@@ -17,12 +17,10 @@ import { chirpySprite } from '../ui/sprites';
 import * as sound from '../kit/sound';
 import { liveAffirmations } from '../kit/affirmations';
 import { useLiveContent } from '../kit/liveContent';
-import { ADMIN_PATH, useKidsAdmin } from '../kit/useKidsAdmin';
 import { speak } from '../kit/chirpyVoice';
 import { isMuted, setMuted } from '../../../../lib/sfx';
 import { useDiaryFilledToday } from '../kit/diaryToday';
 import { rememberedGreeting } from '../../../kids/delight';
-import { HomeTreasures } from './HomeTreasures';
 import { GuideArrow, PathSteps } from './TodayPath';
 import { useTodayPath } from '../kit/useTodayPath';
 import type { PathStepId } from '../kit/todayPath';
@@ -42,15 +40,14 @@ const STEPS = [
 ];
 
 /** Composed from the approved two-flow home handoff; all controls are semantic. */
-export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp, onExitGym, onReflection, onReflectionPath, onGarden, onAdventure, onCorner, onStoryLab }: {
+export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp, onExitGym, onReflection, onReflectionPath, onCorner }: {
   name: string; onDeepDive: () => void; onOpenRoom: (room: VirtueRoom) => void;
   onPractice: (room: VirtueRoom) => void;
   onGrownUp: () => void; onExitGym: () => void; onReflection: () => void;
   onReflectionPath?: () => void;
-  onGarden: () => void; onAdventure: () => void; onCorner: () => void; onStoryLab?: () => void;
+  onCorner: () => void;
 }) {
   const s = useKidStore();
-  const reflectionCount = s.savedReflections?.length ?? 0;
   const quiet = useQuiet();
   const diaryDone = useDiaryFilledToday();
   const reduced = useReducedMotion();
@@ -148,7 +145,6 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   });
   const room = VIRTUE_ROOMS.find((r) => r.id === selected);
   const texts = useLiveContent((st) => st.texts);
-  const admin = useKidsAdmin();
   const words = room && roomText(room, texts);
   const behaviour = BEHAVIOURS.find((b) => b.id === selected);
   const game = room ? roomGamesFor(room.id)[0] : undefined;
@@ -246,7 +242,6 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
         <GoodChoicesShelf onAction={open} onDiary={onReflection} diaryWaiting={!diaryDone}
           guideDoor={path.current === 'practise' ? path.room : undefined} />
       </section>
-      <HomeTreasures onGarden={onGarden} onAdventure={onAdventure} onCorner={onCorner} onStoryLab={onStoryLab} />
       {/*
         THE PAINTED LETTERING BY THE SLEEPING DOG: the four words the gym is
         for. Scenery, not a control, so aria-hidden. (The two wooden blocks that
@@ -256,9 +251,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
 
       <GuideArrow worldRef={world} path={path} still={quiet || !!reduced} />
       <footer className="mg-safety">
-        {onReflectionPath && reflectionCount > 0 && <button className="mg-reflection-path-btn" onClick={onReflectionPath}>✦ My Reflection Room <span className="mg-reflection-count">{reflectionCount}</span></button>}
         <button className="chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button>
-        {admin && <a className="mg-admin chrome-fade" href={ADMIN_PATH}>Admin</a>}
       </footer>
     </div>
     <dialog className="mg-room-dialog" aria-labelledby="mg-room-title" ref={dialog} onClose={() => setSelected(null)} onClick={(e) => { if (e.target === e.currentTarget) close(); }}>
