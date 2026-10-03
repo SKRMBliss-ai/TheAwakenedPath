@@ -317,7 +317,6 @@ export function DeepDive({
   // Feeling and Body remain the existing rooms. From here onward one Story
   // Lab stays mounted while the four remaining pieces assemble in place.
   if (stepIndex >= 2) return <StoryLabRoom carried={answers}
-    onBody={() => setStepIndex(1)}
     onExit={() => { onQuiet(false); onFinish({}); }}
     onGrownUp={onGrownUp}
     onKeepsakes={onKeepsakes}
