@@ -3,10 +3,12 @@
 .mg-world{position:relative;max-width:1920px;margin:auto;min-height:820px;height:max(100svh,62vw);background:url('/mind-gym/closed-home/environment.webp') center/cover}
 .mg-top{position:absolute;inset:14px 20px auto;display:flex;justify-content:space-between;z-index:5}.mg-brand{display:flex;flex-direction:column;align-items:flex-start;gap:12px}.mg-logo{font-size:clamp(30px,3vw,48px);font-weight:1000;line-height:.9;text-shadow:0 3px 4px #211327}.mg-logo span{display:block;color:#ffe769}.mg-logo small{display:block;font-size:9px;line-height:1.35;letter-spacing:1.4px;margin-top:8px}
 .mg-tools{display:flex;gap:8px;align-items:flex-start}.mg-points,.mg-month{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#171641e8;border:1px solid #b8a5d5;border-radius:15px;font-size:12px}.mg-points>span:first-child{font-size:30px}.mg-points b{font-size:20px}.mg-tools small{display:block}.mg-month>b{border:1px solid #cbbef2;padding:6px;border-radius:6px}.mg-month span>span{display:block;color:#71dbff;letter-spacing:2px}
+
+.mg-stats-box{display:flex;flex-direction:column;gap:8px;padding:12px 16px;background:#171641d9;border:1px solid #a898d0;border-radius:16px;font-size:12px;text-align:left;min-height:44px;backdrop-filter:blur(4px);transition:all .25s ease}.mg-stats-box:hover{background:#2a1d52ec;border-color:#c8b8e8}.mg-stats-header{display:flex;gap:8px;align-items:baseline}.mg-stats-name{font-weight:900;font-size:15px;color:#fff}.mg-stats-age{font-size:11px;color:#b8a5d5}.mg-stats-info{display:flex;justify-content:space-between;align-items:center;gap:12px}.mg-stats-stars{display:flex;align-items:center;gap:4px;font-weight:800;color:#fff}.mg-stats-stars span:first-child{font-size:16px}.mg-stats-egg{font-size:14px;letter-spacing:2px}.mg-diary-flag{display:block;font-size:11px;font-weight:700;color:#71dbff;letter-spacing:.5px}.mg-diary-flag.is-done{color:#a8ffb3}
 .mg-feelings{position:absolute;left:6%;top:15%;width:31%;height:76%;border:0;border-radius:46% 46% 20% 20% / 15% 15% 8% 8%;background:radial-gradient(ellipse at 45% 40%,#1356bcdc,#122960ba 65%,#081b5680);box-shadow:inset 0 0 25px #59ddff99,0 0 20px #30acff88;padding:25px 18px;display:flex;flex-direction:column;align-items:center;text-shadow:0 2px 4px #102357}
 .mg-feelings h1{font-size:clamp(28px,3vw,53px);font-weight:1000;white-space:nowrap;color:#f3fcff;text-shadow:0 0 10px #55dfff;line-height:1.15}.mg-feelings h2{font-size:clamp(17px,1.6vw,28px);font-weight:800}.mg-invitation{margin:14px 0 5px;border:1px solid #72e1ff;border-radius:30px;padding:8px 14px;font-size:clamp(12px,1.05vw,18px);line-height:1.2;text-align:center;background:#123b9a99;box-shadow:0 0 12px #158bff}
 .mg-steps{display:flex;flex-direction:column;flex:1;min-height:0;width:100%;padding:0;margin:0;list-style:none}.mg-steps li{display:flex;flex:1;align-items:center;gap:8px;min-height:0}.mg-steps li:nth-child(even){margin-left:14%}.mg-steps img{width:25%;height:100%;min-height:0;object-fit:contain;filter:drop-shadow(0 0 5px #80dfff)}.mg-steps b{display:block;font-size:clamp(14px,1.25vw,22px);line-height:1.1}.mg-steps span{display:block;font-size:clamp(11px,.95vw,16px);line-height:1.15;margin-top:4px}
-
+.mg-start{flex-shrink:0;width:95%;min-height:54px;border:2px solid #adffff;border-radius:38px;background:linear-gradient(#298bff,#002bd0);box-shadow:0 0 15px #6ffcff,inset 0 0 12px #71eeff;font-size:clamp(18px,1.8vw,30px);font-weight:900}.mg-start span{font-size:30px;margin-left:8px}
 .mg-character{position:absolute;left:36.7%;top:7%;width:21%;height:85%;pointer-events:none}.mg-greeting{position:relative;z-index:3;background:linear-gradient(#fff,#e4edff);border:0;border-radius:25px;padding:16px 12px;display:flex;gap:10px;color:#1622ab;width:116%;margin-left:-8%;box-shadow:0 7px 20px #201a6855}.mg-greeting:after{content:'';position:absolute;right:20%;top:100%;border:13px solid transparent;border-top-color:#e4edff;border-left-color:#e4edff}.mg-greeting>img{width:42px;height:65px;object-fit:cover;object-position:top;border-radius:50%}.mg-greeting b{font-size:clamp(15px,1.35vw,23px);line-height:1.12;display:block}.mg-greeting p{font-size:clamp(11px,.95vw,16px);line-height:1.15;margin-top:7px}.mg-boy-wrap{position:absolute;bottom:0;width:100%;height:76%}.mg-boy{position:absolute;bottom:0;width:100%;height:100%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 8px 7px #25102855)}.mg-chirpy{position:absolute;left:-6%;top:27%;width:35%;filter:drop-shadow(0 0 5px #6b3489)}.mg-chirpy-line{position:absolute;right:-1%;top:5%;transform:rotate(-12deg);font-size:clamp(12px,1.05vw,18px);font-weight:800;text-shadow:0 2px 6px #241144}
 .mg-choices{position:absolute;right:1.3%;top:12%;width:41%;height:79%}.mg-shelf-title{height:14%;min-height:85px;text-align:center;background:repeating-linear-gradient(3deg,#583016,#683b1b 18px,#38200f 20px,#653715 25px);border:0;border-radius:45% 38% 12% 14%;box-shadow:0 7px 7px #1c0b1599;position:relative;display:flex;flex-direction:column;justify-content:center}.mg-shelf-title>span{position:absolute;top:-28px;left:45%;font-size:44px;color:#ffda57;text-shadow:0 0 12px #ffaa00}.mg-shelf-title h2{font-size:clamp(25px,2.8vw,48px);font-weight:1000;color:#fff3b1;text-shadow:0 0 6px #ffa509,0 0 18px #f46900;line-height:1.05}.mg-shelf-title p{font-size:clamp(10px,.95vw,16px);margin:5px 0}
 .mg-shelf{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,minmax(0,1fr));height:86%;gap:3px 0;border:0;background:transparent}
@@ -24,12 +26,12 @@
 .mg-open-invitation button:last-child{background:linear-gradient(#f0d1eb,#c49fda);color:#30157e}
 .mg-preview-close{position:absolute;right:0;top:0;z-index:3;width:30px;height:30px;border:0;border-radius:50%;background:#39234fe8;color:white;font-size:23px}
 .mg-shelf-note{align-self:center;text-align:center;font-weight:800;font-size:clamp(12px,1vw,18px);text-shadow:0 2px 4px #130711;padding:8px}.mg-shelf-note button{display:block;margin:10px auto 0;padding:9px;border-radius:12px;background:#432462;border:1px solid #ffda7c;min-height:44px}
-.mg-safety{position:absolute;bottom:12px;left:18px;right:18px;display:flex;justify-content:space-between;z-index:5}.mg-safety button{min-height:44px;border:0;background:#32205de8;border-radius:30px;padding:8px 18px;font-weight:800}.mg-safety .mg-admin{display:inline-flex;align-items:center;min-height:44px;padding:8px 16px;border-radius:30px;background:#1d1446b8;color:#ffffffb3;font-size:13px;font-weight:800;text-decoration:none}.mg-mobile-doors{display:none}
+.mg-safety{position:absolute;bottom:12px;left:18px;right:18px;display:flex;justify-content:flex-end;z-index:5}.mg-safety button{min-height:44px;border:0;background:#32205de8;border-radius:30px;padding:8px 18px;font-weight:800}.mg-safety .mg-admin{display:inline-flex;align-items:center;min-height:44px;padding:8px 16px;border-radius:30px;background:#1d1446b8;color:#ffffffb3;font-size:13px;font-weight:800;text-decoration:none}.mg-mobile-doors{display:none}
 .mg-room-dialog{color:white;background:linear-gradient(140deg,#45266b,#191332);border:2px solid #e3b667;border-radius:24px;padding:24px;width:min(520px,calc(100vw - 28px));max-height:85svh;overflow:auto;margin:auto;box-shadow:0 12px 60px #12081e}.mg-room-dialog::backdrop{background:#12091dcc;backdrop-filter:blur(4px)}.mg-room-dialog header{display:flex;align-items:center;justify-content:space-between;gap:12px}.mg-room-dialog h2{font-size:24px;font-weight:900}.mg-room-dialog header button{font-size:30px;min-width:44px;min-height:44px}.mg-room-dialog nav,.mg-day-options{display:flex;gap:8px;margin:16px 0}.mg-room-dialog nav button,.mg-day-options button{min-height:44px;border:1px solid #dcb8ff;padding:8px 14px;border-radius:20px}.mg-room-dialog button[aria-pressed=true]{background:#8b46b6}.mg-room-dialog p{margin:14px 0;line-height:1.5}.mg-room-dialog textarea{display:block;width:100%;border:1px solid #dac0ff;background:#f4ecff;color:#321354;border-radius:12px;padding:10px;margin:8px 0}.mg-save{display:block;background:#9654ca;border-radius:18px;min-height:46px;padding:10px 18px;margin:12px 0}.mg-dialog-grownup{display:block;min-height:44px;text-decoration:underline;margin-top:14px}.mg-room-dialog h3{font-size:19px;font-weight:900;margin-top:20px}
 .mg-home h1,.mg-home h2,.mg-home h3{font-family:inherit}
 @keyframes mg-reveal{from{opacity:0;scale:.96}to{opacity:1;scale:1}}
 @media(min-width:761px) and (max-width:1100px){.mg-world{min-height:860px}.mg-feelings{left:2%;width:33%;padding:20px 10px}.mg-character{left:34%;width:23%;top:14%;height:78%}.mg-greeting>img{display:none}.mg-choices{right:1%;width:42%;top:16%;height:76%}.mg-feelings h1{font-size:28px}.mg-shelf-title h2{font-size:27px}.mg-open-invitation{width:44%}.mg-open-invitation p{font-size:10px}}
-@media(max-width:760px){.mg-world{height:auto;min-height:100svh;padding:120px 12px 80px;display:flex;flex-direction:column;background-attachment:fixed}.mg-top{inset:12px 12px auto}.mg-brand{gap:6px}.mg-logo{font-size:29px}.mg-logo small{font-size:7px}.mg-tools{gap:4px}.mg-points{padding:6px;font-size:9px}.mg-points>span:first-child{font-size:20px}.mg-points b{font-size:16px}.mg-month{font-size:9px;padding:5px;gap:5px}.mg-month>b{padding:3px}
+@media(max-width:760px){.mg-world{height:auto;min-height:100svh;padding:120px 12px 80px;display:flex;flex-direction:column;background-attachment:fixed}.mg-top{inset:12px 12px auto}.mg-brand{gap:6px}.mg-logo{font-size:29px}.mg-logo small{font-size:7px}.mg-tools{gap:4px}.mg-points{padding:6px;font-size:9px}.mg-points>span:first-child{font-size:20px}.mg-points b{font-size:16px}.mg-month{font-size:9px;padding:5px;gap:5px}.mg-month>b{padding:3px}.mg-stats-box{padding:10px 12px;gap:6px;font-size:11px}.mg-stats-header{gap:6px}.mg-stats-name{font-size:14px}.mg-stats-age{font-size:10px}.mg-stats-info{gap:10px}.mg-stats-stars{font-size:11px}.mg-stats-stars span:first-child{font-size:14px}
 .mg-mobile-doors{display:grid;grid-template-columns:1fr 1fr;gap:12px;order:0;margin-top:16px}.mg-mobile-doors button{min-height:100px;border:0;border-radius:34% 34% 15% 15%;background:radial-gradient(ellipse,#1c81d8d9,#17216ba6);box-shadow:0 0 18px #5ebcff66,inset 0 0 15px #66cfff44;font-weight:900;font-size:21px;text-shadow:0 0 9px #399bff;padding:12px 8px;line-height:1.1}.mg-mobile-doors button+button{background:linear-gradient(#915823df,#4b250ca6);box-shadow:0 0 18px #ffa83b44;text-shadow:0 0 8px #ffb322}.mg-mobile-doors small{display:block;font-size:12px;font-weight:700;margin-top:9px}
 .mg-feelings,.mg-choices{display:none;position:relative;left:auto;right:auto;top:auto;width:100%;height:auto;order:1;border:0;box-shadow:none;background:none}.mg-mobile-open{display:block;margin:24px auto}.mg-feelings.mg-mobile-open{display:flex;padding:12px 10px;max-width:430px;background:radial-gradient(ellipse,#143cae99,transparent 75%);border:0}.mg-feelings h1{font-size:32px}.mg-feelings h2{font-size:20px}.mg-invitation{font-size:14px;border:0;background:#12357599}.mg-steps{padding:12px 0}.mg-steps li{min-height:77px}.mg-steps img{width:75px;height:75px}.mg-steps b{font-size:18px}.mg-steps span{font-size:14px}.mg-start{font-size:23px}
 .mg-character{position:relative;left:auto;top:auto;width:min(310px,90%);height:520px;margin:28px auto 0;order:2}.mg-greeting{width:100%;margin:0;padding:14px}.mg-greeting b{font-size:19px}.mg-greeting p{font-size:13px}.mg-boy-wrap{height:380px}.mg-chirpy-line{font-size:15px}.mg-shelf-title{height:90px;min-height:0;margin-top:22px;border:0;background:transparent;box-shadow:none}.mg-shelf-title h2{font-size:30px}.mg-shelf-title p{font-size:12px}.mg-shelf{height:auto;grid-template-columns:1fr 1fr;grid-template-rows:none;gap:10px 3px;border:0;background:none}.mg-cabinet{aspect-ratio:4/3}.mg-cabinet.is-open{grid-column:1/-1;aspect-ratio:1.75}.mg-open-invitation{top:25%;right:1%;bottom:5%;width:41%;gap:6px;padding:7px}.mg-open-invitation p{font-size:13px}.mg-open-invitation button{min-height:44px;font-size:17px}.mg-preview-close{width:36px;height:36px;font-size:26px}.mg-shelf-note{font-size:13px;padding:8px}.mg-safety{bottom:14px;left:12px;right:12px}.mg-safety button{font-size:12px;padding:8px 12px}}
@@ -322,7 +324,8 @@
   .mg-invitation{font-size:clamp(10px,.86vw,15px);margin:2.5% 0 1%;padding:6px 12px}
   .mg-steps b{font-size:clamp(11px,1.03vw,18px)}
   .mg-steps span{font-size:clamp(9px,.79vw,14px)}
-  .mg-feelings-cta{height:9%}
+  .mg-start{font-size:clamp(14px,1.5vw,26px);min-height:0;height:9%}
+  .mg-start span{font-size:1.15em;margin-left:6px}
   /* The swing is a sixth of the panel, not a quarter — a quarter left the even
      captions only half a column to wrap in. */
   .mg-steps li:nth-child(even){margin-left:16%}
@@ -565,25 +568,58 @@
   .mg-mobile-doors .mg-mobile-diary small{margin-top:4px}
   /* Room above each big button for the word today's path pins over it. */
   .mg-mobile-doors{row-gap:46px}
+  .mg-feelings.mg-mobile-open .mg-start{margin-top:30px}
 }
 
-/* ── The feelings portal is one big door ──────────────────────────────── */
-.mg-feelings{transition:box-shadow .3s,transform .3s}
-.mg-feelings:hover{box-shadow:inset 0 0 34px #6fe6ffcc,0 0 34px #3ab4ffcc;transform:scale(1.008)}
-.mg-feelings:active{transform:scale(.996)}
-.mg-feelings-go{position:absolute;inset:0;z-index:4;width:100%;height:100%;padding:0;border:0;border-radius:inherit;background:transparent}
-.mg-feelings-go:focus-visible{outline:3px solid #aef8ff;outline-offset:4px}
-/* The words at the foot of the path, with light running through them. */
-.mg-feelings-cta{flex-shrink:0;display:flex;align-items:center;justify-content:center;margin:4px 0 2px;font-size:clamp(13px,1.2vw,22px);font-weight:900;white-space:nowrap;text-align:center;text-shadow:none;
-  background:linear-gradient(100deg,#bdf3ff 20%,#fff 40%,#ffe9a6 50%,#fff 60%,#bdf3ff 80%);background-size:260% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(0 0 8px #3ab4ff);animation:mg-shimmer 3.2s linear infinite}
-@keyframes mg-shimmer{from{background-position:100% 0}to{background-position:-160% 0}}
-/* While feeling is the thing to do, the six bubbles light up one after
-   another down the path, like footsteps leading in. */
-.mg-feelings.is-guided .mg-steps img{animation:mg-step-chase 3.6s ease-in-out infinite}
-.mg-feelings.is-guided .mg-steps li:nth-child(2) img{animation-delay:.3s}
-.mg-feelings.is-guided .mg-steps li:nth-child(3) img{animation-delay:.6s}
-.mg-feelings.is-guided .mg-steps li:nth-child(4) img{animation-delay:.9s}
-.mg-feelings.is-guided .mg-steps li:nth-child(5) img{animation-delay:1.2s}
-.mg-feelings.is-guided .mg-steps li:nth-child(6) img{animation-delay:1.5s}
-@keyframes mg-step-chase{0%,26%,100%{transform:scale(1);filter:drop-shadow(0 0 5px #80dfff)}9%{transform:scale(1.15);filter:drop-shadow(0 0 12px #fff) drop-shadow(0 0 22px #6fe6ff) brightness(1.25)}}
+/* Compact side panels so more of the room floor shows; Chirpy bobs and changes mood. */
+.mg-feelings{cursor:pointer}
+@media(min-width:761px){
+  .mg-feelings{top:13%;height:56%;width:25%;padding:16px 12px}
+  .mg-feelings .mg-invitation{margin:8px 0 4px;padding:5px 10px}
+  .mg-feelings .mg-steps li{min-height:0}
+  .mg-feelings .mg-steps img{width:44px;height:44px}
+  .mg-choices{top:11%;height:62%;width:35%}
+  .mg-shelf-title{min-height:60px}
+  .mg-chirpy{animation:mg-chirpy-bob 2.4s ease-in-out infinite;transition:opacity .3s}
+}
+@keyframes mg-chirpy-bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(3deg)}}
+@media(prefers-reduced-motion:reduce){.mg-chirpy{animation:none}}
+
+/* Inner Diary buttons: smaller, gently pulsing, and they pop out on hover or focus. */
+.mg-stats-box,.mg-shelf-note button{transition:transform .2s ease,box-shadow .2s ease,background .25s ease,border-color .25s ease;animation:mg-diary-pulse 2.8s ease-in-out infinite;cursor:pointer}
+.mg-stats-box{padding:8px 12px;gap:4px;min-height:0}
+.mg-stats-name{font-size:13px}
+.mg-stats-age,.mg-stats-stars,.mg-diary-flag{font-size:10px}
+.mg-stats-egg{font-size:12px}
+.mg-shelf-note button{padding:6px 12px;font-size:.85em;min-height:44px}
+.mg-stats-box:hover,.mg-stats-box:focus-visible,.mg-shelf-note button:hover,.mg-shelf-note button:focus-visible{animation:none;transform:scale(1.12) translateY(-3px);box-shadow:0 10px 22px #0008,0 0 16px #ffda7c99;z-index:6}
+.mg-stats-box:active,.mg-shelf-note button:active{transform:scale(1.04)}
+@keyframes mg-diary-pulse{0%,100%{transform:scale(1);box-shadow:0 0 0 #ffda7c00}50%{transform:scale(1.04);box-shadow:0 0 14px #ffda7c88}}
+@media(prefers-reduced-motion:reduce){.mg-stats-box,.mg-shelf-note button{animation:none!important}}
+
+/* Funny Feeling panel: narrower, and it scales with the viewport instead of fixed percentages. */
+@media(min-width:761px){
+  .mg-feelings{width:clamp(190px,21vw,300px);left:clamp(8px,4vw,70px);height:min(56%,calc(100vh - 220px));min-height:300px;overflow:hidden;padding:clamp(8px,1.4vh,16px) clamp(8px,.9vw,14px)}
+  .mg-feelings h1{font-size:clamp(17px,2vw,32px)}
+  .mg-feelings h2{font-size:clamp(12px,1.1vw,18px)}
+  .mg-feelings .mg-invitation{font-size:clamp(10px,.85vw,14px)}
+  .mg-feelings .mg-steps b{font-size:clamp(11px,.95vw,15px)}
+  .mg-feelings .mg-steps span{font-size:clamp(9px,.78vw,12px)}
+  .mg-feelings .mg-steps img{width:clamp(30px,3vw,44px);height:clamp(30px,3vw,44px)}
+  .mg-feelings .mg-start{min-height:44px;font-size:clamp(14px,1.3vw,22px)}
+}
+@media(min-width:761px) and (max-height:620px){
+  .mg-feelings .mg-invitation,.mg-feelings .mg-steps span{display:none}
+}
+@media(min-width:761px) and (max-width:1000px){
+  .mg-feelings{width:clamp(170px,24vw,230px);left:1.5%}
+}
+
+/* Translucent stats box and egg label so the room shows through. */
+.mg-stats-box{background:#17164188;border-color:#a898d066;backdrop-filter:blur(6px)}
+.mg-stats-box:hover,.mg-stats-box:focus-visible{background:#2a1d52bb}
+
+/* Smaller Start My Journey button. */
+.mg-feelings .mg-start{width:72%;min-height:40px;font-size:clamp(13px,1.1vw,18px);border-width:1.5px;padding:4px 10px}
+.mg-feelings .mg-start span{font-size:20px;margin-left:5px}
+@media(max-width:760px){.mg-feelings.mg-mobile-open .mg-start{width:70%;font-size:18px;min-height:44px}}

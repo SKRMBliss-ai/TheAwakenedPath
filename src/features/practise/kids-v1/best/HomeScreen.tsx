@@ -12,17 +12,15 @@ import { GoodChoicesShelf } from './GoodChoicesShelf';
 import { DailyWelcome } from './DailyWelcome';
 import { AgePopup } from './AgePopup';
 import { BadgeSlot } from './ChildBadge';
-import { bandUnknown } from '../kit/band';
-import { chirpySprite } from '../ui/sprites';
+import { bandUnknown, childAge } from '../kit/band';
+import { chirpySprite, type ChirpyPose } from '../ui/sprites';
 import * as sound from '../kit/sound';
 import { liveAffirmations } from '../kit/affirmations';
 import { useLiveContent } from '../kit/liveContent';
-import { ADMIN_PATH, useKidsAdmin } from '../kit/useKidsAdmin';
 import { speak } from '../kit/chirpyVoice';
 import { isMuted, setMuted } from '../../../../lib/sfx';
 import { useDiaryFilledToday } from '../kit/diaryToday';
 import { rememberedGreeting } from '../../../kids/delight';
-import { HomeTreasures } from './HomeTreasures';
 import { GuideArrow, PathSteps } from './TodayPath';
 import { useTodayPath } from '../kit/useTodayPath';
 import type { PathStepId } from '../kit/todayPath';
@@ -42,22 +40,23 @@ const STEPS = [
 ];
 
 /** Composed from the approved two-flow home handoff; all controls are semantic. */
-export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp, onExitGym, onReflection, onReflectionPath, onGarden, onAdventure, onCorner }: {
+const CHIRPY_MOODS: ChirpyPose[] = ['curious', 'calm', 'excited', 'thinking', 'hopeful', 'confused', 'sad', 'calm'];
+
+export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp, onExitGym, onReflection, onKeepsakes, onCorner }: {
   name: string; onDeepDive: () => void; onOpenRoom: (room: VirtueRoom) => void;
   onPractice: (room: VirtueRoom) => void;
   onGrownUp: () => void; onExitGym: () => void; onReflection: () => void;
-  onReflectionPath?: () => void;
-  onGarden: () => void; onAdventure: () => void; onCorner: () => void;
+  onKeepsakes?: () => void;
+  onCorner: () => void;
 }) {
   const s = useKidStore();
-  const reflectionCount = s.savedReflections?.length ?? 0;
   const quiet = useQuiet();
   const diaryDone = useDiaryFilledToday();
   const reduced = useReducedMotion();
   const dialog = useRef<HTMLDialogElement>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [mode, setMode] = useState<'reflect' | 'play' | 'learn'>('reflect');
-  const [mobile, setMobile] = useState<'choices' | null>(null);
+  const [mobile, setMobile] = useState<'feelings' | 'choices' | null>(null);
   const [saved, setSaved] = useState(false);
   /*
     THE SOUND SWITCH CAME BACK.
@@ -111,6 +110,12 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     return () => clearInterval(timer);
   }, []);
   const [teaching, setTeaching] = useState<string | null>(null);
+  const [mood, setMood] = useState(0);
+  useEffect(() => {
+    if (quiet || reduced) return;
+    const t = window.setInterval(() => setMood((m) => (m + 1) % CHIRPY_MOODS.length), 3500);
+    return () => window.clearInterval(t);
+  }, [quiet, reduced]);
   const lastTeaching = useRef('');
   /* A kind word stays in the bubble for a while, then the bubble goes back to
      showing the way. */
@@ -148,7 +153,6 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   });
   const room = VIRTUE_ROOMS.find((r) => r.id === selected);
   const texts = useLiveContent((st) => st.texts);
-  const admin = useKidsAdmin();
   const words = room && roomText(room, texts);
   const behaviour = BEHAVIOURS.find((b) => b.id === selected);
   const game = room ? roomGamesFor(room.id)[0] : undefined;
@@ -160,7 +164,6 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   */
   const world = useRef<HTMLDivElement>(null);
   const path = useTodayPath();
-  const enterFeelings = () => { sound.play('enterRoom'); onDeepDive(); };
   const go = (step: PathStepId) => {
     sound.play('enterRoom');
     if (step === 'feel') onDeepDive();
@@ -172,7 +175,6 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   };
   const hello = greeting?.title ?? `Hello${name ? `, ${name}` : ''}!`;
   const month = today.slice(0, 7);
-  const days = Object.entries(s.completions).filter(([date, values]) => date.startsWith(month) && Object.values(values).some(Boolean)).length;
   const noteKey = `${today}:${selected ?? ''}`;
   const note = s.monthReviews[month]?.[noteKey] ?? '';
   const open = (id: string, next: typeof mode) => {
@@ -189,7 +191,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     if (next === 'play') {
       /* The prop is optional, so a caller that does not pass it keeps the old
          behaviour — the dialog — rather than a door that does nothing. */
-      if (id === 'mindheart') { if (onReflectionPath) { onReflectionPath(); return; } }
+      if (id === 'mindheart') { if (onKeepsakes) { onKeepsakes(); return; } }
       else if (practiceRoom) { onPractice(practiceRoom); return; }
     }
     setSelected(id); setMode(next); setSaved(false); sound.play('roomCard'); dialog.current?.showModal();
@@ -211,23 +213,26 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
             onClick={() => { const next = !mutedState; setMuted(next); setMutedState(next); if (!next) sound.play('tap'); }}
             aria-pressed={!mutedState}
             aria-label={mutedState ? 'Sounds are off. Turn sounds on.' : 'Sounds are on. Turn sounds off.'}
-          ><span aria-hidden="true">{mutedState ? '🔇' : '🔊'}</span></button><span className="mg-points"><span aria-hidden="true">⭐</span><span><b>{points}</b><small>Mind Stars</small></span></span>
-          <button className={`mg-month ${diaryDone ? '' : 'mg-diary-waiting'}`} data-guide="diary" data-guide-rank="0" onClick={onReflection} aria-label={diaryDone ? 'Open My Inner Diary and browse months' : 'Today’s diary page is still empty. Open My Inner Diary'}><b>{new Date().toLocaleString('en', { month: 'short' }).toUpperCase()}</b><span>This month<small>{days} {days === 1 ? 'day' : 'days'} remembered</small><span aria-hidden="true">● ● ● ● ✦</span><span className={`mg-diary-flag ${diaryDone ? 'is-done' : ''}`}>{diaryDone ? '✓ Today is in your diary' : '✨ Today’s page is waiting'}</span></span></button></div>
+          ><span aria-hidden="true">{mutedState ? '🔇' : '🔊'}</span></button>
+          <button className={`mg-stats-box ${diaryDone ? '' : 'mg-diary-waiting'}`} data-guide="diary" data-guide-rank="0" onClick={onReflection} aria-label={diaryDone ? 'Open My Inner Diary' : 'Open My Inner Diary to fill today page'}>
+            <div className="mg-stats-header">
+              <span className="mg-stats-name">{name}</span>
+              {childAge() && <span className="mg-stats-age">Age {childAge()}</span>}
+            </div>
+            <div className="mg-stats-info">
+              <span className="mg-stats-stars"><span aria-hidden="true">⭐</span> {points} Mind Stars</span>
+              <span className="mg-stats-egg" aria-hidden="true">🥚 ✨</span>
+            </div>
+            <span className={`mg-diary-flag ${diaryDone ? 'is-done' : ''}`}>{diaryDone ? '✓ Filled today' : '✨ Waiting for you'}</span>
+          </button></div>
+
       </header>
       <PathSteps path={path} title={hello} variant="strip" quiet={quiet} onGo={go} />
-      <div className="mg-mobile-doors"><button data-guide="feel" data-guide-rank="1" onClick={enterFeelings}>Funny Feeling?<small>Step into your mind →</small></button><button data-guide="practise" data-guide-rank="1" onClick={() => setMobile(mobile === 'choices' ? null : 'choices')} aria-expanded={mobile === 'choices'}>My Good Choices<small>Open your seven rooms →</small></button><button className="mg-mobile-diary" data-guide="diary" data-guide-rank="1" onClick={onReflection}>📖 My Inner Diary<small>{diaryDone ? '✓ Today is in your diary' : 'Today’s page is waiting'}</small></button></div>
-      {/*
-        THE PORTAL IS THE DOOR. The whole arch on the left goes into the
-        feelings journey, so there is no separate button to find: one clear
-        button covers it, and the six steps light up one after another down
-        the path into the words at the bottom, which shimmer. On a phone the
-        big Funny Feeling? button goes straight in.
-      */}
-      <section className={`mg-feelings ${path.current === 'feel' ? 'is-guided' : ''}`} aria-label="Funny Feeling journey">
+      <div className="mg-mobile-doors"><button data-guide="feel" data-guide-rank="1" onClick={() => setMobile(mobile === 'feelings' ? null : 'feelings')} aria-expanded={mobile === 'feelings'}>Funny Feeling?<small>Step into your mind →</small></button><button data-guide="practise" data-guide-rank="1" onClick={() => setMobile(mobile === 'choices' ? null : 'choices')} aria-expanded={mobile === 'choices'}>My Good Choices<small>Open your seven rooms →</small></button><button className="mg-mobile-diary" data-guide="diary" data-guide-rank="1" onClick={onReflection}>📖 My Inner Diary<small>{diaryDone ? '✓ Today is in your diary' : 'Today’s page is waiting'}</small></button></div>
+      <section className={`mg-feelings ${mobile === 'feelings' ? 'mg-mobile-open' : ''}`} aria-label="Funny Feeling journey" role="button" tabIndex={0} onClick={() => { sound.play('enterRoom'); onDeepDive(); }} onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); sound.play('enterRoom'); onDeepDive(); } }}>
         <h1>Funny Feeling?</h1><h2>Step into your mind.</h2><p className="mg-invitation">A guided journey to understand<br />your feelings and feel better.</p>
         <ol className="mg-steps">{STEPS.map(([icon, title, sub], i) => <li key={icon}><img src={`${A}icon_${icon}.webp`} alt="" /><div><b>{i + 1}. {title}</b><span>{sub}</span></div></li>)}</ol>
-        <p className="mg-feelings-cta" data-guide="feel" data-guide-rank="2" aria-hidden="true">✨ Tap anywhere to step in ✨</p>
-        <button className="mg-feelings-go" data-guide-area="feel" onClick={enterFeelings} aria-label="Funny Feeling? Step into your mind: start the feelings journey" />
+        <button className="mg-start" data-guide="feel" data-guide-rank="2" onClick={(e) => { e.stopPropagation(); sound.play('enterRoom'); onDeepDive(); }}>Start My Journey <span aria-hidden="true">›</span></button>
       </section>
       <section className="mg-character" aria-label="Your guide">
         <div className={`mg-greeting ${teaching ? '' : 'is-path'}`} aria-live="polite"><img src={`${A}boy_fullbody.webp`} alt="" />{teaching
@@ -235,7 +240,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
           : <PathSteps path={path} title={hello} variant="card" quiet={quiet} onGo={go} />}</div>
         <button className={`mg-boy-wrap ${teaching ? 'mg-boy-said' : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you">
           <img className="mg-boy" src={`${A}boy_fullbody.webp`} alt="Your red-cap explorer" />
-          <img className="mg-chirpy" src={chirpySprite(teaching ? 'excited' : 'curious')} alt="Chirpy" />
+          <img className="mg-chirpy" src={chirpySprite(teaching ? 'excited' : CHIRPY_MOODS[mood])} alt="Chirpy" />
           <span className="mg-chirpy-line">I’m here<br />with you!<br />♡ Chirpy!</span>
           <span className="mg-tapme" aria-hidden="true">Tap me</span>
         </button>
@@ -245,7 +250,6 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
         <GoodChoicesShelf onAction={open} onDiary={onReflection} diaryWaiting={!diaryDone}
           guideDoor={path.current === 'practise' ? path.room : undefined} />
       </section>
-      <HomeTreasures onGarden={onGarden} onAdventure={onAdventure} onCorner={onCorner} />
       {/*
         THE PAINTED LETTERING BY THE SLEEPING DOG: the four words the gym is
         for. Scenery, not a control, so aria-hidden. (The two wooden blocks that
@@ -255,10 +259,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
 
       <GuideArrow worldRef={world} path={path} still={quiet || !!reduced} />
       <footer className="mg-safety">
-        <button className="chrome-fade" onClick={onExitGym}>‹ Back</button>
-        {onReflectionPath && reflectionCount > 0 && <button className="mg-reflection-path-btn" onClick={onReflectionPath}>✦ My Reflection Room <span className="mg-reflection-count">{reflectionCount}</span></button>}
         <button className="chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button>
-        {admin && <a className="mg-admin chrome-fade" href={ADMIN_PATH}>Admin</a>}
       </footer>
     </div>
     <dialog className="mg-room-dialog" aria-labelledby="mg-room-title" ref={dialog} onClose={() => setSelected(null)} onClick={(e) => { if (e.target === e.currentTarget) close(); }}>
@@ -266,12 +267,12 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
         <nav aria-label="Room activities">{(['reflect', 'play', 'learn'] as const).map((item) => <button key={item} onClick={() => {
           if (item !== 'play') { setMode(item); return; }
           /* Same door, same destination, whichever way a child reaches it. */
-          const go = room.id === 'mindheart' ? onReflectionPath : () => onPractice(room);
+          const go = room.id === 'mindheart' ? onKeepsakes : () => onPractice(room);
           if (!go) { setMode(item); return; }
           close(); go();
         }} aria-pressed={mode === item}>{item === 'reflect' ? 'My day' : item === 'play' ? 'Play' : 'Learn'}</button>)}</nav>
         {mode === 'reflect' && <><p>{words?.prompt ?? behaviour.prompt}</p><div className="mg-day-options"><button aria-pressed={!!s.completions[today]?.[room.id]} onClick={() => s.setBehaviourOn(today, room.id, true)}>Yes, I did</button><button aria-pressed={!s.completions[today]?.[room.id]} onClick={() => s.setBehaviourOn(today, room.id, false)}>Not today</button></div><label htmlFor="mg-home-note">Something to remember (if you like)</label><textarea id="mg-home-note" value={note} onChange={(e) => write(e.target.value)} rows={3} /><MicButton onText={(text) => write(note ? `${note} ${text}` : text)} /><button className="mg-save" onClick={() => setSaved(true)}>{saved ? 'Saved in your diary' : 'Save my thought'}</button><p role="status">{saved ? 'Your thought is saved on this device.' : 'You can stop whenever you like.'}</p></>}
-        {mode === 'learn' && <><h3>{words?.learn.title}</h3><p>{words?.learn.body}</p><button className="mg-save" onClick={() => { close(); if (room.id === 'mindheart' && onReflectionPath) onReflectionPath(); else onOpenRoom(room); }}>{room.id === 'mindheart' && onReflectionPath ? 'Sit in the Reflection Room →' : 'Explore this room →'}</button></>}
+        {mode === 'learn' && <><h3>{words?.learn.title}</h3><p>{words?.learn.body}</p><button className="mg-save" onClick={() => { close(); if (room.id === 'mindheart' && onKeepsakes) onKeepsakes(); else onOpenRoom(room); }}>{room.id === 'mindheart' && onKeepsakes ? 'Visit My Corner →' : 'Explore this room →'}</button></>}
         {mode === 'play' && (game ? <RoomGamePlayer key={game.id} game={game} accent="#ffe099" onDone={(earned) => { const marker = `home:${game.id}`; if (!(s.scenariosDone[today] ?? []).includes(marker)) { s.completeScenario(marker); s.awardPoints(earned, room.id); } setMode('reflect'); }} /> : <button className="mg-save" onClick={() => { close(); onOpenRoom(room); }}>Enter the {behaviour.title} activity →</button>)}
         <button className="mg-dialog-grownup" onClick={() => { close(); onGrownUp(); }}>Talk to a grown-up</button>
       </>}
