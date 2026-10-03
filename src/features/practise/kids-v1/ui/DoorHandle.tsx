@@ -84,7 +84,7 @@ const TIP_MS = 2800;
 
 /** A back handle reminds the child where it is this often, for this long. */
 const REMIND_EVERY_MS = 5000;
-const REMIND_FOR_MS = 2800;
+const REMIND_FOR_MS = 2600;
 
 /** Wave and wave the handle every N seconds to catch attention and show it's pressable. */
 const ATTN_BEAT_EVERY_MS = 5000;
@@ -276,7 +276,7 @@ export function DoorHandle({
                 // would be hunting for a control that is hiding from them.
                 // Waking is still a clear event: full opacity, a warm bloom
                 // and motes, none of which the resting state has.
-                opacity: live ? 1 : [0.45, 0.3, 0.45],
+                opacity: live ? 1 : [0.85, 0.65, 0.85],
                 x: live ? (forward ? -5 : 5) : 0,
               }
         }
@@ -306,8 +306,8 @@ export function DoorHandle({
                 : 'pointer-events-none absolute h-[86px] w-[86px] rounded-full sm:h-[136px] sm:w-[136px]'
             }
             style={{ background: `radial-gradient(circle, ${accent}77 0%, ${accent}22 42%, transparent 70%)`, zoom: scale }}
-            animate={{ scale: [1, 1.4, 1], opacity: [0.85, 0.25, 0.85] }}
-            transition={{ repeat: Infinity, duration: 2.8, ease: 'easeInOut' }}
+            animate={reminding ? { scale: [1, 1.7, 1], opacity: [1, 0.3, 1] } : { scale: [1, 1.4, 1], opacity: [0.85, 0.25, 0.85] }}
+            transition={{ repeat: Infinity, duration: reminding ? 0.9 : 2.8, ease: 'easeInOut' }}
           />
         )}
 
@@ -377,7 +377,7 @@ export function DoorHandle({
                 ? 'h-auto w-[140px] max-w-none select-none sm:w-[240px] lg:w-[340px]'
                 : 'h-auto w-[140px] max-w-none select-none sm:w-[240px]'
             }
-            animate={{ rotate: pressed ? PRESS_DEG : (reminding || attnBeat) && !m.quiet ? [0, 12, -6, 10, 0] : 0 }}
+            animate={{ rotate: pressed ? PRESS_DEG : (reminding || attnBeat) && !m.quiet ? [0, 12, -6, 10, 0] : 0, scale: reminding && !pressed && !m.quiet ? [1, 1.14, 1, 1.14, 1] : 1 }}
             transition={(reminding || attnBeat) && !pressed && !m.quiet
               ? { duration: 1.2, repeat: reminding ? 2 : 1, repeatDelay: reminding ? 0.6 : 0 }
               : { type: 'spring', stiffness: 240, damping: 15 }}
@@ -390,7 +390,9 @@ export function DoorHandle({
               // dark brass and had to be dimmed further to stay out of the
               // way; this one is lit gold and can simply sit there at full
               // strength. A control a child cannot find is not subtle.
-              filter: live
+              filter: reminding
+                ? `brightness(1.4) saturate(1.3) drop-shadow(0 0 20px #fff) drop-shadow(0 0 44px ${accent})`
+                : live
                 ? `brightness(1.18) saturate(1.14) drop-shadow(0 0 26px ${accent}EE)`
                 : `drop-shadow(0 0 18px ${accent}AA) drop-shadow(0 4px 12px rgba(0,0,0,0.55))`,
               transition: 'filter 520ms ease-out',

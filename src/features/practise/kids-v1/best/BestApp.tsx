@@ -333,7 +333,6 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
             {view.at === 'story' && (
               <StoryLabRoom
                 carried={storyAnswers}
-                onBody={back}
                 onExit={back}
                 onGrownUp={() => setView({ at: 'grownup' })}
                 onKeepsakes={() => setView({ at: 'corner', fresh: true })}
