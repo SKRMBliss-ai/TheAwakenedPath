@@ -239,7 +239,7 @@ const DROPS = Array.from({ length: 46 }, (_, i) => ({
 
 /* ── The garden ───────────────────────────────────────────────────────────── */
 
-export function Garden({ onExit, onGrownUp }: { onExit: () => void; onGrownUp: () => void }) {
+export function Garden({ onExit, onGrownUp }: { onExit: () => void; onGrownUp: () => void; }) {
   const quiet = useQuiet();
   const reduced = useReducedMotion();
   const still = quiet || !!reduced;

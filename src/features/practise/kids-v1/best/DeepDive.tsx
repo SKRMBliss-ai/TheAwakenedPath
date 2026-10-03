@@ -188,7 +188,7 @@ export function DeepDive({
   onFinish,
   onGrownUp,
   onQuiet,
-  onReflectionPath,
+  onKeepsakes,
 }: {
   onFinish: (answers: DeepDiveAnswers) => void;
   onGrownUp: () => void;
@@ -196,7 +196,7 @@ export function DeepDive({
   /** Called after a Story Lab journey is saved — takes the child to see
    *  their reflection path. Optional so callers that don't yet have the
    *  view can omit it without breaking anything. */
-  onReflectionPath?: () => void;
+  onKeepsakes?: () => void;
 }) {
   const [stepIndex, setStepIndex] = useState(0);
   const [answers, setAnswers] = useState<DeepDiveAnswers>({});
@@ -320,7 +320,7 @@ export function DeepDive({
     onBody={() => setStepIndex(1)}
     onExit={() => { onQuiet(false); onFinish({}); }}
     onGrownUp={onGrownUp}
-    onReflectionPath={onReflectionPath}
+    onKeepsakes={onKeepsakes}
     onSave={(a) => {
       const ok = saveCase(a);
       if (ok) useKidStore.getState().addSavedReflection(buildSavedReflection(a));

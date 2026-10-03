@@ -213,7 +213,7 @@ const PANEL_GAP = 30;
   exactly where they were stopping. The seventh has no answer of its own; it is
   the door, and it lights up when the other six are behind them.
 */
-const STEPS = ['Feeling', 'Body', 'Thought', 'What happened?', 'Story', 'Another way', 'Reflection Room'];
+const STEPS = ['Feeling', 'Body', 'Thought', 'What happened?', 'Story', 'Another way', 'My Corner'];
 const STEP_ART = ['feeling', 'body', 'thought', 'what_happened', 'story', 'another_way'];
 const LAST_STEP = STEPS.length - 1;
 const TITLES = ['3. Thought', '4. What Happened?', '5. Story', '6. Another Way'];
@@ -420,14 +420,14 @@ function Panel({ index, step, chirpy, children, onHome }: {
 }
 
 /** One mounted room: four panels that arrive in turn and then stand together. */
-export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onReflectionPath }: {
+export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onKeepsakes }: {
   carried: DeepDiveAnswers;
   onBody: () => void;
   onExit: () => void;
   onGrownUp: () => void;
   onSave: (answers: DeepDiveAnswers) => boolean;
   /** Called when the child steps through the door to the Reflection Room. */
-  onReflectionPath?: () => void;
+  onKeepsakes?: () => void;
 }) {
   const quiet = useQuiet();
   const reduced = useReducedMotion();
@@ -975,10 +975,10 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
       style={{ '--sl-lit': `${(Math.min(step, LAST_STEP) / LAST_STEP) * 100}%` } as CSSProperties}>
       <ol>{STEPS.map((label, i) => {
         const door = i === LAST_STEP;
-        const ready = door && step >= 6 && !!onReflectionPath;
+        const ready = door && step >= 6 && !!onKeepsakes;
         const Tag = ready ? 'button' : 'span';
         return <li key={label} className={`${i === step ? 'sl-current' : i < step ? 'sl-collected' : ''} ${door ? 'sl-step-door' : ''} ${ready ? 'sl-door-ready' : ''}`} aria-current={i === step ? 'step' : undefined}>
-          <Tag className="sl-step-inner" {...(ready ? { type: 'button' as const, onClick: () => { if (!quiet) sound.play('enterRoom'); onReflectionPath?.(); }, 'aria-label': 'Go to the Reflection Room next' } : {})}>
+          <Tag className="sl-step-inner" {...(ready ? { type: 'button' as const, onClick: () => { if (!quiet) sound.play('enterRoom'); onKeepsakes?.(); }, 'aria-label': 'Go to My Corner next' } : {})}>
           {ready && <span className="sl-door-next" aria-hidden="true">Go here next!</span>}
           <span className="sl-step-symbol" aria-hidden="true">
             <img src={door ? '/mind-gym/reflection/reflection_portal.png' : `/mind-gym/home/icon_${STEP_ART[i]}.webp`} alt=""
@@ -999,7 +999,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
       <button className="chrome-fade" onClick={onExit}>Stop for now</button>
       <button className="chrome-fade" onClick={back}>← Back a step</button>
       {step >= 6 && !receiptGone && <button className="sl-save" onClick={save} disabled={saved}>{saved ? 'Journey saved ✓' : '✧ Save This Journey'}</button>}
-      {saved && onReflectionPath && <button className="sl-save sl-reflection-cta" onClick={onReflectionPath}>✦ My Reflection Room →</button>}
+      {saved && onKeepsakes && <button className="sl-save sl-reflection-cta" onClick={onKeepsakes}>✦ See it in My Corner →</button>}
       {/* Not offered on step 5 — the "Another way" possibility is the whole
           point of the walk, so a child stays in the Story Lab, choosing
           among the reframes, rather than skipping past the one step this

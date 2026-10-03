@@ -12,7 +12,6 @@ import { RoomScene } from '../ui/scene';
 import { timeOfDayForHour } from '../rooms';
 import { GrownUp } from '../GrownUp';
 import { DeepDive } from './DeepDive';
-import { ReflectionPath } from './ReflectionPath';
 import { HubBoy, HubGreeting, HubHotspot, HubStage, HUB_BOXES, PhoneHub, type Hotspot, type HotspotKey } from './PaintedHub';
 import { FloatingJar } from './FloatingJar';
 import { DoorHandle } from '../ui/DoorHandle';
@@ -57,6 +56,7 @@ import { greetByName, stopSpeaking } from '../kit/chirpyVoice';
 import { COMPANY } from '../kit/feelingCompanions';
 import { markVisit, releasedCount } from '../kit/sky';
 import { startSkyAmbience, stopAmbience } from '../kit/ambience';
+import { useDiaryFilledToday } from '../kit/diaryToday';
 import * as sound from '../kit/sound';
 
 /**
@@ -92,7 +92,6 @@ type View =
   | { at: 'pause' }
   | { at: 'deep' }
   | { at: 'helpchirpy' }
-  | { at: 'reflectionpath' }
   /** The room the painting's Different Story dome has always pointed at. */
   | { at: 'story' }
   /** `today` opens straight onto today's page, for a child who came to fill it in. */
@@ -108,7 +107,7 @@ type View =
   | { at: 'oneminute' }
   /* The three places off the home-page floor — see kids/delight. */
   | { at: 'garden' }
-  | { at: 'corner' }
+  | { at: 'corner'; fresh?: boolean }
   | { at: 'adventure' };
 
 /**
@@ -160,6 +159,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
   const onboarded = useKidStore((s) => s.onboarded);
   const name = useKidStore((s) => s.name);
   const completions = useKidStore((s) => s.completions);
+  const diaryDone = useDiaryFilledToday();
 
   /** Same arithmetic as the Observatory's jar — one per virtue per day it was
    *  ticked. The one-minute door shows it back as a plain fact. */
@@ -202,6 +202,17 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
   useEffect(() => {
     setSeasonOver(seasonJustEnded(useKidStore.getState().completions));
   }, []);
+
+  /**
+   * THE DIARY IS THE PRIMARY FLOW. When a child returns to the home page and
+   * hasn't filled their diary yet, take them straight to it. This inspires them
+   * to reflect on their day and is the main pathway after the feelings journey.
+   */
+  useEffect(() => {
+    if (view.at === 'map' && !diaryDone) {
+      setView({ at: 'reflection', today: true });
+    }
+  }, [view.at, diaryDone]);
 
   // The two reasons a screen change stays a plain fade: the child asked their
   // device for less motion, or the app has quietened itself because they're
@@ -258,25 +269,23 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
               <HomeScreen
                 name={name}
                 onReflection={() => setView({ at: 'reflection', today: true })}
-                onReflectionPath={() => setView({ at: 'reflectionpath' })}
+                onKeepsakes={() => setView({ at: 'corner', fresh: true })}
                 onOpenRoom={(r) => setView({ at: 'room', room: r, step: null })}
                 onPractice={(room) => setView({ at: 'practice', room })}
                 onDeepDive={() => setView({ at: 'deep' })}
                 onExitGym={onExitGym}
                 onGrownUp={() => setView({ at: 'grownup' })}
-                onGarden={() => setView({ at: 'garden' })}
-                onAdventure={() => setView({ at: 'adventure' })}
                 onCorner={() => setView({ at: 'corner' })}
               />
             )}
 
             {view.at === 'garden' && <Garden onExit={back} onGrownUp={() => setView({ at: 'grownup' })} />}
-            {view.at === 'corner' && <MyCorner onExit={back} onGrownUp={() => setView({ at: 'grownup' })} />}
+            {view.at === 'corner' && <MyCorner fresh={view.fresh} onExit={back} onGrownUp={() => setView({ at: 'grownup' })} onStoryLab={() => setView({ at: 'story' })} onGarden={() => setView({ at: 'garden' })} onAdventure={() => setView({ at: 'adventure' })} />}
             {view.at === 'adventure' && <AdventureMap onExit={back} onGrownUp={() => setView({ at: 'grownup' })} onCorner={() => setView({ at: 'corner' })} />}
 
             {view.at === 'practice' && <GamesRoom key={view.room.id}
               room={view.room} pillar={ROOM_PILLARS[view.room.id]} onExit={back}
-              onGrownUp={() => setView({ at: 'grownup' })} />}
+              onGrownUp={() => setView({ at: 'grownup' })} onCorner={() => setView({ at: 'corner' })} />}
 
             {/*
               THE TRUTH LAB IS ITS OWN ROOM, and the branch is here rather
@@ -312,8 +321,8 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
               <DeepDive
                 onQuiet={setQuiet}
                 onGrownUp={() => setView({ at: 'grownup' })}
-                onFinish={(answers) => { saveCase(answers); back(); }}
-                onReflectionPath={() => setView({ at: 'reflectionpath' })}
+                onFinish={(answers) => { setView(saveCase(answers) ? { at: 'corner', fresh: true } : { at: 'map' }); }}
+                onKeepsakes={() => setView({ at: 'corner', fresh: true })}
               />
             )}
 
@@ -328,7 +337,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                 onBody={back}
                 onExit={back}
                 onGrownUp={() => setView({ at: 'grownup' })}
-                onReflectionPath={() => setView({ at: 'reflectionpath' })}
+                onKeepsakes={() => setView({ at: 'corner', fresh: true })}
                 onSave={(answers) => {
                   setStoryAnswers(answers);
                   const ok = saveCase(answers);
@@ -337,9 +346,6 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                   return ok;
                 }}
               />
-            )}
-            {view.at === 'reflectionpath' && (
-              <ReflectionPath onExit={back} onGrownUp={() => setView({ at: 'grownup' })} />
             )}
             {/*
               MY INNER DIARY is the month itself — the dot grid, the four
@@ -646,7 +652,7 @@ export function LegacyRoomMap({
       room you reach another way.
     */
     dome('story', 'Different Story', '#7FC7F0', onStory),
-    dome('reflection', 'Reflection Room', '#9FB4F5', open('mindheart'), ticked('mindheart')),
+    dome('reflection', 'My Corner', '#9FB4F5', open('mindheart'), ticked('mindheart')),
 
     /*
       THE DOORS, AND THE BRASS ON THEM — FOUR CONTROLS, NOT TWO.

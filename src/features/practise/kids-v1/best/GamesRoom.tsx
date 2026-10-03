@@ -1,3 +1,5 @@
+import { RoomCorner } from './RoomLinks';
+import { EggNest } from './SurpriseEgg';
 import {
   useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties,
 } from 'react';
@@ -193,12 +195,15 @@ function useCountUp(value: number, still: boolean): number {
 
 type Flight = { x: number; y: number; toX: number; toY: number; points: number };
 
-export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
+export function GamesRoom({ room, pillar, onExit, onGrownUp, onCorner }: {
+  onCorner?: () => void;
   room: VirtueRoom;
   pillar?: BehaviourPillar;
   onExit: () => void;
   onGrownUp: () => void;
-}) {
+  // eslint-disable-next-line react/no-unused-prop-types
+
+  }) {
   const quiet = useQuiet();
   const reduced = useReducedMotion();
   const still = quiet || !!reduced;
@@ -441,7 +446,7 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
     : picked?.points && picked.points >= 5 ? '🤔'
     : picked ? '💭' : undefined;
 
-  return <main
+  return <><main
     className={`gr-room ${still ? 'gr-still' : ''} ${quiet ? 'gr-quiet' : ''} ${idle && !still ? 'gr-idle' : ''} gr-awake-${awakePhase}`}
     data-pillar={theme}
     data-phase={state.phase}
@@ -701,5 +706,7 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
       }} transition={{ duration: still ? 0.6 : 1.1, times: [0, 0.25, 1], ease: 'easeInOut' }}>
       +{flight.points} ⭐
     </motion.div>, document.body)}
-  </main>;
+  </main>
+  {onCorner && <RoomCorner><EggNest onCorner={onCorner} /></RoomCorner>}
+  </>;
 }

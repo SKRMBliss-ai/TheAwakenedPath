@@ -120,7 +120,9 @@ export function TruthLabRoom({
   onGrownUp: () => void;
   /** Continue to the next room. Present only on the journey. */
   onNext?: () => void;
-}) {
+  // eslint-disable-next-line react/no-unused-prop-types
+
+  }) {
   const m = useMotion();
   const completions = useKidStore((s) => s.completions);
   const setBehaviourOn = useKidStore((s) => s.setBehaviourOn);

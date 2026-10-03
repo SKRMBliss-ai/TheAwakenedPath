@@ -215,7 +215,7 @@ export function Reader({ story, chapter, name, onClose, onNext, onCorner, still,
 
 /* ── The map ──────────────────────────────────────────────────────────────── */
 
-export function AdventureMap({ onExit, onGrownUp, onCorner }: { onExit: () => void; onGrownUp: () => void; onCorner: () => void }) {
+export function AdventureMap({ onExit, onGrownUp, onCorner }: { onExit: () => void; onGrownUp: () => void; onCorner: () => void; }) {
   const quiet = useQuiet();
   const reduced = useReducedMotion();
   const still = quiet || !!reduced;
