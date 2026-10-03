@@ -38,8 +38,8 @@ function Scroll() {
   );
 }
 
-export function HomeTreasures({ onGarden, onAdventure, onCorner }: {
-  onGarden: () => void; onAdventure: () => void; onCorner: () => void;
+export function HomeTreasures({ onGarden, onAdventure, onCorner, onStoryLab }: {
+  onGarden: () => void; onAdventure: () => void; onCorner: () => void; onStoryLab?: () => void;
 }) {
   const plants = useKidStore((s) => s.plants);
   const gardenSeen = useKidStore((s) => s.gardenSeen);
@@ -83,6 +83,14 @@ export function HomeTreasures({ onGarden, onAdventure, onCorner }: {
       </button>
 
       <div className="tr tr-egg"><EggNest onCorner={onCorner} /></div>
+
+      {onStoryLab && (
+        <button className="tr tr-storylab" onClick={go(onStoryLab)}
+          aria-label="Story Lab. Explore your mind and find new perspectives.">
+          <span className="tr-art"><Scroll /></span>
+          <span className="tr-tag" aria-hidden="true">Story Lab</span>
+        </button>
+      )}
 
       <button className="tr tr-corner" data-guide="play" data-guide-rank="2" onClick={go(onCorner)}
         aria-label={friend ? `My Corner. ${friend.name} is waiting there.` : 'My Corner of the treehouse'}>

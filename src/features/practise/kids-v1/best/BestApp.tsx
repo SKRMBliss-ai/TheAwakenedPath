@@ -267,16 +267,17 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                 onGarden={() => setView({ at: 'garden' })}
                 onAdventure={() => setView({ at: 'adventure' })}
                 onCorner={() => setView({ at: 'corner' })}
+                onStoryLab={() => setView({ at: 'story' })}
               />
             )}
 
-            {view.at === 'garden' && <Garden onExit={back} onGrownUp={() => setView({ at: 'grownup' })} />}
-            {view.at === 'corner' && <MyCorner onExit={back} onGrownUp={() => setView({ at: 'grownup' })} />}
-            {view.at === 'adventure' && <AdventureMap onExit={back} onGrownUp={() => setView({ at: 'grownup' })} onCorner={() => setView({ at: 'corner' })} />}
+            {view.at === 'garden' && <Garden onExit={back} onGrownUp={() => setView({ at: 'grownup' })} onReflectionPath={() => setView({ at: 'reflectionpath' })} />}
+            {view.at === 'corner' && <MyCorner onExit={back} onGrownUp={() => setView({ at: 'grownup' })} onReflectionPath={() => setView({ at: 'reflectionpath' })} onStoryLab={() => setView({ at: 'story' })} />}
+            {view.at === 'adventure' && <AdventureMap onExit={back} onGrownUp={() => setView({ at: 'grownup' })} onCorner={() => setView({ at: 'corner' })} onReflectionPath={() => setView({ at: 'reflectionpath' })} />}
 
             {view.at === 'practice' && <GamesRoom key={view.room.id}
               room={view.room} pillar={ROOM_PILLARS[view.room.id]} onExit={back}
-              onGrownUp={() => setView({ at: 'grownup' })} />}
+              onGrownUp={() => setView({ at: 'grownup' })} onReflectionPath={() => setView({ at: 'reflectionpath' })} />}
 
             {/*
               THE TRUTH LAB IS ITS OWN ROOM, and the branch is here rather
@@ -293,6 +294,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                 onExit={back}
                 onGrownUp={() => setView({ at: 'grownup' })}
                 onNext={view.step !== null ? () => nextRoom(view.step as number) : undefined}
+                onReflectionPath={() => setView({ at: 'reflectionpath' })}
               />
             )}
 
@@ -305,6 +307,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                 onGrownUp={() => setView({ at: 'grownup' })}
                 onDeepDive={() => setView({ at: 'deep' })}
                 onNext={view.step !== null ? () => nextRoom(view.step as number) : undefined}
+                onReflectionPath={() => setView({ at: 'reflectionpath' })}
               />
             )}
 

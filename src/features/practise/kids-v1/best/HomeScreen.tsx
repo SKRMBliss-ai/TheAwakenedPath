@@ -42,12 +42,12 @@ const STEPS = [
 ];
 
 /** Composed from the approved two-flow home handoff; all controls are semantic. */
-export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp, onExitGym, onReflection, onReflectionPath, onGarden, onAdventure, onCorner }: {
+export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp, onExitGym, onReflection, onReflectionPath, onGarden, onAdventure, onCorner, onStoryLab }: {
   name: string; onDeepDive: () => void; onOpenRoom: (room: VirtueRoom) => void;
   onPractice: (room: VirtueRoom) => void;
   onGrownUp: () => void; onExitGym: () => void; onReflection: () => void;
   onReflectionPath?: () => void;
-  onGarden: () => void; onAdventure: () => void; onCorner: () => void;
+  onGarden: () => void; onAdventure: () => void; onCorner: () => void; onStoryLab?: () => void;
 }) {
   const s = useKidStore();
   const reflectionCount = s.savedReflections?.length ?? 0;
@@ -236,7 +236,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
         <GoodChoicesShelf onAction={open} onDiary={onReflection} diaryWaiting={!diaryDone}
           guideDoor={path.current === 'practise' ? path.room : undefined} />
       </section>
-      <HomeTreasures onGarden={onGarden} onAdventure={onAdventure} onCorner={onCorner} />
+      <HomeTreasures onGarden={onGarden} onAdventure={onAdventure} onCorner={onCorner} onStoryLab={onStoryLab} />
       {/*
         THE PAINTED LETTERING BY THE SLEEPING DOG: the four words the gym is
         for. Scenery, not a control, so aria-hidden. (The two wooden blocks that
@@ -246,7 +246,6 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
 
       <GuideArrow worldRef={world} path={path} still={quiet || !!reduced} />
       <footer className="mg-safety">
-        <button className="chrome-fade" onClick={onExitGym}>‹ Back</button>
         {onReflectionPath && reflectionCount > 0 && <button className="mg-reflection-path-btn" onClick={onReflectionPath}>✦ My Reflection Room <span className="mg-reflection-count">{reflectionCount}</span></button>}
         <button className="chrome-fade" onClick={onGrownUp}>♡ Talk to a grown-up</button>
         {admin && <a className="mg-admin chrome-fade" href={ADMIN_PATH}>Admin</a>}
