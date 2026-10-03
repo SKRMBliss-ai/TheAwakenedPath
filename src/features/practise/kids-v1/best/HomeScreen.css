@@ -584,3 +584,15 @@
 }
 @keyframes mg-chirpy-bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(3deg)}}
 @media(prefers-reduced-motion:reduce){.mg-chirpy{animation:none}}
+
+/* Inner Diary buttons: smaller, gently pulsing, and they pop out on hover or focus. */
+.mg-stats-box,.mg-shelf-note button{transition:transform .2s ease,box-shadow .2s ease,background .25s ease,border-color .25s ease;animation:mg-diary-pulse 2.8s ease-in-out infinite;cursor:pointer}
+.mg-stats-box{padding:8px 12px;gap:4px;min-height:0}
+.mg-stats-name{font-size:13px}
+.mg-stats-age,.mg-stats-stars,.mg-diary-flag{font-size:10px}
+.mg-stats-egg{font-size:12px}
+.mg-shelf-note button{padding:6px 12px;font-size:.85em;min-height:44px}
+.mg-stats-box:hover,.mg-stats-box:focus-visible,.mg-shelf-note button:hover,.mg-shelf-note button:focus-visible{animation:none;transform:scale(1.12) translateY(-3px);box-shadow:0 10px 22px #0008,0 0 16px #ffda7c99;z-index:6}
+.mg-stats-box:active,.mg-shelf-note button:active{transform:scale(1.04)}
+@keyframes mg-diary-pulse{0%,100%{transform:scale(1);box-shadow:0 0 0 #ffda7c00}50%{transform:scale(1.04);box-shadow:0 0 14px #ffda7c88}}
+@media(prefers-reduced-motion:reduce){.mg-stats-box,.mg-shelf-note button{animation:none!important}}
