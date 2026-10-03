@@ -111,6 +111,7 @@ export function TruthLabRoom({
   onExit,
   onGrownUp,
   onNext,
+  onReflectionPath,
 }: {
   /** The day the tick at the bottom is answering for. Fixed by BestApp. */
   reporting: ReportingDay;
@@ -120,6 +121,9 @@ export function TruthLabRoom({
   onGrownUp: () => void;
   /** Continue to the next room. Present only on the journey. */
   onNext?: () => void;
+  // eslint-disable-next-line react/no-unused-prop-types
+
+  onReflectionPath?: () => void;
 }) {
   const m = useMotion();
   const completions = useKidStore((s) => s.completions);

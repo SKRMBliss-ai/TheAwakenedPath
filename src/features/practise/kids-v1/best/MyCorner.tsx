@@ -67,7 +67,7 @@ function nameOf(id: string): string {
   return CORNER_ITEM_BY_ID[id]?.name ?? 'Thing';
 }
 
-export function MyCorner({ onExit, onGrownUp }: { onExit: () => void; onGrownUp: () => void }) {
+export function MyCorner({ onExit, onGrownUp, onReflectionPath, onStoryLab }: { onExit: () => void; onGrownUp: () => void; onReflectionPath?: () => void; onStoryLab?: () => void }) {
   const quiet = useQuiet();
   const reduced = useReducedMotion();
   const still = quiet || !!reduced;

@@ -193,11 +193,14 @@ function useCountUp(value: number, still: boolean): number {
 
 type Flight = { x: number; y: number; toX: number; toY: number; points: number };
 
-export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
+export function GamesRoom({ room, pillar, onExit, onGrownUp, onReflectionPath }: {
   room: VirtueRoom;
   pillar?: BehaviourPillar;
   onExit: () => void;
   onGrownUp: () => void;
+  // eslint-disable-next-line react/no-unused-prop-types
+
+  onReflectionPath?: () => void;
 }) {
   const quiet = useQuiet();
   const reduced = useReducedMotion();

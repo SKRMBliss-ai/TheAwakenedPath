@@ -47,6 +47,7 @@ export function VirtueRoomView({
   onGrownUp,
   onDeepDive,
   onNext,
+  onReflectionPath,
 }: {
   room: VirtueRoom;
   /**
@@ -64,6 +65,9 @@ export function VirtueRoomView({
   onDeepDive: () => void;
   /** Continue to the next room. Present only on the journey. */
   onNext?: () => void;
+  // eslint-disable-next-line react/no-unused-prop-types
+
+  onReflectionPath?: () => void;
 }) {
   const texts = useLiveContent((s) => s.texts);
   const room = useMemo(() => roomText(baseRoom, texts), [baseRoom, texts]);
