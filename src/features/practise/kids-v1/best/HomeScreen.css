@@ -570,3 +570,17 @@
   .mg-mobile-doors{row-gap:46px}
   .mg-feelings.mg-mobile-open .mg-start{margin-top:30px}
 }
+
+/* Compact side panels so more of the room floor shows; Chirpy bobs and changes mood. */
+.mg-feelings{cursor:pointer}
+@media(min-width:761px){
+  .mg-feelings{top:13%;height:56%;width:25%;padding:16px 12px}
+  .mg-feelings .mg-invitation{margin:8px 0 4px;padding:5px 10px}
+  .mg-feelings .mg-steps li{min-height:0}
+  .mg-feelings .mg-steps img{width:44px;height:44px}
+  .mg-choices{top:11%;height:62%;width:35%}
+  .mg-shelf-title{min-height:60px}
+  .mg-chirpy{animation:mg-chirpy-bob 2.4s ease-in-out infinite;transition:opacity .3s}
+}
+@keyframes mg-chirpy-bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(3deg)}}
+@media(prefers-reduced-motion:reduce){.mg-chirpy{animation:none}}
