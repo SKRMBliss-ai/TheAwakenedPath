@@ -119,3 +119,6 @@
 @media (prefers-reduced-motion: reduce) {
   .egg-home *, .egg-home::before, .egg-veil * { animation: none !important; }
 }
+
+.egg-tag, .egg-home.is-ready .egg-tag, .egg-home:not(.is-ready):not(.is-hatched) .egg-tag { background-color: #2b1d5566; backdrop-filter: blur(4px); }
+.egg-home.is-ready .egg-tag { background-color: #ff7fb599; }

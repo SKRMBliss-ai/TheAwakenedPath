@@ -614,3 +614,7 @@
 @media(min-width:761px) and (max-width:1000px){
   .mg-feelings{width:clamp(170px,24vw,230px);left:1.5%}
 }
+
+/* Translucent stats box and egg label so the room shows through. */
+.mg-stats-box{background:#17164188;border-color:#a898d066;backdrop-filter:blur(6px)}
+.mg-stats-box:hover,.mg-stats-box:focus-visible{background:#2a1d52bb}
