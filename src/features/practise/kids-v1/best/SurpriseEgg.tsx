@@ -230,14 +230,7 @@ export function EggNest({ onCorner }: { onCorner: () => void }) {
   const [open, setOpen] = useState<null | 'crack' | 'reveal'>(null);
   const [crack, setCrack] = useState(0);
   const [prize, setPrize] = useState<EggPrize | null>(null);
-  const [tip, setTip] = useState(false);
   const [wiggle, setWiggle] = useState(0);
-
-  useEffect(() => {
-    if (!tip) return;
-    const t = window.setTimeout(() => setTip(false), 5200);
-    return () => window.clearTimeout(t);
-  }, [tip]);
 
   const tap = () => {
     if (hatchedToday) {
@@ -249,7 +242,6 @@ export function EggNest({ onCorner }: { onCorner: () => void }) {
     if (!ready) {
       if (!quiet) sound.play('tapHit');
       setWiggle((n) => n + 1);
-      setTip(true);
       speak('Your egg is warming up! Do one good thing today, like a game, a story or a diary page, and it will hatch.', quiet, 'grownup');
       return;
     }
@@ -290,13 +282,6 @@ export function EggNest({ onCorner }: { onCorner: () => void }) {
         <Nest part="front" />
         <span className="egg-tag" aria-hidden="true">{hatchedToday ? 'Hatched! ✓' : ready ? 'Hatch me!' : 'Warming up…'}</span>
       </button>
-      <AnimatePresence>
-        {tip && (
-          <motion.p className="egg-tip" role="status" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-            Your egg is warming up! Do one good thing today and it will hatch.
-          </motion.p>
-        )}
-      </AnimatePresence>
       {typeof document !== 'undefined' && createPortal(
         <AnimatePresence>
           {open && <Hatch key="hatch" phase={open} crack={crack} onCrack={crackOnce} prize={prize} golden={golden}

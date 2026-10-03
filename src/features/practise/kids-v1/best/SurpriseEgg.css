@@ -47,13 +47,6 @@
 @keyframes egg-tag { 50% { scale: 1.08; } }
 .egg-home:not(.is-ready):not(.is-hatched) .egg-tag { background: #2b1d55e6; color: #ffe6a2; border-color: #ffd98a66; }
 
-.egg-tip {
-  position: absolute; z-index: 12; bottom: calc(100% + 6px); left: 50%; translate: -50% 0;
-  width: max-content; max-width: 230px; margin: 0; padding: 9px 13px; border-radius: 16px;
-  background: linear-gradient(#ffffff33, #f1e9ff33); backdrop-filter: blur(8px); color: #2b1750;
-  font-size: 13px; font-weight: 850; line-height: 1.28; box-shadow: 0 4px 12px #0b041844;
-}
-
 /* ── Cracking it open ─────────────────────────────────────────────────────── */
 
 .egg-veil {
