@@ -480,13 +480,14 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp, onCorner }: {
         the way out was competing with the scenery for the same corner. */}
     <DoorHandle side="left" label="Leave Room" onClick={() => leave(onExit)} accent={art.palette.accent} bottomVh={68} scale={0.5} />
 
+    <button className="gr-chip gr-grownup" onClick={() => leave(onGrownUp)}>♡ Talk to a grown-up</button>
+
     <header className="gr-top">
       <div className="gr-top-left">
         <button className="gr-chip" aria-pressed={muted} onClick={() => {
           const next = !isMuted(); setMuted(next); setMutedState(next);
           if (next) { sound.stopAll(); sound.stopMusic(); stopSpeaking(); }
         }}>{muted ? 'Sound off' : 'Sound on'}</button>
-        <BadgeSlot />
       </div>
 
       <div className="gr-sign">
@@ -505,6 +506,7 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp, onCorner }: {
           them. Now the star is the medal: big, lit, turning slowly, and the
           number rolls up as each choice's stars land.
         */}
+        <div className="gr-statcard"><BadgeSlot />
         <motion.div ref={counter} className="gr-stars" role="img" aria-label={`Mind Stars: ${points}`}
           animate={!still && state.rewardArrived ? { scale: [1, 1.12, 1] } : { scale: 1 }}>
           <span className="gr-stars-medal" aria-hidden="true">
@@ -516,9 +518,8 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp, onCorner }: {
             <small>Mind Stars</small>
           </span>
           {state.rewardArrived && flight && <span key={state.practised} className="gr-stars-gain" aria-hidden="true">+{flight.points}</span>}
-        </motion.div>
+        </motion.div></div>
         <StickerHud next={next} count={owned.length} bump={owned.length} onOpen={openBook} />
-        <button className="gr-chip" onClick={() => leave(onGrownUp)}>♡ Talk to a grown-up</button>
         <AnimatePresence>
           {popStickers.length > 0 && <StickerPop key="sticker-pop" stickers={popStickers}
             more={stickerQueue.length - popStickers.length} still={still} onDone={dismissPop} />}

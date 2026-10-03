@@ -805,3 +805,10 @@
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:2px;padding:0;overflow:hidden;
 }
+
+/* Talk to a grown-up: bottom right, dims after 3s, full again on hover or focus. */
+.gr-grownup{position:fixed;right:14px;bottom:14px;z-index:30;min-height:44px;animation:gr-grownup-dim .6s ease 3s forwards}
+.gr-grownup:hover,.gr-grownup:focus-visible{animation:none;opacity:1}
+@keyframes gr-grownup-dim{to{opacity:.35}}
+.gr-statcard{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.gr-idle .gr-grownup{filter:none}

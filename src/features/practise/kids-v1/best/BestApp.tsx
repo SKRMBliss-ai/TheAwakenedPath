@@ -275,7 +275,6 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                 onDeepDive={() => setView({ at: 'deep' })}
                 onExitGym={onExitGym}
                 onGrownUp={() => setView({ at: 'grownup' })}
-                onCorner={() => setView({ at: 'corner' })}
               />
             )}
 

@@ -83,8 +83,8 @@ const PIVOT = '24% 50%';
 const TIP_MS = 2800;
 
 /** A back handle reminds the child where it is this often, for this long. */
-const REMIND_EVERY_MS = 60000;
-const REMIND_FOR_MS = 5000;
+const REMIND_EVERY_MS = 5000;
+const REMIND_FOR_MS = 2800;
 
 /** Wave and wave the handle every N seconds to catch attention and show it's pressable. */
 const ATTN_BEAT_EVERY_MS = 5000;
