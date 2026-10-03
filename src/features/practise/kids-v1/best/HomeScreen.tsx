@@ -12,7 +12,7 @@ import { GoodChoicesShelf } from './GoodChoicesShelf';
 import { DailyWelcome } from './DailyWelcome';
 import { AgePopup } from './AgePopup';
 import { BadgeSlot } from './ChildBadge';
-import { bandUnknown } from '../kit/band';
+import { bandUnknown, childAge } from '../kit/band';
 import { chirpySprite } from '../ui/sprites';
 import * as sound from '../kit/sound';
 import { liveAffirmations } from '../kit/affirmations';
@@ -171,7 +171,6 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   };
   const hello = greeting?.title ?? `Hello${name ? `, ${name}` : ''}!`;
   const month = today.slice(0, 7);
-  const days = Object.entries(s.completions).filter(([date, values]) => date.startsWith(month) && Object.values(values).some(Boolean)).length;
   const noteKey = `${today}:${selected ?? ''}`;
   const note = s.monthReviews[month]?.[noteKey] ?? '';
   const open = (id: string, next: typeof mode) => {
@@ -210,8 +209,19 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
             onClick={() => { const next = !mutedState; setMuted(next); setMutedState(next); if (!next) sound.play('tap'); }}
             aria-pressed={!mutedState}
             aria-label={mutedState ? 'Sounds are off. Turn sounds on.' : 'Sounds are on. Turn sounds off.'}
-          ><span aria-hidden="true">{mutedState ? '🔇' : '🔊'}</span></button><span className="mg-points"><span aria-hidden="true">⭐</span><span><b>{points}</b><small>Mind Stars</small></span></span>
-          <button className={`mg-month ${diaryDone ? '' : 'mg-diary-waiting'}`} data-guide="diary" data-guide-rank="0" onClick={onReflection} aria-label={diaryDone ? 'Open My Inner Diary and browse months' : 'Today’s diary page is still empty. Open My Inner Diary'}><b>{new Date().toLocaleString('en', { month: 'short' }).toUpperCase()}</b><span>This month<small>{days} {days === 1 ? 'day' : 'days'} remembered</small><span aria-hidden="true">● ● ● ● ✦</span><span className={`mg-diary-flag ${diaryDone ? 'is-done' : ''}`}>{diaryDone ? '✓ Today is in your diary' : '✨ Today’s page is waiting'}</span></span></button></div>
+          ><span aria-hidden="true">{mutedState ? '🔇' : '🔊'}</span></button>
+          <button className={`mg-stats-box ${diaryDone ? '' : 'mg-diary-waiting'}`} data-guide="diary" data-guide-rank="0" onClick={onReflection} aria-label={diaryDone ? 'Open My Inner Diary' : 'Open My Inner Diary to fill today page'}>
+            <div className="mg-stats-header">
+              <span className="mg-stats-name">{name}</span>
+              {childAge() && <span className="mg-stats-age">Age {childAge()}</span>}
+            </div>
+            <div className="mg-stats-info">
+              <span className="mg-stats-stars"><span aria-hidden="true">⭐</span> {points} Mind Stars</span>
+              <span className="mg-stats-egg" aria-hidden="true">🥚 ✨</span>
+            </div>
+            <span className={`mg-diary-flag ${diaryDone ? 'is-done' : ''}`}>{diaryDone ? '✓ Filled today' : '✨ Waiting for you'}</span>
+          </button></div>
+
       </header>
       <PathSteps path={path} title={hello} variant="strip" quiet={quiet} onGo={go} />
       <div className="mg-mobile-doors"><button data-guide="feel" data-guide-rank="1" onClick={() => setMobile(mobile === 'feelings' ? null : 'feelings')} aria-expanded={mobile === 'feelings'}>Funny Feeling?<small>Step into your mind →</small></button><button data-guide="practise" data-guide-rank="1" onClick={() => setMobile(mobile === 'choices' ? null : 'choices')} aria-expanded={mobile === 'choices'}>My Good Choices<small>Open your seven rooms →</small></button><button className="mg-mobile-diary" data-guide="diary" data-guide-rank="1" onClick={onReflection}>📖 My Inner Diary<small>{diaryDone ? '✓ Today is in your diary' : 'Today’s page is waiting'}</small></button></div>

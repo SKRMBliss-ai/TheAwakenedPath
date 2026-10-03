@@ -57,6 +57,7 @@ import { greetByName, stopSpeaking } from '../kit/chirpyVoice';
 import { COMPANY } from '../kit/feelingCompanions';
 import { markVisit, releasedCount } from '../kit/sky';
 import { startSkyAmbience, stopAmbience } from '../kit/ambience';
+import { useDiaryFilledToday } from '../kit/diaryToday';
 import * as sound from '../kit/sound';
 
 /**
@@ -160,6 +161,7 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
   const onboarded = useKidStore((s) => s.onboarded);
   const name = useKidStore((s) => s.name);
   const completions = useKidStore((s) => s.completions);
+  const diaryDone = useDiaryFilledToday();
 
   /** Same arithmetic as the Observatory's jar — one per virtue per day it was
    *  ticked. The one-minute door shows it back as a plain fact. */
@@ -202,6 +204,17 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
   useEffect(() => {
     setSeasonOver(seasonJustEnded(useKidStore.getState().completions));
   }, []);
+
+  /**
+   * THE DIARY IS THE PRIMARY FLOW. When a child returns to the home page and
+   * hasn't filled their diary yet, take them straight to it. This inspires them
+   * to reflect on their day and is the main pathway after the feelings journey.
+   */
+  useEffect(() => {
+    if (view.at === 'map' && !diaryDone) {
+      setView({ at: 'reflection', today: true });
+    }
+  }, [view.at, diaryDone]);
 
   // The two reasons a screen change stays a plain fade: the child asked their
   // device for less motion, or the app has quietened itself because they're
