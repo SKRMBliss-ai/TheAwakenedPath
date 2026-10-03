@@ -323,7 +323,12 @@ export function DeepDive({
     onKeepsakes={onKeepsakes}
     onSave={(a) => {
       const ok = saveCase(a);
-      if (ok) useKidStore.getState().addSavedReflection(buildSavedReflection(a));
+      if (ok) {
+        useKidStore.getState().addSavedReflection(buildSavedReflection(a));
+        /* Telling Chirpy the whole story is the biggest thing a child does
+           here, so it earns the most stars of anything in the gym. */
+        useKidStore.getState().rewardJourney(a.sessionId);
+      }
       useKidStore.getState().noteActivity({ kind: 'story', detail: a.feeling });
       logKidEvent('storyLab', { ...a });
       return ok;

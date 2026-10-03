@@ -1,0 +1,97 @@
+/* The level panel and the buddy on the home page — see HomeBuddy.tsx. */
+
+.hb-hud-wrap { position: relative; display: grid; justify-items: stretch; gap: 6px; pointer-events: auto; }
+.hb-hud {
+  position: relative; display: flex; align-items: center; gap: 10px; min-width: 240px; padding: 8px 14px 8px 8px; border-radius: 22px; text-align: left;
+  background: #1a1046b8; border: 1.5px solid #ffd45c99; color: #fff; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 8px 22px #0b041866, inset 0 1px 0 #ffffff26; transition: transform .2s, box-shadow .2s;
+}
+.hb-hud > span { position: relative; pointer-events: none; }
+.hb-hud-open { position: absolute; inset: 0; z-index: 0; width: 100%; padding: 0; border: 0; border-radius: inherit; background: none; cursor: pointer; }
+.hb-hud:hover, .hb-hud:has(.hb-hud-open:focus-visible) { transform: translateY(-2px); box-shadow: 0 12px 26px #0b041888, 0 0 18px #ffd45c66; }
+.hb-hud-open:focus-visible { outline: 3px solid #aef8ff; outline-offset: 3px; }
+.hb-hud.is-gaining { box-shadow: 0 8px 22px #0b041866, 0 0 0 3px #ffd45c88, 0 0 26px #ffb21e88; }
+.hb-badge {
+  position: relative; flex: none; display: grid; place-items: center; width: 54px; height: 54px; padding-top: 8px; border-radius: 50%;
+  background: radial-gradient(circle at 36% 30%, #fff6c4, #ffc93c 55%, #e08a12); border: 2.5px solid #fff; color: #5a2d00;
+  font-size: 24px; font-weight: 700; line-height: 1; box-shadow: 0 4px 0 #b4700f, 0 0 16px #ffd45c88;
+}
+.hb-badge small { position: absolute; top: 7px; left: 0; right: 0; text-align: center; font-size: 7.5px; letter-spacing: 1.2px; font-weight: 700; }
+.hb-meter { flex: 1; display: grid; gap: 4px; min-width: 0; }
+.hb-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.hb-name { font-size: 14px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hb-stars { font-size: 20px; font-weight: 700; color: #ffd45c; white-space: nowrap; text-shadow: 0 2px 0 #6b3a00; font-variant-numeric: tabular-nums; }
+.hb-stars span { font-size: 16px; }
+.is-gaining .hb-stars { animation: hb-bump .25s ease-in-out infinite alternate; }
+.hb-bar { position: relative; height: 11px; border-radius: 99px; background: #0b041866; overflow: hidden; box-shadow: inset 0 1px 2px #0007; }
+.hb-bar i { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: linear-gradient(90deg, #ffe680, #ffb21e); box-shadow: 0 0 8px #ffd45c; transition: width .9s cubic-bezier(.25, .8, .3, 1); }
+.hb-bar i::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, #fffb 50%, transparent 70%); background-size: 220% 100%; animation: br-sheen 2.6s linear infinite; }
+.hb-left { font-size: 11.5px; font-weight: 700; color: #e9e0ff; }
+.hb-hatch {
+  position: relative; z-index: 1; pointer-events: auto; justify-self: start; min-height: 30px; margin-top: 1px; padding: 3px 12px; border: 0; border-radius: 99px; cursor: pointer;
+  color: #fff; font-size: 14.5px; font-weight: 700; white-space: nowrap; text-shadow: 0 1px 0 #0004;
+  background: linear-gradient(#ff9fd0, #ff4f98); box-shadow: 0 3px 0 #b02a68, 0 0 16px #ff7ab6aa; animation: br-pulse 1.4s ease-in-out infinite;
+}
+.hb-hatch:focus-visible { outline: 3px solid #fff3c4; outline-offset: 2px; }
+.hb-short { display: none; }
+
+/* The buddy on the floor of the room, between the feelings portal and the boy. */
+.hb-floor { position: absolute; z-index: 4; left: 27%; bottom: 5%; width: clamp(130px, 11.5vw, 190px); display: grid; justify-items: center; gap: 2px; pointer-events: none; }
+.hb-floor > * { pointer-events: auto; }
+.hb-floor-art { width: 100%; aspect-ratio: 1; padding: 0; border: 0; background: none; cursor: pointer; transform-origin: 50% 92%; -webkit-tap-highlight-color: transparent; }
+.hb-floor-art .cr { width: 100%; height: 100%; filter: drop-shadow(0 6px 10px #1a0b2e66); }
+.hb-floor-art:hover .cr, .hb-floor-art:focus-visible .cr { filter: drop-shadow(0 0 10px #fff6c4) drop-shadow(0 6px 10px #1a0b2e66); }
+.hb-floor-art:focus-visible { outline: 3px solid #aef8ff; outline-offset: 2px; border-radius: 30%; }
+.hb-tag {
+  margin-top: -8px; min-height: 36px; padding: 4px 14px; border-radius: 99px; cursor: pointer; white-space: nowrap;
+  background: #1a1046cc; border: 1.5px solid #ffd45c99; color: #fff; font-size: 15px; font-weight: 700; box-shadow: 0 4px 12px #0b041866;
+}
+.hb-tag span { color: #ffd45c; font-size: .9em; }
+.hb-tag-pink { background: linear-gradient(#ff9fd0, #ff4f98); border: 0; box-shadow: 0 4px 0 #b02a68, 0 0 18px #ff7ab6aa; animation: br-pulse 1.4s ease-in-out infinite; }
+.hb-mystery { position: relative; }
+.hb-mystery-sil { position: absolute; inset: 0; display: block; }
+.hb-mystery-sil .cr { filter: drop-shadow(0 0 12px #c9b2ffaa) !important; }
+.hb-q {
+  position: absolute; left: 50%; top: 38%; translate: -50% -50%; font-size: 54px; font-weight: 700; color: #fff8d6;
+  text-shadow: 0 3px 0 #6b3a00, 0 0 18px #ffd45c; animation: hb-q 1.6s ease-in-out infinite;
+}
+.hb-say {
+  position: absolute; bottom: calc(100% - 18px); left: 50%; translate: -50% 0; width: max-content; max-width: 230px; margin: 0; padding: 9px 14px;
+  border-radius: 18px; background: #fffdf6; color: #3a1f6e; font-size: 14px; font-weight: 800; line-height: 1.3; text-align: center;
+  box-shadow: 0 8px 20px #0b041877; z-index: 5;
+}
+.hb-say::after { content: ''; position: absolute; top: 100%; left: 50%; margin-left: -8px; border: 8px solid transparent; border-top-color: #fffdf6; }
+
+@keyframes hb-bump { from { transform: scale(1); } to { transform: scale(1.12); } }
+@keyframes hb-q { 0%, 100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-6px) rotate(6deg); } }
+@keyframes br-sheen { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+@keyframes br-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+
+/* Tablets and small laptops: the shelf's sign sits higher, so the panel gets shorter. */
+@media (min-width: 761px) and (max-width: 1320px), (min-width: 761px) and (max-height: 800px) {
+  .hb-hud { min-width: 0; gap: 8px; padding: 5px 12px 5px 6px; border-radius: 18px; }
+  .hb-badge { width: 44px; height: 44px; font-size: 20px; padding-top: 7px; box-shadow: 0 3px 0 #b4700f, 0 0 12px #ffd45c88; }
+  .hb-badge small { top: 5px; font-size: 6.5px; }
+  .hb-meter { gap: 3px; }
+  .hb-name { font-size: 12.5px; }
+  .hb-stars { font-size: 17px; }
+  .hb-stars span { font-size: 13px; }
+  .hb-bar { height: 8px; }
+  .hb-left { font-size: 10.5px; }
+  .hb-hatch { min-height: 26px; padding: 2px 10px; font-size: 13px; }
+}
+
+/* On a phone the buddy steps out of the painting into the page, under the doors. */
+@media (max-width: 760px) {
+  .hb-hud { min-width: 0; padding: 6px 10px 6px 6px; gap: 8px; }
+  .hb-badge { width: 44px; height: 44px; font-size: 20px; }
+  .hb-badge small { top: 5px; font-size: 6.5px; }
+  .hb-name { display: none; }
+  .hb-stars { font-size: 17px; }
+  .hb-left { font-size: 10.5px; }
+  .hb-hatch { font-size: 13px; min-height: 30px; padding: 3px 10px; }
+  .hb-long { display: none; }
+  .hb-short { display: inline; }
+  .hb-floor { position: relative; left: auto; bottom: auto; order: 0; width: 150px; margin: 12px auto 0; }
+}
+@media (prefers-reduced-motion: reduce) { .hb-hud *, .hb-floor *, .hb-hatch, .hb-tag-pink { animation: none !important; } }

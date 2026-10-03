@@ -212,7 +212,8 @@ export function MyCorner({ onExit, onGrownUp, onStoryLab, onGarden, onAdventure,
       <div className="cn-glow" aria-hidden="true" />
 
       <FeelingKeepsakes fresh={fresh} />
-      <div className="cn-egg-nest"><EggNest onCorner={onExit} /></div>
+      {/* Already in the corner, so "Visit My Corner" just closes the egg. */}
+      <div className="cn-egg-nest"><EggNest onCorner={() => setTab('friends')} /></div>
       <RoomLinks items={[{ label: 'My Garden', icon: '🌱', onClick: onGarden }, { label: 'Story Map', icon: '🗺️', onClick: onAdventure }, { label: 'Story Lab', icon: '📜', onClick: onStoryLab }]} />
       <DoorHandle side="left" label="Mind Gym" onClick={onExit} accent="#ffd98a" scale={0.4} bottomVh={66} />
 

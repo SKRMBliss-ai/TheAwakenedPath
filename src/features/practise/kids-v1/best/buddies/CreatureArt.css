@@ -1,0 +1,31 @@
+/* The creatures breathe, blink and wag; fliers and swimmers bob. All of it is
+   transform-only, so a whole collection of them stays cheap to animate. */
+.cr { display: block; overflow: visible; }
+.cr .cr-body { transform-box: view-box; transform-origin: 100px 184px; animation: cr-breathe 3.2s ease-in-out infinite; }
+.cr-flier .cr-body, .cr-swimmer .cr-swim { animation: cr-bob 2.6s ease-in-out infinite; }
+.cr-swimmer .cr-body { animation: none; }
+.cr .cr-eye { transform-box: fill-box; transform-origin: 50% 50%; animation: cr-blink 5.2s infinite; }
+.cr .cr-tail { transform-box: fill-box; transform-origin: 100% 40%; animation: cr-wag 2.4s ease-in-out infinite; }
+.cr .cr-wing-l { transform-box: fill-box; transform-origin: 100% 60%; animation: cr-flap-l 1.3s ease-in-out infinite; }
+.cr .cr-wing-r { transform-box: fill-box; transform-origin: 0% 60%; animation: cr-flap-r 1.3s ease-in-out infinite; }
+.cr .cr-twinkle { transform-box: fill-box; transform-origin: 50% 50%; animation: cr-twinkle 1.8s ease-in-out infinite; }
+.cr .cr-twinkle:nth-of-type(2n) { animation-delay: .6s; }
+.cr .cr-twinkle:nth-of-type(3n) { animation-delay: 1.1s; }
+.cr .cr-aura { transform-box: fill-box; transform-origin: 50% 50%; animation: cr-aura 2.4s ease-in-out infinite; }
+.cr .cr-shiny-sparks path { transform-box: fill-box; transform-origin: 50% 50%; animation: cr-twinkle 1.6s ease-in-out infinite; }
+.cr .cr-shiny-sparks path:nth-child(2) { animation-delay: .5s; }
+.cr .cr-shiny-sparks path:nth-child(3) { animation-delay: 1s; }
+.cr-flier .cr-shadow { transform-box: fill-box; transform-origin: 50% 50%; animation: cr-shadow 2.6s ease-in-out infinite; }
+
+@keyframes cr-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.012, 1.028); } }
+@keyframes cr-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes cr-blink { 0%, 93%, 100% { transform: scaleY(1); } 95.5% { transform: scaleY(.08); } }
+@keyframes cr-wag { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-5deg); } }
+@keyframes cr-flap-l { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(10deg); } }
+@keyframes cr-flap-r { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-10deg); } }
+@keyframes cr-twinkle { 0%, 100% { transform: scale(.55); opacity: .5; } 50% { transform: scale(1.1); opacity: 1; } }
+@keyframes cr-aura { 0%, 100% { opacity: .55; transform: scale(.94); } 50% { opacity: 1; transform: scale(1.04); } }
+@keyframes cr-shadow { 0%, 100% { transform: scale(1); opacity: .2; } 50% { transform: scale(.85); opacity: .13; } }
+
+.cr-still *, .cr-still .cr-body { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { .cr *, .cr .cr-body { animation: none !important; } }

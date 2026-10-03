@@ -42,6 +42,8 @@ import { GamesRoom } from './GamesRoom';
 import { Garden } from './Garden';
 import { MyCorner } from './MyCorner';
 import { AdventureMap } from './AdventureMap';
+import { BuddiesRoom } from './buddies/BuddiesRoom';
+import { RewardLayer } from './buddies/RewardLayer';
 import { ChildBadge } from './ChildBadge';
 import { ROOM_PILLARS } from '../kit/behaviourPractice';
 import { seasonJustEnded, type Keepsake } from '../kit/seasons';
@@ -108,7 +110,8 @@ type View =
   /* The three places off the home-page floor — see kids/delight. */
   | { at: 'garden' }
   | { at: 'corner'; fresh?: boolean }
-  | { at: 'adventure' };
+  | { at: 'adventure' }
+  | { at: 'buddies' };
 
 /**
  * WALKING THROUGH, NOT FADING THROUGH.
@@ -276,8 +279,10 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                 onExitGym={onExitGym}
                 onGrownUp={() => setView({ at: 'grownup' })}
                 onCorner={() => setView({ at: 'corner' })}
+                onBuddies={() => setView({ at: 'buddies' })}
               />
             )}
+            {view.at === 'buddies' && <BuddiesRoom onExit={back} />}
 
             {view.at === 'garden' && <Garden onExit={back} onGrownUp={() => setView({ at: 'grownup' })} />}
             {view.at === 'corner' && <MyCorner fresh={view.fresh} onExit={back} onGrownUp={() => setView({ at: 'grownup' })} onStoryLab={() => setView({ at: 'story' })} onGarden={() => setView({ at: 'garden' })} onAdventure={() => setView({ at: 'adventure' })} />}
@@ -341,7 +346,10 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
                 onSave={(answers) => {
                   setStoryAnswers(answers);
                   const ok = saveCase(answers);
-                  if (ok) useKidStore.getState().addSavedReflection(buildSavedReflection(answers));
+                  if (ok) {
+                    useKidStore.getState().addSavedReflection(buildSavedReflection(answers));
+                    useKidStore.getState().rewardJourney(answers.sessionId);
+                  }
                   useKidStore.getState().noteActivity({ kind: 'story', detail: answers.feeling });
                   return ok;
                 }}
@@ -377,6 +385,9 @@ export default function BestApp({ onExitGym }: { onExitGym: () => void }) {
             {view.at === 'grownup' && <GrownUp onBack={back} />}
           </motion.div>
         </AnimatePresence>
+        {/* Stars landing, wherever they are earned: see buddies/RewardLayer.
+            Not over the grown-up's page, which is not part of the game. */}
+        {view.at !== 'grownup' && <RewardLayer quiet={quiet} />}
 
         {/*
           NO BOTTOM BAR. It used to run across every hub and every room with

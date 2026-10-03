@@ -1,5 +1,3 @@
-import { RoomCorner } from './RoomLinks';
-import { EggNest } from './SurpriseEgg';
 import {
   useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties,
 } from 'react';
@@ -195,7 +193,9 @@ function useCountUp(value: number, still: boolean): number {
 
 type Flight = { x: number; y: number; toX: number; toY: number; points: number };
 
-export function GamesRoom({ room, pillar, onExit, onGrownUp, onCorner }: {
+export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
+  /* The surprise egg used to sit in this room's corner; it lives in My
+     Corner now, and the eggs a child hatches here are the buddy eggs. */
   onCorner?: () => void;
   room: VirtueRoom;
   pillar?: BehaviourPillar;
@@ -707,6 +707,5 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp, onCorner }: {
       +{flight.points} ⭐
     </motion.div>, document.body)}
   </main>
-  {onCorner && <RoomCorner><EggNest onCorner={onCorner} /></RoomCorner>}
   </>;
 }

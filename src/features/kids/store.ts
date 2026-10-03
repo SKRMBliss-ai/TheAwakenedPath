@@ -6,6 +6,7 @@ import {
   EGG_FRIEND_BY_ID, MEMORY_LIMIT, SEEDS_PER_DAY, eggPrizeFor, plantKindFor,
   type EggPrize, type Memory, type NewMemory, type PlacedItem, type Plant,
 } from './delight';
+import { CREATURE_BY_ID, WORLD_BY_ID, baseOf, eggsReady, nextHatch, shinyOf, type WorldId } from './buddies';
 
 /**
  * Kid progress lives on THIS DEVICE only (localStorage), never on a server —
@@ -96,6 +97,16 @@ function activityPatch(s: KidState, memory: NewMemory, plant = true): Pick<KidSt
   return { memories, activeDays, plants };
 }
 
+export type BuddyHatch = { id: string; shiny: boolean } | { bonus: number };
+
+/** Stars a finished feelings journey earns, and how many journeys a day earn them. */
+export const JOURNEY_STARS = 20;
+export const JOURNEYS_REWARDED_PER_DAY = 3;
+/** What an egg holds once a world (and every shiny one in it) has hatched. */
+const EGG_BONUS_STARS = 25;
+/** Journeys already rewarded this visit, so saving one again after a change earns nothing twice. */
+const rewardedJourneys = new Set<string>();
+
 interface KidState {
   onboarded: boolean;
   name: string;
@@ -143,6 +154,20 @@ interface KidState {
   /** Week -> the story read that week. Set at the first chapter, so a story changed mid-week can't swap it out. */
   storyByWeek: Record<string, string>;
 
+  /* See buddies.ts: the creatures a child collects by levelling up. */
+  /** The world eggs hatch in: their buddy's world. Null until they choose one. */
+  buddyWorld: WorldId | null;
+  /** World -> what has hatched there, in order: `rex`, or `rex*` for a shiny one. */
+  buddies: Record<string, string[]>;
+  /** The one who stands on the home page. */
+  buddyId: string | null;
+  /** World -> the buddy last chosen there, so going back to a world brings its buddy back too. */
+  buddyPicks: Record<string, string>;
+  /** Level eggs opened so far, in any world. Eggs waiting = levels gained minus this. */
+  buddyEggsOpened: number;
+  /** Day -> feelings journeys that have earned stars that day. */
+  journeyStars: Record<string, number>;
+
   completeOnboarding: (name: string, avatarId: string) => void;
   setName: (name: string) => void;
   toggleBehaviour: (behaviourId: string) => void;
@@ -178,6 +203,16 @@ interface KidState {
   setCornerWall: (id: string) => void;
   /** A chapter read to its last page. Reports whether it was new, and whether it finished the story. */
   readChapter: (week: string, chapter: number, storyId: string, title: string) => { firstTime: boolean; finished: boolean };
+  /** Go to a world. Its first buddy is picked with pickStarter. */
+  chooseWorld: (world: WorldId) => void;
+  /** The first buddy in a world, chosen from its three starters. */
+  pickStarter: (world: WorldId, id: string) => void;
+  /** Opens one waiting level egg in the buddy's world: a new creature, or stars once every one has hatched. */
+  hatchBuddyEgg: () => BuddyHatch | null;
+  setBuddy: (id: string) => void;
+  /** Stars for finishing a feelings journey, the first few times a day. A
+      journey saved again after an edit (same session) earns nothing more. */
+  rewardJourney: (sessionId?: string) => number;
   reset: () => void;
 }
 
@@ -268,6 +303,12 @@ export const useKidStore = create<KidState>()(
       chaptersRead: {},
       storiesFinished: [],
       storyByWeek: {},
+      buddyWorld: null,
+      buddies: {},
+      buddyId: null,
+      buddyPicks: {},
+      buddyEggsOpened: 0,
+      journeyStars: {},
 
       completeOnboarding: (name, avatarId) => set({ onboarded: true, name: name.trim() || 'Explorer', avatarId }),
       setName: (name) => { if (name.trim()) set({ name: name.trim() }); },
@@ -459,6 +500,64 @@ export const useKidStore = create<KidState>()(
         return result;
       },
 
+      chooseWorld: (world) => set((s) => {
+        const owned = s.buddies[world] ?? [];
+        const pick = s.buddyPicks[world];
+        return { buddyWorld: world, buddyId: pick && owned.includes(pick) ? pick : owned[0] ?? s.buddyId };
+      }),
+
+      pickStarter: (world, id) => set((s) => {
+        if ((s.buddies[world] ?? []).length || !WORLD_BY_ID[world].starters.includes(id)) return s;
+        return { buddyWorld: world, buddies: { ...s.buddies, [world]: [id] }, buddyId: id, buddyPicks: { ...s.buddyPicks, [world]: id } };
+      }),
+
+      hatchBuddyEgg: () => {
+        let out: BuddyHatch | null = null;
+        set((s) => {
+          const world = s.buddyWorld;
+          if (!world || !(s.buddies[world] ?? []).length || eggsReady(s.points, s.buddyEggsOpened) <= 0) return s;
+          const owned = s.buddies[world];
+          const next = nextHatch(world, owned);
+          if (!next) {
+            out = { bonus: EGG_BONUS_STARS };
+            const points = s.points + EGG_BONUS_STARS;
+            return { buddyEggsOpened: s.buddyEggsOpened + 1, points, rewards: recomputeRewards(points, s.rewards) };
+          }
+          out = next;
+          return {
+            buddyEggsOpened: s.buddyEggsOpened + 1,
+            buddies: { ...s.buddies, [world]: [...owned, next.shiny ? shinyOf(next.id) : next.id] },
+          };
+        });
+        return out;
+      },
+
+      setBuddy: (id) => set((s) => {
+        const creature = CREATURE_BY_ID[baseOf(id)];
+        if (!creature || !(s.buddies[creature.world] ?? []).includes(id)) return s;
+        return { buddyId: id, buddyWorld: creature.world, buddyPicks: { ...s.buddyPicks, [creature.world]: id } };
+      }),
+
+      rewardJourney: (sessionId) => {
+        if (sessionId && rewardedJourneys.has(sessionId)) return 0;
+        if (sessionId) rewardedJourneys.add(sessionId);
+        let given = 0;
+        set((s) => {
+          const today = todayKey();
+          const done = s.journeyStars[today] ?? 0;
+          if (done >= JOURNEYS_REWARDED_PER_DAY) return s;
+          given = JOURNEY_STARS;
+          const points = s.points + JOURNEY_STARS;
+          return {
+            points,
+            pointsByBehaviour: { ...s.pointsByBehaviour, mindheart: (s.pointsByBehaviour.mindheart ?? 0) + JOURNEY_STARS },
+            rewards: recomputeRewards(points, s.rewards),
+            journeyStars: { ...s.journeyStars, [today]: done + 1 },
+          };
+        });
+        return given;
+      },
+
       reset: () => set({
         onboarded: false, name: '', avatarId: 'sunny', points: 0, pointsByBehaviour: {},
         completions: {}, missionsDone: {}, reflections: {}, savedReflections: [], monthReviews: {}, scenariosDone: {},
@@ -466,6 +565,7 @@ export const useKidStore = create<KidState>()(
         memories: [], visitDays: [], activeDays: [], plants: [], gardenSeen: '', wateredOn: '',
         eggHatchedOn: '', eggsHatched: 0, eggPrize: null, friends: [], jokesTold: [], eggStickers: [],
         corner: [], cornerWall: 'treehouse', chaptersRead: {}, storiesFinished: [], storyByWeek: {},
+        buddyWorld: null, buddies: {}, buddyId: null, buddyPicks: {}, buddyEggsOpened: 0, journeyStars: {},
       }),
       };
     },
