@@ -596,3 +596,21 @@
 .mg-stats-box:active,.mg-shelf-note button:active{transform:scale(1.04)}
 @keyframes mg-diary-pulse{0%,100%{transform:scale(1);box-shadow:0 0 0 #ffda7c00}50%{transform:scale(1.04);box-shadow:0 0 14px #ffda7c88}}
 @media(prefers-reduced-motion:reduce){.mg-stats-box,.mg-shelf-note button{animation:none!important}}
+
+/* Funny Feeling panel: narrower, and it scales with the viewport instead of fixed percentages. */
+@media(min-width:761px){
+  .mg-feelings{width:clamp(190px,21vw,300px);left:clamp(8px,4vw,70px);height:min(56%,calc(100vh - 220px));min-height:300px;overflow:hidden;padding:clamp(8px,1.4vh,16px) clamp(8px,.9vw,14px)}
+  .mg-feelings h1{font-size:clamp(17px,2vw,32px)}
+  .mg-feelings h2{font-size:clamp(12px,1.1vw,18px)}
+  .mg-feelings .mg-invitation{font-size:clamp(10px,.85vw,14px)}
+  .mg-feelings .mg-steps b{font-size:clamp(11px,.95vw,15px)}
+  .mg-feelings .mg-steps span{font-size:clamp(9px,.78vw,12px)}
+  .mg-feelings .mg-steps img{width:clamp(30px,3vw,44px);height:clamp(30px,3vw,44px)}
+  .mg-feelings .mg-start{min-height:44px;font-size:clamp(14px,1.3vw,22px)}
+}
+@media(min-width:761px) and (max-height:620px){
+  .mg-feelings .mg-invitation,.mg-feelings .mg-steps span{display:none}
+}
+@media(min-width:761px) and (max-width:1000px){
+  .mg-feelings{width:clamp(170px,24vw,230px);left:1.5%}
+}
