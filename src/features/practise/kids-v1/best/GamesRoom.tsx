@@ -195,8 +195,7 @@ function useCountUp(value: number, still: boolean): number {
 
 type Flight = { x: number; y: number; toX: number; toY: number; points: number };
 
-// @ts-expect-error onReflectionPath will be used when reflection buttons are added to rooms
-export function GamesRoom({ room, pillar, onExit, onGrownUp, onReflectionPath, onCorner }: {
+export function GamesRoom({ room, pillar, onExit, onGrownUp, onCorner }: {
   onCorner?: () => void;
   room: VirtueRoom;
   pillar?: BehaviourPillar;
@@ -204,8 +203,7 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp, onReflectionPath, o
   onGrownUp: () => void;
   // eslint-disable-next-line react/no-unused-prop-types
 
-  onReflectionPath?: () => void;
-}) {
+  }) {
   const quiet = useQuiet();
   const reduced = useReducedMotion();
   const still = quiet || !!reduced;

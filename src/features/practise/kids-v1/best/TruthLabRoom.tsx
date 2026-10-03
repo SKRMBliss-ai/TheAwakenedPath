@@ -111,8 +111,6 @@ export function TruthLabRoom({
   onExit,
   onGrownUp,
   onNext,
-  // @ts-ignore - will be used when reflection buttons are added
-  onReflectionPath,
 }: {
   /** The day the tick at the bottom is answering for. Fixed by BestApp. */
   reporting: ReportingDay;
@@ -124,8 +122,7 @@ export function TruthLabRoom({
   onNext?: () => void;
   // eslint-disable-next-line react/no-unused-prop-types
 
-  onReflectionPath?: () => void;
-}) {
+  }) {
   const m = useMotion();
   const completions = useKidStore((s) => s.completions);
   const setBehaviourOn = useKidStore((s) => s.setBehaviourOn);

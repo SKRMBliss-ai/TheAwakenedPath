@@ -47,8 +47,6 @@ export function VirtueRoomView({
   onGrownUp,
   onDeepDive,
   onNext,
-  // @ts-ignore - will be used when reflection buttons are added
-  onReflectionPath,
 }: {
   room: VirtueRoom;
   /**
@@ -68,8 +66,7 @@ export function VirtueRoomView({
   onNext?: () => void;
   // eslint-disable-next-line react/no-unused-prop-types
 
-  onReflectionPath?: () => void;
-}) {
+  }) {
   const texts = useLiveContent((s) => s.texts);
   const room = useMemo(() => roomText(baseRoom, texts), [baseRoom, texts]);
   const completions = useKidStore((s) => s.completions);
