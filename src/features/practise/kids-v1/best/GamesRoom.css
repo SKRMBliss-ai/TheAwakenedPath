@@ -812,3 +812,8 @@
 @keyframes gr-grownup-dim{to{opacity:.35}}
 .gr-statcard{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
 .gr-idle .gr-grownup{filter:none}
+
+/* Name tag sits on the top edge of the Mind Stars box so the two read as one card. */
+.gr-statcard{position:relative;padding-top:12px;gap:0}
+.gr-statcard>span:first-child{position:absolute;top:0;right:18px;z-index:2;transform:translateY(-35%)}
+.gr-statcard .gr-stars{padding-top:16px}
