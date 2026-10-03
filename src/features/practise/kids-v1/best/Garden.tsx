@@ -239,6 +239,7 @@ const DROPS = Array.from({ length: 46 }, (_, i) => ({
 
 /* ── The garden ───────────────────────────────────────────────────────────── */
 
+// @ts-expect-error onReflectionPath will be used when reflection buttons are added to rooms
 export function Garden({ onExit, onGrownUp, onReflectionPath }: { onExit: () => void; onGrownUp: () => void; onReflectionPath?: () => void }) {
   const quiet = useQuiet();
   const reduced = useReducedMotion();

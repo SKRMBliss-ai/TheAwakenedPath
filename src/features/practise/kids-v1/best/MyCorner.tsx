@@ -67,6 +67,7 @@ function nameOf(id: string): string {
   return CORNER_ITEM_BY_ID[id]?.name ?? 'Thing';
 }
 
+// @ts-expect-error onReflectionPath and onStoryLab will be used when buttons are added to rooms
 export function MyCorner({ onExit, onGrownUp, onReflectionPath, onStoryLab }: { onExit: () => void; onGrownUp: () => void; onReflectionPath?: () => void; onStoryLab?: () => void }) {
   const quiet = useQuiet();
   const reduced = useReducedMotion();

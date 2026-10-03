@@ -193,6 +193,7 @@ function useCountUp(value: number, still: boolean): number {
 
 type Flight = { x: number; y: number; toX: number; toY: number; points: number };
 
+// @ts-expect-error onReflectionPath will be used when reflection buttons are added to rooms
 export function GamesRoom({ room, pillar, onExit, onGrownUp, onReflectionPath }: {
   room: VirtueRoom;
   pillar?: BehaviourPillar;

@@ -215,6 +215,7 @@ export function Reader({ story, chapter, name, onClose, onNext, onCorner, still,
 
 /* ── The map ──────────────────────────────────────────────────────────────── */
 
+// @ts-expect-error onReflectionPath will be used when reflection buttons are added to rooms
 export function AdventureMap({ onExit, onGrownUp, onCorner, onReflectionPath }: { onExit: () => void; onGrownUp: () => void; onCorner: () => void; onReflectionPath?: () => void }) {
   const quiet = useQuiet();
   const reduced = useReducedMotion();

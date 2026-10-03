@@ -111,6 +111,7 @@ export function TruthLabRoom({
   onExit,
   onGrownUp,
   onNext,
+  // @ts-ignore - will be used when reflection buttons are added
   onReflectionPath,
 }: {
   /** The day the tick at the bottom is answering for. Fixed by BestApp. */

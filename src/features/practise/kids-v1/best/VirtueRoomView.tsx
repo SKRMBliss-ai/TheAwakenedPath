@@ -47,6 +47,7 @@ export function VirtueRoomView({
   onGrownUp,
   onDeepDive,
   onNext,
+  // @ts-ignore - will be used when reflection buttons are added
   onReflectionPath,
 }: {
   room: VirtueRoom;
