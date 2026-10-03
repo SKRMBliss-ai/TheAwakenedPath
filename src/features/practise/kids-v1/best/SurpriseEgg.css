@@ -50,8 +50,8 @@
 .egg-tip {
   position: absolute; z-index: 12; bottom: calc(100% + 6px); left: 50%; translate: -50% 0;
   width: max-content; max-width: 230px; margin: 0; padding: 9px 13px; border-radius: 16px;
-  background: linear-gradient(#ffffff, #f1e9ff); color: #2b1750;
-  font-size: 13px; font-weight: 850; line-height: 1.28; box-shadow: 0 8px 22px -8px #0b0418cc;
+  background: linear-gradient(#ffffff33, #f1e9ff33); backdrop-filter: blur(8px); color: #2b1750;
+  font-size: 13px; font-weight: 850; line-height: 1.28; box-shadow: 0 4px 12px #0b041844;
 }
 
 /* ── Cracking it open ─────────────────────────────────────────────────────── */
