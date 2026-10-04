@@ -60,7 +60,7 @@ function dayGrade(h: number) {
 const PHONE_LANTERNS: [number, number][] = [[.41, .09], [.056, .35], [.15, .78], [.97, .36], [.87, .79]];
 /* Ambient lights, in fractions of the 1916x821 environment picture. */
 /* Hanging lanterns: [x (centre), y (top), height] as fractions of the 1915x821 environment. */
-const LANTERNS: [number, number, number][] = [[.30, .03, .30], [.40, .03, .17], [.70, .04, .13], [.84, .05, .2]];
+const LANTERNS: [number, number, number][] = [[.30, .03, .30], [.40, .03, .17], [.70, .04, .13], [.172, .2, .13]];
 const FIREFLIES = [
   ...Array.from({ length: 16 }, (_, i) => ({
     x: ((i * 37 + 11) % 97) / 100, y: .12 + ((i * 53 + 7) % 70) / 100,
