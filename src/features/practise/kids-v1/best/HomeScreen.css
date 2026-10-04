@@ -984,7 +984,7 @@
 @media(min-width:761px){.hs-sofa{display:none!important}} /* the 21:9 art has no sofa to light up */
 
 /* The star beanbag belongs to My Corner: it sits beside the sign and lights up with it. */
-.hs-bean{position:absolute;left:-60%;bottom:8%;width:86%;z-index:-1;height:auto;pointer-events:none;filter:drop-shadow(0 .6cqw .8cqw #1a0b3caa);transition:transform .3s ease,filter .3s ease;transform-origin:50% 100%}
+.hs-bean{position:absolute;left:-43%;bottom:8%;width:84%;z-index:-1;height:auto;pointer-events:none;filter:drop-shadow(0 .6cqw .8cqw #1a0b3caa);transition:transform .3s ease,filter .3s ease;transform-origin:50% 100%}
 .hs-corner:hover .hs-bean,.hs-corner:focus-visible .hs-bean{transform:scale(1.06) translateY(-2%);filter:brightness(1.18) saturate(1.1) drop-shadow(0 0 1.4cqw #ffd98acc) drop-shadow(0 .6cqw .8cqw #1a0b3caa)}
 .hs-corner:hover,.hs-corner:focus-visible{transform:none}
 .mg-still .hs-bean{transition:none}
@@ -1008,3 +1008,4 @@
 @media(prefers-reduced-motion:reduce){.hs-glow-m{animation:none}}
 /* A touch livelier on both layouts. */
 @keyframes hs-flicker{0%,100%{opacity:.7;scale:1}12%{opacity:1;scale:1.09}27%{opacity:.62;scale:.95}41%{opacity:.95;scale:1.05}58%{opacity:.72;scale:.97}74%{opacity:1;scale:1.08}88%{opacity:.8;scale:1}}
+
