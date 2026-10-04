@@ -13,7 +13,7 @@ import { BODY_ZONE_LABEL, type BodyZoneId } from '../ui/bodyZones';
 import { DrawingCanvas, type DrawingCanvasHandle } from '../ui/DrawingCanvas';
 import { THOUGHTS, MAYBES } from '../kit/checkinContent';
 import { SizeBalloons } from './SizeBalloons';
-import { band } from '../kit/band';
+import { band, childAge } from '../kit/band';
 import { FEELINGS } from '../../kids/checkin/content';
 import { STEADY, STEADY_GROWNUP } from '../kit/steady';
 import { Steady } from '../ui/Steady';
@@ -209,6 +209,8 @@ export function DeepDive({
   /** Younger children point first, then pop a balloon for how big it is. */
   const [pendingBody, setPendingBody] = useState<string[] | null>(null);
   const youngBody = band() !== 'older';
+  /** The youngest children finish after the feeling, where it sits and how big it is. Age must be known. */
+  const shortJourney = (childAge() ?? 99) <= 6;
   /** Whether the mind's-story card is showing its other side. */
   const [turned, setTurned] = useState(false);
   /** Set the instant a feeling ball is tapped, so the room blooms with it. */
@@ -633,8 +635,10 @@ export function DeepDive({
               {step.hint && !(step.id === 'body' && youngBody && pendingBody) && <SceneLine>{step.id === 'body' && youngBody ? 'Tap the spot on the picture.' : step.hint}</SceneLine>}
               {step.id === 'body' && youngBody && pendingBody && (
                 <SizeBalloons hue={feelingHue} onPick={(sizeId) => {
-                  setAnswers((a) => ({ ...a, body: pendingBody, size: sizeId }));
+                  const next = { ...answers, body: pendingBody, size: sizeId };
                   setPendingBody(null);
+                  if (shortJourney) { setAnswers(next); onQuiet(false); onFinish(next); return; }
+                  setAnswers(next);
                   setStepIndex((i) => i + 1);
                 }} />
               )}
@@ -673,7 +677,7 @@ export function DeepDive({
                       column is nowhere near that. See where RoomScene
                       renders, and the file doc comment on BodyPortrait. */}
                   <button
-                    onClick={() => answer('body', ['nowhere in particular'])}
+                    onClick={() => { if (youngBody) { setPendingBody(['nowhere in particular']); return; } answer('body', ['nowhere in particular']); }}
                     className="self-start text-[12.5px] font-bold underline decoration-dotted underline-offset-4"
                     style={{ color: CHROME.textSoft, minHeight: 36 }}
                   >
