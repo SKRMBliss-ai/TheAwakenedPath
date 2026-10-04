@@ -635,12 +635,12 @@
 .hs-stage .mg-top{inset:1.6% 1.4% auto}
 .hs-stage .mg-logo{font-size:calc(var(--u)*3.2)}
 .hs-guide{position:absolute;inset:0;pointer-events:none;z-index:3}
-.hs-bubble{position:absolute;left:57.8%;top:15.5%;width:17.4%;min-height:12%;display:grid;place-items:center;padding:1% 1.4%;text-align:center;
+.hs-bubble{position:absolute;left:57.8%;top:17.5%;width:17.4%;min-height:12%;display:grid;place-items:center;padding:1% 1.4%;text-align:center;
   background:#fffdf6;color:#1f2a9c;border-radius:calc(var(--u)*2.4);font-weight:800;font-size:calc(var(--u)*1.7);line-height:1.2;box-shadow:0 .5cqw 1.6cqw #1a0b4a66}
 .hs-bubble:before{content:'';position:absolute;left:-1.6cqw;bottom:20%;border:1cqw solid transparent;border-right-color:#fffdf6;border-left:0;transform:rotate(-12deg)}
 .hs-boy-wrap{position:absolute;inset:0;border:0;background:none;padding:0;pointer-events:none}
-.hs-stage .hs-boy{position:absolute;left:40.5%;top:13%;width:20.5%;height:auto;bottom:auto;object-fit:contain;pointer-events:auto;cursor:pointer}
-.hs-chirpy{position:absolute;left:36.8%;top:24.2%;width:8.9%;pointer-events:auto;cursor:pointer;filter:drop-shadow(0 .3cqw .5cqw #25102855);animation:hs-bob 3.2s ease-in-out infinite}
+.hs-stage .hs-boy{position:absolute;left:40.5%;top:15.8%;width:20.5%;height:auto;bottom:auto;object-fit:contain;pointer-events:auto;cursor:pointer}
+.hs-chirpy{position:absolute;left:36.8%;top:27%;width:8.9%;pointer-events:auto;cursor:pointer;filter:drop-shadow(0 .3cqw .5cqw #25102855);animation:hs-bob 3.2s ease-in-out infinite}
 @keyframes hs-bob{50%{transform:translateY(-2.5%)}}
 .hs-card{position:absolute;top:35.5%;width:24%;aspect-ratio:1212/1298;z-index:2;color:#fff}
 .hs-card-1{left:13.3%}.hs-card-2{left:38.9%}.hs-card-3{left:64.7%}
@@ -678,3 +678,7 @@
   .hs-stage .mg-safety{right:12px;bottom:14px;position:fixed}.hs-stage .mg-safety button{font-size:12px}
   .hs-stage .mg-logo{font-size:30px}
 }
+
+.hs-card h2.hs-arc{left:4%;width:92%;top:41%;height:13%;display:block;transform:none}
+.hs-arc svg{width:100%;height:100%;overflow:visible}
+.hs-arc text{fill:#2b2a8f;font-weight:900;font-size:7.8px;font-family:inherit}

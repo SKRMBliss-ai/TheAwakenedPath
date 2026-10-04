@@ -24,6 +24,14 @@ import './HomeScreen.css';
 import './DiaryNudge.css';
 
 const A = '/mind-gym/home/';
+
+/** A card title bent along the arch of its ribbon. */
+function ArcTitle({ id, children }: { id: string; children: string }) {
+  return <h2 className="hs-arc" aria-label={children}>
+    <svg viewBox="0 0 100 15" aria-hidden="true"><path id={id} d="M5 12Q50 3 95 12" fill="none" />
+      <text><textPath href={`#${id}`} startOffset="50%" textAnchor="middle">{children}</textPath></text></svg>
+  </h2>;
+}
 /** Composed from the approved two-flow home handoff; all controls are semantic. */
 
 export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp, onExitGym, onReflection, onKeepsakes, onBuddies }: {
@@ -184,21 +192,21 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
       <div className="hs-card hs-card-1">
         <img className="hs-card-art" src={`${A}card-HomeScreen.webp`} alt="" />
         <img className="hs-card-icon" src={`${A}hs-icon-heart.webp`} alt="" />
-        <h2>How Are You Feeling?</h2>
+        <ArcTitle id="hs-arc-1">How Are You Feeling?</ArcTitle>
         <p>Explore a feeling with Chirpy<br />and feel better.</p>
         <button className="hs-go hs-go-blue" data-guide="feel" data-guide-rank="1" onClick={() => { sound.play('enterRoom'); onDeepDive(); }}>Start My Journey <span aria-hidden="true">→</span></button>
       </div>
       <div className="hs-card hs-card-2">
         <img className="hs-card-art" src={`${A}card-HomeScreen.webp`} alt="" />
         <img className="hs-card-icon" src={`${A}hs-icon-games.webp`} alt="" />
-        <h2>Good Choices Games</h2>
+        <ArcTitle id="hs-arc-2">Good Choices Games</ArcTitle>
         <p>Play situations. Make a choice.<br />Earn Mind Stars.</p>
         <button className="hs-go hs-go-green" data-guide="practise" data-guide-rank="1" onClick={() => { sound.play('roomCard'); setRooms(true); }}>Visit My Rooms <span aria-hidden="true">→</span></button>
       </div>
       <div className="hs-card hs-card-3">
         <img className="hs-card-art" src={`${A}card-HomeScreen.webp`} alt="" />
         <img className="hs-card-icon" src={`${A}hs-icon-diary.webp`} alt="" />
-        <h2>My Inner Diary</h2>
+        <ArcTitle id="hs-arc-3">My Inner Diary</ArcTitle>
         <p>Remember your day,<br />thoughts and progress.</p>
         <button className="hs-go hs-go-purple" data-guide="diary" data-guide-rank="1" onClick={onReflection}>Open My Diary <span aria-hidden="true">→</span></button>
         {!diaryDone && <span className="hs-today"><span aria-hidden="true">★</span> Today’s page<br />is waiting</span>}
