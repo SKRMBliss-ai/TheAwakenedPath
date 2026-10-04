@@ -162,7 +162,7 @@
   background:radial-gradient(ellipse 60% 55% at 50% 50%,#ffcf6e26 0%,transparent 72%);
 }
 .gr-sign img{
-  width:clamp(250px,min(44vw,25svh),480px);height:auto;display:block;
+  width:clamp(320px,min(48vw,28svh),560px);height:auto;display:block;
   opacity:.72;
   filter:drop-shadow(0 6px 16px #10061d66) drop-shadow(0 0 38px #ffcf6e45) saturate(.9);
   -webkit-mask-image:radial-gradient(ellipse 80% 68% at 50% 50%,#000 50%,transparent 96%);
