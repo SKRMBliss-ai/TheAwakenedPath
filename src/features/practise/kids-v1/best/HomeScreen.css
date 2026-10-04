@@ -793,19 +793,16 @@
 .hs-stage .mg-logo{text-shadow:0 2px 3px #1a0b3c,0 0 14px #1a0b3ccc}
 .hs-stage .mg-logo small{text-shadow:0 1px 2px #000,0 0 6px #1a0b3c;font-weight:900}
 
-/* On a window wider than 16:9 the stage keeps its shape and the leftover sides
-   used to show as flat dark bars. They are now a blurred, enlarged copy of the
-   same scene, so the room appears to carry on past the edges. */
+/* On a window wider than 16:9 the stage keeps its shape, and the scene is
+   carried out to the edges with mirrored, sharp copies of itself (the art's
+   own branches and lanterns continue), so the picture runs full bleed. */
 @media(min-width:761px){
-  .mg-home{position:relative;overflow:hidden;isolation:isolate}
-  .mg-home:before{content:'';position:fixed;inset:-4%;z-index:-1;pointer-events:none;
-    background:url('/mind-gym/home/environment.webp') center/cover,radial-gradient(ellipse at 50% 62%,#ffb067 0,#c0629f 22%,#5b3aa8 48%,#271a63 80%);
-    filter:blur(22px) brightness(.8) saturate(1.1)}
+  .mg-home{--W:min(100vw,calc(100svh*16/9));position:relative;overflow:hidden;isolation:isolate}
+  .mg-home:before,.mg-home:after{content:'';position:absolute;z-index:-1;pointer-events:none;top:50%;width:var(--W);height:calc(var(--W)*9/16);
+    background:url('/mind-gym/home/environment.webp') center/100% 100% no-repeat,radial-gradient(ellipse at 50% 62%,#ffb067 0,#c0629f 22%,#5b3aa8 48%,#271a63 80%)}
+  .mg-home:before{right:calc(50% + var(--W)/2 - 1px);transform:translateY(-50%) scaleX(-1)}
+  .mg-home:after{left:calc(50% + var(--W)/2 - 1px);transform:translateY(-50%) scaleX(-1)}
 }
-@media(min-width:761px) and (min-aspect-ratio:17/9){
-  .hs-stage:after{-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
-}
-
 /* The same soft scrim behind the sound button and level chip, so they stay
    readable over the branches and lanterns. */
 .hs-stage .mg-tools{position:relative;isolation:isolate}
