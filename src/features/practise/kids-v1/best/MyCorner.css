@@ -152,3 +152,14 @@
 /* Chirpy's egg nest in the corner. */
 /* Bottom left: the garden and story map links stand on the right. */
 .cn-egg-nest { position: absolute; bottom: calc(var(--tray) + 24px); left: clamp(14px, 2vw, 30px); z-index: 3; --egg-w: clamp(100px, 11vw, 150px); transition: bottom .35s ease; }
+
+/* Back door knob glow pulse every 2s */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes cn-door-glow {
+    0%, 100% { filter: drop-shadow(0 0 8px rgba(255, 212, 92, 0.3)); }
+    50% { filter: drop-shadow(0 0 18px rgba(255, 212, 92, 0.8)); }
+  }
+}
+
+/* Adjust Room Links position to avoid tray overlap when pulsing */
+.rl-right { bottom: calc(var(--tray) + 140px) !important; }
