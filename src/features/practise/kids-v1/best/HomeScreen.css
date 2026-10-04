@@ -788,8 +788,8 @@
 /* A soft scrim behind the logo so "Mind Gym" stays readable over the bright
    branches and lanterns, without darkening the picture anywhere else. */
 .hs-stage .mg-brand{position:relative;isolation:isolate}
-.hs-stage .mg-brand:before{content:'';position:absolute;z-index:-1;left:-45%;top:-30%;width:190%;height:170%;pointer-events:none;
-  background:radial-gradient(ellipse at 50% 50%,#2a1409e6 0,#3a1d0caa 48%,transparent 76%)}
+.hs-stage .mg-brand:before{content:'';position:absolute;z-index:-1;left:-12%;top:-8%;width:124%;height:116%;pointer-events:none;border-radius:40%;
+  background:radial-gradient(ellipse at 50% 50%,#1b1456aa 0,#1b145670 55%,transparent 80%);filter:blur(6px)}
 .hs-stage .mg-logo{text-shadow:0 2px 3px #2a1409,0 0 14px #2a1409cc}
 .hs-stage .mg-logo small{text-shadow:0 1px 2px #000,0 0 6px #2a1409;font-weight:900}
 
@@ -1027,3 +1027,6 @@
 .mg-still .hs-lan,.mg-still .hs-lan .on{animation:none!important}
 @media(prefers-reduced-motion:reduce){.hs-lan,.hs-lan .on{animation:none!important}}
 @keyframes hs-lit{0%,100%{opacity:1}14%{opacity:.82}30%{opacity:1}52%{opacity:.88}74%{opacity:1}}
+
+.hs-stage .mg-logo small{text-shadow:0 1px 0 #1b1456,0 0 5px #1b1456,0 0 10px #1b1456}
+.hs-stage .mg-logo{text-shadow:0 .14em 0 #1b1456,0 0 12px #1b1456aa,0 .25em .35em #0006}
