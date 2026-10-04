@@ -838,3 +838,8 @@
   .hs-bubble:before{right:-1.5cqw;top:30%;left:auto;bottom:auto;border:1cqw solid transparent;border-left-color:#fffdf6;border-right:0;transform:rotate(12deg)}
   .hs-stage .mg-safety{right:30%;bottom:2%}
 }
+@media(min-width:761px){
+  .hs-side{right:-5%}
+  .hs-bubble{right:19%}
+  .hs-stage .mg-safety{right:26%}
+}
