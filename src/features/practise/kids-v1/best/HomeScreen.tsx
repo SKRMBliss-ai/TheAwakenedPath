@@ -331,6 +331,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
       </div>
 
       {onKeepsakes && <button className="hs-corner" onClick={onKeepsakes} aria-label="My Corner. Rest, reflect and revisit.">
+        <img className="hs-bean" src="/mind-gym/corner/hs-beanbag.webp" alt="" />
         <img src="/mind-gym/corner/hs-sign.webp" alt="" />
         <span><b>My Corner</b><small>Rest, reflect and revisit.</small></span>
       </button>}
