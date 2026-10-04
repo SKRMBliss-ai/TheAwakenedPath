@@ -1030,3 +1030,27 @@
 
 .hs-stage .mg-logo small{text-shadow:0 1px 0 #1b1456,0 0 5px #1b1456,0 0 10px #1b1456}
 .hs-stage .mg-logo{text-shadow:0 .14em 0 #1b1456,0 0 12px #1b1456aa,0 .25em .35em #0006}
+
+/* ===== WHAT CAN I PRESS? Gentle invitations, in turn ===== */
+@keyframes hs-invite{0%,26%,100%{scale:1;box-shadow:0 0 1.2cqw #fff0}8%{scale:1.07;filter:brightness(1.25)}16%{scale:1;filter:brightness(1.1)}}
+@keyframes hs-ring{0%,30%,100%{opacity:0;scale:.9}6%{opacity:.9}24%{opacity:0;scale:1.22}}
+.hs-go{position:relative;animation:hs-invite 9s ease-in-out infinite;animation-delay:var(--w,0s)}
+.hs-go:after{pointer-events:none}
+.hs-card-1 .hs-go{--w:0s}.hs-card-2 .hs-go{--w:3s}.hs-card-3 .hs-go{--w:6s}
+.hs-card:hover .hs-go,.hs-card:focus-within .hs-go{animation:none}
+/* The nudge: a card the boy is pointing at. */
+@keyframes hs-hint{0%,100%{translate:0 0}30%{translate:0 -2.4%}60%{translate:0 0}80%{translate:0 -1%}}
+.hs-card.hs-hint{animation:hs-hint 1.1s ease-in-out 4;filter:brightness(1.12) drop-shadow(0 0 1.6cqw #ffe27acc);z-index:4}
+/* My Corner says what it is. */
+.hs-tag{position:absolute;left:62%;top:-4%;translate:-50% 0;padding:.25em .8em;border-radius:99px;background:linear-gradient(#fff6c8,#ffd977);color:#5a3a06;font:800 calc(var(--u)*.85)/1.2 'Fredoka','Outfit',system-ui,sans-serif;font-style:normal;white-space:nowrap;box-shadow:0 .3cqw 1cqw #0006;pointer-events:none;animation:mg-tapme 2.6s ease-in-out infinite}
+.hs-corner:hover .hs-tag,.hs-corner:focus-visible .hs-tag{animation:none}
+.hs-corner{animation:hs-pop .6s .7s cubic-bezier(.2,.8,.25,1) both,hs-nudge 9s 4s ease-in-out infinite}
+@keyframes hs-nudge{0%,88%,100%{filter:none}94%{filter:brightness(1.2) drop-shadow(0 0 1cqw #ffd98a)}}
+.mg-sound:hover,.mg-sound:focus-visible,.hb-hud-open:hover{filter:brightness(1.2)}
+.mg-sound,.hb-hud-open{cursor:pointer}
+@media(max-width:760px),(max-aspect-ratio:1/1){
+  .hs-tag{bottom:-4vw;font-size:2.6vw}
+  .hs-go{animation:hs-invite 9s ease-in-out infinite;animation-delay:var(--w,0s)}
+}
+.mg-still .hs-go,.mg-still .hs-tag,.mg-still .hs-corner,.mg-still .hs-card.hs-hint{animation:none!important}
+@media(prefers-reduced-motion:reduce){.hs-go,.hs-tag,.hs-card.hs-hint{animation:none!important}.hs-corner{animation:none!important}}

@@ -66,7 +66,7 @@ export function BuddyHud({ name, onOpen }: { name: string; onOpen: () => void })
   return (
     <div className="hb-hud-wrap">
       <div className={`hb-hud ${gaining ? 'is-gaining' : ''}`}>
-        <button className="hb-hud-open" onClick={() => { if (!quiet) sound.play('roomCard'); onOpen(); }}
+        <button className="hb-hud-open" title="See your buddy and stars" onClick={() => { if (!quiet) sound.play('roomCard'); onOpen(); }}
           aria-label={`Level ${b.level.level}, ${b.stars} Mind Stars. ${b.level.left} more for the next egg. Open my buddies.`} />
         <span className="hb-badge" style={{ fontFamily: GAME_FONT }} aria-hidden="true"><small>LEVEL</small>{b.level.level}</span>
         <span className="hb-meter" aria-hidden={b.ready > 0 ? undefined : true}>
