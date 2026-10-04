@@ -25,6 +25,22 @@ import './HomeScreen.css';
 import './DiaryNudge.css';
 
 const A = '/mind-gym/home/';
+/** What the guide says about the card under the pointer, and how he greets by the hour. */
+const CARD_LINES = ['Let’s talk about how you feel.', 'Ready to make good choices?', 'Let’s remember today together.'];
+function greeting(h: number) {
+  if (h < 5) return 'Up late? Let’s keep it calm.';
+  if (h < 12) return 'Good morning! What shall we do?';
+  if (h < 17) return 'Good afternoon! What shall we do?';
+  if (h < 21) return 'Good evening! What shall we do?';
+  return 'Getting sleepy? Maybe something calm.';
+}
+/** A gentle colour grade for the hour — warm at dawn, bright by day, deep blue at night. */
+function dayGrade(h: number) {
+  if (h < 5 || h >= 21) return 'linear-gradient(#0a103c66,#0a103c4d)';
+  if (h < 9) return 'linear-gradient(#ffd69633,#ffb06e1f)';
+  if (h < 17) return 'linear-gradient(#ffffff17,#ffffff0a)';
+  return 'none';
+}
 /* Ambient lights, in fractions of the 1916x821 environment picture. */
 const LANTERNS: [number, number][] = [[.247, .12], [.161, .38], [.063, .8], [.867, .17], [.947, .32], [.885, .69]];
 const FIREFLIES = Array.from({ length: 16 }, (_, i) => ({
@@ -111,6 +127,8 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     return () => clearInterval(timer);
   }, []);
   const [teaching, setTeaching] = useState<string | null>(null);
+  const [look, setLook] = useState<number | null>(null);
+  const [hour] = useState(() => new Date().getHours());
   const [mood, setMood] = useState(0);
   useEffect(() => {
     if (quiet || reduced) return;
@@ -209,6 +227,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   return <main ref={home} className={`mg-home ${quiet || reduced ? 'mg-still' : ''}`} style={{ fontFamily: FONT }}>
     <DailyWelcome />
     {askAge && <AgePopup onDone={() => setAskAge(false)} />}
+    <div className="hs-tod" aria-hidden="true" style={{ background: dayGrade(hour) }} />
     <div className="hs-bg" aria-hidden="true">
       {LANTERNS.map(([x, y], i) => <i key={i} className="hs-glow" style={{ left: `${x * 100}%`, top: `${y * 100}%`, animationDelay: `${i * 0.7}s` }} />)}
       {!quiet && !reduced && FIREFLIES.map((f, i) => <b key={i} className="hs-fly" style={{ left: `${f.x * 100}%`, top: `${f.y * 100}%`, animationDuration: `${f.d}s`, animationDelay: `-${f.s}s`, ['--r' as string]: `${f.r}px` }} />)}
@@ -217,8 +236,8 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     {onKeepsakes && <span className="hs-sofa" aria-hidden="true" />}
     {/* Wide screens: the guide is pinned to the window's right-most edge, outside the scaled stage. */}
     <div className="hs-wide">
-      <div className="hs-bubble hs-wide-bubble" aria-live="polite">{teaching ? <>{teaching}<small>Tap me again for another one.</small></> : 'What would you like to do today?'}</div>
-      <button className={`hs-wide-boy ${teaching ? 'mg-boy-said' : ''} ${hop ? (hop % 2 ? 'hs-hop-a' : 'hs-hop-b') : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you"><img src="/assets/home/boy@640.webp" alt="" /><span className="mg-tapme hs-tapme" aria-hidden="true">Tap me</span></button>
+      <div className="hs-bubble hs-wide-bubble" aria-live="polite">{teaching ? <>{teaching}<small>Tap me again for another one.</small></> : look !== null ? CARD_LINES[look] : greeting(hour)}</div>
+      <button className={`hs-wide-boy ${look !== null ? `hs-look-${look + 1}` : ''} ${teaching ? 'mg-boy-said' : ''} ${hop ? (hop % 2 ? 'hs-hop-a' : 'hs-hop-b') : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you"><img src="/assets/home/boy@640.webp" alt="" /><span className="mg-tapme hs-tapme" aria-hidden="true">Tap me</span></button>
     </div>
     <div className="hs-stage">
       <header className="mg-top">
@@ -238,7 +257,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
       {/* Phone only: a standing boy at the left edge, fixed to the screen. */}
       <button className={`hs-side hs-side-l ${teaching ? 'mg-boy-said' : ''} ${hop ? (hop % 2 ? 'hs-hop-a' : 'hs-hop-b') : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you"><img src="/assets/home/boy@640.webp" alt="" /><span className="mg-tapme hs-tapme" aria-hidden="true">Tap me</span></button>
       <section className="hs-guide" aria-label="Your guide">
-        <div className="hs-bubble" aria-live="polite">{teaching ? <>{teaching}<small>Tap me again for another one.</small></> : 'What would you like to do today?'}</div>
+        <div className="hs-bubble" aria-live="polite">{teaching ? <>{teaching}<small>Tap me again for another one.</small></> : look !== null ? CARD_LINES[look] : greeting(hour)}</div>
         <button className={`hs-boy-wrap ${teaching ? 'mg-boy-said' : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you">
           <img className="hs-boy mg-boy" src={`${A}boy_fullbody.webp`} alt="Your red-cap explorer" />
           <img className="hs-chirpy mg-chirpy" src={chirpySprite(teaching ? 'excited' : CHIRPY_MOODS[mood])} alt="Chirpy" />
@@ -247,21 +266,21 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
         </button>
       </section>
 
-      <div className="hs-card hs-card-1">
+      <div className="hs-card hs-card-1" onPointerEnter={() => setLook(0)} onPointerLeave={() => setLook(null)} onFocus={() => setLook(0)} onBlur={() => setLook(null)}>
         <img className="hs-card-art" src={`${A}card-HomeScreen.webp`} alt="" />
         <img className="hs-card-icon" src={`${A}hs-icon-heart.webp`} alt="" />
         <ArcTitle id="hs-arc-1">How Are You Feeling?</ArcTitle>
         <p>Explore a feeling with Chirpy <br className="hs-br" />and feel better.</p>
         <button className="hs-go hs-go-blue" data-guide="feel" data-guide-rank="1" onClick={() => { sound.play('enterRoom'); onDeepDive(); }}>Start My Journey <span aria-hidden="true">→</span></button>
       </div>
-      <div className="hs-card hs-card-2">
+      <div className="hs-card hs-card-2" onPointerEnter={() => setLook(1)} onPointerLeave={() => setLook(null)} onFocus={() => setLook(1)} onBlur={() => setLook(null)}>
         <img className="hs-card-art" src={`${A}card-HomeScreen.webp`} alt="" />
         <img className="hs-card-icon" src={`${A}hs-icon-games.webp`} alt="" />
         <ArcTitle id="hs-arc-2">Good Choices Games</ArcTitle>
         <p>Play situations. Make a choice. <br className="hs-br" />Earn Mind Stars.</p>
         <button className="hs-go hs-go-green" data-guide="practise" data-guide-rank="1" onClick={() => { sound.play('roomCard'); setRooms(true); }}>Visit My Rooms <span aria-hidden="true">→</span></button>
       </div>
-      <div className="hs-card hs-card-3">
+      <div className="hs-card hs-card-3" onPointerEnter={() => setLook(2)} onPointerLeave={() => setLook(null)} onFocus={() => setLook(2)} onBlur={() => setLook(null)}>
         <img className="hs-card-art" src={`${A}card-HomeScreen.webp`} alt="" />
         <img className="hs-card-icon" src={`${A}hs-icon-diary.webp`} alt="" />
         <ArcTitle id="hs-arc-3">My Inner Diary</ArcTitle>

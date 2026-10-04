@@ -922,3 +922,12 @@
 .hs-hop-a,.hs-hop-b{animation:none}
 .mg-still .hs-card,.mg-still .hs-corner,.mg-still .hs-wide-boy,.mg-still .hs-side,.mg-still .hs-wide-bubble,.mg-still .hs-bubble,.mg-still .hs-glow,.mg-still .hs-fly,.mg-still .hs-bg{animation:none!important;transition:none!important}
 @media(prefers-reduced-motion:reduce){.hs-card,.hs-corner,.hs-wide-boy,.hs-side,.hs-wide-bubble,.hs-bubble,.hs-glow,.hs-fly{animation:none!important}.hs-bg{transition:none}}
+
+/* ===== 2. CHARACTER ACTING ===== */
+.hs-tod{display:none}
+@media(min-width:761px){
+  .hs-tod{display:block;position:fixed;inset:0;z-index:-2;pointer-events:none}
+  .hs-wide-boy{transform-origin:50% 100%;rotate:0deg;transition:rotate .45s cubic-bezier(.2,.8,.25,1)}
+  .hs-wide-boy.hs-look-1{rotate:-4deg}.hs-wide-boy.hs-look-2{rotate:-3deg}.hs-wide-boy.hs-look-3{rotate:-1.8deg}
+}
+.mg-still .hs-wide-boy{transition:none;rotate:0deg!important}
