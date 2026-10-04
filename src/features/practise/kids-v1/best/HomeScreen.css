@@ -959,3 +959,15 @@
   .hs-card-icon{animation:none!important}.hs-chip{right:6vw;top:-2vw;font-size:2.8vw}.hs-chip-streak{bottom:-2vw;top:auto}.hs-burst{top:50%;left:auto;right:7vw}}
 .mg-still .hs-card-icon,.mg-still .hs-burst{animation:none!important}
 @media(prefers-reduced-motion:reduce){.hs-card-icon{animation:none!important}.hs-leaving,.hs-leaving .hs-stage{transition:none;opacity:1;transform:none}}
+
+/* ===== 4. TYPOGRAPHY: one rounded display face, carved into the wood ===== */
+.hs-arc text{font-family:'Fredoka','Outfit',system-ui,sans-serif;font-weight:700;letter-spacing:.01em}
+.hs-arc-ink{fill:#2a2587;stroke:#2a2587;stroke-width:.25px;paint-order:stroke}
+.hs-arc-hi{fill:#fff7dc;stroke:#fff7dc;stroke-width:.25px;transform:translateY(.55px);opacity:.9}
+.hs-plain{font-family:'Fredoka','Outfit',system-ui,sans-serif;font-weight:700;text-shadow:0 .25vw 0 #fff7dc99}
+.hs-stage .mg-logo,.hs-stage .mg-logo span{font-family:'Fredoka','Outfit',system-ui,sans-serif;font-weight:700;letter-spacing:.01em}
+.hs-stage .mg-logo{text-shadow:0 .15em 0 #2a1409,0 0 14px #2a1409cc,0 .25em .35em #0007}
+.hs-stage .mg-logo span{background:linear-gradient(#fff3a0,#ffc93f);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 .12em 0 #6b3a05) drop-shadow(0 .2em .3em #0008)}
+.hs-bubble,.hs-wide-bubble{font-family:'Fredoka','Outfit',system-ui,sans-serif;font-weight:600}
+.hs-card p,.hs-corner small{font-family:'Outfit',system-ui,sans-serif}
+.hs-corner b,.hs-go{font-family:'Fredoka','Outfit',system-ui,sans-serif;font-weight:700}

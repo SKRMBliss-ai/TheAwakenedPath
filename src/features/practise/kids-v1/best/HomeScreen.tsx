@@ -21,6 +21,7 @@ import { speak } from '../kit/chirpyVoice';
 import { isMuted, setMuted } from '../../../../lib/sfx';
 import { useDiaryFilledToday } from '../kit/diaryToday';
 import { BuddyHud, FloorBuddy } from './buddies/HomeBuddy';
+import { loadGameFont } from './buddies/gameFont';
 import './HomeScreen.css';
 import './DiaryNudge.css';
 
@@ -53,7 +54,8 @@ const CHIRPY_MOODS: ChirpyPose[] = ['curious', 'calm', 'excited', 'thinking', 'h
 function ArcTitle({ id, children }: { id: string; children: string }) {
   return <h2 className="hs-arc" aria-label={children}>
     <svg viewBox="0 0 100 15" aria-hidden="true"><path id={id} d="M5 12Q50 3 95 12" fill="none" />
-      <text><textPath href={`#${id}`} startOffset="50%" textAnchor="middle">{children}</textPath></text></svg>
+      <text className="hs-arc-hi"><textPath href={`#${id}`} startOffset="50%" textAnchor="middle">{children}</textPath></text>
+      <text className="hs-arc-ink"><textPath href={`#${id}`} startOffset="50%" textAnchor="middle">{children}</textPath></text></svg>
     <span className="hs-plain" aria-hidden="true">{children}</span>
   </h2>;
 }
@@ -67,6 +69,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   onBuddies: () => void;
 }) {
   const s = useKidStore();
+  useEffect(() => { loadGameFont(); }, []);
   const quiet = useQuiet();
   const diaryDone = useDiaryFilledToday();
   const playedToday = (s.scenariosDone[todayKey()] ?? []).length;
