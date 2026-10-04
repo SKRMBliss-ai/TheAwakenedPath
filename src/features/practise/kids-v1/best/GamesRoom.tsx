@@ -225,8 +225,13 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
   const [flight, setFlight] = useState<Flight | null>(null);
 
   /* Where the boy floats by default — sitting on the cushions at the bottom left —
-     until a child drags him somewhere else, which then sticks for good. */
-  const boyFloat = useFloatingPosition('games-room:boy', { xPct: 1, yPct: 72 });
+     until a child drags him somewhere else, which then sticks for good.
+     On small screens: left of story board. On full screens: between theme badges. */
+  const getDefaultBoyPos = useCallback(() => {
+    const isSmallScreen = typeof window !== 'undefined' && window.innerWidth < 900;
+    return isSmallScreen ? { xPct: 12, yPct: 28 } : { xPct: 48, yPct: 92 };
+  }, []);
+  const boyFloat = useFloatingPosition('games-room:boy', getDefaultBoyPos());
 
   /*
     IDLE BLUR — after 3 seconds without interaction the scenery, cast, themes

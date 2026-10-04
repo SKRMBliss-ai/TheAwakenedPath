@@ -404,7 +404,6 @@ function Panel({ index, step, chirpy, children, onHome }: {
   return <div data-sl-panel={index} className={`sl-panel ${current ? 'sl-panel-now' : ''} ${done ? 'sl-panel-done' : ''}`}>
     <div className="sl-panel-bar">
       <h2>{TITLES[index - 2]}</h2>
-      <button className="sl-panel-home" onClick={onHome} aria-label="Back to Mind Gym">⌂</button>
     </div>
     <p className="sl-dots" aria-hidden="true">{STEPS.map((label, i) => <span key={label} className={i === index ? 'sl-dot-now' : i < index ? 'sl-dot-done' : ''} />)}</p>
     {/* The Story panel used to skip this to save room, which left the one
@@ -762,7 +761,7 @@ export function StoryLabRoom({ carried, onExit, onGrownUp, onSave, onKeepsakes }
   const ownForm = <form className="sl-own-form" onSubmit={e => { e.preventDefault(); if (!quiet) sound.play('tap'); capture(draft); }}>
     <label htmlFor="sl-own-answer">{step === 4 ? 'The story my mind made' : 'Your own words'}</label>
     <textarea id="sl-own-answer" autoFocus value={draft} onChange={e => setDraft(e.target.value)} rows={2} maxLength={400} />
-    <div><MicButton onText={text => setDraft(value => value ? `${value} ${text}` : text)} /><button type="submit" disabled={!draft.trim()}>Keep these words →</button><button type="button" onClick={() => setWriting(false)}>Cancel</button></div>
+    <div><MicButton onText={text => setDraft(value => value ? `${value} ${text}` : text)} /><button type="submit" disabled={!draft.trim()}>Keep these words →</button></div>
   </form>;
 
   return <motion.main ref={footRoom}initial={still ? false : { opacity: 0, scale: .98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .7 }} className={`sl-room ${still ? 'sl-still' : ''} ${quiet ? 'sl-quiet' : ''}`} style={{ fontFamily: FONT }} data-step={step} data-floating-room>
