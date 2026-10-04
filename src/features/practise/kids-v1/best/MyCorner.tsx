@@ -131,15 +131,16 @@ export function MyCorner({ onExit, onGrownUp, onGarden, onAdventure, fresh }: { 
   const [tab, setTab] = useState<Tab>(() => (newCount.friends ? 'friends' : 'things'));
   const [trayOpen, setTrayOpen] = useState(true);
   const [selected, setSelected] = useState<string | null>(null);
-  const [hint, setHint] = useState(placed.length
+  const [hint, setHint] = useState<string | null>(placed.length
     ? 'Drag your things anywhere. Tap one to change it.'
     : 'Tap something in your tray to put it in your corner!');
 
-  /* Clear hint after 4 seconds */
+  /* Every hint, first or later, leaves after 4 seconds. */
   useEffect(() => {
+    if (!hint) return;
     const timer = window.setTimeout(() => setHint(null), 4000);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [hint]);
 
   /* ── Placing and moving ── */
   const room = useRef<HTMLDivElement>(null);
@@ -226,7 +227,7 @@ export function MyCorner({ onExit, onGrownUp, onGarden, onAdventure, fresh }: { 
 
       <header className="cn-head">
         <h1>My Corner <span aria-hidden="true">♡</span></h1>
-        <p aria-live="polite">{hint}</p>
+        {hint && <p aria-live="polite">{hint}</p>}
       </header>
       <div className="cn-affirm">
         <AnimatePresence mode="wait">
