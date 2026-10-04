@@ -135,6 +135,12 @@ export function MyCorner({ onExit, onGrownUp, onGarden, onAdventure, fresh }: { 
     ? 'Drag your things anywhere. Tap one to change it.'
     : 'Tap something in your tray to put it in your corner!');
 
+  /* Clear hint after 4 seconds */
+  useEffect(() => {
+    const timer = window.setTimeout(() => setHint(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   /* ── Placing and moving ── */
   const room = useRef<HTMLDivElement>(null);
   const drag = useRef<{ uid: string; x0: number; y0: number; ox: number; oy: number; moved: boolean } | null>(null);
