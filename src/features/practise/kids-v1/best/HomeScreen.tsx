@@ -175,6 +175,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   return <main className={`mg-home ${quiet || reduced ? 'mg-still' : ''}`} style={{ fontFamily: FONT }}>
     <DailyWelcome />
     {askAge && <AgePopup onDone={() => setAskAge(false)} />}
+    <div className="hs-veil" aria-hidden="true" />
     <div className="hs-stage">
       <header className="mg-top">
         <div className="mg-brand">

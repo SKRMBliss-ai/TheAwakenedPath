@@ -798,7 +798,7 @@
    own branches and lanterns continue), so the picture runs full bleed. */
 @media(min-width:761px){
   .mg-home{--W:min(100vw,calc(100svh*16/9));position:relative;overflow:hidden;isolation:isolate}
-  .mg-home:before,.mg-home:after{content:'';position:absolute;z-index:-1;pointer-events:none;top:50%;width:var(--W);height:calc(var(--W)*9/16);
+  .mg-home:before,.mg-home:after{content:'';position:absolute;z-index:-2;pointer-events:none;top:50%;width:var(--W);height:calc(var(--W)*9/16);
     background:url('/mind-gym/home/environment.webp') center/100% 100% no-repeat,radial-gradient(ellipse at 50% 62%,#ffb067 0,#c0629f 22%,#5b3aa8 48%,#271a63 80%)}
   .mg-home:before{right:calc(50% + var(--W)/2 - 1px);transform:translateY(-50%) scaleX(-1)}
   .mg-home:after{left:calc(50% + var(--W)/2 - 1px);transform:translateY(-50%) scaleX(-1)}
@@ -809,3 +809,13 @@
 .hs-stage .mg-tools:before{content:'';position:absolute;z-index:-1;left:-14%;top:-45%;width:128%;height:190%;pointer-events:none;
   background:radial-gradient(ellipse at 50% 50%,#1a0b3ce6 0,#1a0b3caa 50%,transparent 76%)}
 .hs-stage .mg-tools .mg-sound{background:#1d1446f2;border-color:#d4c4f2}
+
+/* The hover blur is full bleed too: this veil spans the whole window (the
+   mirrored sides included); the stage blurs its own scene on top of it. */
+.hs-veil{display:none}
+@media(min-width:761px){
+  .hs-veil{display:block;position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:0;transition:opacity .35s ease;
+    -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);background:linear-gradient(#150a3033,#150a3045 55%,#150a3066)}
+  .mg-home:has(.hs-card:hover,.hs-card:focus-within,.hs-corner:hover,.hs-corner:focus-visible) .hs-veil{opacity:1}
+  .mg-still .hs-veil{transition:none}
+}
