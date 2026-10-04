@@ -775,3 +775,12 @@
 .mg-still .hs-chirpy,.mg-still .hs-side img{animation:none}
 @media(prefers-reduced-motion:reduce){.hs-chirpy,.hs-side img{animation:none!important}}
 @media(max-width:760px){.hs-chirpy-line{display:none}.hs-bubble small{font-size:.6em}}
+
+/* Each card is lit on its own: the one under the pointer lifts and glows, its
+   neighbours settle back, so it is always clear which one is about to open. */
+@media(min-width:761px){
+  .hs-card{transition:transform .3s ease,filter .3s ease}
+  .hs-card:hover,.hs-card:focus-within{transform:translateY(-1.2%) scale(1.045);z-index:4;filter:brightness(1.1) saturate(1.1) drop-shadow(0 0 1.4cqw #ffd98acc)}
+  .hs-stage:has(.hs-card:hover,.hs-card:focus-within) .hs-card:not(:hover):not(:focus-within){filter:brightness(.7) saturate(.8);transform:scale(.97)}
+  .mg-still .hs-card{transition:none}
+}
