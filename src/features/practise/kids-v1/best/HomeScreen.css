@@ -1090,3 +1090,19 @@
 @keyframes hs-shoot{0%,86%,100%{opacity:0;translate:0 0}88%{opacity:1}96%{opacity:0;translate:-26vw 10vw}}
 .mg-still .hs-cloud,.mg-still .hs-shoot{animation:none!important}.mg-still .hs-shoot{display:none}
 @media(prefers-reduced-motion:reduce){.hs-cloud,.hs-shoot{animation:none!important}.hs-shoot{display:none}}
+
+/* ===== LOADING, TAP SPARKLES, PHONE TILT, FOCUS ===== */
+.hs-loading{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 45%,#2f2290,#150e3f 70%);opacity:1;transition:opacity .6s ease .1s;pointer-events:none}
+.hs-loading img{width:min(18vw,110px);animation:hs-lit 1.6s ease-in-out infinite,hs-sway 3s ease-in-out infinite;filter:drop-shadow(0 0 18px #ffb23e99)}
+.hs-loading.is-done{opacity:0}
+.mg-still .hs-loading img,.mg-still .hs-loading{animation:none;transition:none}
+.hs-tapspark{position:fixed;width:0;height:0;z-index:55;pointer-events:none}
+.hs-tapspark i{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:#fff6b0;box-shadow:0 0 10px 3px #ffd86a;animation:hs-tap .6s ease-out forwards}
+@keyframes hs-tap{from{transform:rotate(var(--a)) translateX(0) scale(1);opacity:1}to{transform:rotate(var(--a)) translateX(46px) scale(.2);opacity:0}}
+@media(max-width:760px),(max-aspect-ratio:1/1){
+  .hs-side img{translate:calc(var(--px)*-1.6vw) calc(var(--py)*-.8vw)}
+  .hs-glow-m{translate:calc(-50% + var(--px)*-1.5vw) calc(-50% + var(--py)*-1vw)}
+}
+/* Keyboard: a clear gold ring that suits the scene, on everything pressable. */
+.mg-home .hs-go:focus-visible,.mg-home .hs-corner:focus-visible,.mg-home .hs-wide-boy:focus-visible,.mg-home .hs-side:focus-visible,.mg-home .mg-sound:focus-visible,.mg-home .hb-hud-open:focus-visible,.mg-home .mg-safety button:focus-visible{outline:3px solid #ffe27a;outline-offset:4px;box-shadow:0 0 0 6px #1b145688,0 0 18px 4px #ffd86acc}
+.mg-home .hs-card:focus-within{outline:none}

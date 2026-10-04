@@ -22,7 +22,7 @@ import { isMuted, setMuted } from '../../../../lib/sfx';
 import { useDiaryFilledToday } from '../kit/diaryToday';
 import { BuddyHud, FloorBuddy } from './buddies/HomeBuddy';
 import { loadGameFont } from './buddies/gameFont';
-import { playHoverNote } from '../kit/doorbell';
+import { playHoverNote, playWoodTap } from '../kit/doorbell';
 import { startSkyAmbience, stopAmbience } from '../kit/ambience';
 import { timeOfDayForHour } from '../rooms';
 import './HomeScreen.css';
@@ -164,6 +164,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   const leaveTimer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(leaveTimer.current), []);
   const go = (card: number, next: () => void, zoom = true) => {
+    if (!quiet) playWoodTap();
     if (quiet || reduced) { next(); return; }
     setBurst(card); window.setTimeout(() => setBurst(null), 700); react('surprised', 700);
     if (!zoom) { next(); return; }
@@ -180,6 +181,44 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     s.setProperty('--hx', `${(x * 100).toFixed(1)}%`); s.setProperty('--hy', `${(y * 100).toFixed(1)}%`);
   };
   const untilt = (e: React.PointerEvent<HTMLDivElement>) => { const s = e.currentTarget.style; s.setProperty('--rx', '0deg'); s.setProperty('--ry', '0deg'); };
+  /* LOADING — the room stays dark with a single lantern until its art has arrived, so a child
+     never sees a bare sky or half-built scene. Gives up waiting after four seconds. */
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    let done = false; const finish = () => { if (!done) { done = true; setReady(true); } };
+    const srcs = [`${A}environment.webp`, '/assets/home/boy@640.webp', `${A}LanternON.webp`];
+    let left = srcs.length;
+    srcs.forEach((s) => { const im = new Image(); im.onload = im.onerror = () => { left -= 1; if (left <= 0) finish(); }; im.src = s; });
+    const t = window.setTimeout(finish, 4000);
+    return () => window.clearTimeout(t);
+  }, []);
+  /* TAP SPARKLES — on touch screens a tap on the scenery leaves a little burst of light. */
+  const [sparks, setSparks] = useState<{ id: number; x: number; y: number }[]>([]);
+  const sparkId = useRef(0);
+  const spark = (e: React.PointerEvent) => {
+    if (quiet || reduced || e.pointerType !== 'touch') return;
+    const id = ++sparkId.current;
+    setSparks((s) => [...s.slice(-4), { id, x: e.clientX, y: e.clientY }]);
+    window.setTimeout(() => setSparks((s) => s.filter((p) => p.id !== id)), 700);
+  };
+  /* TILT — on a phone the scene leans a little with the device (asks once, where the platform requires it). */
+  useEffect(() => {
+    const el = home.current;
+    if (!el || quiet || reduced || !window.matchMedia('(pointer: coarse)').matches || typeof DeviceOrientationEvent === 'undefined') return;
+    const on = (e: DeviceOrientationEvent) => {
+      const g = Math.max(-25, Math.min(25, e.gamma ?? 0)) / 25, b = Math.max(-25, Math.min(25, (e.beta ?? 45) - 45)) / 25;
+      el.style.setProperty('--px', g.toFixed(3)); el.style.setProperty('--py', b.toFixed(3));
+    };
+    const start = () => window.addEventListener('deviceorientation', on);
+    const req = (DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }).requestPermission;
+    if (typeof req === 'function') {
+      const ask = () => { req().then((r) => { if (r === 'granted') start(); }).catch(() => {}); };
+      window.addEventListener('pointerdown', ask, { once: true });
+      return () => { window.removeEventListener('pointerdown', ask); window.removeEventListener('deviceorientation', on); };
+    }
+    start();
+    return () => window.removeEventListener('deviceorientation', on);
+  }, [quiet, reduced]);
   const [hour] = useState(() => new Date().getHours());
   /* The place has its own night air — the same bed the hub uses for this hour.
      Silent while sound is off (the default) and in the quiet state. */
@@ -322,7 +361,9 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
 
   const aim = look ?? hint;
   const pose: Pose = flash ?? (teaching || aim !== null ? 'happy' : gaze);
-  return <main ref={home} className={`mg-home ${quiet || reduced ? 'mg-still' : ''} ${leaving !== null ? `hs-leaving hs-leaving-${leaving + 1}` : ''}`} style={{ fontFamily: FONT }}>
+  return <main ref={home} onPointerDown={spark} className={`mg-home ${quiet || reduced ? 'mg-still' : ''} ${leaving !== null ? `hs-leaving hs-leaving-${leaving + 1}` : ''}`} style={{ fontFamily: FONT }}>
+    <div className={`hs-loading ${ready ? 'is-done' : ''}`} aria-hidden="true"><img src={`${A}LanternON.webp`} alt="" /></div>
+    {sparks.map((p) => <span key={p.id} className="hs-tapspark" style={{ left: p.x, top: p.y }}>{Array.from({ length: 8 }, (_, k) => <i key={k} style={{ ['--a' as string]: `${k * 45}deg` }} />)}</span>)}
     <DailyWelcome />
     {askAge && <AgePopup onDone={() => setAskAge(false)} />}
     <div className="hs-tod" aria-hidden="true" style={{ background: dayGrade(hour) }} />

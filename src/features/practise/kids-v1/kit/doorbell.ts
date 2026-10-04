@@ -45,3 +45,22 @@ export function playHoverNote(frequency: number) {
     oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
   } catch { /* needs a first gesture */ }
 }
+
+/** A short, dry wooden tap — a filtered noise burst — for pressing a plank. */
+export function playWoodTap() {
+  if (isMuted() || typeof window === 'undefined') return;
+  try {
+    context ??= new AudioContext();
+    void context.resume().catch(() => {});
+    const now = context.currentTime;
+    const len = Math.floor(context.sampleRate * 0.09);
+    const buf = context.createBuffer(1, len, context.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+    const src = context.createBufferSource(); src.buffer = buf;
+    const filter = context.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = 520; filter.Q.value = 2.2;
+    const gain = context.createGain(); gain.gain.value = .35;
+    src.connect(filter); filter.connect(gain); gain.connect(context.destination);
+    src.start(now); src.onended = () => { src.disconnect(); filter.disconnect(); gain.disconnect(); };
+  } catch { /* needs a first gesture */ }
+}
