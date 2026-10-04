@@ -130,14 +130,6 @@ export function MyCorner({ onExit, onGrownUp, onGarden, onAdventure, fresh }: { 
 
   const [tab, setTab] = useState<Tab>(() => (newCount.friends ? 'friends' : 'things'));
   const [trayOpen, setTrayOpen] = useState(true);
-  useEffect(() => {
-    // Close tray after 3s, then pulse open/close every 3s
-    const close = window.setTimeout(() => setTrayOpen(false), 3000);
-    const pulse = window.setInterval(() => {
-      setTrayOpen(o => !o);
-    }, 3000);
-    return () => { window.clearTimeout(close); window.clearInterval(pulse); };
-  }, []);
   const [selected, setSelected] = useState<string | null>(null);
   const [hint, setHint] = useState(placed.length
     ? 'Drag your things anywhere. Tap one to change it.'
