@@ -240,7 +240,7 @@
 */
 .sl-room-bubble{
   position:absolute;z-index:2;left:64%;bottom:72%;
-  width:max-content;max-width:min(240px,22vw);
+  width:max-content;max-width:min(260px,24vw);padding:10px 14px 11px;
   background:linear-gradient(#ffffff,#f1e9ff);border-radius:18px;
   box-shadow:0 6px 16px #0b041866;pointer-events:none;
 }
@@ -248,15 +248,16 @@
   content:'';position:absolute;left:13%;top:100%;
   border:10px solid transparent;border-top-color:#f1e9ff;border-right-color:#f1e9ff;
 }
-.sl-room-bubble p{
-  margin:0;padding:10px 13px;
-  font-size:clamp(11px,1.05vw,14px);font-weight:850;line-height:1.24;
-  color:#2b1750;text-align:center;
-}
+.sl-say-line,.sl-say-sub{margin:0;text-align:center}
+.sl-say-line{font-size:clamp(14px,1.25vw,18px);font-weight:900;line-height:1.18;color:#26136e}
+.sl-say-sub{margin-top:4px;font-size:clamp(11px,.95vw,13.5px);font-weight:750;line-height:1.22;color:#4b3a86}
 /* Wide enough to have floor either side of the panel: he moves out of the
-   panel and the clouds take back the 78px that was being held for him. */
+   panel and the clouds take back the 78px that was being held for him. His
+   bubble asks the question, so the panel's own question row is not drawn. */
 @media(min-width:900px){
   .sl-room-cast{display:block}
+  .sl-ask{display:none}
+  .sl-lone-wide .sl-room-cast{display:none}
   .sl-thinking-boy{display:none}
   .sl-thought-clouds{padding-top:14px}
   .sl-desk-note{left:8px}
@@ -1004,7 +1005,6 @@ button.sl-step-inner:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .sl-ask-bubble p,[data-sl-panel="4"] .sl-ask-bubble p{font-size:clamp(14px,1.15vw,16px);line-height:1.3}
 .sl-panel-answer{font-size:clamp(15px,1.2vw,17px)}
 .sl-thought-cloud{font-size:clamp(14px,1.2vw,17px);line-height:1.2}
-.sl-room-bubble p{font-size:clamp(15px,1.3vw,18px)}
 .sl-desk-note{font-size:14px}
 .sl-cards button{font-size:clamp(14px,1.15vw,16px);line-height:1.2}
 .sl-badge{font-size:12px}
@@ -1079,16 +1079,6 @@ button.sl-step-inner:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .sl-film[data-card="wide"] .sl-thought-cloud:not(.sl-cloud-own){width:196px;min-height:78px!important;font-size:15.5px;line-height:1.15;padding:12px 16px}
 .sl-film[data-card="half"] .sl-thought-cloud:not(.sl-cloud-own){width:172px;min-height:76px!important;font-size:14.5px;line-height:1.15;padding:12px 13px}
 .sl-film:is([data-card="wide"],[data-card="half"]) .sl-cloud-own{width:auto;align-self:center;white-space:nowrap;font-size:15.5px;padding:12px 22px}
-
-/*
-  THE BOY STANDS IN THE WIDE CARD'S CORNER. Above 900px he is on the floor
-  beside the strip — but a lone wide card covers that floor, so at his usual
-  spot he and his bubble sat on the start of the question. The question moves
-  along to clear him, and keeps its own Chirpy.
-*/
-@media(min-width:900px){
-  .sl-film[data-card="wide"] .sl-ask{padding-left:25%}
-}
 
 .sl-film[data-card="wide"] .sl-screen{height:230px}
 /* 150, not 190: with two cards up, the second row of "what happened" choices
@@ -1208,4 +1198,46 @@ button.sl-step-inner:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .sl-rail-done{
   background:linear-gradient(#ffe9b84d,#ffd98a26);border-color:#ffe9b8;
   box-shadow:0 0 24px -4px #ffd98a;
+}
+
+/*
+  THOUGHT, ALONE ON THE WIDE CARD: the boy stands in the middle with his bubble
+  over his head and the clouds go round him — two columns each side, the way in
+  with your own words under him. Only from 900px up (below that he is in the
+  panel's corner) and only while this is the one card on screen: once an answer
+  shrinks it into the strip the clouds go back to drifting in rows and he walks
+  off to the floor, where his bubble asks the next question.
+*/
+.sl-hole{display:none}
+@media(min-width:900px){
+  .sl-film[data-card="wide"] .sl-thought-clouds.sl-around{
+    display:grid;grid-template-columns:repeat(2,1fr) minmax(260px,280px) repeat(2,1fr);
+    grid-template-rows:repeat(3,minmax(88px,auto)) auto;
+    align-content:center;align-content:safe center;align-items:center;justify-items:center;gap:8px 12px;padding:0 24px;
+  }
+  .sl-film[data-card="wide"] .sl-around .sl-thought-cloud:not(.sl-cloud-own){width:176px;font-size:14.5px}
+  .sl-around .sl-hole{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+    grid-column:3;grid-row:1/4;width:100%;min-height:0;
+  }
+  .sl-hole-bubble{
+    position:relative;width:100%;padding:10px 14px 11px;border-radius:18px;
+    background:linear-gradient(#fffffff2,#f0e9ffe8);box-shadow:0 3px 12px #0d04184d;
+  }
+  .sl-hole-bubble:after{
+    content:'';position:absolute;left:50%;top:100%;margin-left:-9px;
+    border:9px solid transparent;border-top-color:#f0e9ffe8;border-bottom:0;
+  }
+  .sl-hole-bubble .sl-say-line{font-size:21px}
+  .sl-hole-bubble .sl-say-sub{font-size:14px}
+  .sl-hole-boy{
+    height:168px;width:auto;max-width:100%;min-height:0;flex:0 1 auto;object-fit:contain;
+    filter:drop-shadow(0 8px 9px #25132799);transform-origin:50% 100%;
+    animation:sl-boy-bounce 3.1s ease-in-out infinite;
+  }
+  /* Writing in their own words, only he and the form are left, so he is smaller to leave the form its room. */
+  .sl-around.sl-writing .sl-cloud-mover{display:none}
+  .sl-film[data-card="wide"] .sl-thought-clouds.sl-around.sl-writing{grid-template-rows:auto}
+  .sl-around.sl-writing .sl-hole{grid-row:1}
+  .sl-around.sl-writing .sl-hole-boy{height:112px}
 }

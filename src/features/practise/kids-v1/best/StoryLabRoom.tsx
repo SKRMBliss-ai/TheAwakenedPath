@@ -219,27 +219,34 @@ const TITLES = ['3. Thought', '4. What Happened?', '5. Story', '6. Another Way']
 const PROMPTS = ['What was your mind saying?', 'What actually happened?', "Here's the story your mind made…", "Could anything else be true?"];
 const SUBS = ['Tap a thought, or tell me in your own words.', "Let's look at what a little camera could see.", 'Your mind connects the pieces and tries to make sense of it.', "Let's see some other possible stories."];
 
-/*
-  CHIRPY WAS SITTING ON HIS SHOULDER SAYING NOTHING.
-
-  The boy on the floor of the room carries Chirpy with him, and every other
-  room in the Mind Gym gives that pair a bubble. Here they just stood there
-  while the panel did all the talking, which reads as the bird having been
-  switched off. One short line per step, in his own words rather than the
-  panel's — repeating the question twice on one screen would be worse than
-  silence.
-*/
-const BOY_LINES = [
-  "That's my mind talking, up there.",
-  "Now — what would a camera have seen?",
-  "So that's the story I made out of it.",
-  "Maybe something else could be true too.",
-  'We walked the whole way. Nice one.',
-];
-
 /** The confirm question rides Chirpy's bubble on the Story panel now, so the
     panel is not asking the same thing twice in two different boxes. */
 const CONFIRM_SUB = 'Does this sound like what your mind was saying?';
+
+/*
+  ONE BUBBLE, AND IT IS THE BOY'S. He carries Chirpy, so the question comes from
+  the pair of them rather than from a second bubble on the panel (which is only
+  drawn where he is not in the room — see .sl-ask in the stylesheet).
+*/
+const DONE_LINE = 'We walked the whole way. Nice one.';
+function boySays(step: number) {
+  if (step - 2 >= PROMPTS.length) return { line: DONE_LINE, sub: '' };
+  return { line: PROMPTS[step - 2], sub: step === 4 ? CONFIRM_SUB : SUBS[step - 2] };
+}
+
+/**
+ * Where each thought cloud sits while the boy stands in the middle of the card:
+ * two columns either side of him, and the pinned "Say it your way" under him.
+ * Grid placement is ignored by the flex layout every other card uses.
+ */
+function aroundBoy(i: number, options: Option[]): CSSProperties {
+  const clouds = options.length - 1;
+  if (i >= clouds) return { gridColumn: 3, gridRow: Math.max(4, Math.ceil(clouds / 4) + (clouds % 4 === 0 ? 1 : 0)) };
+  const row = Math.floor(i / 4) + 1;
+  const inRow = Math.min(4, clouds - (row - 1) * 4);
+  const cols = inRow === 4 ? [1, 2, 4, 5] : inRow === 3 ? [1, 2, 4] : inRow === 2 ? [2, 4] : [2];
+  return { gridRow: row, gridColumn: cols[i % 4] };
+}
 
 const SAY_IT: Option = { text: 'Say it your way', icon: 'mic', own: true };
 const SOMETHING_ELSE: Option = { text: 'Something else', icon: 'mic', own: true };
@@ -474,6 +481,8 @@ export function StoryLabRoom({ carried, onExit, onGrownUp, onSave, onKeepsakes }
   const reached = Math.min(step, 5);
   const panels = narrow ? [reached] : [2, 3, 4, 5].filter(index => index <= reached);
   const { box, scale, canvas } = useFilmScale(panels.length);
+  /* Thought alone on the wide card: the boy stands in its middle and the clouds go round him. */
+  const loneWide = step === 2 && canvas.card === 'wide';
   const { room: footRoom, rail: footRail } = useFootClearance();
 
   /*
@@ -715,7 +724,7 @@ export function StoryLabRoom({ carried, onExit, onGrownUp, onSave, onKeepsakes }
   const otherOptions = alternative ? [] : [...possibilityRoll.items, MY_OWN];
 
   const chosen = (index: number) => answers[index];
-  const boyLine = BOY_LINES[Math.min(Math.max(step - 2, 0), BOY_LINES.length - 1)];
+  const says = boySays(step);
   /* Hovering (or focusing) anything with words on it has Chirpy read it out
      in the mind voice. A short pause first, so sweeping the pointer across
      the panel doesn't set off every card on the way. Limited to 10 to avoid
@@ -761,10 +770,10 @@ export function StoryLabRoom({ carried, onExit, onGrownUp, onSave, onKeepsakes }
   const ownForm = <form className="sl-own-form" onSubmit={e => { e.preventDefault(); if (!quiet) sound.play('tap'); capture(draft); }}>
     <label htmlFor="sl-own-answer">{step === 4 ? 'The story my mind made' : 'Your own words'}</label>
     <textarea id="sl-own-answer" autoFocus value={draft} onChange={e => setDraft(e.target.value)} rows={2} maxLength={400} />
-    <div><MicButton onText={text => setDraft(value => value ? `${value} ${text}` : text)} /><button type="submit" disabled={!draft.trim()}>Keep these words →</button></div>
+    <div><MicButton onText={text => setDraft(value => value ? `${value} ${text}` : text)} /><button type="submit" disabled={!draft.trim()}>Keep these words →</button><button type="button" onClick={() => setWriting(false)}>Cancel</button></div>
   </form>;
 
-  return <motion.main ref={footRoom}initial={still ? false : { opacity: 0, scale: .98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .7 }} className={`sl-room ${still ? 'sl-still' : ''} ${quiet ? 'sl-quiet' : ''}`} style={{ fontFamily: FONT }} data-step={step} data-floating-room>
+  return <motion.main ref={footRoom}initial={still ? false : { opacity: 0, scale: .98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .7 }} className={`sl-room ${still ? 'sl-still' : ''} ${quiet ? 'sl-quiet' : ''} ${loneWide ? 'sl-lone-wide' : ''}`} style={{ fontFamily: FONT }} data-step={step} data-floating-room>
     {/* The handle leaves the room altogether. Stepping back through the four
         panels is a small thing and belongs in the footer; the door on the
         wall is what a child reaches for when they want out. */}
@@ -804,7 +813,7 @@ export function StoryLabRoom({ carried, onExit, onGrownUp, onSave, onKeepsakes }
 
               {index === 2 && <div className="sl-thought-field">
                 <ThoughtParticles show={!thought} />
-                <div className={`sl-thought-clouds ${thoughtRoll.fading ? 'sl-rolling-out' : ''}`} {...hold}>
+                <div className={`sl-thought-clouds ${thoughtRoll.fading ? 'sl-rolling-out' : ''} ${loneWide ? 'sl-around' : ''} ${loneWide && writing ? 'sl-writing' : ''}`} {...hold}>
                   {thoughtOptions.map((option, i) => (
                     /* Two wrappers give independent X and Y bounce: the span
                        carries its own CSS animation for X, the button for Y.
@@ -818,6 +827,7 @@ export function StoryLabRoom({ carried, onExit, onGrownUp, onSave, onKeepsakes }
                         '--bx': `${9 + (i % 4) * 5}px`,
                         '--bx-dur': `${6.2 + (i % 7) * 0.55}s`,
                         '--bx-del': `${-(i % 7) * 0.92}s`,
+                        ...aroundBoy(i, thoughtOptions),
                       } as CSSProperties}
                     >
                       <button
@@ -836,6 +846,10 @@ export function StoryLabRoom({ carried, onExit, onGrownUp, onSave, onKeepsakes }
                       </button>
                     </span>
                   ))}
+                  <div className="sl-hole">
+                    <div className="sl-hole-bubble"><p className="sl-say-line">{PROMPTS[0]}</p><p className="sl-say-sub">{SUBS[0]}</p></div>
+                    <img className="sl-hole-boy" key={companion.src} src={companion.src} alt={carried.feeling ? `You, feeling ${carried.feeling.toLowerCase()}, with Chirpy` : 'You, with Chirpy'} />
+                  </div>
                 </div>
 
                 {/*
@@ -955,9 +969,9 @@ export function StoryLabRoom({ carried, onExit, onGrownUp, onSave, onKeepsakes }
         alt={carried.feeling ? `You, feeling ${carried.feeling.toLowerCase()}, with Chirpy` : 'You, with Chirpy'}
         draggable={false}
       />
-      <div className="sl-room-bubble" aria-live="polite"><p>{boyLine}</p></div>
+      <div className="sl-room-bubble" aria-live="polite"><p className="sl-say-line">{says.line}</p>{says.sub && <p className="sl-say-sub">{says.sub}</p>}</div>
     </div>
-    <RoomThoughtParticles show={step === 2 && !thought} />
+    <RoomThoughtParticles show={step === 2 && !thought && !loneWide} />
 
     {/*
       The ribbon of light runs bright as far as the step they are standing on
@@ -991,11 +1005,6 @@ export function StoryLabRoom({ carried, onExit, onGrownUp, onSave, onKeepsakes }
 
     <footer className="sl-stop">
       {step >= 6 && !receiptGone && <button className="sl-save" onClick={save} disabled={saved}>{saved ? 'Journey saved ✓' : '✧ Save This Journey'}</button>}
-      {/* Not offered on step 5 — the "Another way" possibility is the whole
-          point of the walk, so a child stays in the Story Lab, choosing
-          among the reframes, rather than skipping past the one step this
-          room exists for. Every earlier step still has its own skip. */}
-      {step < 6 && step !== 4 && step !== 5 && <button className="chrome-fade" onClick={() => capture("I'm not sure yet.")}>{"I'm not sure — keep going"}</button>}
     </footer>
   </motion.main>;
 }
