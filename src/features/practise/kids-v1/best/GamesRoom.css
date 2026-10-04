@@ -817,3 +817,13 @@
 .gr-statcard{position:relative;padding-top:12px;gap:0}
 .gr-statcard>span:first-child{position:absolute;top:0;right:18px;z-index:2;transform:translateY(-35%)}
 .gr-statcard .gr-stars{padding-top:16px}
+
+/* Make background glow come alive on hover over interactives */
+.gr-room:has(.gr-rug-btn:not(:disabled):hover) .gr-warm-glow,
+.gr-room:has(.gr-books-btn:not(:disabled):hover) .gr-warm-glow,
+.gr-room:has(.gr-plant-btn:not(:disabled):hover) .gr-warm-glow,
+.gr-room:has(.gr-cushions-btn:not(:disabled):hover) .gr-warm-glow,
+.gr-room:has(.gr-scenery-btn:not(:disabled):hover) .gr-warm-glow {
+  filter: brightness(1.5) saturate(1.4);
+  transition: filter 0.2s ease;
+}
