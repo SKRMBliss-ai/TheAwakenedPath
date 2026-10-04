@@ -1054,3 +1054,11 @@
 }
 .mg-still .hs-go,.mg-still .hs-tag,.mg-still .hs-corner,.mg-still .hs-card.hs-hint{animation:none!important}
 @media(prefers-reduced-motion:reduce){.hs-go,.hs-tag,.hs-card.hs-hint{animation:none!important}.hs-corner{animation:none!important}}
+
+/* Hovering My Corner: the three main cards drop back, soft and dim, so the corner is the focus. */
+@media(min-width:761px) and (min-aspect-ratio:1/1){
+  .hs-card{transition:transform .3s ease,filter .35s ease,translate .5s cubic-bezier(.2,.7,.2,1)}
+  .mg-home:has(.hs-corner:hover,.hs-corner:focus-visible) .hs-card{filter:blur(3.5px) brightness(.62) saturate(.85);transform:scale(.88)}
+  .mg-home:has(.hs-corner:hover,.hs-corner:focus-visible) .hs-chip,.mg-home:has(.hs-corner:hover,.hs-corner:focus-visible) .hs-today{opacity:.5}
+}
+.mg-still .hs-card{transition:none}
