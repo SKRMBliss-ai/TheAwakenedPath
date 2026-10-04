@@ -1019,12 +1019,11 @@
   .hs-lan{position:absolute;translate:-50% 0;aspect-ratio:344/700;transform-origin:50% 0;animation:hs-sway 6s ease-in-out infinite;animation-delay:var(--d)}
   .hs-lan img{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:contain;transition:opacity .45s ease}
   .hs-lan .on{opacity:0}
-  .hs-lan:after{content:'';position:absolute;left:50%;top:48%;width:340%;aspect-ratio:1;translate:-50% -50%;border-radius:50%;opacity:0;pointer-events:none;mix-blend-mode:screen;
-    background:radial-gradient(circle,#ffc65ebb 0,#ff9a3a55 34%,transparent 66%);transition:opacity .6s ease}
   .mg-home:has(.hs-card:hover,.hs-card:focus-within,.hs-corner:hover,.hs-corner:focus-visible,.hs-wide-boy:hover) .hs-lan .on{opacity:1}
-  .mg-home:has(.hs-card:hover,.hs-card:focus-within,.hs-corner:hover,.hs-corner:focus-visible,.hs-wide-boy:hover) .hs-lan:after{opacity:1;animation:hs-flicker 3.1s ease-in-out infinite;animation-delay:var(--d)}
+  .mg-home:has(.hs-card:hover,.hs-card:focus-within,.hs-corner:hover,.hs-corner:focus-visible,.hs-wide-boy:hover) .hs-lan .on{animation:hs-lit 3.1s ease-in-out infinite;animation-delay:var(--d)}
   .hs-veil{background:linear-gradient(#150a3055,#150a3070 55%,#150a3099)!important}
 }
 @keyframes hs-sway{0%,100%{rotate:-1.2deg}50%{rotate:1.2deg}}
-.mg-still .hs-lan,.mg-still .hs-lan:after{animation:none!important}
-@media(prefers-reduced-motion:reduce){.hs-lan,.hs-lan:after{animation:none!important}}
+.mg-still .hs-lan,.mg-still .hs-lan .on{animation:none!important}
+@media(prefers-reduced-motion:reduce){.hs-lan,.hs-lan .on{animation:none!important}}
+@keyframes hs-lit{0%,100%{opacity:1}14%{opacity:.82}30%{opacity:1}52%{opacity:.88}74%{opacity:1}}
