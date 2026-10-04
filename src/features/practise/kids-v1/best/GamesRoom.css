@@ -817,6 +817,12 @@
 .gr-statcard>span:first-child{position:absolute;top:0;right:18px;z-index:2;transform:translateY(-35%)}
 .gr-statcard .gr-stars{padding-top:16px}
 
+/* Age badge */
+.gr-age-badge{
+  padding:6px 12px;border-radius:16px;background:#1d1446d9;border:1px solid #ffd98a55;
+  font-size:13px;font-weight:900;color:#ffe6a2;
+}
+
 /* Make background glow come alive on hover over interactives */
 .gr-room:has(.gr-rug-btn:not(:disabled):hover) .gr-warm-glow,
 .gr-room:has(.gr-books-btn:not(:disabled):hover) .gr-warm-glow,

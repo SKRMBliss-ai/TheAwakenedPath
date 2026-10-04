@@ -512,6 +512,7 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
           number rolls up as each choice's stars land.
         */}
         <div className="gr-statcard"><BadgeSlot />
+        <div className="gr-age-badge">Age {childAge()}</div>
         <motion.div ref={counter} className="gr-stars" role="img" aria-label={`Mind Stars: ${points}`}
           animate={!still && state.rewardArrived ? { scale: [1, 1.12, 1] } : { scale: 1 }}>
           <span className="gr-stars-medal" aria-hidden="true">
