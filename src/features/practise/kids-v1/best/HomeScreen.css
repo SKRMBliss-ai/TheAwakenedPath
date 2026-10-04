@@ -931,3 +931,31 @@
   .hs-wide-boy.hs-look-1{rotate:-4deg}.hs-wide-boy.hs-look-2{rotate:-3deg}.hs-wide-boy.hs-look-3{rotate:-1.8deg}
 }
 .mg-still .hs-wide-boy{transition:none;rotate:0deg!important}
+
+/* ===== 3. CARD POLISH ===== */
+.hs-go{transition:transform .16s cubic-bezier(.3,1.6,.5,1),filter .2s}
+.hs-go:active{transform:scale(.94,.88)}
+.hs-card:active{transition-duration:.1s}
+.hs-chip{position:absolute;right:3%;top:-2%;padding:.35em .9em;border-radius:99px;background:linear-gradient(#ffe27a,#ffc94a);color:#4a2a05;font-weight:800;font-size:calc(var(--u)*1);line-height:1.1;box-shadow:0 .3cqw 1cqw #0006;pointer-events:none;z-index:2;white-space:nowrap}
+.hs-chip-streak{top:auto;bottom:-3%;background:linear-gradient(#ffb36b,#ff7a3d);color:#fff}
+/* Living icons. */
+@keyframes hs-heart{0%,100%{scale:1}14%{scale:1.1}28%{scale:1}42%{scale:1.07}}
+@keyframes hs-float{0%,100%{translate:0 0;rotate:0deg}50%{translate:0 -3.5%;rotate:1.4deg}}
+@keyframes hs-flutter{0%,100%{rotate:0deg}25%{rotate:-1.6deg}75%{rotate:1.6deg}}
+.hs-card-1 .hs-card-icon{animation:hs-heart 2.6s ease-in-out infinite;transform-origin:50% 60%}
+.hs-card-2 .hs-card-icon{animation:hs-float 3.6s ease-in-out infinite}
+.hs-card-3 .hs-card-icon{animation:hs-flutter 4.2s ease-in-out infinite;transform-origin:50% 90%}
+.hs-card:hover .hs-card-icon{animation-duration:1.4s}
+/* Sparkles from the pressed button. */
+.hs-burst{position:absolute;left:50%;top:84%;width:0;height:0;z-index:5;pointer-events:none}
+.hs-burst i{position:absolute;left:-.4cqw;top:-.4cqw;width:.8cqw;height:.8cqw;border-radius:50%;background:#fff6b0;box-shadow:0 0 .8cqw .3cqw #ffd86a;animation:hs-spark .65s ease-out forwards}
+@keyframes hs-spark{from{transform:rotate(var(--a)) translateX(0) scale(1);opacity:1}to{transform:rotate(var(--a)) translateX(6cqw) scale(.2);opacity:0}}
+/* Entering a room: the world leans in. */
+.mg-home{transition:opacity .3s ease}
+.hs-leaving .hs-stage{transform:scale(1.07);transition:transform .32s cubic-bezier(.4,0,.2,1)}
+.hs-leaving{opacity:.1}
+.hs-leaving .hs-bg{transform:translate(-50%,-50%) scale(1.14)!important;transition:transform .32s cubic-bezier(.4,0,.2,1)}
+@media(max-width:760px){.hs-burst i{width:2vw;height:2vw;left:-1vw;top:-1vw}@keyframes hs-spark{from{transform:rotate(var(--a)) translateX(0) scale(1);opacity:1}to{transform:rotate(var(--a)) translateX(16vw) scale(.2);opacity:0}}
+  .hs-card-icon{animation:none!important}.hs-chip{right:6vw;top:-2vw;font-size:2.8vw}.hs-chip-streak{bottom:-2vw;top:auto}.hs-burst{top:50%;left:auto;right:7vw}}
+.mg-still .hs-card-icon,.mg-still .hs-burst{animation:none!important}
+@media(prefers-reduced-motion:reduce){.hs-card-icon{animation:none!important}.hs-leaving,.hs-leaving .hs-stage{transition:none;opacity:1;transform:none}}

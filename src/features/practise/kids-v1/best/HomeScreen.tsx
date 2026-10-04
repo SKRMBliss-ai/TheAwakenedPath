@@ -69,6 +69,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   const s = useKidStore();
   const quiet = useQuiet();
   const diaryDone = useDiaryFilledToday();
+  const playedToday = (s.scenariosDone[todayKey()] ?? []).length;
   const reduced = useReducedMotion();
   const dialog = useRef<HTMLDialogElement>(null);
   const [selected, setSelected] = useState<string | null>(null);
@@ -128,6 +129,19 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   }, []);
   const [teaching, setTeaching] = useState<string | null>(null);
   const [look, setLook] = useState<number | null>(null);
+  /* A card press: sparkles burst from it, the room zooms toward the viewer, and
+     only then does the next screen open. Instant when motion is off. */
+  const [burst, setBurst] = useState<number | null>(null);
+  const [leaving, setLeaving] = useState(false);
+  const leaveTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(leaveTimer.current), []);
+  const go = (card: number, next: () => void, zoom = true) => {
+    if (quiet || reduced) { next(); return; }
+    setBurst(card); window.setTimeout(() => setBurst(null), 700);
+    if (!zoom) { next(); return; }
+    setLeaving(true);
+    leaveTimer.current = window.setTimeout(() => { next(); setLeaving(false); }, 320);
+  };
   const [hour] = useState(() => new Date().getHours());
   const [mood, setMood] = useState(0);
   useEffect(() => {
@@ -224,7 +238,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   const close = () => { dialog.current?.close(); setSelected(null); };
   const write = (value: string) => { s.setMonthReview(month, noteKey, value); setSaved(false); };
 
-  return <main ref={home} className={`mg-home ${quiet || reduced ? 'mg-still' : ''}`} style={{ fontFamily: FONT }}>
+  return <main ref={home} className={`mg-home ${quiet || reduced ? 'mg-still' : ''} ${leaving ? 'hs-leaving' : ''}`} style={{ fontFamily: FONT }}>
     <DailyWelcome />
     {askAge && <AgePopup onDone={() => setAskAge(false)} />}
     <div className="hs-tod" aria-hidden="true" style={{ background: dayGrade(hour) }} />
@@ -271,21 +285,26 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
         <img className="hs-card-icon" src={`${A}hs-icon-heart.webp`} alt="" />
         <ArcTitle id="hs-arc-1">How Are You Feeling?</ArcTitle>
         <p>Explore a feeling with Chirpy <br className="hs-br" />and feel better.</p>
-        <button className="hs-go hs-go-blue" data-guide="feel" data-guide-rank="1" onClick={() => { sound.play('enterRoom'); onDeepDive(); }}>Start My Journey <span aria-hidden="true">→</span></button>
+        {burst === 0 && <span className="hs-burst" aria-hidden="true">{Array.from({ length: 10 }, (_, k) => <i key={k} style={{ ['--a' as string]: `${k * 36}deg`, animationDelay: `${(k % 3) * 30}ms` }} />)}</span>}
+        <button className="hs-go hs-go-blue" data-guide="feel" data-guide-rank="1" onClick={() => { sound.play('enterRoom'); go(0, onDeepDive); }}>Start My Journey <span aria-hidden="true">→</span></button>
       </div>
       <div className="hs-card hs-card-2" onPointerEnter={() => setLook(1)} onPointerLeave={() => setLook(null)} onFocus={() => setLook(1)} onBlur={() => setLook(null)}>
         <img className="hs-card-art" src={`${A}card-HomeScreen.webp`} alt="" />
         <img className="hs-card-icon" src={`${A}hs-icon-games.webp`} alt="" />
         <ArcTitle id="hs-arc-2">Good Choices Games</ArcTitle>
         <p>Play situations. Make a choice. <br className="hs-br" />Earn Mind Stars.</p>
-        <button className="hs-go hs-go-green" data-guide="practise" data-guide-rank="1" onClick={() => { sound.play('roomCard'); setRooms(true); }}>Visit My Rooms <span aria-hidden="true">→</span></button>
+        {playedToday > 0 && <span className="hs-chip"><span aria-hidden="true">★</span> {playedToday} played today</span>}
+        {burst === 1 && <span className="hs-burst" aria-hidden="true">{Array.from({ length: 10 }, (_, k) => <i key={k} style={{ ['--a' as string]: `${k * 36}deg`, animationDelay: `${(k % 3) * 30}ms` }} />)}</span>}
+        <button className="hs-go hs-go-green" data-guide="practise" data-guide-rank="1" onClick={() => { sound.play('roomCard'); go(1, () => setRooms(true), false); }}>Visit My Rooms <span aria-hidden="true">→</span></button>
       </div>
       <div className="hs-card hs-card-3" onPointerEnter={() => setLook(2)} onPointerLeave={() => setLook(null)} onFocus={() => setLook(2)} onBlur={() => setLook(null)}>
         <img className="hs-card-art" src={`${A}card-HomeScreen.webp`} alt="" />
         <img className="hs-card-icon" src={`${A}hs-icon-diary.webp`} alt="" />
         <ArcTitle id="hs-arc-3">My Inner Diary</ArcTitle>
         <p>Remember your day, <br className="hs-br" />thoughts and progress.</p>
-        <button className="hs-go hs-go-purple" data-guide="diary" data-guide-rank="1" onClick={onReflection}>Open My Diary <span aria-hidden="true">→</span></button>
+        {burst === 2 && <span className="hs-burst" aria-hidden="true">{Array.from({ length: 10 }, (_, k) => <i key={k} style={{ ['--a' as string]: `${k * 36}deg`, animationDelay: `${(k % 3) * 30}ms` }} />)}</span>}
+        <button className="hs-go hs-go-purple" data-guide="diary" data-guide-rank="1" onClick={() => go(2, onReflection)}>Open My Diary <span aria-hidden="true">→</span></button>
+        {s.streak >= 2 && <span className="hs-chip hs-chip-streak"><span aria-hidden="true">🔥</span> {s.streak}-day streak</span>}
         {!diaryDone && <span className="hs-today"><span aria-hidden="true">★</span> Today’s page<br />is waiting</span>}
       </div>
 
