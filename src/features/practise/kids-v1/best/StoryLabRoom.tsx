@@ -7,7 +7,6 @@ import { DoorHandle } from '../ui/DoorHandle';
 import { BadgeSlot } from './ChildBadge';
 import { MicButton } from '../ui/MicButton';
 import { useFloatingPosition } from '../ui/useFloatingPosition';
-import { chirpySprite } from '../ui/sprites';
 import { band } from '../kit/band';
 import { thoughtsFor, eventsFor, possibilitiesFor, type Option } from '../kit/storyLabContent';
 import { companionFor, COMPANY } from '../kit/feelingCompanions';
@@ -394,9 +393,9 @@ function useNarrow() {
 }
 
 /** The panel frame every step shares — the sheet's rounded window on the room. */
-function Panel({ index, step, chirpy, children, onHome }: {
-  index: number; step: number; chirpy: string;
-  children: ReactNode; onHome: () => void;
+function Panel({ index, step, boy, children }: {
+  index: number; step: number; boy: string;
+  children: ReactNode;
 }) {
   const current = index === step;
   const done = index < step;
@@ -411,7 +410,8 @@ function Panel({ index, step, chirpy, children, onHome }: {
         it. It gets the bubble back and the confirm question moves into it,
         so the panel gains a voice without gaining a box. */}
     <div className="sl-ask">
-      <img className="sl-ask-chirpy" src={chirpy} alt={current ? 'Chirpy' : ''} aria-hidden={!current} />
+      {/* One bird: Chirpy rides the boy, so he stands here only where no other boy is on screen. */}
+      <img className="sl-ask-boy" src={boy} alt="" aria-hidden="true" />
       <div className="sl-ask-bubble"><h3>{PROMPTS[index - 2]}</h3>{sub && <p>{sub}</p>}</div>
     </div>
     <div className="sl-panel-body">{children}</div>
@@ -800,8 +800,7 @@ export function StoryLabRoom({ carried, onExit, onGrownUp, onSave, onKeepsakes }
             transition={still ? { duration: 0 } : { type: 'spring', stiffness: 170, damping: 20, mass: .9 }}
           >
             {position > 0 && <span className="sl-film-arrow" aria-hidden="true">›</span>}
-            <Panel index={index} step={step} onHome={onExit}
-              chirpy={index === 4 ? '/mind-gym/story-lab/chirpy-pointing.webp' : chirpySprite(index === 5 ? 'hopeful' : 'curious')}>
+            <Panel index={index} step={step} boy={companion.src}>
 
               {index === 2 && <div className="sl-thought-field">
                 <ThoughtParticles show={!thought} />
