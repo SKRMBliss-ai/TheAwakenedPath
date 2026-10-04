@@ -900,7 +900,7 @@
   .hs-sofa{transform:scale(1.06) translate(calc(var(--px)*-1.1%),calc(var(--py)*-1.1%));transition:opacity .35s ease,transform .5s cubic-bezier(.2,.7,.2,1)}
   .hs-glow{position:absolute;width:11%;aspect-ratio:1;translate:-50% -50%;border-radius:50%;mix-blend-mode:screen;
     background:radial-gradient(circle,#ffc65e99 0,#ff9a3a44 38%,transparent 70%);animation:hs-flicker 3.4s ease-in-out infinite}
-  .hs-fly{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff6b0;box-shadow:0 0 8px 3px #ffd86acc,0 0 18px 6px #ffb23e66;opacity:0;animation:hs-drift 10s ease-in-out infinite}
+  .hs-fly{position:absolute;width:7px;height:7px;border-radius:50%;background:#fffbd0;box-shadow:0 0 10px 4px #ffe27acc,0 0 26px 10px #ffb23e77;opacity:0;animation:hs-drift 10s ease-in-out infinite}
   .hs-card,.hs-wide-boy{translate:calc(var(--px)*.35cqw) calc(var(--py)*.25cqw)}
   .hs-wide-boy{translate:calc(var(--px)*-.5vw) calc(var(--py)*-.3vw)}
   .hs-card{transition:transform .3s ease,filter .3s ease,translate .5s cubic-bezier(.2,.7,.2,1)}

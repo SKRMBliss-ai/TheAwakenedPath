@@ -47,10 +47,17 @@ function dayGrade(h: number) {
 }
 /* Ambient lights, in fractions of the 1916x821 environment picture. */
 const LANTERNS: [number, number][] = [[.247, .12], [.161, .38], [.063, .8], [.867, .17], [.947, .32], [.885, .69]];
-const FIREFLIES = Array.from({ length: 16 }, (_, i) => ({
-  x: ((i * 37 + 11) % 97) / 100, y: .12 + ((i * 53 + 7) % 70) / 100,
-  d: 7 + (i * 5) % 9, s: (i * 1.3) % 8, r: 14 + (i * 7) % 26,
-}));
+const FIREFLIES = [
+  ...Array.from({ length: 16 }, (_, i) => ({
+    x: ((i * 37 + 11) % 97) / 100, y: .12 + ((i * 53 + 7) % 70) / 100,
+    d: 7 + (i * 5) % 9, s: (i * 1.3) % 8, r: 14 + (i * 7) % 26,
+  })),
+  /* A denser drift through the open middle of the scene, over the sky and rail. */
+  ...Array.from({ length: 22 }, (_, i) => ({
+    x: .28 + ((i * 41 + 5) % 45) / 100, y: .1 + ((i * 29 + 3) % 62) / 100,
+    d: 6 + (i * 3) % 8, s: (i * 0.9) % 7, r: 10 + (i * 5) % 22,
+  })),
+];
 const CHIRPY_MOODS: ChirpyPose[] = ['curious', 'calm', 'excited', 'thinking', 'hopeful', 'confused', 'sad', 'calm'];
 
 /** A card title bent along the arch of its ribbon. */
