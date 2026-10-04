@@ -792,3 +792,23 @@
   background:radial-gradient(ellipse at 50% 50%,#1a0b3ce6 0,#1a0b3caa 48%,transparent 76%)}
 .hs-stage .mg-logo{text-shadow:0 2px 3px #1a0b3c,0 0 14px #1a0b3ccc}
 .hs-stage .mg-logo small{text-shadow:0 1px 2px #000,0 0 6px #1a0b3c;font-weight:900}
+
+/* On a window wider than 16:9 the stage keeps its shape and the leftover sides
+   used to show as flat dark bars. They are now a blurred, enlarged copy of the
+   same scene, so the room appears to carry on past the edges. */
+@media(min-width:761px){
+  .mg-home{position:relative;overflow:hidden;isolation:isolate}
+  .mg-home:before{content:'';position:fixed;inset:-4%;z-index:-1;pointer-events:none;
+    background:url('/mind-gym/home/environment.webp') center/cover,radial-gradient(ellipse at 50% 62%,#ffb067 0,#c0629f 22%,#5b3aa8 48%,#271a63 80%);
+    filter:blur(22px) brightness(.8) saturate(1.1)}
+}
+@media(min-width:761px) and (min-aspect-ratio:17/9){
+  .hs-stage:after{-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
+}
+
+/* The same soft scrim behind the sound button and level chip, so they stay
+   readable over the branches and lanterns. */
+.hs-stage .mg-tools{position:relative;isolation:isolate}
+.hs-stage .mg-tools:before{content:'';position:absolute;z-index:-1;left:-14%;top:-45%;width:128%;height:190%;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 50%,#1a0b3ce6 0,#1a0b3caa 50%,transparent 76%)}
+.hs-stage .mg-tools .mg-sound{background:#1d1446f2;border-color:#d4c4f2}
