@@ -176,6 +176,11 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     <DailyWelcome />
     {askAge && <AgePopup onDone={() => setAskAge(false)} />}
     <div className="hs-veil" aria-hidden="true" />
+    {/* Wide screens: the guide is pinned to the window's right-most edge, outside the scaled stage. */}
+    <div className="hs-wide">
+      <div className="hs-bubble hs-wide-bubble" aria-live="polite">{teaching ? <>{teaching}<small>Tap me again for another one.</small></> : 'What would you like to do today?'}</div>
+      <button className={`hs-wide-boy ${teaching ? 'mg-boy-said' : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you"><img src="/assets/home/boy@640.webp" alt="" /><span className="mg-tapme hs-tapme" aria-hidden="true">Tap me</span></button>
+    </div>
     <div className="hs-stage">
       <header className="mg-top">
         <div className="mg-brand">
