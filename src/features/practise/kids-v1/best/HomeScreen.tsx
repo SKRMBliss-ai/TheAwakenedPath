@@ -176,6 +176,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     <DailyWelcome />
     {askAge && <AgePopup onDone={() => setAskAge(false)} />}
     <div className="hs-veil" aria-hidden="true" />
+    {onKeepsakes && <span className="hs-sofa" aria-hidden="true" />}
     {/* Wide screens: the guide is pinned to the window's right-most edge, outside the scaled stage. */}
     <div className="hs-wide">
       <div className="hs-bubble hs-wide-bubble" aria-live="polite">{teaching ? <>{teaching}<small>Tap me again for another one.</small></> : 'What would you like to do today?'}</div>
@@ -231,7 +232,6 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
         {!diaryDone && <span className="hs-today"><span aria-hidden="true">★</span> Today’s page<br />is waiting</span>}
       </div>
 
-      {onKeepsakes && <span className="hs-sofa" aria-hidden="true" />}
       {onKeepsakes && <button className="hs-corner" onClick={onKeepsakes} aria-label="My Corner. Rest, reflect and revisit.">
         <img src="/mind-gym/corner/hs-sign.webp" alt="" />
         <span><b>My Corner</b><small>Rest, reflect and revisit.</small></span>

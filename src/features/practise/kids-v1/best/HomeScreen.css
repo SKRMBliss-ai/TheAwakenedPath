@@ -870,3 +870,22 @@
   .hs-card:hover,.hs-card:focus-within{transform:translateY(-1.2%) scale(.94)}
   .hs-stage:has(.hs-card:hover,.hs-card:focus-within) .hs-card:not(:hover):not(:focus-within){transform:scale(.87)}
 }
+
+/* ===== WEB: the new 21:9 environment, full bleed =====
+   The picture covers the whole window (no mirrored sides); the 16:9 stage of
+   cards and characters sits over its middle. */
+@media(min-width:761px){
+  .mg-home{--iw:max(100vw,calc(100svh*1916/821));--ih:calc(var(--iw)*821/1916);
+    background:url('/mind-gym/home/environment.webp') center/cover no-repeat,#271a63}
+  .mg-home:before,.mg-home:after{display:none}
+  .hs-stage{background:none}
+  .hs-stage:after,.hs-stage:before{display:none}
+  .hs-sofa{display:block;position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity .35s ease;
+    background:url('/mind-gym/home/environment.webp') center/cover no-repeat;filter:brightness(1.12) saturate(1.12);
+    -webkit-mask-image:radial-gradient(ellipse calc(var(--iw)*.15) calc(var(--ih)*.22) at calc(50vw - var(--iw)/2 + var(--iw)*.135) calc(50svh - var(--ih)/2 + var(--ih)*.72),#000 55%,transparent 100%);
+    mask-image:radial-gradient(ellipse calc(var(--iw)*.15) calc(var(--ih)*.22) at calc(50vw - var(--iw)/2 + var(--iw)*.135) calc(50svh - var(--ih)/2 + var(--ih)*.72),#000 55%,transparent 100%)}
+}
+@media(min-width:761px){
+  .hs-sofa{z-index:0;left:0;top:0;width:100vw;height:100svh}
+  .mg-home:has(.hs-corner:hover,.hs-corner:focus-visible) .hs-sofa{opacity:1}
+}
