@@ -672,6 +672,7 @@
 .hs-arc svg{width:100%;height:100%;overflow:visible}
 .hs-arc text{fill:#2b2a8f;font-weight:900;font-size:7.8px;font-family:inherit}
 .hs-plain{display:none}
+.hs-side{display:none}
 @media(max-width:760px){
   .mg-home{display:block}
   .hs-stage{--u:3.58vw;container-type:normal;width:100%;aspect-ratio:auto;min-height:100svh;display:flex;flex-direction:column;align-items:center;gap:0;padding:28vw 0 24vw;overflow:visible;background:url('/mind-gym/home/Phone/PhoneMainScreenBackground.webp') center top/cover no-repeat fixed,linear-gradient(#2a1a6e 0,#5b3aa8 26%,#c0629f 44%,#ffb067 51%,#6b3a2e 55%,#4a2a3a 78%,#7a4a2a 100%) fixed}
@@ -690,8 +691,14 @@
   .hs-go:before{content:'';position:absolute;inset:0;z-index:1}
   .hs-go:after{content:'→';font-size:6.4vw;line-height:1;color:#fff}
   .hs-today{position:absolute;left:auto;right:2vw;top:-3vw;width:auto;font-size:3vw;padding:1.2vw 3vw;z-index:2}
-  .hs-corner{position:relative;left:auto;bottom:auto;width:70vw;flex:none;margin:0 auto 0 3vw}.hs-corner b{font-size:6vw}.hs-corner small{font-size:3vw}
-  .hs-stage .mg-safety{right:12px;bottom:14px;position:fixed}.hs-stage .mg-safety button{font-size:12px}
+  .hs-corner{position:relative;left:auto;bottom:auto;width:50vw;flex:none;margin:0 auto}.hs-corner b{font-size:4.6vw}.hs-corner small{font-size:2.5vw}
+  .hs-stage .mg-safety{right:12px;bottom:14px;position:fixed;z-index:4}.hs-stage .mg-safety button{font-size:12px}
+  .hs-boy-wrap{display:none}
+  .hs-bubble{left:50%;transform:translateX(-50%);width:76%;top:5vw;font-size:4.2vw}.hs-bubble:before{display:none}
+  .hs-side{display:block;position:fixed;bottom:0;z-index:1;width:34vw;padding:0;border:0;background:none;pointer-events:auto}
+  .hs-side img{display:block;width:100%;height:auto;filter:drop-shadow(0 1.5vw 2vw #0008)}
+  .hs-side-l{left:-7vw}.hs-side-r{right:-7vw}
+  .hs-card{z-index:2}.hs-corner,.hs-guide{z-index:2}
   .hs-stage .mg-logo{font-size:30px}
 }
 

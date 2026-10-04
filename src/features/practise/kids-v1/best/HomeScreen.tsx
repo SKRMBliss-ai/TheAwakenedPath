@@ -182,6 +182,9 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
           <BuddyHud name={name} onOpen={onBuddies} /></div>
       </header>
 
+      {/* Phone only: a standing boy at each edge, fixed to the screen. */}
+      <button className="hs-side hs-side-l" onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you"><img src="/assets/home/boy@640.webp" alt="" /></button>
+      <button className="hs-side hs-side-r" onClick={sayTeaching} tabIndex={-1} aria-hidden="true"><img src="/assets/home/boy@640.webp" alt="" /></button>
       <section className="hs-guide" aria-label="Your guide">
         <div className="hs-bubble" aria-live="polite">{teaching ?? 'What would you like to do today?'}</div>
         <button className={`hs-boy-wrap ${teaching ? 'mg-boy-said' : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you">
