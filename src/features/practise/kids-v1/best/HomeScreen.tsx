@@ -29,6 +29,17 @@ import './HomeScreen.css';
 import './DiaryNudge.css';
 
 const A = '/mind-gym/home/';
+type Pose = 'center' | 'left' | 'right' | 'up' | 'down' | 'happy' | 'surprised';
+const POSE_SRC: Record<Exclude<Pose, 'center'>, string> = {
+  left: 'boy-look-left', right: 'boy-look-right', up: 'boy-look-up', down: 'boy-look-down', happy: 'boy-happy', surprised: 'boy-surprised',
+};
+/** The standing boy: his resting picture, with each expression stacked on top and faded in as needed. */
+function BoyPoses({ pose }: { pose: Pose }) {
+  return <span className="hs-poses">
+    <img src="/assets/home/boy@640.webp" alt="" />
+    {(Object.keys(POSE_SRC) as (keyof typeof POSE_SRC)[]).map((k) => <img key={k} className={`p ${pose === k ? 'on' : ''}`} src={`/assets/home/${POSE_SRC[k]}@640.webp`} alt="" />)}
+  </span>;
+}
 /** What the guide says about the card under the pointer, and how he greets by the hour. */
 const CARD_LINES = ['Let’s talk about how you feel.', 'Ready to make good choices?', 'Let’s remember today together.'];
 function greeting(h: number) {
@@ -45,6 +56,8 @@ function dayGrade(h: number) {
   if (h < 17) return 'linear-gradient(#ffffff17,#ffffff0a)';
   return 'none';
 }
+/* The phone background's lanterns, in fractions of the screen. */
+const PHONE_LANTERNS: [number, number][] = [[.41, .09], [.056, .35], [.15, .78], [.97, .36], [.87, .79]];
 /* Ambient lights, in fractions of the 1916x821 environment picture. */
 const LANTERNS: [number, number][] = [[.247, .12], [.161, .38], [.063, .8], [.867, .17], [.947, .32], [.885, .69]];
 const FIREFLIES = [
@@ -150,7 +163,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   useEffect(() => () => window.clearTimeout(leaveTimer.current), []);
   const go = (card: number, next: () => void, zoom = true) => {
     if (quiet || reduced) { next(); return; }
-    setBurst(card); window.setTimeout(() => setBurst(null), 700);
+    setBurst(card); window.setTimeout(() => setBurst(null), 700); react('surprised', 700);
     if (!zoom) { next(); return; }
     setLeaving(true);
     leaveTimer.current = window.setTimeout(() => { next(); setLeaving(false); }, 320);
@@ -163,6 +176,30 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     startSkyAmbience(timeOfDayForHour(hour));
     return () => stopAmbience();
   }, [quiet, hour, mutedState]);
+  /* EYES AND FACE. He looks toward the pointer (web), smiles at a card you point at or
+     when he speaks, and is startled for a moment when a card is pressed. */
+  const [gaze, setGaze] = useState<Pose>('center');
+  const [flash, setFlash] = useState<Pose | null>(null);
+  const flashTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(flashTimer.current), []);
+  const react = (p: Pose, ms = 900) => { setFlash(p); window.clearTimeout(flashTimer.current); flashTimer.current = window.setTimeout(() => setFlash(null), ms); };
+  const boyBtn = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (quiet || typeof window === 'undefined' || !window.matchMedia('(hover: hover)').matches) return;
+    const move = (e: PointerEvent) => {
+      const r = boyBtn.current?.getBoundingClientRect();
+      if (!r || !r.width) return;
+      const dx = e.clientX - (r.left + r.width * 0.5), dy = e.clientY - (r.top + r.height * 0.2);
+      let next: Pose = 'center';
+      if (Math.abs(dx) < 50 && Math.abs(dy) < 50) next = 'center';
+      else if (dy < -Math.abs(dx) * 0.7 && dy < -70) next = 'up';
+      else if (dy > Math.abs(dx) * 1.1 && dy > 190) next = 'down';
+      else next = dx < 0 ? 'left' : 'right';
+      setGaze((g) => (g === next ? g : next));
+    };
+    window.addEventListener('pointermove', move);
+    return () => window.removeEventListener('pointermove', move);
+  }, [quiet]);
   const notes = [523.25, 659.25, 783.99];
   const hearCard = (i: number) => { setLook(i); if (!quiet) playHoverNote(notes[i]); };
   const [mood, setMood] = useState(0);
@@ -260,6 +297,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   const close = () => { dialog.current?.close(); setSelected(null); };
   const write = (value: string) => { s.setMonthReview(month, noteKey, value); setSaved(false); };
 
+  const pose: Pose = flash ?? (teaching || look !== null ? 'happy' : gaze);
   return <main ref={home} className={`mg-home ${quiet || reduced ? 'mg-still' : ''} ${leaving ? 'hs-leaving' : ''}`} style={{ fontFamily: FONT }}>
     <DailyWelcome />
     {askAge && <AgePopup onDone={() => setAskAge(false)} />}
@@ -273,9 +311,10 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     {/* Wide screens: the guide is pinned to the window's right-most edge, outside the scaled stage. */}
     <div className="hs-wide">
       <div className="hs-bubble hs-wide-bubble" aria-live="polite">{teaching ? <>{teaching}<small>Tap me again for another one.</small></> : look !== null ? CARD_LINES[look] : greeting(hour)}</div>
-      <button className={`hs-wide-boy ${look !== null ? `hs-look-${look + 1}` : ''} ${teaching ? 'mg-boy-said' : ''} ${hop ? (hop % 2 ? 'hs-hop-a' : 'hs-hop-b') : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you"><img src="/assets/home/boy@640.webp" alt="" /><span className="mg-tapme hs-tapme" aria-hidden="true">Tap me</span></button>
+      <button ref={boyBtn} className={`hs-wide-boy ${look !== null ? `hs-look-${look + 1}` : ''} ${teaching ? 'mg-boy-said' : ''} ${hop ? (hop % 2 ? 'hs-hop-a' : 'hs-hop-b') : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you"><BoyPoses pose={pose} /><span className="mg-tapme hs-tapme" aria-hidden="true">Tap me</span></button>
     </div>
     <div className="hs-stage">
+      <div className="hs-bg-m" aria-hidden="true">{PHONE_LANTERNS.map(([x, y], i) => <i key={i} className="hs-glow-m" style={{ left: `${x * 100}%`, top: `${y * 100}%`, animationDelay: `${i * 0.9}s` }} />)}</div>
       <header className="mg-top">
         <div className="mg-brand">
           <button className="mg-logo" onClick={onExitGym} aria-label="Leave Mind Gym">Mind<span>Gym</span><small>A BRIGHTER<br />YOU INSIDE</small></button>
@@ -291,7 +330,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
       </header>
 
       {/* Phone only: a standing boy at the left edge, fixed to the screen. */}
-      <button className={`hs-side hs-side-l ${teaching ? 'mg-boy-said' : ''} ${hop ? (hop % 2 ? 'hs-hop-a' : 'hs-hop-b') : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you"><img src="/assets/home/boy@640.webp" alt="" /><span className="mg-tapme hs-tapme" aria-hidden="true">Tap me</span></button>
+      <button className={`hs-side hs-side-l ${teaching ? 'mg-boy-said' : ''} ${hop ? (hop % 2 ? 'hs-hop-a' : 'hs-hop-b') : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you"><BoyPoses pose={pose} /><span className="mg-tapme hs-tapme" aria-hidden="true">Tap me</span></button>
       <section className="hs-guide" aria-label="Your guide">
         <div className="hs-bubble" aria-live="polite">{teaching ? <>{teaching}<small>Tap me again for another one.</small></> : look !== null ? CARD_LINES[look] : greeting(hour)}</div>
         <button className={`hs-boy-wrap ${teaching ? 'mg-boy-said' : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you">

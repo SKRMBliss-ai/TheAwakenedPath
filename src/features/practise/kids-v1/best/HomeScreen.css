@@ -984,8 +984,27 @@
 @media(min-width:761px){.hs-sofa{display:none!important}} /* the 21:9 art has no sofa to light up */
 
 /* The star beanbag belongs to My Corner: it sits beside the sign and lights up with it. */
-.hs-bean{position:absolute;left:-47%;bottom:10%;width:60%;height:auto;pointer-events:none;filter:drop-shadow(0 .6cqw .8cqw #1a0b3caa);transition:transform .3s ease,filter .3s ease;transform-origin:50% 100%}
+.hs-bean{position:absolute;left:-60%;bottom:8%;width:86%;z-index:-1;height:auto;pointer-events:none;filter:drop-shadow(0 .6cqw .8cqw #1a0b3caa);transition:transform .3s ease,filter .3s ease;transform-origin:50% 100%}
 .hs-corner:hover .hs-bean,.hs-corner:focus-visible .hs-bean{transform:scale(1.06) translateY(-2%);filter:brightness(1.18) saturate(1.1) drop-shadow(0 0 1.4cqw #ffd98acc) drop-shadow(0 .6cqw .8cqw #1a0b3caa)}
 .hs-corner:hover,.hs-corner:focus-visible{transform:none}
 .mg-still .hs-bean{transition:none}
 @media(max-width:760px),(max-aspect-ratio:1/1){.hs-bean{display:none}}
+
+/* Expressions: the resting picture sets the size; each pose is stacked above and faded in. */
+.hs-poses{position:relative;display:block;width:100%}
+.hs-poses img{display:block;width:100%;height:auto}
+.hs-poses img.p{position:absolute;left:0;top:0;opacity:0;transition:opacity .16s ease-out}
+.hs-poses img.p.on{opacity:1}
+.mg-still .hs-poses img.p{transition:none}
+
+/* Phone lantern flicker: warm glows laid over the painted lanterns. */
+.hs-bg-m{display:none}
+@media(max-width:760px),(max-aspect-ratio:1/1){
+  .hs-bg-m{display:block;position:fixed;inset:0;z-index:0;pointer-events:none}
+  .hs-glow-m{position:absolute;width:30vw;aspect-ratio:1;translate:-50% -50%;border-radius:50%;mix-blend-mode:screen;
+    background:radial-gradient(circle,#ffc65ecc 0,#ff9a3a66 36%,transparent 68%);animation:hs-flicker 3.1s ease-in-out infinite}
+}
+.mg-still .hs-glow-m{animation:none}
+@media(prefers-reduced-motion:reduce){.hs-glow-m{animation:none}}
+/* A touch livelier on both layouts. */
+@keyframes hs-flicker{0%,100%{opacity:.7;scale:1}12%{opacity:1;scale:1.09}27%{opacity:.62;scale:.95}41%{opacity:.95;scale:1.05}58%{opacity:.72;scale:.97}74%{opacity:1;scale:1.08}88%{opacity:.8;scale:1}}
