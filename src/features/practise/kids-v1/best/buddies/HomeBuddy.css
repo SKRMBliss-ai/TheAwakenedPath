@@ -3,7 +3,7 @@
 .hb-hud-wrap { position: relative; display: grid; justify-items: stretch; gap: 6px; pointer-events: auto; }
 .hb-hud {
   position: relative; display: flex; align-items: center; gap: 10px; min-width: 240px; padding: 8px 14px 8px 8px; border-radius: 22px; text-align: left;
-  background: #1a1046b8; border: 1.5px solid #ffd45c99; color: #fff; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  background: #1a104660; border: 1.5px solid #ffd45c99; color: #fff; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
   box-shadow: 0 8px 22px #0b041866, inset 0 1px 0 #ffffff26; transition: transform .2s, box-shadow .2s;
 }
 .hb-hud > span { position: relative; pointer-events: none; }
