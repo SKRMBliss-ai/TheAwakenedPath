@@ -634,6 +634,7 @@
     radial-gradient(ellipse at 50% 62%,#ffb067 0,#c0629f 22%,#5b3aa8 48%,#271a63 80%);}
 .hs-stage .mg-top{inset:1.6% 1.4% auto}
 .hs-stage .mg-logo{font-size:calc(var(--u)*3.2)}
+.hs-stage:before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;-webkit-backdrop-filter:blur(1.4px);backdrop-filter:blur(1.4px);background:linear-gradient(#150a3022,#150a3030 55%,#150a3048)}
 .hs-guide{position:absolute;inset:0;pointer-events:none;z-index:3}
 .hs-bubble{position:absolute;left:57.8%;top:13.5%;width:17.4%;min-height:12%;display:grid;place-items:center;padding:1% 1.4%;text-align:center;
   background:#fffdf6;color:#1f2a9c;border-radius:calc(var(--u)*2.4);font-weight:800;font-size:calc(var(--u)*1.7);line-height:1.2;box-shadow:0 .5cqw 1.6cqw #1a0b4a66}
