@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { SCENE_MOODS, roomArt, storageFallback, type RoomConfig } from '../rooms';
 import { FONT, Scrim } from './chrome';
@@ -59,6 +59,43 @@ const SETTLE_MS = 3000;
  */
 const FEATHER_MASK = 'radial-gradient(ellipse 86% 90% at 50% 50%, #000 58%, transparent 100%)';
 
+
+/**
+ * HOVER BLUR — the site-wide rule for web: the room's backdrop goes soft while a
+ * pointer is over something a child can press, so the foreground reads clearly.
+ *
+ * Only where there is a real hover (not touch), never in the quiet state, and
+ * never for the one room whose painting IS the control (contain without
+ * feather — the Body Detective), where blurring it would blur the thing a child
+ * is being asked to point at. Listens on the room's parent so it only reacts to
+ * that room's own controls.
+ */
+const PRESSABLE = 'button, a[href], [role="button"], summary, input, textarea, select, label';
+function useHoverBlur(root: React.RefObject<HTMLDivElement | null>, enabled: boolean) {
+  const [hot, setHot] = useState(false);
+  useEffect(() => {
+    if (!enabled || typeof window === 'undefined' || !window.matchMedia('(hover: hover)').matches) return;
+    const host = root.current?.parentElement;
+    if (!host) return;
+    const over = (e: Event) => {
+      const el = (e.target as Element | null)?.closest?.(PRESSABLE);
+      setHot(!!el && host.contains(el) && !root.current!.contains(el));
+    };
+    const leave = () => setHot(false);
+    host.addEventListener('pointerover', over);
+    host.addEventListener('pointerleave', leave);
+    host.addEventListener('focusin', over);
+    host.addEventListener('focusout', leave);
+    return () => {
+      host.removeEventListener('pointerover', over);
+      host.removeEventListener('pointerleave', leave);
+      host.removeEventListener('focusin', over);
+      host.removeEventListener('focusout', leave);
+    };
+  }, [root, enabled]);
+  return hot;
+}
+
 export function RoomScene({
   room,
   dim = DIM.content,
@@ -114,6 +151,8 @@ export function RoomScene({
 }) {
   const mood = SCENE_MOODS[room.scene];
   const quiet = useQuiet();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const hot = useHoverBlur(rootRef, !quiet && !(fit === 'contain' && !feather));
 
   /* Starts undimmed and settles. Keyed off the mount, so walking into a room
      restarts it and changing the dim mid-stay (the games dim further) does
@@ -141,7 +180,7 @@ export function RoomScene({
   }, [room.scene, quiet]);
 
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+    <div ref={rootRef} aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
       {/* Ground. Under painted art too — it shows through the edges on a
           wide screen where the art can't reach, and it stops the page
           flashing white before the image decodes. */}
@@ -256,6 +295,18 @@ export function RoomScene({
         room in the building anyway. A prop that says none should mean none.
       */}
       {dim > 0 && <Scrim room={room} on={settled} />}
+
+      {/* The hover veil: a light blur and tint, on only while something is hovered. */}
+      <div
+        className="absolute inset-0"
+        style={{
+          opacity: hot ? 1 : 0,
+          transition: 'opacity 350ms ease',
+          WebkitBackdropFilter: 'blur(3px)',
+          backdropFilter: 'blur(3px)',
+          background: 'linear-gradient(rgba(21,10,48,0.16), rgba(21,10,48,0.3))',
+        }}
+      />
     </div>
   );
 }
