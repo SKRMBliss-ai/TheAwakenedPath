@@ -226,7 +226,7 @@ export function GamesRoom({ room, pillar, onExit, onGrownUp }: {
 
   /* Where the boy floats by default — sitting on the cushions at the bottom left —
      until a child drags him somewhere else, which then sticks for good. */
-  const boyFloat = useFloatingPosition('games-room:boy', { xPct: 9, yPct: 70 });
+  const boyFloat = useFloatingPosition('games-room:boy', { xPct: 3, yPct: 72 });
 
   /*
     IDLE BLUR — after 3 seconds without interaction the scenery, cast, themes
