@@ -674,10 +674,10 @@
 .hs-plain{display:none}
 @media(max-width:760px){
   .mg-home{display:block}
-  .hs-stage{--u:3.58vw;container-type:normal;width:100%;aspect-ratio:auto;min-height:100svh;display:flex;flex-direction:column;align-items:center;gap:3.2vw;padding:28vw 0 24vw;overflow:visible;background-size:cover;background-attachment:fixed}
-  .hs-guide{position:relative;inset:auto;width:100%;height:45vw;flex:none}
+  .hs-stage{--u:3.58vw;container-type:normal;width:100%;aspect-ratio:auto;min-height:100svh;display:flex;flex-direction:column;align-items:center;gap:3.2vw;padding:28vw 0 24vw;overflow:visible;background:url('/mind-gym/home/Phone/PhoneMainScreenBackground.webp') center top/cover no-repeat fixed,linear-gradient(#2a1a6e 0,#5b3aa8 26%,#c0629f 44%,#ffb067 51%,#6b3a2e 55%,#4a2a3a 78%,#7a4a2a 100%) fixed}
+  .hs-guide{position:relative;inset:auto;width:100%;height:max(40vw,calc(39.6svh - 28vw));flex:none}
   .hs-bubble{left:58%;top:4vw;width:38%;min-height:0;font-size:3.5vw;padding:2vw;border-radius:5vw}.hs-bubble:before{left:-2.4vw;bottom:24%;border-width:2vw}
-  .hs-stage .hs-boy{left:25%;top:40%;width:42%}.hs-chirpy{left:6%;top:58%;width:18%}
+  .hs-stage .hs-boy{left:25%;top:auto;bottom:-1.8vw;width:42%}.hs-chirpy{left:6%;top:auto;bottom:-1.5vw;width:18%}
   .hs-card{position:relative;left:auto!important;top:auto;width:92vw;aspect-ratio:auto;flex:none;display:grid;grid-template-columns:27vw 1fr 13vw;grid-template-areas:"icon title go" "icon sub go";align-items:center;column-gap:2vw;min-height:25vw;padding:3vw 3vw 3vw 0;border-radius:4vw;border:.8vw solid #8a5424;background:linear-gradient(#fbecc6,#ecd49c);box-shadow:0 1.2vw 3vw #0007,inset 0 0 0 .5vw #c98f4a}
   .hs-card>*{position:static}
   .hs-card-art{display:none}
@@ -690,7 +690,7 @@
   .hs-go:before{content:'';position:absolute;inset:0;z-index:1}
   .hs-go:after{content:'→';font-size:6.4vw;line-height:1;color:#fff}
   .hs-today{position:absolute;left:auto;right:2vw;top:-3vw;width:auto;font-size:3vw;padding:1.2vw 3vw;z-index:2}
-  .hs-corner{position:relative;left:auto;bottom:auto;width:70vw;flex:none;margin:0 0 0 auto}.hs-corner b{font-size:6vw}.hs-corner small{font-size:3vw}
+  .hs-corner{position:relative;left:auto;bottom:auto;width:70vw;flex:none;margin:0 auto 0 3vw}.hs-corner b{font-size:6vw}.hs-corner small{font-size:3vw}
   .hs-stage .mg-safety{right:12px;bottom:14px;position:fixed}.hs-stage .mg-safety button{font-size:12px}
   .hs-stage .mg-logo{font-size:30px}
 }
