@@ -1034,7 +1034,7 @@
 /* ===== WHAT CAN I PRESS? Gentle invitations, in turn ===== */
 @keyframes hs-invite{0%,26%,100%{scale:1;box-shadow:0 0 1.2cqw #fff0}8%{scale:1.07;filter:brightness(1.25)}16%{scale:1;filter:brightness(1.1)}}
 @keyframes hs-ring{0%,30%,100%{opacity:0;scale:.9}6%{opacity:.9}24%{opacity:0;scale:1.22}}
-.hs-go{position:relative;animation:hs-invite 9s ease-in-out infinite;animation-delay:var(--w,0s)}
+.hs-go{animation:hs-invite 9s ease-in-out infinite;animation-delay:var(--w,0s)}
 .hs-go:after{pointer-events:none}
 .hs-card-1 .hs-go{--w:0s}.hs-card-2 .hs-go{--w:3s}.hs-card-3 .hs-go{--w:6s}
 .hs-card:hover .hs-go,.hs-card:focus-within .hs-go{animation:none}
@@ -1049,7 +1049,7 @@
 .mg-sound:hover,.mg-sound:focus-visible,.hb-hud-open:hover{filter:brightness(1.2)}
 .mg-sound,.hb-hud-open{cursor:pointer}
 @media(max-width:760px),(max-aspect-ratio:1/1){
-  .hs-tag{bottom:-4vw;font-size:2.6vw}
+  .hs-tag{top:-5vw;bottom:auto;left:60%;font-size:2.6vw}
   .hs-go{animation:hs-invite 9s ease-in-out infinite;animation-delay:var(--w,0s)}
 }
 .mg-still .hs-go,.mg-still .hs-tag,.mg-still .hs-corner,.mg-still .hs-card.hs-hint{animation:none!important}
