@@ -13,6 +13,7 @@ import { DailyWelcome } from './DailyWelcome';
 import { AgePopup } from './AgePopup';
 import { BadgeSlot } from './ChildBadge';
 import { bandUnknown } from '../kit/band';
+import { chirpySprite, type ChirpyPose } from '../ui/sprites';
 import * as sound from '../kit/sound';
 import { liveAffirmations } from '../kit/affirmations';
 import { useLiveContent } from '../kit/liveContent';
@@ -24,6 +25,7 @@ import './HomeScreen.css';
 import './DiaryNudge.css';
 
 const A = '/mind-gym/home/';
+const CHIRPY_MOODS: ChirpyPose[] = ['curious', 'calm', 'excited', 'thinking', 'hopeful', 'confused', 'sad', 'calm'];
 
 /** A card title bent along the arch of its ribbon. */
 function ArcTitle({ id, children }: { id: string; children: string }) {
@@ -103,6 +105,12 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     return () => clearInterval(timer);
   }, []);
   const [teaching, setTeaching] = useState<string | null>(null);
+  const [mood, setMood] = useState(0);
+  useEffect(() => {
+    if (quiet || reduced) return;
+    const t = window.setInterval(() => setMood((m) => (m + 1) % CHIRPY_MOODS.length), 3500);
+    return () => window.clearInterval(t);
+  }, [quiet, reduced]);
   const lastTeaching = useRef('');
   /* A kind word stays in the bubble for a while, then the bubble goes back to
      showing the way. */
@@ -183,12 +191,14 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
       </header>
 
       {/* Phone only: a standing boy at the left edge, fixed to the screen. */}
-      <button className="hs-side hs-side-l" onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you"><img src="/assets/home/boy@640.webp" alt="" /></button>
+      <button className={`hs-side hs-side-l ${teaching ? 'mg-boy-said' : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you"><img src="/assets/home/boy@640.webp" alt="" /><span className="mg-tapme hs-tapme" aria-hidden="true">Tap me</span></button>
       <section className="hs-guide" aria-label="Your guide">
-        <div className="hs-bubble" aria-live="polite">{teaching ?? 'What would you like to do today?'}</div>
+        <div className="hs-bubble" aria-live="polite">{teaching ? <>{teaching}<small>Tap me again for another one.</small></> : 'What would you like to do today?'}</div>
         <button className={`hs-boy-wrap ${teaching ? 'mg-boy-said' : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you">
           <img className="hs-boy mg-boy" src={`${A}boy_fullbody.webp`} alt="Your red-cap explorer" />
-          <img className="hs-chirpy" src={`${A}chirpy.webp`} alt="Chirpy" />
+          <img className="hs-chirpy mg-chirpy" src={chirpySprite(teaching ? 'excited' : CHIRPY_MOODS[mood])} alt="Chirpy" />
+          <span className="mg-chirpy-line hs-chirpy-line">I’m here<br />with you!<br />♡ Chirpy!</span>
+          <span className="mg-tapme hs-tapme" aria-hidden="true">Tap me</span>
         </button>
       </section>
 

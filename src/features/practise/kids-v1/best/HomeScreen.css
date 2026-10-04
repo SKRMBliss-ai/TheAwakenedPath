@@ -643,7 +643,7 @@
 .hs-bubble:before{content:'';position:absolute;left:-1.6cqw;bottom:20%;border:1cqw solid transparent;border-right-color:#fffdf6;border-left:0;transform:rotate(-12deg)}
 .hs-boy-wrap{position:absolute;inset:0;border:0;background:none;padding:0;pointer-events:none}
 .hs-stage .hs-boy{position:absolute;left:40.5%;top:11.6%;width:20.5%;height:auto;bottom:auto;object-fit:contain;pointer-events:auto;cursor:pointer}
-.hs-chirpy{position:absolute;left:36.8%;top:22.6%;width:8.9%;pointer-events:auto;cursor:pointer;filter:drop-shadow(0 .3cqw .5cqw #25102855);animation:hs-bob 3.2s ease-in-out infinite}
+.hs-chirpy{position:absolute;left:37.4%;top:22.6%;width:7.4%;pointer-events:auto;cursor:pointer;filter:drop-shadow(0 .3cqw .5cqw #25102855);animation:hs-bob 3.2s ease-in-out infinite}
 @keyframes hs-bob{50%{transform:translateY(-2.5%)}}
 .hs-card{position:absolute;top:35.5%;width:24%;aspect-ratio:1212/1298;z-index:2;color:#fff}
 .hs-card-1{left:13.3%}.hs-card-2{left:38.9%}.hs-card-3{left:64.7%}
@@ -751,3 +751,20 @@
 .hs-rooms .mg-open-invitation{gap:10px;padding:12px;border-radius:12px}
 .hs-rooms .mg-open-invitation p{font-size:clamp(15px,1.5vw,21px);line-height:1.2}
 .hs-rooms .mg-open-invitation button{min-height:46px;font-size:clamp(15px,1.3vw,19px)}
+
+/* The guide keeps his old behaviour: a shift of weight that quickens on hover,
+   Chirpy's bobbing and changing moods, the "Tap me" label and his saying line. */
+.hs-boy-wrap:hover .hs-boy,.hs-boy-wrap:focus-visible .hs-boy{animation-duration:1.5s}
+.hs-boy-said .hs-boy,.mg-boy-said .hs-boy{animation-duration:1.1s}
+.hs-chirpy{animation:mg-chirpy-bob 2.4s ease-in-out infinite;transition:opacity .3s}
+.hs-chirpy-line{position:absolute;left:33.5%;top:15%;right:auto;transform:rotate(-12deg);font-size:calc(var(--u)*1.05);pointer-events:none;color:#fff;white-space:nowrap}
+.hs-tapme{left:50.5%;top:34.5%;bottom:auto;font-size:calc(var(--u)*.95);pointer-events:none}
+.hs-bubble small{display:block;margin-top:.5cqw;font-size:.62em;font-weight:700;opacity:.75}
+.hs-side{cursor:pointer}
+.hs-side img{animation:mg-shift 3.4s ease-in-out infinite;transform-origin:50% 100%}
+.hs-side:hover img,.hs-side:focus-visible img{animation-duration:1.5s}
+.hs-side.mg-boy-said img{animation-duration:1.1s}
+.hs-side .hs-tapme{position:absolute;left:58%;bottom:7vw;top:auto;font-size:3vw;padding:1vw 2.4vw;translate:-50% 0}
+.mg-still .hs-chirpy,.mg-still .hs-side img{animation:none}
+@media(prefers-reduced-motion:reduce){.hs-chirpy,.hs-side img{animation:none!important}}
+@media(max-width:760px){.hs-chirpy-line{display:none}.hs-bubble small{font-size:.6em}}
