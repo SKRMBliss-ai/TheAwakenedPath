@@ -623,3 +623,58 @@
 .mg-feelings .mg-start{width:72%;min-height:40px;font-size:clamp(13px,1.1vw,18px);border-width:1.5px;padding:4px 10px}
 .mg-feelings .mg-start span{font-size:20px;margin-left:5px}
 @media(max-width:760px){.mg-feelings.mg-mobile-open .mg-start{width:70%;font-size:18px;min-height:44px}}
+
+/* ===== HOME SCREEN REBUILD: three cards on the treehouse deck =====
+   A 16:9 stage; everything is placed in % of it and sized in --u (1% of its
+   width), so the picture scales as one piece. The art in environment.webp has
+   a transparent sky, so the dusk is painted behind it here. */
+.mg-home{display:grid;place-items:center;background:#1b0f33}
+.hs-stage{--u:1cqw;position:relative;container-type:inline-size;width:min(100vw,calc(100svh*16/9));aspect-ratio:16/9;overflow:hidden;
+  background:url('/mind-gym/home/environment.webp') center/100% 100% no-repeat,
+    radial-gradient(ellipse at 50% 62%,#ffb067 0,#c0629f 22%,#5b3aa8 48%,#271a63 80%);}
+.hs-stage .mg-top{inset:1.6% 1.4% auto}
+.hs-stage .mg-logo{font-size:calc(var(--u)*3.2)}
+.hs-guide{position:absolute;inset:0;pointer-events:none;z-index:3}
+.hs-bubble{position:absolute;left:57.8%;top:15.5%;width:17.4%;min-height:12%;display:grid;place-items:center;padding:1% 1.4%;text-align:center;
+  background:#fffdf6;color:#1f2a9c;border-radius:calc(var(--u)*2.4);font-weight:800;font-size:calc(var(--u)*1.7);line-height:1.2;box-shadow:0 .5cqw 1.6cqw #1a0b4a66}
+.hs-bubble:before{content:'';position:absolute;left:-1.6cqw;bottom:20%;border:1cqw solid transparent;border-right-color:#fffdf6;border-left:0;transform:rotate(-12deg)}
+.hs-boy-wrap{position:absolute;inset:0;border:0;background:none;padding:0;pointer-events:none}
+.hs-stage .hs-boy{position:absolute;left:40.5%;top:13%;width:20.5%;height:auto;bottom:auto;object-fit:contain;pointer-events:auto;cursor:pointer}
+.hs-chirpy{position:absolute;left:36.8%;top:24.2%;width:8.9%;pointer-events:auto;cursor:pointer;filter:drop-shadow(0 .3cqw .5cqw #25102855);animation:hs-bob 3.2s ease-in-out infinite}
+@keyframes hs-bob{50%{transform:translateY(-2.5%)}}
+.hs-card{position:absolute;top:35.5%;width:24%;aspect-ratio:1212/1298;z-index:2;color:#fff}
+.hs-card-1{left:13.3%}.hs-card-2{left:38.9%}.hs-card-3{left:64.7%}
+.hs-card>*{position:absolute}
+.hs-card-art{inset:0;width:100%;height:100%;pointer-events:none}
+.hs-card-icon{left:50%;top:9%;height:29%;width:auto;max-width:56%;object-fit:contain;transform:translateX(-50%);pointer-events:none;filter:drop-shadow(0 0 .8cqw #ffd87a88)}
+.hs-card-3 .hs-card-icon{height:auto;width:62%;max-width:none;top:11%}
+.hs-card h2{left:9%;width:82%;top:42.5%;height:11%;display:grid;place-items:center;margin:0;color:#2b2a8f;font-weight:900;font-size:calc(var(--u)*1.8);line-height:1;text-align:center;white-space:nowrap;transform:rotate(-1.2deg)}
+.hs-card p{left:8%;width:84%;top:60%;margin:0;text-align:center;font-weight:700;font-size:calc(var(--u)*1.15);line-height:1.25;text-shadow:0 .1cqw .3cqw #2a1206}
+.hs-go{left:11%;width:78%;top:76%;height:12%;border-radius:99px;color:#fff;font-weight:900;font-size:calc(var(--u)*1.55);border:.2cqw solid #fff8;cursor:pointer}
+.hs-go-blue{background:linear-gradient(#3a7bff,#1a3fd0);box-shadow:0 0 1.2cqw #4f8dffcc,inset 0 0 .9cqw #7fb0ff}
+.hs-go-green{background:linear-gradient(#35d070,#15823c);box-shadow:0 0 1.2cqw #4cf08acc,inset 0 0 .9cqw #8cf5b0}
+.hs-go-purple{background:linear-gradient(#8f4aff,#5420c8);box-shadow:0 0 1.2cqw #a56bffcc,inset 0 0 .9cqw #c5a0ff}
+.hs-go:hover,.hs-go:focus-visible{transform:scale(1.04)}
+.hs-today{left:62%;top:-3%;width:54%;padding:2% 4%;border-radius:99px;background:linear-gradient(#ffe27a,#ffc94a);color:#4a2a05;font-weight:800;font-size:calc(var(--u)*1.1);line-height:1.15;box-shadow:0 .3cqw 1cqw #0006;pointer-events:none}
+.hs-today span{color:#e0368e;margin-right:.3cqw}
+.hs-corner{position:absolute;left:10.5%;bottom:-.5%;width:21%;aspect-ratio:1292/620;z-index:2;background:none;border:0;padding:0}
+.hs-corner img{position:absolute;inset:0;width:100%;height:100%}
+.hs-corner span{position:absolute;left:25%;width:58%;top:50%;height:32%;display:grid;align-content:center;justify-items:center;color:#2b2a8f;text-align:center}
+.hs-corner b{font-size:calc(var(--u)*1.9);line-height:1}.hs-corner small{font-size:calc(var(--u)*.95);font-weight:700}
+.hs-corner:hover,.hs-corner:focus-visible{transform:scale(1.04)}
+.hs-stage .mg-safety{position:absolute;right:1.4%;bottom:2%;left:auto}
+.hs-stage .mg-safety button{font-size:calc(var(--u)*1.2);min-height:0;padding:.9cqw 1.8cqw;background:#1d1446e6;border:1px solid #8f84d8}
+.hs-rooms{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:#12091dd9;backdrop-filter:blur(4px)}
+.hs-rooms .hs-rooms-panel{position:relative;display:block;inset:auto;right:auto;top:auto;width:min(1040px,96vw);height:min(94svh,820px);padding:14px 16px;border-radius:24px;background:linear-gradient(#3b2150,#20123a);border:2px solid #e3b667;box-shadow:0 12px 60px #000a}
+.hs-rooms-close{position:absolute;right:10px;top:8px;z-index:6;width:44px;height:44px;border:0;border-radius:50%;background:#39234fe8;color:#fff;font-size:28px}
+@media(max-width:760px){
+  .mg-home{display:block}
+  .hs-stage{--u:3.58vw;container-type:normal;width:100%;aspect-ratio:auto;min-height:100svh;display:flex;flex-direction:column;align-items:center;gap:6px;padding:130px 0 90px;overflow:visible;background-size:cover;background-attachment:fixed}
+  .hs-guide{position:relative;inset:auto;width:100%;height:78vw;flex:none}
+  .hs-bubble{left:6%;top:0;width:88%;font-size:5vw;border-radius:6vw;min-height:0}.hs-bubble:before{display:none}
+  .hs-stage .hs-boy{left:28%;top:30%;width:44%}.hs-chirpy{left:8%;top:54%;width:20%}
+  .hs-card{position:relative;left:auto!important;top:auto;width:86vw;flex:none;--u:3.58vw}
+  .hs-corner{position:relative;left:auto;bottom:auto;width:70vw;flex:none;margin-top:8px}.hs-corner b{font-size:6vw}.hs-corner small{font-size:3vw}
+  .hs-stage .mg-safety{right:12px;bottom:14px;position:fixed}.hs-stage .mg-safety button{font-size:12px}
+  .hs-stage .mg-logo{font-size:30px}
+}
