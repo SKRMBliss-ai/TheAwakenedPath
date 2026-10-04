@@ -12,6 +12,9 @@ import { BodyPortrait } from '../ui/BodyPortrait';
 import { BODY_ZONE_LABEL, type BodyZoneId } from '../ui/bodyZones';
 import { DrawingCanvas, type DrawingCanvasHandle } from '../ui/DrawingCanvas';
 import { THOUGHTS, MAYBES } from '../kit/checkinContent';
+import { SizeBalloons } from './SizeBalloons';
+import { band } from '../kit/band';
+import { FEELINGS } from '../../kids/checkin/content';
 import { STEADY, STEADY_GROWNUP } from '../kit/steady';
 import { Steady } from '../ui/Steady';
 import { FeelingBalls } from './FeelingBalls';
@@ -180,6 +183,8 @@ export interface DeepDiveAnswers {
   story?: string;
   eyes?: string;
   other?: string;
+  /** How big the feeling is, as a balloon id (bit, quite, really). Asked of younger children only. */
+  size?: string;
   /** What they drew of it, as a PNG data URL, when they made one. */
   drawing?: string;
 }
@@ -201,6 +206,9 @@ export function DeepDive({
   const [stepIndex, setStepIndex] = useState(0);
   const [answers, setAnswers] = useState<DeepDiveAnswers>({});
   const [bodyZones, setBodyZones] = useState<Set<BodyZoneId>>(new Set());
+  /** Younger children point first, then pop a balloon for how big it is. */
+  const [pendingBody, setPendingBody] = useState<string[] | null>(null);
+  const youngBody = band() !== 'older';
   /** Whether the mind's-story card is showing its other side. */
   const [turned, setTurned] = useState(false);
   /** Set the instant a feeling ball is tapped, so the room blooms with it. */
@@ -263,7 +271,13 @@ export function DeepDive({
 
   /** Chirpy's line on the body step, when the feeling has a usual home. */
   const bodySuggestion = step.id === 'body' ? suggestedBodyZone(answers.feeling) : null;
-  const bodyHint = bodySuggestion
+  const feelingHue = FEELINGS.find((f) => f.label.toLowerCase() === (answers.feeling ?? '').toLowerCase())?.hue ?? 270;
+  const feelingWord = (answers.feeling ?? 'feeling').toLowerCase();
+  const bodyHint = step.id === 'body' && youngBody && pendingBody
+    ? 'Is it big or small? Pop the balloon that is as big as your feeling.'
+    : step.id === 'body' && youngBody
+    ? `Where is that ${feelingWord}? Is it in your tummy? In your chest? Tap where it is.`
+    : bodySuggestion
     ? `Some people notice ${(answers.feeling ?? 'it').toLowerCase()} in their ${BODY_ZONE_LABEL[bodySuggestion]}. Where do you notice yours?`
     : null;
 
@@ -408,6 +422,7 @@ export function DeepDive({
                         onToggle={(z) => {
                           setBodyZones(new Set([z]));
                           sound.play('tap');
+                          if (youngBody) { setPendingBody([BODY_ZONE_LABEL[z]]); return; }
                           answer('body', [BODY_ZONE_LABEL[z]]);
                         }}
                       />
@@ -614,8 +629,15 @@ export function DeepDive({
                 : step.id === 'eyes' ? STEADY.situation
                 : null
               } />
-              <Question room={art}>{step.question}</Question>
-              {step.hint && <SceneLine>{step.hint}</SceneLine>}
+              <Question room={art}>{step.id === 'body' && youngBody && pendingBody ? 'How big is it?' : step.question}</Question>
+              {step.hint && !(step.id === 'body' && youngBody && pendingBody) && <SceneLine>{step.id === 'body' && youngBody ? 'Tap the spot on the picture.' : step.hint}</SceneLine>}
+              {step.id === 'body' && youngBody && pendingBody && (
+                <SizeBalloons hue={feelingHue} onPick={(sizeId) => {
+                  setAnswers((a) => ({ ...a, body: pendingBody, size: sizeId }));
+                  setPendingBody(null);
+                  setStepIndex((i) => i + 1);
+                }} />
+              )}
 
               {step.id === 'feeling' && (
                 <FeelingBalls
@@ -642,7 +664,7 @@ export function DeepDive({
                 than a button, because "I can't find it" is a true answer and
                 should not look like failing the step.
               */}
-              {step.id === 'body' && (
+              {step.id === 'body' && !pendingBody && (
                 <>
                   {/* BodyPortrait itself is NOT in here — it has to sit as a
                       full-screen sibling of RoomScene rather than inside this

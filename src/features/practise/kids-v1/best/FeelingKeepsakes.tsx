@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { FEELINGS } from '../../kids/checkin/content';
 import { agoLabel, loadCases, type Case } from '../kit/cases';
+import { SIZES } from '../kit/checkinContent';
 import * as sound from '../kit/sound';
 import './FeelingKeepsakes.css';
 
@@ -51,6 +52,7 @@ function Memory({ c, onClose }: { c: Case; onClose: () => void }) {
         <h2>The day I felt {c.feeling?.toLowerCase() ?? 'something'}</h2>
         <p className="fk-ago">{agoLabel(c.day)}</p>
         {c.drawing && <img className="fk-draw" src={c.drawing} alt="What I drew" />}
+        {c.size && <p><b>It felt</b> {SIZES.find((s) => s.id === c.size)?.label.toLowerCase() ?? c.size}.</p>}
         {c.body && c.body.length > 0 && <p><b>I felt it in my</b> {c.body.join(', ').toLowerCase()}.</p>}
         {c.story && <p><b>My mind said</b> “{c.story}”</p>}
         {c.eyes && <p><b>My eyes saw</b> {c.eyes}</p>}
