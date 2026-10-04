@@ -1021,7 +1021,7 @@
   .hs-lan .on{opacity:0}
   .mg-home:has(.hs-card:hover,.hs-card:focus-within,.hs-corner:hover,.hs-corner:focus-visible,.hs-wide-boy:hover) .hs-lan .on{opacity:1}
   .mg-home:has(.hs-card:hover,.hs-card:focus-within,.hs-corner:hover,.hs-corner:focus-visible,.hs-wide-boy:hover) .hs-lan .on{animation:hs-lit 3.1s ease-in-out infinite;animation-delay:var(--d)}
-  .hs-veil{background:linear-gradient(#150a3055,#150a3070 55%,#150a3099)!important}
+  .hs-veil{background:linear-gradient(#0a0524b3,#0a0524bf 55%,#0a0524d9)!important}
 }
 @keyframes hs-sway{0%,100%{rotate:-1.2deg}50%{rotate:1.2deg}}
 .mg-still .hs-lan,.mg-still .hs-lan .on{animation:none!important}
