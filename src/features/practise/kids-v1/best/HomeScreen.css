@@ -630,7 +630,7 @@
    a transparent sky, so the dusk is painted behind it here. */
 .mg-home{display:grid;place-items:center;background:#1b0f33}
 .hs-stage{--u:1cqw;position:relative;container-type:inline-size;width:min(100vw,calc(100svh*16/9));aspect-ratio:16/9;overflow:hidden;isolation:isolate}
-@media(min-width:761px){.hs-stage:after{content:'';position:absolute;inset:0;z-index:-1;background:url('/mind-gym/home/environment.webp') center/100% 100% no-repeat,
+@media(min-width:761px) and (min-aspect-ratio:1/1){.hs-stage:after{content:'';position:absolute;inset:0;z-index:-1;background:url('/mind-gym/home/environment.webp') center/100% 100% no-repeat,
     radial-gradient(ellipse at 50% 62%,#ffb067 0,#c0629f 22%,#5b3aa8 48%,#271a63 80%);}}
 .hs-stage .mg-top{inset:1.6% 1.4% auto}
 .hs-stage .mg-logo{font-size:calc(var(--u)*3.2)}
@@ -664,7 +664,7 @@
   filter:brightness(1.1) saturate(1.12)}
 .hs-stage:has(.hs-corner:hover,.hs-corner:focus-visible) .hs-sofa{opacity:1}
 .mg-still .hs-sofa{transition:none}
-@media(max-width:760px){.hs-sofa{display:none}}
+@media(max-width:760px),(max-aspect-ratio:1/1){.hs-sofa{display:none}}
 .hs-today{left:62%;top:-3%;width:54%;padding:2% 4%;border-radius:99px;background:linear-gradient(#ffe27a,#ffc94a);color:#4a2a05;font-weight:800;font-size:calc(var(--u)*1.1);line-height:1.15;box-shadow:0 .3cqw 1cqw #0006;pointer-events:none}
 .hs-today span{color:#e0368e;margin-right:.3cqw}
 .hs-corner{position:absolute;left:10.5%;bottom:-.5%;width:21%;aspect-ratio:1292/620;z-index:2;background:none;border:0;padding:0}
@@ -683,7 +683,7 @@
 .hs-arc text{fill:#2b2a8f;font-weight:900;font-size:7.8px;font-family:inherit}
 .hs-plain{display:none}
 .hs-side{display:none}
-@media(max-width:760px){
+@media(max-width:760px),(max-aspect-ratio:1/1){
   .mg-home{display:block}
   .hs-stage:after{display:none}
   .hs-stage{--u:3.58vw;container-type:normal;width:100%;aspect-ratio:auto;min-height:100svh;display:flex;flex-direction:column;align-items:center;gap:0;padding:28vw 0 4vw;overflow:visible;background:url('/mind-gym/home/Phone/PhoneMainScreenBackground.webp') center top/cover no-repeat fixed,linear-gradient(#2a1a6e 0,#5b3aa8 26%,#c0629f 44%,#ffb067 51%,#6b3a2e 55%,#4a2a3a 78%,#7a4a2a 100%) fixed}
@@ -747,7 +747,7 @@
 .hs-rooms .mg-shelf-note{align-self:end;justify-self:stretch;height:64%;margin:0 12px 18px;border-radius:10px}
 .hs-rooms .mg-shelf-note button{min-height:44px}
 
-@media(max-width:760px){
+@media(max-width:760px),(max-aspect-ratio:1/1){
   .hs-rooms .hs-rooms-panel{max-height:94svh;overflow:auto}
   .hs-rooms .mg-shelf{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,clamp(150px,22svh,200px))}
   .hs-rooms .mg-cabinet:nth-child(4n){box-shadow:inset -7px 0 0 #4a2814,inset -9px 0 8px -5px #0008}
@@ -774,11 +774,11 @@
 .hs-side .hs-tapme{position:absolute;left:58%;bottom:7vw;top:auto;font-size:3vw;padding:1vw 2.4vw;translate:-50% 0}
 .mg-still .hs-chirpy,.mg-still .hs-side img{animation:none}
 @media(prefers-reduced-motion:reduce){.hs-chirpy,.hs-side img{animation:none!important}}
-@media(max-width:760px){.hs-chirpy-line{display:none}.hs-bubble small{font-size:.6em}}
+@media(max-width:760px),(max-aspect-ratio:1/1){.hs-chirpy-line{display:none}.hs-bubble small{font-size:.6em}}
 
 /* Each card is lit on its own: the one under the pointer lifts and glows, its
    neighbours settle back, so it is always clear which one is about to open. */
-@media(min-width:761px){
+@media(min-width:761px) and (min-aspect-ratio:1/1){
   .hs-card{transition:transform .3s ease,filter .3s ease}
   .hs-card:hover,.hs-card:focus-within{transform:translateY(-1.2%) scale(1.045);z-index:4;filter:brightness(1.1) saturate(1.1) drop-shadow(0 0 1.4cqw #ffd98acc)}
   .hs-stage:has(.hs-card:hover,.hs-card:focus-within) .hs-card:not(:hover):not(:focus-within){filter:brightness(.7) saturate(.8);transform:scale(.97)}
@@ -796,7 +796,7 @@
 /* On a window wider than 16:9 the stage keeps its shape, and the scene is
    carried out to the edges with mirrored, sharp copies of itself (the art's
    own branches and lanterns continue), so the picture runs full bleed. */
-@media(min-width:761px){
+@media(min-width:761px) and (min-aspect-ratio:1/1){
   .mg-home{--W:min(100vw,calc(100svh*16/9));position:relative;overflow:hidden;isolation:isolate}
   .mg-home:before,.mg-home:after{content:'';position:absolute;z-index:-2;pointer-events:none;top:50%;width:var(--W);height:calc(var(--W)*9/16);
     background:url('/mind-gym/home/environment.webp') center/100% 100% no-repeat,radial-gradient(ellipse at 50% 62%,#ffb067 0,#c0629f 22%,#5b3aa8 48%,#271a63 80%)}
@@ -813,7 +813,7 @@
 /* The hover blur is full bleed too: this veil spans the whole window (the
    mirrored sides included); the stage blurs its own scene on top of it. */
 .hs-veil{display:none}
-@media(min-width:761px){
+@media(min-width:761px) and (min-aspect-ratio:1/1){
   .hs-veil{display:block;position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:0;transition:opacity .35s ease;
     -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);background:linear-gradient(#150a3033,#150a3045 55%,#150a3066)}
   .mg-home:has(.hs-card:hover,.hs-card:focus-within,.hs-corner:hover,.hs-corner:focus-visible) .hs-veil{opacity:1}
@@ -822,7 +822,7 @@
 
 /* WEB: the standing boy (Chirpy on his shoulder) stands on the right at the
    old layout's size; the cards move left to make room, the bubble beside him. */
-@media(min-width:761px){
+@media(min-width:761px) and (min-aspect-ratio:1/1){
   .hs-boy-wrap{display:none}
   .hs-side{display:block;position:absolute;right:.5%;bottom:-2%;width:23%;z-index:5;padding:0;border:0;background:none}
   .hs-side img{display:block;width:100%;height:auto;filter:drop-shadow(0 .6cqw .9cqw #1a0b3caa)}
@@ -832,20 +832,20 @@
   .hs-bubble:before{left:auto;right:12%;top:100%;bottom:auto;border:1cqw solid transparent;border-top-color:#fffdf6;border-bottom:0;transform:none}
   .hs-chirpy,.hs-chirpy-line{display:none}
 }
-@media(min-width:761px){
+@media(min-width:761px) and (min-aspect-ratio:1/1){
   .hs-side{right:0;bottom:-3%;width:29%}
   .hs-bubble{right:23.5%;top:19%;width:16.5%}
   .hs-bubble:before{right:-1.5cqw;top:30%;left:auto;bottom:auto;border:1cqw solid transparent;border-left-color:#fffdf6;border-right:0;transform:rotate(12deg)}
   .hs-stage .mg-safety{right:30%;bottom:2%}
 }
-@media(min-width:761px){
+@media(min-width:761px) and (min-aspect-ratio:1/1){
   .hs-side{right:-5%}
   .hs-bubble{right:19%}
   .hs-stage .mg-safety{right:26%}
 }
 
 .hs-wide{display:none}
-@media(min-width:761px){
+@media(min-width:761px) and (min-aspect-ratio:1/1){
   .hs-side,.hs-stage .hs-bubble:not(.hs-wide-bubble){display:none}
   .hs-wide{display:block;position:fixed;inset:0;z-index:5;pointer-events:none;--S:calc(var(--W)/100)}
   .hs-wide-boy{position:absolute;right:-4.8vw;bottom:calc(var(--S)*-1.7);width:calc(var(--S)*29);padding:0;border:0;background:none;cursor:pointer;pointer-events:auto}
@@ -860,11 +860,11 @@
   .mg-still .hs-wide-boy img{animation:none}
   .hs-stage .mg-safety{right:26%}
 }
-@media(min-width:761px) and (prefers-reduced-motion:reduce){.hs-wide-boy img{animation:none!important}}
+@media(min-width:761px) and (min-aspect-ratio:1/1) and (prefers-reduced-motion:reduce){.hs-wide-boy img{animation:none!important}}
 
 /* WEB: the three cards are centred on the screen again (slightly smaller so the
    boy at the right edge only brushes the last one). */
-@media(min-width:761px){
+@media(min-width:761px) and (min-aspect-ratio:1/1){
   .hs-card{transform:scale(.9)}
   .hs-card-1{left:14%}.hs-card-2{left:38%}.hs-card-3{left:62%}
   .hs-card:hover,.hs-card:focus-within{transform:translateY(-1.2%) scale(.94)}
@@ -874,7 +874,7 @@
 /* ===== WEB: the new 21:9 environment, full bleed =====
    The picture covers the whole window (no mirrored sides); the 16:9 stage of
    cards and characters sits over its middle. */
-@media(min-width:761px){
+@media(min-width:761px) and (min-aspect-ratio:1/1){
   .mg-home{--iw:max(100vw,calc(100svh*1916/821));--ih:calc(var(--iw)*821/1916);
     background:url('/mind-gym/home/environment.webp') center/cover no-repeat,#271a63}
   .mg-home:before,.mg-home:after{display:none}
@@ -885,14 +885,14 @@
     -webkit-mask-image:radial-gradient(ellipse calc(var(--iw)*.15) calc(var(--ih)*.22) at calc(50vw - var(--iw)/2 + var(--iw)*.135) calc(50svh - var(--ih)/2 + var(--ih)*.72),#000 55%,transparent 100%);
     mask-image:radial-gradient(ellipse calc(var(--iw)*.15) calc(var(--ih)*.22) at calc(50vw - var(--iw)/2 + var(--iw)*.135) calc(50svh - var(--ih)/2 + var(--ih)*.72),#000 55%,transparent 100%)}
 }
-@media(min-width:761px){
+@media(min-width:761px) and (min-aspect-ratio:1/1){
   .hs-sofa{z-index:0;left:0;top:0;width:100vw;height:100svh}
   .mg-home:has(.hs-corner:hover,.hs-corner:focus-visible) .hs-sofa{opacity:1}
 }
 
 /* ===== 1. A LIVING SCENE ===== */
 .hs-bg{display:none}
-@media(min-width:761px){
+@media(min-width:761px) and (min-aspect-ratio:1/1){
   .mg-home{--px:0;--py:0;background:#271a63}
   .hs-bg{display:block;position:fixed;left:50%;top:50%;width:var(--iw);height:var(--ih);z-index:-3;pointer-events:none;
     background:url('/mind-gym/home/environment.webp') center/100% 100% no-repeat;
@@ -925,7 +925,7 @@
 
 /* ===== 2. CHARACTER ACTING ===== */
 .hs-tod{display:none}
-@media(min-width:761px){
+@media(min-width:761px) and (min-aspect-ratio:1/1){
   .hs-tod{display:block;position:fixed;inset:0;z-index:-2;pointer-events:none}
   .hs-wide-boy{transform-origin:50% 100%;rotate:0deg;transition:rotate .45s cubic-bezier(.2,.8,.25,1)}
   .hs-wide-boy.hs-look-1{rotate:-4deg}.hs-wide-boy.hs-look-2{rotate:-3deg}.hs-wide-boy.hs-look-3{rotate:-1.8deg}
@@ -955,7 +955,7 @@
 .hs-leaving .hs-stage{transform:scale(1.07);transition:transform .32s cubic-bezier(.4,0,.2,1)}
 .hs-leaving{opacity:.1}
 .hs-leaving .hs-bg{transform:translate(-50%,-50%) scale(1.14)!important;transition:transform .32s cubic-bezier(.4,0,.2,1)}
-@media(max-width:760px){.hs-burst i{width:2vw;height:2vw;left:-1vw;top:-1vw}@keyframes hs-spark{from{transform:rotate(var(--a)) translateX(0) scale(1);opacity:1}to{transform:rotate(var(--a)) translateX(16vw) scale(.2);opacity:0}}
+@media(max-width:760px),(max-aspect-ratio:1/1){.hs-burst i{width:2vw;height:2vw;left:-1vw;top:-1vw}@keyframes hs-spark{from{transform:rotate(var(--a)) translateX(0) scale(1);opacity:1}to{transform:rotate(var(--a)) translateX(16vw) scale(.2);opacity:0}}
   .hs-card-icon{animation:none!important}.hs-chip{right:6vw;top:-2vw;font-size:2.8vw}.hs-chip-streak{bottom:-2vw;top:auto}.hs-burst{top:50%;left:auto;right:7vw}}
 .mg-still .hs-card-icon,.mg-still .hs-burst{animation:none!important}
 @media(prefers-reduced-motion:reduce){.hs-card-icon{animation:none!important}.hs-leaving,.hs-leaving .hs-stage{transition:none;opacity:1;transform:none}}
