@@ -160,16 +160,26 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   /* A card press: sparkles burst from it, the room zooms toward the viewer, and
      only then does the next screen open. Instant when motion is off. */
   const [burst, setBurst] = useState<number | null>(null);
-  const [leaving, setLeaving] = useState(false);
+  const [leaving, setLeaving] = useState<number | null>(null);
   const leaveTimer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(leaveTimer.current), []);
   const go = (card: number, next: () => void, zoom = true) => {
     if (quiet || reduced) { next(); return; }
     setBurst(card); window.setTimeout(() => setBurst(null), 700); react('surprised', 700);
     if (!zoom) { next(); return; }
-    setLeaving(true);
-    leaveTimer.current = window.setTimeout(() => { next(); setLeaving(false); }, 320);
+    setLeaving(card);
+    leaveTimer.current = window.setTimeout(() => { next(); setLeaving(null); }, 320);
   };
+  /* A card tilts toward the pointer and a sheen follows it, like a lit wooden plank. */
+  const tilt = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (quiet || reduced || e.pointerType === 'touch') return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+    const s = e.currentTarget.style;
+    s.setProperty('--rx', `${((x - .5) * 9).toFixed(2)}deg`); s.setProperty('--ry', `${((.5 - y) * 7).toFixed(2)}deg`);
+    s.setProperty('--hx', `${(x * 100).toFixed(1)}%`); s.setProperty('--hy', `${(y * 100).toFixed(1)}%`);
+  };
+  const untilt = (e: React.PointerEvent<HTMLDivElement>) => { const s = e.currentTarget.style; s.setProperty('--rx', '0deg'); s.setProperty('--ry', '0deg'); };
   const [hour] = useState(() => new Date().getHours());
   /* The place has its own night air — the same bed the hub uses for this hour.
      Silent while sound is off (the default) and in the quiet state. */
@@ -312,10 +322,14 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
 
   const aim = look ?? hint;
   const pose: Pose = flash ?? (teaching || aim !== null ? 'happy' : gaze);
-  return <main ref={home} className={`mg-home ${quiet || reduced ? 'mg-still' : ''} ${leaving ? 'hs-leaving' : ''}`} style={{ fontFamily: FONT }}>
+  return <main ref={home} className={`mg-home ${quiet || reduced ? 'mg-still' : ''} ${leaving !== null ? `hs-leaving hs-leaving-${leaving + 1}` : ''}`} style={{ fontFamily: FONT }}>
     <DailyWelcome />
     {askAge && <AgePopup onDone={() => setAskAge(false)} />}
     <div className="hs-tod" aria-hidden="true" style={{ background: dayGrade(hour) }} />
+    <div className="hs-sky" aria-hidden="true">
+      <i className="hs-cloud c1" /><i className="hs-cloud c2" /><i className="hs-cloud c3" /><i className="hs-cloud c4" />
+      <b className="hs-shoot s1" /><b className="hs-shoot s2" />
+    </div>
     <div className="hs-bg" aria-hidden="true">
 
       {!quiet && !reduced && FIREFLIES.map((f, i) => <b key={i} className="hs-fly" style={{ left: `${f.x * 100}%`, top: `${f.y * 100}%`, animationDuration: `${f.d}s`, animationDelay: `-${f.s}s`, ['--r' as string]: `${f.r}px` }} />)}
@@ -332,6 +346,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
       <button ref={boyBtn} className={`hs-wide-boy ${aim !== null ? `hs-look-${aim + 1}` : ''} ${teaching ? 'mg-boy-said' : ''} ${hop ? (hop % 2 ? 'hs-hop-a' : 'hs-hop-b') : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you"><BoyPoses pose={pose} /><span className="mg-tapme hs-tapme" aria-hidden="true">Tap me</span></button>
     </div>
     <div className="hs-stage">
+      <span className="hs-pool" aria-hidden="true" />
       <div className="hs-bg-m" aria-hidden="true">{PHONE_LANTERNS.map(([x, y], i) => <i key={i} className="hs-glow-m" style={{ left: `${x * 100}%`, top: `${y * 100}%`, animationDelay: `${i * 0.9}s` }} />)}</div>
       <header className="mg-top">
         <div className="mg-brand">
@@ -359,7 +374,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
         </button>
       </section>
 
-      <div className={`hs-card hs-card-1${hint === 0 && look === null ? ' hs-hint' : ''}`} onPointerEnter={() => hearCard(0)} onPointerLeave={() => setLook(null)} onFocus={() => hearCard(0)} onBlur={() => setLook(null)}>
+      <div className={`hs-card hs-card-1${hint === 0 && look === null ? ' hs-hint' : ''}`} onPointerEnter={() => hearCard(0)} onPointerMove={tilt} onPointerLeave={(e) => { setLook(null); untilt(e); }} onFocus={() => hearCard(0)} onBlur={() => setLook(null)}>
         <img className="hs-card-art" src={`${A}card-HomeScreen.webp`} alt="" />
         <img className="hs-card-icon" src={`${A}hs-icon-heart.webp`} alt="" />
         <ArcTitle id="hs-arc-1">How Are You Feeling?</ArcTitle>
@@ -367,7 +382,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
         {burst === 0 && <span className="hs-burst" aria-hidden="true">{Array.from({ length: 10 }, (_, k) => <i key={k} style={{ ['--a' as string]: `${k * 36}deg`, animationDelay: `${(k % 3) * 30}ms` }} />)}</span>}
         <button className="hs-go hs-go-blue" data-guide="feel" data-guide-rank="1" onClick={() => { sound.play('enterRoom'); go(0, onDeepDive); }}>Start My Journey <span aria-hidden="true">→</span></button>
       </div>
-      <div className={`hs-card hs-card-2${hint === 1 && look === null ? ' hs-hint' : ''}`} onPointerEnter={() => hearCard(1)} onPointerLeave={() => setLook(null)} onFocus={() => hearCard(1)} onBlur={() => setLook(null)}>
+      <div className={`hs-card hs-card-2${hint === 1 && look === null ? ' hs-hint' : ''}`} onPointerEnter={() => hearCard(1)} onPointerMove={tilt} onPointerLeave={(e) => { setLook(null); untilt(e); }} onFocus={() => hearCard(1)} onBlur={() => setLook(null)}>
         <img className="hs-card-art" src={`${A}card-HomeScreen.webp`} alt="" />
         <img className="hs-card-icon" src={`${A}hs-icon-games.webp`} alt="" />
         <ArcTitle id="hs-arc-2">Good Choices Games</ArcTitle>
@@ -376,7 +391,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
         {burst === 1 && <span className="hs-burst" aria-hidden="true">{Array.from({ length: 10 }, (_, k) => <i key={k} style={{ ['--a' as string]: `${k * 36}deg`, animationDelay: `${(k % 3) * 30}ms` }} />)}</span>}
         <button className="hs-go hs-go-green" data-guide="practise" data-guide-rank="1" onClick={() => { sound.play('roomCard'); go(1, () => setRooms(true), false); }}>Visit My Rooms <span aria-hidden="true">→</span></button>
       </div>
-      <div className={`hs-card hs-card-3${hint === 2 && look === null ? ' hs-hint' : ''}`} onPointerEnter={() => hearCard(2)} onPointerLeave={() => setLook(null)} onFocus={() => hearCard(2)} onBlur={() => setLook(null)}>
+      <div className={`hs-card hs-card-3${hint === 2 && look === null ? ' hs-hint' : ''}`} onPointerEnter={() => hearCard(2)} onPointerMove={tilt} onPointerLeave={(e) => { setLook(null); untilt(e); }} onFocus={() => hearCard(2)} onBlur={() => setLook(null)}>
         <img className="hs-card-art" src={`${A}card-HomeScreen.webp`} alt="" />
         <img className="hs-card-icon" src={`${A}hs-icon-diary.webp`} alt="" />
         <ArcTitle id="hs-arc-3">My Inner Diary</ArcTitle>
