@@ -225,6 +225,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
         {!diaryDone && <span className="hs-today"><span aria-hidden="true">★</span> Today’s page<br />is waiting</span>}
       </div>
 
+      {onKeepsakes && <span className="hs-sofa" aria-hidden="true" />}
       {onKeepsakes && <button className="hs-corner" onClick={onKeepsakes} aria-label="My Corner. Rest, reflect and revisit.">
         <img src="/mind-gym/corner/hs-sign.webp" alt="" />
         <span><b>My Corner</b><small>Rest, reflect and revisit.</small></span>

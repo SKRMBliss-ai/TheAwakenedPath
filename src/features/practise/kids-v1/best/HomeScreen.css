@@ -658,6 +658,13 @@
 .hs-go-green{background:linear-gradient(#35d070,#15823c);box-shadow:0 0 1.2cqw #4cf08acc,inset 0 0 .9cqw #8cf5b0}
 .hs-go-purple{background:linear-gradient(#8f4aff,#5420c8);box-shadow:0 0 1.2cqw #a56bffcc,inset 0 0 .9cqw #c5a0ff}
 .hs-go:hover,.hs-go:focus-visible{transform:scale(1.04)}
+.hs-sofa{position:absolute;left:0;top:63%;width:22%;height:26%;z-index:1;pointer-events:none;opacity:0;transition:opacity .35s ease;
+  background:url('/mind-gym/home/environment.webp') 0% 84%/454.5% 385%,radial-gradient(ellipse at 45% 55%,#ffd98a66,transparent 70%);
+  -webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 62%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 62%,transparent 100%);
+  filter:brightness(1.1) saturate(1.12)}
+.hs-stage:has(.hs-corner:hover,.hs-corner:focus-visible) .hs-sofa{opacity:1}
+.mg-still .hs-sofa{transition:none}
+@media(max-width:760px){.hs-sofa{display:none}}
 .hs-today{left:62%;top:-3%;width:54%;padding:2% 4%;border-radius:99px;background:linear-gradient(#ffe27a,#ffc94a);color:#4a2a05;font-weight:800;font-size:calc(var(--u)*1.1);line-height:1.15;box-shadow:0 .3cqw 1cqw #0006;pointer-events:none}
 .hs-today span{color:#e0368e;margin-right:.3cqw}
 .hs-corner{position:absolute;left:10.5%;bottom:-.5%;width:21%;aspect-ratio:1292/620;z-index:2;background:none;border:0;padding:0}
