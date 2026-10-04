@@ -131,8 +131,12 @@ export function MyCorner({ onExit, onGrownUp, onGarden, onAdventure, fresh }: { 
   const [tab, setTab] = useState<Tab>(() => (newCount.friends ? 'friends' : 'things'));
   const [trayOpen, setTrayOpen] = useState(true);
   useEffect(() => {
-    const t = window.setTimeout(() => setTrayOpen(false), 3000);
-    return () => window.clearTimeout(t);
+    // Close tray after 3s, then pulse open/close every 3s
+    const close = window.setTimeout(() => setTrayOpen(false), 3000);
+    const pulse = window.setInterval(() => {
+      setTrayOpen(o => !o);
+    }, 3000);
+    return () => { window.clearTimeout(close); window.clearInterval(pulse); };
   }, []);
   const [selected, setSelected] = useState<string | null>(null);
   const [hint, setHint] = useState(placed.length
@@ -220,7 +224,7 @@ export function MyCorner({ onExit, onGrownUp, onGarden, onAdventure, fresh }: { 
           friends, where the one just hatched is waiting to be placed. */}
       <div className="cn-egg-nest"><EggNest onCorner={() => { setTab('friends'); setTrayOpen(true); }} /></div>
       <RoomLinks side="right" items={[{ label: 'My Garden', icon: '🌱', onClick: onGarden }, { label: 'Story Map', icon: '🗺️', onClick: onAdventure }]} />
-      <DoorHandle side="left" label="Mind Gym" onClick={onExit} accent="#ffd98a" scale={0.4} bottomVh={66} />
+      <DoorHandle side="left" label="" onClick={onExit} accent="#ffd98a" scale={0.4} bottomVh={66} />
 
       <header className="cn-head">
         <h1>My Corner <span aria-hidden="true">♡</span></h1>
