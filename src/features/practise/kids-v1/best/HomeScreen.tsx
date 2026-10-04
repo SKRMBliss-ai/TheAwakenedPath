@@ -25,6 +25,12 @@ import './HomeScreen.css';
 import './DiaryNudge.css';
 
 const A = '/mind-gym/home/';
+/* Ambient lights, in fractions of the 1916x821 environment picture. */
+const LANTERNS: [number, number][] = [[.247, .12], [.161, .38], [.063, .8], [.867, .17], [.947, .32], [.885, .69]];
+const FIREFLIES = Array.from({ length: 16 }, (_, i) => ({
+  x: ((i * 37 + 11) % 97) / 100, y: .12 + ((i * 53 + 7) % 70) / 100,
+  d: 7 + (i * 5) % 9, s: (i * 1.3) % 8, r: 14 + (i * 7) % 26,
+}));
 const CHIRPY_MOODS: ChirpyPose[] = ['curious', 'calm', 'excited', 'thinking', 'hopeful', 'confused', 'sad', 'calm'];
 
 /** A card title bent along the arch of its ribbon. */
@@ -134,6 +140,34 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     sound.play('tap');
     speak(line, quiet);
   };
+  /* PARALLAX — the scene leans a little toward the pointer. Web only (it needs a
+     hover pointer), and never in the quiet or reduced-motion states. */
+  const home = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = home.current;
+    if (!el || quiet || reduced || !window.matchMedia('(hover: hover)').matches) return;
+    let raf = 0;
+    const move = (e: PointerEvent) => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        el.style.setProperty('--px', String(((e.clientX / window.innerWidth) * 2 - 1).toFixed(3)));
+        el.style.setProperty('--py', String(((e.clientY / window.innerHeight) * 2 - 1).toFixed(3)));
+      });
+    };
+    window.addEventListener('pointermove', move);
+    return () => { window.removeEventListener('pointermove', move); cancelAnimationFrame(raf); };
+  }, [quiet, reduced]);
+  /* IDLE — after a quiet spell the boy and Chirpy hop once, visibly and silently. */
+  const [hop, setHop] = useState(0);
+  useEffect(() => {
+    if (quiet || reduced) return;
+    let timer = 0;
+    const arm = () => { window.clearTimeout(timer); timer = window.setTimeout(() => { setHop((n) => n + 1); arm(); }, 11_000); };
+    arm();
+    const reset = () => arm();
+    window.addEventListener('pointerdown', reset); window.addEventListener('keydown', reset);
+    return () => { window.clearTimeout(timer); window.removeEventListener('pointerdown', reset); window.removeEventListener('keydown', reset); };
+  }, [quiet, reduced]);
   const today = todayKey();
   useEffect(() => { useKidStore.getState().noteVisit(); }, []);
   /*
@@ -172,15 +206,19 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   const close = () => { dialog.current?.close(); setSelected(null); };
   const write = (value: string) => { s.setMonthReview(month, noteKey, value); setSaved(false); };
 
-  return <main className={`mg-home ${quiet || reduced ? 'mg-still' : ''}`} style={{ fontFamily: FONT }}>
+  return <main ref={home} className={`mg-home ${quiet || reduced ? 'mg-still' : ''}`} style={{ fontFamily: FONT }}>
     <DailyWelcome />
     {askAge && <AgePopup onDone={() => setAskAge(false)} />}
+    <div className="hs-bg" aria-hidden="true">
+      {LANTERNS.map(([x, y], i) => <i key={i} className="hs-glow" style={{ left: `${x * 100}%`, top: `${y * 100}%`, animationDelay: `${i * 0.7}s` }} />)}
+      {!quiet && !reduced && FIREFLIES.map((f, i) => <b key={i} className="hs-fly" style={{ left: `${f.x * 100}%`, top: `${f.y * 100}%`, animationDuration: `${f.d}s`, animationDelay: `-${f.s}s`, ['--r' as string]: `${f.r}px` }} />)}
+    </div>
     <div className="hs-veil" aria-hidden="true" />
     {onKeepsakes && <span className="hs-sofa" aria-hidden="true" />}
     {/* Wide screens: the guide is pinned to the window's right-most edge, outside the scaled stage. */}
     <div className="hs-wide">
       <div className="hs-bubble hs-wide-bubble" aria-live="polite">{teaching ? <>{teaching}<small>Tap me again for another one.</small></> : 'What would you like to do today?'}</div>
-      <button className={`hs-wide-boy ${teaching ? 'mg-boy-said' : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you"><img src="/assets/home/boy@640.webp" alt="" /><span className="mg-tapme hs-tapme" aria-hidden="true">Tap me</span></button>
+      <button className={`hs-wide-boy ${teaching ? 'mg-boy-said' : ''} ${hop ? (hop % 2 ? 'hs-hop-a' : 'hs-hop-b') : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you"><img src="/assets/home/boy@640.webp" alt="" /><span className="mg-tapme hs-tapme" aria-hidden="true">Tap me</span></button>
     </div>
     <div className="hs-stage">
       <header className="mg-top">
@@ -198,7 +236,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
       </header>
 
       {/* Phone only: a standing boy at the left edge, fixed to the screen. */}
-      <button className={`hs-side hs-side-l ${teaching ? 'mg-boy-said' : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you"><img src="/assets/home/boy@640.webp" alt="" /><span className="mg-tapme hs-tapme" aria-hidden="true">Tap me</span></button>
+      <button className={`hs-side hs-side-l ${teaching ? 'mg-boy-said' : ''} ${hop ? (hop % 2 ? 'hs-hop-a' : 'hs-hop-b') : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you"><img src="/assets/home/boy@640.webp" alt="" /><span className="mg-tapme hs-tapme" aria-hidden="true">Tap me</span></button>
       <section className="hs-guide" aria-label="Your guide">
         <div className="hs-bubble" aria-live="polite">{teaching ? <>{teaching}<small>Tap me again for another one.</small></> : 'What would you like to do today?'}</div>
         <button className={`hs-boy-wrap ${teaching ? 'mg-boy-said' : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you">
