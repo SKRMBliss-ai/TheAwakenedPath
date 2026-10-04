@@ -413,7 +413,7 @@ export function DoorHandle({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 4 }}
               transition={{ duration: 0.28 }}
-              className="pointer-events-none absolute bottom-full mb-1 whitespace-nowrap rounded-full px-3 py-1.5 text-[11.5px] font-extrabold"
+              className="pointer-events-none absolute bottom-full mb-1 whitespace-normal rounded-full max-w-[120px] text-center px-3 py-1.5 text-[11.5px] font-extrabold"
               style={{
                 // ABOVE the fitting, not beside it. Beside it put the words
                 // straight over whatever the screen was already showing —
