@@ -35,6 +35,8 @@ export interface Case {
   day: string;
   feeling?: string;
   body?: string[];
+  /** How big the feeling was: bit, quite or really. Younger children only. */
+  size?: string;
   /** What their mind said. */
   story?: string;
   /** What their eyes actually saw. */

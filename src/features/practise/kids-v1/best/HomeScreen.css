@@ -694,3 +694,47 @@
   .hs-stage .mg-safety{right:12px;bottom:14px;position:fixed}.hs-stage .mg-safety button{font-size:12px}
   .hs-stage .mg-logo{font-size:30px}
 }
+
+/* ── Good Choices rooms: a lit treehouse bookcase ─────────────────────────── */
+.hs-rooms{background:radial-gradient(ellipse at 50% 40%,#2c1a5acc,#0b0620f2 70%),url(/mind-gym/home/background_environment.webp) center/cover;backdrop-filter:blur(6px);overflow:auto}
+.hs-rooms .hs-rooms-panel{display:flex;flex-direction:column;height:auto;max-height:96svh;overflow:hidden;padding:12px 18px 20px;border-radius:28px;border:2px solid #e9c27a;
+  background:linear-gradient(180deg,#241347ee,#150b30f2) padding-box,url(/mind-gym/home/background_environment.webp) center/cover;
+  box-shadow:0 0 0 6px #6b3d1c,0 0 0 8px #e9c27a55,0 30px 80px #000c,0 0 90px #7a4bd655}
+.hs-rooms .hs-rooms-panel:before{content:'';position:absolute;inset:0;pointer-events:none;border-radius:inherit;opacity:.9;
+  background:radial-gradient(2px 2px at 12% 18%,#fff,transparent),radial-gradient(2px 2px at 83% 12%,#ffe9a6,transparent),radial-gradient(1.5px 1.5px at 32% 30%,#fff,transparent),radial-gradient(2px 2px at 66% 26%,#fff,transparent),radial-gradient(1.5px 1.5px at 92% 38%,#ffe9a6,transparent),radial-gradient(2px 2px at 6% 52%,#fff,transparent),radial-gradient(240px 160px at 12% 8%,#ffcf7a33,transparent),radial-gradient(240px 160px at 90% 8%,#b78bff33,transparent);
+  animation:hs-twinkle 5s ease-in-out infinite alternate}
+@keyframes hs-twinkle{from{opacity:.55}to{opacity:1}}
+.hs-rooms .hs-rooms-panel>*{position:relative;z-index:1}
+.hs-rooms .mg-shelf-title{height:auto;min-height:0;flex:0 0 auto;margin:0 auto 14px;padding:12px 56px 12px;width:min(560px,100%);border-radius:18px 18px 40% 40%/18px 18px 22px 22px}
+.hs-rooms .mg-shelf-title>span{top:-26px;left:50%;transform:translateX(-50%)}
+.hs-rooms .mg-shelf-title h2{font-size:clamp(24px,3vw,40px)}
+
+.hs-rooms .mg-shelf{height:auto;flex:0 0 auto;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,clamp(150px,22svh,200px));gap:0;margin:6px 10px 0;
+  border-radius:14px;background:linear-gradient(#150c2fcc,#0b0620e6);
+  box-shadow:inset 0 0 50px #000b,0 0 0 8px #6b3d1c,0 0 0 10px #d9a15f88,0 18px 36px #000a}
+.hs-rooms .mg-shelf:before{display:none}
+.hs-rooms .mg-cabinet{box-shadow:inset -7px 0 0 #4a2814,inset -9px 0 8px -5px #0008}
+.hs-rooms .mg-cabinet:nth-child(4n){box-shadow:none}
+.hs-rooms .mg-cabinet:before{content:'';position:absolute;inset:4% 6% 12px;pointer-events:none;background:radial-gradient(ellipse at 50% 72%,#ffc87a40,transparent 68%)}
+.hs-rooms .mg-cabinet:after{left:0;right:0;height:14px}
+.hs-rooms .mg-cabinet-door{inset:3% 12% 12px 10%}
+.hs-rooms .mg-cabinet-door img{object-fit:contain;object-position:center bottom;transform:none}
+.hs-rooms .mg-cabinet.is-hovered{transform:translateY(-4px) scale(1.04);filter:drop-shadow(0 0 12px #ffd877)}
+.hs-rooms .mg-cabinet.is-open{position:static;transform:none;filter:none;box-shadow:none;z-index:8}
+.hs-rooms .mg-cabinet.is-open:before{display:none}
+.hs-rooms .mg-cabinet-preview{inset:auto;left:50%;top:50%;width:min(68%,660px);aspect-ratio:295/175;translate:-50% -50%;filter:drop-shadow(0 18px 40px #000)}
+.hs-rooms .mg-open-art{object-fit:cover}
+.hs-rooms .mg-shelf-note{align-self:end;justify-self:stretch;height:64%;margin:0 12px 18px;border-radius:10px}
+.hs-rooms .mg-shelf-note button{min-height:44px}
+
+@media(max-width:760px){
+  .hs-rooms .hs-rooms-panel{max-height:94svh;overflow:auto}
+  .hs-rooms .mg-shelf{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,clamp(150px,22svh,200px))}
+  .hs-rooms .mg-cabinet:nth-child(4n){box-shadow:inset -7px 0 0 #4a2814,inset -9px 0 8px -5px #0008}
+  .hs-rooms .mg-cabinet:nth-child(2n){box-shadow:none}
+  .hs-rooms .mg-cabinet-preview{width:min(92%,420px)}
+}
+@media(prefers-reduced-motion:reduce){.hs-rooms .hs-rooms-panel:before{animation:none}}
+.hs-rooms .mg-open-invitation{gap:10px;padding:12px;border-radius:12px}
+.hs-rooms .mg-open-invitation p{font-size:clamp(15px,1.5vw,21px);line-height:1.2}
+.hs-rooms .mg-open-invitation button{min-height:46px;font-size:clamp(15px,1.3vw,19px)}
