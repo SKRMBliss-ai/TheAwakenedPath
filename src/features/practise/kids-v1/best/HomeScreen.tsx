@@ -22,6 +22,9 @@ import { isMuted, setMuted } from '../../../../lib/sfx';
 import { useDiaryFilledToday } from '../kit/diaryToday';
 import { BuddyHud, FloorBuddy } from './buddies/HomeBuddy';
 import { loadGameFont } from './buddies/gameFont';
+import { playHoverNote } from '../kit/doorbell';
+import { startSkyAmbience, stopAmbience } from '../kit/ambience';
+import { timeOfDayForHour } from '../rooms';
 import './HomeScreen.css';
 import './DiaryNudge.css';
 
@@ -146,6 +149,15 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     leaveTimer.current = window.setTimeout(() => { next(); setLeaving(false); }, 320);
   };
   const [hour] = useState(() => new Date().getHours());
+  /* The place has its own night air — the same bed the hub uses for this hour.
+     Silent while sound is off (the default) and in the quiet state. */
+  useEffect(() => {
+    if (quiet) { stopAmbience(); return; }
+    startSkyAmbience(timeOfDayForHour(hour));
+    return () => stopAmbience();
+  }, [quiet, hour, mutedState]);
+  const notes = [523.25, 659.25, 783.99];
+  const hearCard = (i: number) => { setLook(i); if (!quiet) playHoverNote(notes[i]); };
   const [mood, setMood] = useState(0);
   useEffect(() => {
     if (quiet || reduced) return;
@@ -283,7 +295,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
         </button>
       </section>
 
-      <div className="hs-card hs-card-1" onPointerEnter={() => setLook(0)} onPointerLeave={() => setLook(null)} onFocus={() => setLook(0)} onBlur={() => setLook(null)}>
+      <div className="hs-card hs-card-1" onPointerEnter={() => hearCard(0)} onPointerLeave={() => setLook(null)} onFocus={() => hearCard(0)} onBlur={() => setLook(null)}>
         <img className="hs-card-art" src={`${A}card-HomeScreen.webp`} alt="" />
         <img className="hs-card-icon" src={`${A}hs-icon-heart.webp`} alt="" />
         <ArcTitle id="hs-arc-1">How Are You Feeling?</ArcTitle>
@@ -291,7 +303,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
         {burst === 0 && <span className="hs-burst" aria-hidden="true">{Array.from({ length: 10 }, (_, k) => <i key={k} style={{ ['--a' as string]: `${k * 36}deg`, animationDelay: `${(k % 3) * 30}ms` }} />)}</span>}
         <button className="hs-go hs-go-blue" data-guide="feel" data-guide-rank="1" onClick={() => { sound.play('enterRoom'); go(0, onDeepDive); }}>Start My Journey <span aria-hidden="true">→</span></button>
       </div>
-      <div className="hs-card hs-card-2" onPointerEnter={() => setLook(1)} onPointerLeave={() => setLook(null)} onFocus={() => setLook(1)} onBlur={() => setLook(null)}>
+      <div className="hs-card hs-card-2" onPointerEnter={() => hearCard(1)} onPointerLeave={() => setLook(null)} onFocus={() => hearCard(1)} onBlur={() => setLook(null)}>
         <img className="hs-card-art" src={`${A}card-HomeScreen.webp`} alt="" />
         <img className="hs-card-icon" src={`${A}hs-icon-games.webp`} alt="" />
         <ArcTitle id="hs-arc-2">Good Choices Games</ArcTitle>
@@ -300,7 +312,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
         {burst === 1 && <span className="hs-burst" aria-hidden="true">{Array.from({ length: 10 }, (_, k) => <i key={k} style={{ ['--a' as string]: `${k * 36}deg`, animationDelay: `${(k % 3) * 30}ms` }} />)}</span>}
         <button className="hs-go hs-go-green" data-guide="practise" data-guide-rank="1" onClick={() => { sound.play('roomCard'); go(1, () => setRooms(true), false); }}>Visit My Rooms <span aria-hidden="true">→</span></button>
       </div>
-      <div className="hs-card hs-card-3" onPointerEnter={() => setLook(2)} onPointerLeave={() => setLook(null)} onFocus={() => setLook(2)} onBlur={() => setLook(null)}>
+      <div className="hs-card hs-card-3" onPointerEnter={() => hearCard(2)} onPointerLeave={() => setLook(null)} onFocus={() => hearCard(2)} onBlur={() => setLook(null)}>
         <img className="hs-card-art" src={`${A}card-HomeScreen.webp`} alt="" />
         <img className="hs-card-icon" src={`${A}hs-icon-diary.webp`} alt="" />
         <ArcTitle id="hs-arc-3">My Inner Diary</ArcTitle>
