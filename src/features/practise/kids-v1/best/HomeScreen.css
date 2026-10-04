@@ -695,9 +695,9 @@
   .hs-stage .mg-safety{right:12px;bottom:14px;position:fixed;z-index:4}.hs-stage .mg-safety button{font-size:12px}
   .hs-boy-wrap{display:none}
   .hs-bubble{left:50%;transform:translateX(-50%);width:76%;top:5vw;font-size:4.2vw}.hs-bubble:before{display:none}
-  .hs-side{display:block;position:fixed;bottom:-3vw;z-index:5;width:31vw;padding:0;border:0;background:none;pointer-events:auto}
+  .hs-side{display:block;position:fixed;bottom:-4vw;z-index:5;width:39vw;padding:0;border:0;background:none;pointer-events:auto}
   .hs-side img{display:block;width:100%;height:auto;filter:drop-shadow(0 1.5vw 2vw #0008)}
-  .hs-side-l{left:0}
+  .hs-side-l{left:-4vw}
   .hs-card{z-index:2}.hs-corner,.hs-guide{z-index:2}
   .hs-stage .mg-logo{font-size:30px}
 }
