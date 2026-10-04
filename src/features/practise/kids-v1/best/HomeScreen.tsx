@@ -59,7 +59,8 @@ function dayGrade(h: number) {
 /* The phone background's lanterns, in fractions of the screen. */
 const PHONE_LANTERNS: [number, number][] = [[.41, .09], [.056, .35], [.15, .78], [.97, .36], [.87, .79]];
 /* Ambient lights, in fractions of the 1916x821 environment picture. */
-const LANTERNS: [number, number][] = [[.247, .12], [.161, .38], [.063, .8], [.867, .17], [.947, .32], [.885, .69]];
+/* Hanging lanterns: [x (centre), y (top), height] as fractions of the 1915x821 environment. */
+const LANTERNS: [number, number, number][] = [[.205, -.02, .34], [.075, .3, .26], [.31, .17, .2], [.735, -.02, .22], [.60, -.02, .16], [.52, .13, .13]];
 const FIREFLIES = [
   ...Array.from({ length: 16 }, (_, i) => ({
     x: ((i * 37 + 11) % 97) / 100, y: .12 + ((i * 53 + 7) % 70) / 100,
@@ -303,10 +304,14 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     {askAge && <AgePopup onDone={() => setAskAge(false)} />}
     <div className="hs-tod" aria-hidden="true" style={{ background: dayGrade(hour) }} />
     <div className="hs-bg" aria-hidden="true">
-      {LANTERNS.map(([x, y], i) => <i key={i} className="hs-glow" style={{ left: `${x * 100}%`, top: `${y * 100}%`, animationDelay: `${i * 0.7}s` }} />)}
+
       {!quiet && !reduced && FIREFLIES.map((f, i) => <b key={i} className="hs-fly" style={{ left: `${f.x * 100}%`, top: `${f.y * 100}%`, animationDuration: `${f.d}s`, animationDelay: `-${f.s}s`, ['--r' as string]: `${f.r}px` }} />)}
     </div>
     <div className="hs-veil" aria-hidden="true" />
+    <div className="hs-lanterns" aria-hidden="true">
+      {LANTERNS.map(([x, y, h], i) => <span key={i} className="hs-lan" style={{ left: `${x * 100}%`, top: `${y * 100}%`, height: `${h * 100}%`, ['--d' as string]: `${(i * 0.7).toFixed(1)}s` }}>
+        <img className="off" src={`${A}LanternOFF.webp`} alt="" /><img className="on" src={`${A}LanternON.webp`} alt="" /></span>)}
+    </div>
     {onKeepsakes && <span className="hs-sofa" aria-hidden="true" />}
     {/* Wide screens: the guide is pinned to the window's right-most edge, outside the scaled stage. */}
     <div className="hs-wide">
