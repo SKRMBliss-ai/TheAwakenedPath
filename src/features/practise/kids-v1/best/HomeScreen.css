@@ -784,3 +784,11 @@
   .hs-stage:has(.hs-card:hover,.hs-card:focus-within) .hs-card:not(:hover):not(:focus-within){filter:brightness(.7) saturate(.8);transform:scale(.97)}
   .mg-still .hs-card{transition:none}
 }
+
+/* A soft scrim behind the logo so "Mind Gym" stays readable over the bright
+   branches and lanterns, without darkening the picture anywhere else. */
+.hs-stage .mg-brand{position:relative;isolation:isolate}
+.hs-stage .mg-brand:before{content:'';position:absolute;z-index:-1;left:-45%;top:-30%;width:190%;height:170%;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 50%,#1a0b3ce6 0,#1a0b3caa 48%,transparent 76%)}
+.hs-stage .mg-logo{text-shadow:0 2px 3px #1a0b3c,0 0 14px #1a0b3ccc}
+.hs-stage .mg-logo small{text-shadow:0 1px 2px #000,0 0 6px #1a0b3c;font-weight:900}
