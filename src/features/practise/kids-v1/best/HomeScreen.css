@@ -819,3 +819,22 @@
   .mg-home:has(.hs-card:hover,.hs-card:focus-within,.hs-corner:hover,.hs-corner:focus-visible) .hs-veil{opacity:1}
   .mg-still .hs-veil{transition:none}
 }
+
+/* WEB: the standing boy (Chirpy on his shoulder) stands on the right at the
+   old layout's size; the cards move left to make room, the bubble beside him. */
+@media(min-width:761px){
+  .hs-boy-wrap{display:none}
+  .hs-side{display:block;position:absolute;right:.5%;bottom:-2%;width:23%;z-index:5;padding:0;border:0;background:none}
+  .hs-side img{display:block;width:100%;height:auto;filter:drop-shadow(0 .6cqw .9cqw #1a0b3caa)}
+  .hs-side .hs-tapme{position:absolute;left:50%;bottom:10%;top:auto;font-size:calc(var(--u)*.95);padding:.4cqw .9cqw;translate:-50% 0}
+  .hs-card-1{left:3.5%}.hs-card-2{left:28.8%}.hs-card-3{left:54.1%}
+  .hs-bubble{left:auto;right:6%;transform:none;top:6%;width:17.4%}
+  .hs-bubble:before{left:auto;right:12%;top:100%;bottom:auto;border:1cqw solid transparent;border-top-color:#fffdf6;border-bottom:0;transform:none}
+  .hs-chirpy,.hs-chirpy-line{display:none}
+}
+@media(min-width:761px){
+  .hs-side{right:0;bottom:-3%;width:29%}
+  .hs-bubble{right:23.5%;top:19%;width:16.5%}
+  .hs-bubble:before{right:-1.5cqw;top:30%;left:auto;bottom:auto;border:1cqw solid transparent;border-left-color:#fffdf6;border-right:0;transform:rotate(12deg)}
+  .hs-stage .mg-safety{right:30%;bottom:2%}
+}
