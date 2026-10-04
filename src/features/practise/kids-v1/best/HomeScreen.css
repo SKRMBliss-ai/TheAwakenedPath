@@ -861,3 +861,12 @@
   .hs-stage .mg-safety{right:26%}
 }
 @media(min-width:761px) and (prefers-reduced-motion:reduce){.hs-wide-boy img{animation:none!important}}
+
+/* WEB: the three cards are centred on the screen again (slightly smaller so the
+   boy at the right edge only brushes the last one). */
+@media(min-width:761px){
+  .hs-card{transform:scale(.9)}
+  .hs-card-1{left:14%}.hs-card-2{left:38%}.hs-card-3{left:62%}
+  .hs-card:hover,.hs-card:focus-within{transform:translateY(-1.2%) scale(.94)}
+  .hs-stage:has(.hs-card:hover,.hs-card:focus-within) .hs-card:not(:hover):not(:focus-within){transform:scale(.87)}
+}
