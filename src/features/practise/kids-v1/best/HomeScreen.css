@@ -1258,3 +1258,25 @@
 }
 @media(min-width:761px) and (min-aspect-ratio:1/1) and (prefers-reduced-motion:reduce){.hs-cloudpop .hs-cloud{left:42%}.hs-cloudpop .cv-puff{left:22%}}
 .mg-still .hs-cloudpop .cv-drift{left:42%}.mg-still .hs-cloudpop .cv-puff{left:22%}
+
+/* ===== NIGHT: a full moon, and moonlit clouds. By day there is no moon and the clouds are bright. ===== */
+.hs-moon{display:none}
+@media(min-width:761px) and (min-aspect-ratio:1/1){
+  .hs-moon{display:block;position:absolute;left:47.5%;top:9%;width:5.5%;aspect-ratio:1;border-radius:50%;
+    background:
+      radial-gradient(circle at 30% 34%,#cfc6a2 0 6%,transparent 7%),radial-gradient(circle at 62% 28%,#d8d0ae 0 4.5%,transparent 5.5%),
+      radial-gradient(circle at 55% 62%,#cbc29c 0 8%,transparent 9%),radial-gradient(circle at 28% 66%,#d6cdab 0 5%,transparent 6%),radial-gradient(circle at 72% 54%,#d2c9a6 0 3.5%,transparent 4.5%),
+      radial-gradient(circle at 38% 34%,#fffdf0 0,#f7f0d4 55%,#e4dab4 100%);
+    box-shadow:0 0 1.4vw .5vw #fff6c8aa,0 0 5vw 1.6vw #cfd8ff55,0 0 12vw 4vw #8aa0ff22;filter:brightness(1.3) saturate(1.1);animation:hs-moonglow 7s ease-in-out infinite}
+  .hs-night .hs-sky{background-blend-mode:normal}
+  /* clouds are lit by the moon: cooler, quieter */
+  .hs-night .hs-sky .hs-cloud{filter:brightness(.62) saturate(.55) hue-rotate(8deg);opacity:.8}
+  .hs-night .hs-sky .hs-cloud.cv-drift,.hs-night .hs-sky .hs-cloud.cv-puff{opacity:.85}
+  .hs-night .hs-cloudpop .hs-cloud{filter:brightness(1.05) saturate(.7) drop-shadow(0 0 22px #bfd0ffdd) drop-shadow(0 0 46px #7f9aff88)}
+  .hs-day .hs-shoot{display:none}
+  .hs-f-luna{border-radius:50%}
+  .mg-home:has(.hs-f-luna:hover,.hs-f-luna:focus-visible) .hs-moon{filter:brightness(1.12);box-shadow:0 0 2vw .8vw #fff6c8dd,0 0 7vw 2.4vw #cfd8ff88}
+}
+@keyframes hs-moonglow{0%,100%{box-shadow:0 0 1.4vw .5vw #fff6c8aa,0 0 5vw 1.6vw #cfd8ff55,0 0 12vw 4vw #8aa0ff22}50%{box-shadow:0 0 1.8vw .7vw #fff6c8cc,0 0 6vw 2vw #cfd8ff77,0 0 14vw 4.6vw #8aa0ff33}}
+.mg-still .hs-moon{animation:none}
+@media(prefers-reduced-motion:reduce){.hs-moon{animation:none}}
