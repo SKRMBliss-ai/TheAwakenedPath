@@ -1424,3 +1424,41 @@
 @media(max-width:760px),(max-aspect-ratio:1/1){
   .hs-midday .hs-sky{background:radial-gradient(ellipse at 52% 50%,#ffffffbb 0,transparent 44%),linear-gradient(180deg,#7fa8dc 0%,#a6c3e8 32%,#c9dcf0 50%,#e3eef6 58%,#dbe7ee 62%,#b4c3d6 68%,#8393b4 78%,#5d6696 100%)}
 }
+
+/* ===== CHIRPY, as his own character on the boy's shoulder ===== */
+.hs-poses .hs-chirp{position:absolute;left:19%;top:21%;width:28%;height:auto;z-index:2;filter:drop-shadow(0 .5vw .8vw #1a0b3c99);transform-origin:50% 90%;
+  animation:hs-chirp-bob 2.6s ease-in-out infinite;transition:left .45s cubic-bezier(.3,1.4,.5,1),top .45s cubic-bezier(.3,1.4,.5,1),scale .3s}
+@keyframes hs-chirp-bob{0%,100%{translate:0 0;rotate:-2deg}50%{translate:0 -4%;rotate:3deg}}
+/* he leans toward whatever the boy looks at, and flaps up when something is said */
+.hs-chirp.hs-chirp-left{left:13%}.hs-chirp.hs-chirp-right{left:25%}.hs-chirp.hs-chirp-up{top:16%}.hs-chirp.hs-chirp-down{top:25%}
+.hs-chirp.hs-chirp-happy,.hs-chirp.hs-chirp-surprised{scale:1.12;top:15%}
+.hs-chirp.is-excited{animation-duration:.9s}
+.mg-still .hs-poses .hs-chirp{animation:none;transition:none}
+@media(prefers-reduced-motion:reduce){.hs-poses .hs-chirp{animation:none;transition:none}}
+
+/* ===== CHIRPY, a character of his own: perches on the boy, flies over the cards, never lands on them ===== */
+.hs-flyer{display:none}
+@media(min-width:761px) and (min-aspect-ratio:1/1){
+  .hs-wide{--W:min(100vw,calc(100svh*16/9));--SL:calc(50vw - var(--W)/2);--ST:calc(50svh - var(--W)*9/32)}
+  .hs-flyer{display:block;position:absolute;width:calc(var(--S)*7.2);padding:0;border:0;background:none;cursor:pointer;pointer-events:auto;z-index:1;translate:-50% -50%;
+    transition:left .9s cubic-bezier(.45,.05,.25,1),top .9s cubic-bezier(.45,.05,.25,1)}
+  .hs-flyer img{display:block;width:100%;height:auto;filter:drop-shadow(0 .5vw .8vw #1a0b3c99);animation:hs-chirp-bob 2.6s ease-in-out infinite;transform-origin:50% 90%}
+  .hs-flyer.is-flying img{animation:hs-flap .28s ease-in-out infinite}
+  .hs-flyer:hover img,.hs-flyer:focus-visible img{filter:brightness(1.12) drop-shadow(0 0 1.2vw #c9a5ff) drop-shadow(0 .5vw .8vw #1a0b3c99)}
+  /* shoulder: measured from the boy's own box (29S wide, right-aligned past the edge) */
+  .hs-at-shoulder{left:calc(104.8vw - var(--S)*29 + var(--S)*29*.28);top:calc(100svh + var(--S)*1.7 - var(--S)*43.5 + var(--S)*43.5*.3)}
+  .hs-at-sky{left:calc(var(--SL) + var(--W)*.5);top:calc(var(--ST) + var(--W)*9/16*.13)}
+  .hs-at-c1{left:calc(var(--SL) + var(--W)*.255);top:calc(var(--ST) + var(--W)*9/16*.285)}
+  .hs-at-c2{left:calc(var(--SL) + var(--W)*.5);top:calc(var(--ST) + var(--W)*9/16*.285)}
+  .hs-at-c3{left:calc(var(--SL) + var(--W)*.745);top:calc(var(--ST) + var(--W)*9/16*.285)}
+}
+@keyframes hs-flap{0%,100%{translate:0 0;rotate:-6deg;scale:1}50%{translate:0 -7%;rotate:6deg;scale:1.06}}
+.mg-still .hs-flyer,.mg-still .hs-flyer img{transition:none;animation:none}
+@media(prefers-reduced-motion:reduce){.hs-flyer,.hs-flyer img{transition:none;animation:none}}
+.hs-poses img.hide{opacity:0}
+.hs-chirp-m{display:none}
+/* PHONE: Chirpy rides the boy's shoulder, in the boy's own box so they stay together. */
+@media(max-width:760px),(max-aspect-ratio:1/1){
+  .hs-side .hs-poses{display:block}
+  .hs-side .hs-chirp-m{display:block;position:absolute;left:60%;top:17%;width:34%!important;height:auto;z-index:3;filter:drop-shadow(0 1vw 1.4vw #1a0b3c99);animation:hs-chirp-bob 2.6s ease-in-out infinite;transform-origin:50% 90%}
+}

@@ -37,7 +37,7 @@ const POSE_SRC: Record<Exclude<Pose, 'center'>, string> = {
 /** The standing boy: his resting picture, with each expression stacked on top and faded in as needed. */
 function BoyPoses({ pose }: { pose: Pose }) {
   return <span className="hs-poses">
-    <img src="/assets/home/boy@640.webp" alt="" />
+    <img className={pose === 'center' ? '' : 'hide'} src="/assets/home/boy-nobird@640.webp" alt="" />
     {(Object.keys(POSE_SRC) as (keyof typeof POSE_SRC)[]).map((k) => <img key={k} className={`p ${pose === k ? 'on' : ''}`} src={`/assets/home/${POSE_SRC[k]}@640.webp`} alt="" />)}
   </span>;
 }
@@ -417,6 +417,24 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   const write = (value: string) => { s.setMonthReview(month, noteKey, value); setSaved(false); };
 
   const aim = look ?? hint;
+  /* CHIRPY FLIES. He rests on the boy's shoulder, flies up over the card you point at (never onto it),
+     takes a turn round the sky, and is back on the shoulder when someone speaks. */
+  const [tour, setTour] = useState<'shoulder' | 'sky' | 'c1' | 'c2' | 'c3'>('shoulder');
+  const [flying, setFlying] = useState(false);
+  useEffect(() => {
+    if (quiet || reduced) return;
+    const order: ('sky' | 'c3' | 'shoulder' | 'c1' | 'shoulder' | 'c2')[] = ['sky', 'c3', 'shoulder', 'c1', 'shoulder', 'c2'];
+    let i = 0;
+    const t = window.setInterval(() => { setTour(order[i % order.length]); i += 1; }, 7000);
+    return () => window.clearInterval(t);
+  }, [quiet, reduced]);
+  const spot: 'shoulder' | 'sky' | 'c1' | 'c2' | 'c3' = teaching ? 'shoulder' : aim !== null ? (`c${aim + 1}` as 'c1' | 'c2' | 'c3') : tour;
+  useEffect(() => {
+    setFlying(true);
+    const t = window.setTimeout(() => setFlying(false), 1000);
+    return () => window.clearTimeout(t);
+  }, [spot]);
+  const chirpyPose: ChirpyPose = teaching ? 'excited' : flying ? 'excited' : aim !== null ? 'wondering' : CHIRPY_MOODS[mood];
   const pose: Pose = flash ?? (teaching || aim !== null ? 'happy' : gaze);
   return <main ref={home} onPointerDown={(e) => { spark(e); if (!(e.target as HTMLElement).closest?.('.hs-friend-card,.hs-friend')) setFriend(null); }} onKeyDown={(e) => { if (e.key === 'Escape') setFriend(null); }} className={`mg-home ${night ? 'hs-night' : 'hs-day'} hs-${phase} ${quiet || reduced ? 'mg-still' : ''} ${leaving !== null ? `hs-leaving hs-leaving-${leaving + 1}` : ''}`} style={{ fontFamily: FONT }}>
     <div className={`hs-loading ${ready ? 'is-done' : ''}`} aria-hidden="true"><img src={`${A}LanternON.webp`} alt="" /></div>
@@ -474,6 +492,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     {/* Wide screens: the guide is pinned to the window's right-most edge, outside the scaled stage. */}
     <div className="hs-wide">
       <div className="hs-bubble hs-wide-bubble" aria-live="polite">{teaching ? <>{teaching}<small>Tap me again for another one.</small></> : aim !== null ? (look === null ? HINT_LINES[aim] : CARD_LINES[aim]) : (intro && met.length < total ? INTRO_LINE : greeting(hour))}</div>
+      <button className={`hs-flyer hs-at-${spot} ${flying ? 'is-flying' : ''}`} onClick={sayTeaching} aria-label="Chirpy. Tap him to hear something kind."><img src={chirpySprite(chirpyPose)} alt="" /></button>
       <button ref={boyBtn} className={`hs-wide-boy ${aim !== null ? `hs-look-${aim + 1}` : ''} ${teaching ? 'mg-boy-said' : ''} ${hop ? (hop % 2 ? 'hs-hop-a' : 'hs-hop-b') : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you"><BoyPoses pose={pose} /><span className="mg-tapme hs-tapme" aria-hidden="true">Tap me</span></button>
     </div>
     <div className="hs-stage">
@@ -494,7 +513,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
       </header>
 
       {/* Phone only: a standing boy at the left edge, fixed to the screen. */}
-      <button className={`hs-side hs-side-l ${teaching ? 'mg-boy-said' : ''} ${hop ? (hop % 2 ? 'hs-hop-a' : 'hs-hop-b') : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you"><BoyPoses pose={pose} /><span className="mg-tapme hs-tapme" aria-hidden="true">Tap me</span></button>
+      <button className={`hs-side hs-side-l ${teaching ? 'mg-boy-said' : ''} ${hop ? (hop % 2 ? 'hs-hop-a' : 'hs-hop-b') : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you"><BoyPoses pose={pose} /><img className="hs-chirp-m" src={chirpySprite(chirpyPose)} alt="" /><span className="mg-tapme hs-tapme" aria-hidden="true">Tap me</span></button>
       <section className="hs-guide" aria-label="Your guide">
         <div className="hs-bubble" aria-live="polite">{teaching ? <>{teaching}<small>Tap me again for another one.</small></> : aim !== null ? (look === null ? HINT_LINES[aim] : CARD_LINES[aim]) : (intro && met.length < total ? INTRO_LINE : greeting(hour))}</div>
         <button className={`hs-boy-wrap ${teaching ? 'mg-boy-said' : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you">
