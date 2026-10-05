@@ -65,6 +65,12 @@ const PHONE_LANTERNS: [number, number][] = [[.41, .09], [.056, .35], [.15, .78],
 const INTRO_LINE = 'Everything in this room has a feeling of its own. Tap them to hear what they feel!';
 const LANTERN_FRIENDS = ['glow', 'spark', 'flicker', 'hush'];
 const MOON: [string, number, number, number, number] = ['luna', .5025, .154, .055, .128];
+/* The same friends on the phone's background, in fractions of the screen: [id, x centre, y centre, w, h]. */
+const PHONE_FRIENDS: [string, number, number, number, number][] = [
+  ['glow', .41, .09, .1, .075], ['flicker', .15, .78, .1, .075], ['hush', .87, .79, .1, .075],
+];
+/* In fractions of the 972x1619 phone picture (it is laid out like background-size: cover). */
+const PHONE_MOON: [string, number, number, number, number] = ['luna', .5, .13, .2, .1];
 const SPOTS: [string, number, number, number, number][] = [
   ['rooty', .15, .36, .07, .2], ['bloom', .142, .64, .06, .22], ['snug', .43, .9, .14, .075], ['wish', .62, .07, .05, .1],
 ];
@@ -436,6 +442,13 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     <div className="hs-veil" aria-hidden="true" />
     <div className="hs-cloudpop" aria-hidden="true"><i className="hs-cloud cv-drift" /><i className="hs-cloud cv-puff" /></div>
     <span className="hs-rugpop" aria-hidden="true" />
+    <div className="hs-friends-m">
+      {(night ? [...PHONE_FRIENDS, PHONE_MOON] : PHONE_FRIENDS).map(([id, x, y, w, h], i) => <button key={id} className={`hs-friend-m ${(wave + 2) % 10 === i || all ? 'is-calling' : ''}`}
+        style={{ left: `calc(50vw - var(--pw) / 2 + var(--pw) * ${x - w / 2})`, top: `calc(var(--ph) * ${y - h / 2})`, width: `calc(var(--pw) * ${w})`, height: `calc(var(--ph) * ${h})` }}
+        aria-label={`${FRIENDS[id].name}, ${FRIENDS[id].thing}. Tap to hear how it feels.`} onClick={(e) => meet(id, e)}>
+        {id !== 'luna' && <i className="hs-spk-m" aria-hidden="true">✦</i>}</button>)}
+      <button className="hs-meet-m" onClick={callAll} aria-label="Sparkles are friends that share a feeling. Tap to see who you can meet.">✦ friends <em>{met.length}/{total}</em></button>
+    </div>
     <div className="hs-friends">
       <button className={`hs-meet ${met.length >= total ? 'is-done' : ''}`} onClick={callAll} aria-label="Arrows open another place. Sparkles are friends that share a feeling. Tap to see who you can meet.">
         <span className="k-door"><b aria-hidden="true">→</b> opens a place</span>
