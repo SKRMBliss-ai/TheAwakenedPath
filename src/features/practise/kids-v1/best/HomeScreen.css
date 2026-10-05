@@ -1226,3 +1226,17 @@
   .hs-lan{transition:filter .4s ease,scale .4s ease}
   .hs-lan.is-hot{scale:1.08;filter:drop-shadow(0 0 22px #ffcf6aee) drop-shadow(0 0 48px #ff9a3a99);z-index:2}
 }
+
+/* The clouds are PAINTED behind everything (in the sky layer); the buttons that make them tappable
+   are invisible and fly on exactly the same path, so a tap lands on the cloud you can see. */
+@media(min-width:761px) and (min-aspect-ratio:1/1){
+  .hs-cloud.cv-drift{left:-30%;top:7%;width:21%;opacity:.95;animation-duration:80s;animation-delay:0s}
+  .hs-cloud.cv-puff{left:-20%;top:25%;width:12%;opacity:.9;scale:-1 1;animation-duration:105s;animation-delay:-44s}
+  .hs-f-cloud,.hs-f-cloud:hover,.hs-f-cloud:focus-visible{background:none!important;box-shadow:none;filter:none}
+  .hs-f-cloud .hs-spk{display:none}
+  .mg-home:has(.hs-f-drift:hover,.hs-f-drift:focus-visible) .cv-drift,.mg-home:has(.hs-f-puff:hover,.hs-f-puff:focus-visible) .cv-puff{filter:brightness(1.15) drop-shadow(0 0 14px #ffd2e8cc)}
+  .mg-still .hs-cloud.cv-drift,.mg-still .hs-f-drift{left:42%}.mg-still .hs-cloud.cv-puff,.mg-still .hs-f-puff{left:22%}
+}
+@media(min-width:761px) and (min-aspect-ratio:1/1) and (prefers-reduced-motion:reduce){
+  .hs-cloud.cv-drift,.hs-f-drift{left:42%}.hs-cloud.cv-puff,.hs-f-puff{left:22%}
+}

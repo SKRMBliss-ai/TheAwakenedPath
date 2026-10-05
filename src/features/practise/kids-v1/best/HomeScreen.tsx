@@ -418,7 +418,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     {askAge && <AgePopup onDone={() => setAskAge(false)} />}
     <div className="hs-tod" aria-hidden="true" style={{ background: dayGrade(hour) }} />
     <div className="hs-sky" aria-hidden="true">
-      <i className="hs-cloud c3" /><i className="hs-cloud c4" />
+      <i className="hs-cloud cv-drift" /><i className="hs-cloud cv-puff" /><i className="hs-cloud c3" /><i className="hs-cloud c4" />
       <b className="hs-shoot s1" /><b className="hs-shoot s2" />
     </div>
     <div className="hs-bg" aria-hidden="true">
