@@ -1180,3 +1180,28 @@
   .hs-corner{transition:filter .35s ease,transform .3s ease}
   .mg-home:has(.hs-f-snug:hover,.hs-f-snug:focus-visible) .hs-corner{filter:blur(3.5px) brightness(.62) saturate(.85)}
 }
+
+/* ===== TWO CLEAR SIGNALS: arrows open a place, sparkles are friends ===== */
+@media(min-width:761px) and (min-aspect-ratio:1/1){
+  /* My Corner is a door: a solid arrow button, like the three cards' buttons. */
+  .hs-tag{left:68%;top:30%;padding:.35em 1.1em;font:700 calc(var(--u)*1.1)/1.1 'Fredoka','Outfit',system-ui,sans-serif;color:#fff;border:2px solid #fff8;
+    background:linear-gradient(#ffb36b,#ff7a3d);box-shadow:0 .3cqw 1cqw #0007,0 0 1.2cqw #ff9a4a99;animation:hs-invite 9s ease-in-out infinite;animation-delay:1.5s}
+  .hs-tag b{display:inline-block;margin-left:.25em;font-size:1.2em;transition:transform .2s}
+  .hs-corner:hover .hs-tag b,.hs-corner:focus-visible .hs-tag b{transform:translateX(.35em)}
+  .hs-go span{display:inline-block;transition:transform .2s}
+  .hs-go:hover span,.hs-card:hover .hs-go span{transform:translateX(.3em)}
+  /* A little twinkle on every friend, so they can be told from scenery without hovering. */
+  .hs-spk{position:absolute;right:-4%;top:-2%;font-style:normal;font-size:calc(var(--iw)*.017);color:#fff6b0;text-shadow:0 0 6px #ffe27a,0 0 14px #ffd86a;pointer-events:none;animation:hs-twinkle 2.6s ease-in-out infinite}
+  .hs-f-lan .hs-spk{right:-22%;top:6%}
+  .hs-f-cloud .hs-spk{right:12%;top:-12%}
+  .hs-friend:nth-child(3n) .hs-spk{animation-delay:-.9s}.hs-friend:nth-child(3n+1) .hs-spk{animation-delay:-1.7s}
+  /* The key at the top. */
+  .hs-meet{gap:1.1em}
+  .hs-meet .k-door b{color:#ffb36b;text-shadow:0 0 8px #ff9a4a}
+  .hs-meet .k-friend b{color:#ffe27a;text-shadow:0 0 8px #ffd86a}
+  .hs-friend-card .kind{margin:0 0 6px;font:700 .72rem/1.2 'Outfit',system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:#b5851f}
+}
+.hs-tag b{font-weight:700}
+.mg-still .hs-spk,.mg-still .hs-tag{animation:none!important}
+@media(prefers-reduced-motion:reduce){.hs-spk,.hs-tag{animation:none!important}}
+@media(max-width:760px),(max-aspect-ratio:1/1){.hs-tag{background:linear-gradient(#ffb36b,#ff7a3d);color:#fff;border:2px solid #fff8}}

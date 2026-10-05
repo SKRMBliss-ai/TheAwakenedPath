@@ -409,6 +409,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     {friend && <div className="hs-friend-card" role="status" style={{ left: Math.min(Math.max(friend.x, 190), (typeof window === 'undefined' ? 800 : window.innerWidth) - 190), top: Math.min(Math.max(friend.y + 36, 20), (typeof window === 'undefined' ? 600 : window.innerHeight) - 220) }} onClick={(e) => e.stopPropagation()}>
       <button className="x" aria-label="Close" onClick={() => setFriend(null)}>×</button>
       <header><b>{friend.f.name}</b><span>{friend.f.feeling}</span></header>
+      <p className="kind">✦ A friend — just sharing a feeling</p>
       <p className="say">“{friend.f.line}”</p>
       <p className="learn">{friend.f.lesson}</p>
     </div>}
@@ -427,17 +428,17 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     <div className="hs-veil" aria-hidden="true" />
     <span className="hs-rugpop" aria-hidden="true" />
     <div className="hs-friends">
-      <button className={`hs-meet ${met.length >= 10 ? 'is-done' : ''}`} onClick={callAll} aria-label="Everything in this room has a feeling. Tap to see who you can meet.">
-        <span aria-hidden="true">✦</span>
-        {met.length >= 10 ? 'You met every friend!' : 'Tap the glowing things to meet their feelings'}
+      <button className={`hs-meet ${met.length >= 10 ? 'is-done' : ''}`} onClick={callAll} aria-label="Arrows open another place. Sparkles are friends that share a feeling. Tap to see who you can meet.">
+        <span className="k-door"><b aria-hidden="true">→</b> opens a place</span>
+        <span className="k-friend"><b aria-hidden="true">✦</b> {met.length >= 10 ? 'you met every friend!' : 'a friend’s feeling'}</span>
         <em>{met.length}/10</em>
       </button>
       {LANTERNS.map(([x, y, h], i) => <button key={`l${i}`} className={`hs-friend hs-f-lan ${wave === i || all ? 'is-calling' : ''}`} style={{ left: `${x * 100}%`, top: `${y * 100}%`, height: `${h * 100}%` }}
-        aria-label={`${FRIENDS[LANTERN_FRIENDS[i]].name}, ${FRIENDS[LANTERN_FRIENDS[i]].thing}. Tap to hear how it feels.`} onClick={(e) => meet(LANTERN_FRIENDS[i], e)} />)}
+        aria-label={`${FRIENDS[LANTERN_FRIENDS[i]].name}, ${FRIENDS[LANTERN_FRIENDS[i]].thing}. Tap to hear how it feels.`} onClick={(e) => meet(LANTERN_FRIENDS[i], e)}><i className="hs-spk" aria-hidden="true">✦</i></button>)}
       {SPOTS.map(([id, x, y, w, h], i) => <button key={id} className={`hs-friend hs-f-spot hs-f-${id} ${wave === 4 + i || all ? 'is-calling' : ''}`} style={{ left: `${(x - w / 2) * 100}%`, top: `${(y - h / 2) * 100}%`, width: `${w * 100}%`, height: `${h * 100}%` }}
-        aria-label={`${FRIENDS[id].name}, ${FRIENDS[id].thing}. Tap to hear how it feels.`} onClick={(e) => meet(id, e)}>{id === 'wish' && <span aria-hidden="true">✦</span>}</button>)}
+        aria-label={`${FRIENDS[id].name}, ${FRIENDS[id].thing}. Tap to hear how it feels.`} onClick={(e) => meet(id, e)}>{id === 'wish' ? <span aria-hidden="true">✦</span> : <i className="hs-spk" aria-hidden="true">✦</i>}</button>)}
       {(['drift', 'puff'] as const).map((id, i) => <button key={id} className={`hs-friend hs-f-cloud hs-f-${id} ${wave === 8 + i || all ? 'is-calling' : ''}`}
-        aria-label={`${FRIENDS[id].name}, ${FRIENDS[id].thing}. Tap to hear how it feels.`} onClick={(e) => meet(id, e)} />)}
+        aria-label={`${FRIENDS[id].name}, ${FRIENDS[id].thing}. Tap to hear how it feels.`} onClick={(e) => meet(id, e)}><i className="hs-spk" aria-hidden="true">✦</i></button>)}
     </div>
     <div className="hs-lanterns" aria-hidden="true">
       {LANTERNS.map(([x, y, h], i) => <span key={i} className="hs-lan" style={{ left: `${x * 100}%`, top: `${y * 100}%`, height: `${h * 100}%`, ['--d' as string]: `${(i * 0.7).toFixed(1)}s` }}>
@@ -510,7 +511,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
         <img className="hs-bean" src="/mind-gym/corner/hs-beanbag.webp" alt="" />
         <img src="/mind-gym/corner/hs-sign.webp" alt="" />
         <span><b>My Corner</b><small>Rest, reflect and revisit.</small></span>
-        <em className="hs-tag" aria-hidden="true">Tap to rest here ✦</em>
+        <em className="hs-tag" aria-hidden="true">Go in <b>→</b></em>
       </button>}
 
       <FloorBuddy onOpen={onBuddies} />
