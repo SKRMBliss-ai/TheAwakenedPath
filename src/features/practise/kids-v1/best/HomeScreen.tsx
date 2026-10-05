@@ -409,6 +409,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
       {!quiet && !reduced && FIREFLIES.map((f, i) => <b key={i} className="hs-fly" style={{ left: `${f.x * 100}%`, top: `${f.y * 100}%`, animationDuration: `${f.d}s`, animationDelay: `-${f.s}s`, ['--r' as string]: `${f.r}px` }} />)}
     </div>
     <div className="hs-veil" aria-hidden="true" />
+    <span className="hs-rugpop" aria-hidden="true" />
     <div className="hs-friends">
       {LANTERNS.map(([x, y, h], i) => <button key={`l${i}`} className={`hs-friend hs-f-lan ${wave === i ? 'is-calling' : ''}`} style={{ left: `${x * 100}%`, top: `${y * 100}%`, height: `${h * 100}%` }}
         aria-label={`${FRIENDS[LANTERN_FRIENDS[i]].name}, ${FRIENDS[LANTERN_FRIENDS[i]].thing}. Tap to hear how it feels.`} onClick={(e) => meet(LANTERN_FRIENDS[i], e)} />)}

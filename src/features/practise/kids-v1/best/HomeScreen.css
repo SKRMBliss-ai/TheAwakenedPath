@@ -1147,3 +1147,18 @@
   .hs-rugfx:after{content:'';position:absolute;inset:6% 4% 8%;border-radius:50%;mix-blend-mode:soft-light;
     background:radial-gradient(ellipse at 50% 35%,#ffcf8a66 0,#ff9a4a22 50%,transparent 78%)}
 }
+
+/* Hovering the rug: the whole rug is lit and sharp, everything else softens and dims. */
+.hs-rugpop{display:none}
+@media(min-width:761px) and (min-aspect-ratio:1/1){
+  .hs-rugpop{display:block;position:fixed;left:0;top:0;width:100vw;height:100svh;z-index:0;pointer-events:none;opacity:0;transition:opacity .35s ease;
+    background:url('/mind-gym/home/environment.webp') center/cover no-repeat;filter:brightness(1.15) saturate(1.15);
+    transform:scale(1.06) translate(calc(var(--px)*-1.1%),calc(var(--py)*-1.1%));
+    -webkit-mask-image:radial-gradient(ellipse calc(var(--iw)*.215) calc(var(--ih)*.105) at calc(50vw - var(--iw)/2 + var(--iw)*.5) calc(50svh - var(--ih)/2 + var(--ih)*.9),#000 62%,transparent 100%);
+    mask-image:radial-gradient(ellipse calc(var(--iw)*.215) calc(var(--ih)*.105) at calc(50vw - var(--iw)/2 + var(--iw)*.5) calc(50svh - var(--ih)/2 + var(--ih)*.9),#000 62%,transparent 100%)}
+  .mg-home:has(.hs-f-snug:hover,.hs-f-snug:focus-visible) .hs-rugpop{opacity:1}
+  .mg-home:has(.hs-f-snug:hover,.hs-f-snug:focus-visible) .hs-veil{opacity:1}
+  .mg-home:has(.hs-f-snug:hover,.hs-f-snug:focus-visible) .hs-lan .on{opacity:1}
+  .mg-home:has(.hs-f-snug:hover,.hs-f-snug:focus-visible) .hs-card{filter:blur(3.5px) brightness(.62) saturate(.85);transform:scale(.88)}
+  .hs-f-snug:hover,.hs-f-snug:focus-visible{background:none;box-shadow:none}
+}
