@@ -62,6 +62,7 @@ function dayGrade(h: number) {
 const PHONE_LANTERNS: [number, number][] = [[.41, .09], [.056, .35], [.15, .78], [.97, .36], [.87, .79]];
 /* Which lantern is which friend (same order as LANTERNS), and where the other friends stand,
    as fractions of the 1915x821 environment: [id, x centre, y centre, width, height]. */
+const INTRO_LINE = 'Everything in this room has a feeling of its own. Tap them to hear what they feel!';
 const LANTERN_FRIENDS = ['glow', 'spark', 'flicker', 'hush'];
 const SPOTS: [string, number, number, number, number][] = [
   ['rooty', .15, .36, .07, .2], ['bloom', .142, .64, .06, .22], ['snug', .43, .9, .14, .075], ['wish', .62, .07, .05, .1],
@@ -235,10 +236,25 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     e.stopPropagation();
     const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
     setFriend({ f, x: r.left + r.width / 2, y: r.top + r.height / 2 });
+    setIntro(false);
+    setMet((m) => {
+      if (m.includes(id)) return m;
+      const next = [...m, id];
+      try { localStorage.setItem('mg-friends-met', JSON.stringify(next)); } catch { /* private mode */ }
+      return next;
+    });
     sound.play('tap'); speak(`${f.line} ${f.lesson}`, quiet);
     window.clearTimeout(friendTimer.current);
     friendTimer.current = window.setTimeout(() => setFriend(null), 14_000);
   };
+  /* Which friends this child has met, kept on this device only. */
+  const [met, setMet] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('mg-friends-met') || '[]') as string[]; } catch { return []; }
+  });
+  const [intro, setIntro] = useState(true);
+  useEffect(() => { const t = window.setTimeout(() => setIntro(false), 9000); return () => window.clearTimeout(t); }, []);
+  const [all, setAll] = useState(false);
+  const callAll = () => { setAll(true); window.setTimeout(() => setAll(false), 2600); sound.play('tap'); };
   const [wave, setWave] = useState(0);
   useEffect(() => {
     if (quiet || reduced) return;
@@ -411,11 +427,16 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     <div className="hs-veil" aria-hidden="true" />
     <span className="hs-rugpop" aria-hidden="true" />
     <div className="hs-friends">
-      {LANTERNS.map(([x, y, h], i) => <button key={`l${i}`} className={`hs-friend hs-f-lan ${wave === i ? 'is-calling' : ''}`} style={{ left: `${x * 100}%`, top: `${y * 100}%`, height: `${h * 100}%` }}
+      <button className={`hs-meet ${met.length >= 10 ? 'is-done' : ''}`} onClick={callAll} aria-label="Everything in this room has a feeling. Tap to see who you can meet.">
+        <span aria-hidden="true">✦</span>
+        {met.length >= 10 ? 'You met every friend!' : 'Tap the glowing things to meet their feelings'}
+        <em>{met.length}/10</em>
+      </button>
+      {LANTERNS.map(([x, y, h], i) => <button key={`l${i}`} className={`hs-friend hs-f-lan ${wave === i || all ? 'is-calling' : ''}`} style={{ left: `${x * 100}%`, top: `${y * 100}%`, height: `${h * 100}%` }}
         aria-label={`${FRIENDS[LANTERN_FRIENDS[i]].name}, ${FRIENDS[LANTERN_FRIENDS[i]].thing}. Tap to hear how it feels.`} onClick={(e) => meet(LANTERN_FRIENDS[i], e)} />)}
-      {SPOTS.map(([id, x, y, w, h], i) => <button key={id} className={`hs-friend hs-f-spot hs-f-${id} ${wave === 4 + i ? 'is-calling' : ''}`} style={{ left: `${(x - w / 2) * 100}%`, top: `${(y - h / 2) * 100}%`, width: `${w * 100}%`, height: `${h * 100}%` }}
+      {SPOTS.map(([id, x, y, w, h], i) => <button key={id} className={`hs-friend hs-f-spot hs-f-${id} ${wave === 4 + i || all ? 'is-calling' : ''}`} style={{ left: `${(x - w / 2) * 100}%`, top: `${(y - h / 2) * 100}%`, width: `${w * 100}%`, height: `${h * 100}%` }}
         aria-label={`${FRIENDS[id].name}, ${FRIENDS[id].thing}. Tap to hear how it feels.`} onClick={(e) => meet(id, e)}>{id === 'wish' && <span aria-hidden="true">✦</span>}</button>)}
-      {(['drift', 'puff'] as const).map((id, i) => <button key={id} className={`hs-friend hs-f-cloud hs-f-${id} ${wave === 8 + i ? 'is-calling' : ''}`}
+      {(['drift', 'puff'] as const).map((id, i) => <button key={id} className={`hs-friend hs-f-cloud hs-f-${id} ${wave === 8 + i || all ? 'is-calling' : ''}`}
         aria-label={`${FRIENDS[id].name}, ${FRIENDS[id].thing}. Tap to hear how it feels.`} onClick={(e) => meet(id, e)} />)}
     </div>
     <div className="hs-lanterns" aria-hidden="true">
@@ -425,7 +446,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     {onKeepsakes && <span className="hs-sofa" aria-hidden="true" />}
     {/* Wide screens: the guide is pinned to the window's right-most edge, outside the scaled stage. */}
     <div className="hs-wide">
-      <div className="hs-bubble hs-wide-bubble" aria-live="polite">{teaching ? <>{teaching}<small>Tap me again for another one.</small></> : aim !== null ? (look === null ? HINT_LINES[aim] : CARD_LINES[aim]) : greeting(hour)}</div>
+      <div className="hs-bubble hs-wide-bubble" aria-live="polite">{teaching ? <>{teaching}<small>Tap me again for another one.</small></> : aim !== null ? (look === null ? HINT_LINES[aim] : CARD_LINES[aim]) : (intro && met.length < 10 ? INTRO_LINE : greeting(hour))}</div>
       <button ref={boyBtn} className={`hs-wide-boy ${aim !== null ? `hs-look-${aim + 1}` : ''} ${teaching ? 'mg-boy-said' : ''} ${hop ? (hop % 2 ? 'hs-hop-a' : 'hs-hop-b') : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you"><BoyPoses pose={pose} /><span className="mg-tapme hs-tapme" aria-hidden="true">Tap me</span></button>
     </div>
     <div className="hs-stage">
@@ -448,7 +469,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
       {/* Phone only: a standing boy at the left edge, fixed to the screen. */}
       <button className={`hs-side hs-side-l ${teaching ? 'mg-boy-said' : ''} ${hop ? (hop % 2 ? 'hs-hop-a' : 'hs-hop-b') : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you"><BoyPoses pose={pose} /><span className="mg-tapme hs-tapme" aria-hidden="true">Tap me</span></button>
       <section className="hs-guide" aria-label="Your guide">
-        <div className="hs-bubble" aria-live="polite">{teaching ? <>{teaching}<small>Tap me again for another one.</small></> : aim !== null ? (look === null ? HINT_LINES[aim] : CARD_LINES[aim]) : greeting(hour)}</div>
+        <div className="hs-bubble" aria-live="polite">{teaching ? <>{teaching}<small>Tap me again for another one.</small></> : aim !== null ? (look === null ? HINT_LINES[aim] : CARD_LINES[aim]) : (intro && met.length < 10 ? INTRO_LINE : greeting(hour))}</div>
         <button className={`hs-boy-wrap ${teaching ? 'mg-boy-said' : ''}`} onClick={sayTeaching} aria-label="Tap the explorer — he has something to tell you">
           <img className="hs-boy mg-boy" src={`${A}boy_fullbody.webp`} alt="Your red-cap explorer" />
           <img className="hs-chirpy mg-chirpy" src={chirpySprite(teaching ? 'excited' : CHIRPY_MOODS[mood])} alt="Chirpy" />

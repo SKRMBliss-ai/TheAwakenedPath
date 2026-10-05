@@ -1162,3 +1162,17 @@
   .mg-home:has(.hs-f-snug:hover,.hs-f-snug:focus-visible) .hs-card{filter:blur(3.5px) brightness(.62) saturate(.85);transform:scale(.88)}
   .hs-f-snug:hover,.hs-f-snug:focus-visible{background:none;box-shadow:none}
 }
+
+/* The invitation to meet the room's friends. */
+.hs-meet{display:none}
+@media(min-width:761px) and (min-aspect-ratio:1/1){
+  .hs-meet{display:flex;align-items:center;gap:.6em;position:fixed;left:50%;top:2.6vh;translate:-50% 0;transform:none;z-index:4;pointer-events:auto;cursor:pointer;
+    padding:.5em 1.1em;border-radius:99px;border:2px solid #e9c27a;background:linear-gradient(#2a1f78e6,#1b1456e6);color:#fff3c8;
+    font:700 clamp(12px,1.05vw,17px)/1.2 'Fredoka','Outfit',system-ui,sans-serif;box-shadow:0 .3vw 1.2vw #0008,0 0 1.4vw #ffd86a44;animation:mg-tapme 3.2s ease-in-out infinite}
+  .hs-meet span{color:#ffe27a;text-shadow:0 0 8px #ffd86a}
+  .hs-meet em{font-style:normal;padding:.1em .6em;border-radius:99px;background:#ffd977;color:#5a3a06;font-size:.85em}
+  .hs-meet.is-done{animation:none;border-color:#9be7a8;color:#d8ffe0}
+  .hs-meet:hover,.hs-meet:focus-visible{filter:brightness(1.2);animation:none}
+}
+.mg-still .hs-meet{animation:none!important}
+@media(prefers-reduced-motion:reduce){.hs-meet{animation:none!important}}
