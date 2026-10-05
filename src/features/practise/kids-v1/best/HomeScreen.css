@@ -1386,3 +1386,22 @@
   .hs-stage .hb-hatch .hb-long{display:inline}.hs-stage .hb-hatch .hb-short{display:none}
   .hs-stage .hb-hud:has(.hb-hatch){padding-bottom:5px}
 }
+
+/* No frames around the friends: hovering just brightens its sparkle. */
+.hs-friend:hover,.hs-friend:focus-visible,.hs-friend-m:focus-visible{background:none!important;box-shadow:none!important;outline:none}
+.hs-friend:hover .hs-spk,.hs-friend:focus-visible .hs-spk{font-size:calc(var(--iw)*.026);text-shadow:0 0 10px #ffe27a,0 0 24px #ffd86a,0 0 40px #ffb23e}
+.hs-spk{transition:font-size .2s ease}
+
+/* Hovering the tree or the flowers (or the star): that thing stays sharp and lit, the rest of the room blurs and dims. */
+.hs-pop{display:none}
+@media(min-width:761px) and (min-aspect-ratio:1/1){
+  .hs-pop{display:block;position:fixed;left:0;top:0;width:100vw;height:100svh;z-index:0;pointer-events:none;opacity:0;transition:opacity .35s ease;
+    background:url('/mind-gym/home/environment.webp') center/cover no-repeat;filter:brightness(1.15) saturate(1.15);
+    transform:scale(1.06) translate(calc(var(--px)*-1.1%),calc(var(--py)*-1.1%))}
+  .hs-pop-rooty{-webkit-mask-image:radial-gradient(ellipse calc(var(--iw)*0.085) calc(var(--ih)*0.17) at calc(50vw - var(--iw)/2 + var(--iw)*0.15) calc(50svh - var(--ih)/2 + var(--ih)*0.36),#000 60%,transparent 100%);mask-image:radial-gradient(ellipse calc(var(--iw)*0.085) calc(var(--ih)*0.17) at calc(50vw - var(--iw)/2 + var(--iw)*0.15) calc(50svh - var(--ih)/2 + var(--ih)*0.36),#000 60%,transparent 100%)}
+  .hs-pop-bloom{-webkit-mask-image:radial-gradient(ellipse calc(var(--iw)*0.075) calc(var(--ih)*0.19) at calc(50vw - var(--iw)/2 + var(--iw)*0.142) calc(50svh - var(--ih)/2 + var(--ih)*0.64),#000 60%,transparent 100%);mask-image:radial-gradient(ellipse calc(var(--iw)*0.075) calc(var(--ih)*0.19) at calc(50vw - var(--iw)/2 + var(--iw)*0.142) calc(50svh - var(--ih)/2 + var(--ih)*0.64),#000 60%,transparent 100%)}
+  .mg-home:has(.hs-f-rooty:hover,.hs-f-rooty:focus-visible) .hs-pop-rooty,.mg-home:has(.hs-f-bloom:hover,.hs-f-bloom:focus-visible) .hs-pop-bloom{opacity:1}
+  .mg-home:has(.hs-f-spot:hover,.hs-f-spot:focus-visible) .hs-veil{opacity:1}
+  .mg-home:has(.hs-f-spot:hover,.hs-f-spot:focus-visible) .hs-lan .on{opacity:1}
+  .mg-home:has(.hs-f-spot:not(.hs-f-snug):hover,.hs-f-spot:not(.hs-f-snug):focus-visible) .hs-card,.mg-home:has(.hs-f-spot:not(.hs-f-snug):hover,.hs-f-spot:not(.hs-f-snug):focus-visible) .hs-corner{filter:blur(3.5px) brightness(.62) saturate(.85);transform:scale(.9)}
+}

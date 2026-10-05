@@ -442,6 +442,8 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     <div className="hs-veil" aria-hidden="true" />
     <div className="hs-cloudpop" aria-hidden="true"><i className="hs-cloud cv-drift" /><i className="hs-cloud cv-puff" /></div>
     <span className="hs-rugpop" aria-hidden="true" />
+    <span className="hs-pop hs-pop-rooty" aria-hidden="true" />
+    <span className="hs-pop hs-pop-bloom" aria-hidden="true" />
     <div className="hs-friends-m">
       {(night ? [...PHONE_FRIENDS, PHONE_MOON] : PHONE_FRIENDS).map(([id, x, y, w, h], i) => <button key={id} className={`hs-friend-m ${(wave + 2) % 10 === i || all ? 'is-calling' : ''}`}
         style={{ left: `calc(50vw - var(--pw) / 2 + var(--pw) * ${x - w / 2})`, top: `calc(var(--ph) * ${y - h / 2})`, width: `calc(var(--pw) * ${w})`, height: `calc(var(--ph) * ${h})` }}
