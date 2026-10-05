@@ -266,6 +266,8 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   const [hour] = useState(() => new Date().getHours());
   /* NIGHT — from seven in the evening to six in the morning the sky has a full moon and the clouds go moonlit. */
   const night = hour >= 19 || hour < 6;
+  /* The sky follows the hour: morning, midday, evening, night. */
+  const phase = night ? 'night' : hour < 10 ? 'morning' : hour < 16 ? 'midday' : 'evening';
   const total = night ? 11 : 10;
   /* The place has its own night air — the same bed the hub uses for this hour.
      Silent while sound is off (the default) and in the quiet state. */
@@ -408,7 +410,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
 
   const aim = look ?? hint;
   const pose: Pose = flash ?? (teaching || aim !== null ? 'happy' : gaze);
-  return <main ref={home} onPointerDown={(e) => { spark(e); if (!(e.target as HTMLElement).closest?.('.hs-friend-card,.hs-friend')) setFriend(null); }} onKeyDown={(e) => { if (e.key === 'Escape') setFriend(null); }} className={`mg-home ${night ? 'hs-night' : 'hs-day'} ${quiet || reduced ? 'mg-still' : ''} ${leaving !== null ? `hs-leaving hs-leaving-${leaving + 1}` : ''}`} style={{ fontFamily: FONT }}>
+  return <main ref={home} onPointerDown={(e) => { spark(e); if (!(e.target as HTMLElement).closest?.('.hs-friend-card,.hs-friend')) setFriend(null); }} onKeyDown={(e) => { if (e.key === 'Escape') setFriend(null); }} className={`mg-home ${night ? 'hs-night' : 'hs-day'} hs-${phase} ${quiet || reduced ? 'mg-still' : ''} ${leaving !== null ? `hs-leaving hs-leaving-${leaving + 1}` : ''}`} style={{ fontFamily: FONT }}>
     <div className={`hs-loading ${ready ? 'is-done' : ''}`} aria-hidden="true"><img src={`${A}LanternON.webp`} alt="" /></div>
     {sparks.map((p) => <span key={p.id} className="hs-tapspark" style={{ left: p.x, top: p.y }}>{Array.from({ length: 8 }, (_, k) => <i key={k} style={{ ['--a' as string]: `${k * 45}deg` }} />)}</span>)}
     {friend && <div className="hs-friend-card" role="status" style={{ left: Math.min(Math.max(friend.x, 190), (typeof window === 'undefined' ? 800 : window.innerWidth) - 190), top: Math.min(Math.max(friend.y + 36, 20), (typeof window === 'undefined' ? 600 : window.innerHeight) - 220) }} onClick={(e) => e.stopPropagation()}>

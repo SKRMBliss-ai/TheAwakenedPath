@@ -1280,3 +1280,26 @@
 @keyframes hs-moonglow{0%,100%{box-shadow:0 0 1.4vw .5vw #fff6c8aa,0 0 5vw 1.6vw #cfd8ff55,0 0 12vw 4vw #8aa0ff22}50%{box-shadow:0 0 1.8vw .7vw #fff6c8cc,0 0 6vw 2vw #cfd8ff77,0 0 14vw 4.6vw #8aa0ff33}}
 .mg-still .hs-moon{animation:none}
 @media(prefers-reduced-motion:reduce){.hs-moon{animation:none}}
+
+/* The real moon (a painting) replaces the code-made one. */
+@media(min-width:761px) and (min-aspect-ratio:1/1){
+  .hs-moon{background:url('/mind-gym/home/moon.webp') center/100% 100% no-repeat;filter:brightness(1.05);border-radius:50%}
+}
+
+/* ===== A SKY FOR EVERY HOUR ===== */
+@media(min-width:761px) and (min-aspect-ratio:1/1){
+  .hs-morning .hs-sky{background:
+      radial-gradient(ellipse at 50% 60%,#fff2c8aa 0,transparent 45%),
+      linear-gradient(180deg,#5a8fd8 0%,#8fb8ec 24%,#cfd8f2 40%,#ffd2b0 50%,#ffb98a 56%,#d9a0a0 62%,#7a78b0 72%,#4a4a88 100%)}
+  .hs-midday .hs-sky{background:
+      radial-gradient(ellipse at 52% 52%,#ffffffaa 0,transparent 40%),
+      linear-gradient(180deg,#2f7fe0 0%,#58a4f0 28%,#9bd0fa 46%,#d6ecfb 54%,#cfe6f0 58%,#a9c4d8 64%,#6a7fae 74%,#46508a 100%)}
+  .hs-evening .hs-sky{background:
+      radial-gradient(1.5px 1.5px at 22% 8%,#fff,transparent),radial-gradient(1.5px 1.5px at 56% 6%,#fff9,transparent),radial-gradient(2px 2px at 78% 11%,#fff,transparent),
+      linear-gradient(180deg,#1b1456 0%,#2f2290 22%,#6a3aa8 38%,#c0629f 47%,#ff9a6a 54%,#ffc07a 58%,#7a4a8e 62%,#3b2a70 72%,#241a58 100%)}
+  /* no stars, fireflies or shooting stars in full daylight; the clouds keep their white */
+  .hs-midday .hs-fly,.hs-morning .hs-fly{display:none}
+  .hs-midday .hs-lan .on,.hs-morning .hs-lan .on{transition:opacity .45s ease}
+  .hs-midday .hs-tod,.hs-morning .hs-tod{background:none!important}
+  .hs-midday .hs-spk,.hs-morning .hs-spk{opacity:.85}
+}
