@@ -201,7 +201,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   const [ready, setReady] = useState(false);
   useEffect(() => {
     let done = false; const finish = () => { if (!done) { done = true; setReady(true); } };
-    const srcs = [`${A}environment.webp`, '/assets/home/boy@640.webp', `${A}LanternON.webp`];
+    const srcs = [`${A}environment.webp`, '/assets/home/boy-nobird@640.webp', `${A}LanternON.webp`];
     let left = srcs.length;
     srcs.forEach((s) => { const im = new Image(); im.onload = im.onerror = () => { left -= 1; if (left <= 0) finish(); }; im.src = s; });
     const t = window.setTimeout(finish, 4000);
