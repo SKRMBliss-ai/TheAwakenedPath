@@ -1448,6 +1448,7 @@
   /* shoulder: measured from the boy's own box (29S wide, right-aligned past the edge) */
   .hs-at-shoulder{left:calc(104.8vw - var(--S)*29 + var(--S)*29*.28);top:calc(100svh + var(--S)*1.7 - var(--S)*43.5 + var(--S)*43.5*.3)}
   .hs-at-sky{left:calc(var(--SL) + var(--W)*.5);top:calc(var(--ST) + var(--W)*9/16*.13)}
+  .hs-at-rail{left:calc(var(--SL) + var(--W)*.105);top:calc(var(--ST) + var(--W)*9/16*.355)}
   .hs-at-c1{left:calc(var(--SL) + var(--W)*.255);top:calc(var(--ST) + var(--W)*9/16*.285)}
   .hs-at-c2{left:calc(var(--SL) + var(--W)*.5);top:calc(var(--ST) + var(--W)*9/16*.285)}
   .hs-at-c3{left:calc(var(--SL) + var(--W)*.745);top:calc(var(--ST) + var(--W)*9/16*.285)}

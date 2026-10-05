@@ -419,16 +419,16 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   const aim = look ?? hint;
   /* CHIRPY FLIES. He rests on the boy's shoulder, flies up over the card you point at (never onto it),
      takes a turn round the sky, and is back on the shoulder when someone speaks. */
-  const [tour, setTour] = useState<'shoulder' | 'sky' | 'c1' | 'c2' | 'c3'>('shoulder');
+  const [tour, setTour] = useState<'shoulder' | 'sky' | 'rail' | 'c1' | 'c2' | 'c3'>('shoulder');
   const [flying, setFlying] = useState(false);
   useEffect(() => {
     if (quiet || reduced) return;
-    const order: ('sky' | 'c3' | 'shoulder' | 'c1' | 'shoulder' | 'c2')[] = ['sky', 'c3', 'shoulder', 'c1', 'shoulder', 'c2'];
+    const order: ('sky' | 'rail' | 'c3' | 'shoulder' | 'c1' | 'c2')[] = ['sky', 'rail', 'c3', 'shoulder', 'c1', 'rail', 'c2', 'shoulder'];
     let i = 0;
     const t = window.setInterval(() => { setTour(order[i % order.length]); i += 1; }, 7000);
     return () => window.clearInterval(t);
   }, [quiet, reduced]);
-  const spot: 'shoulder' | 'sky' | 'c1' | 'c2' | 'c3' = teaching ? 'shoulder' : aim !== null ? (`c${aim + 1}` as 'c1' | 'c2' | 'c3') : tour;
+  const spot: 'shoulder' | 'sky' | 'rail' | 'c1' | 'c2' | 'c3' = teaching ? 'shoulder' : aim !== null ? (`c${aim + 1}` as 'c1' | 'c2' | 'c3') : tour;
   useEffect(() => {
     setFlying(true);
     const t = window.setTimeout(() => setFlying(false), 1000);
