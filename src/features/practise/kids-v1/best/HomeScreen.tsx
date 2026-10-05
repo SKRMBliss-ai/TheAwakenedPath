@@ -23,6 +23,7 @@ import { useDiaryFilledToday } from '../kit/diaryToday';
 import { BuddyHud, FloorBuddy } from './buddies/HomeBuddy';
 import { loadGameFont } from './buddies/gameFont';
 import { playHoverNote, playWoodTap } from '../kit/doorbell';
+import { FRIENDS, type Friend } from './homeFriends';
 import { startSkyAmbience, stopAmbience } from '../kit/ambience';
 import { timeOfDayForHour } from '../rooms';
 import './HomeScreen.css';
@@ -59,6 +60,12 @@ function dayGrade(h: number) {
 }
 /* The phone background's lanterns, in fractions of the screen. */
 const PHONE_LANTERNS: [number, number][] = [[.41, .09], [.056, .35], [.15, .78], [.97, .36], [.87, .79]];
+/* Which lantern is which friend (same order as LANTERNS), and where the other friends stand,
+   as fractions of the 1915x821 environment: [id, x centre, y centre, width, height]. */
+const LANTERN_FRIENDS = ['glow', 'spark', 'flicker', 'hush'];
+const SPOTS: [string, number, number, number, number][] = [
+  ['rooty', .15, .36, .07, .2], ['bloom', .142, .64, .06, .22], ['snug', .43, .9, .14, .075], ['wish', .62, .07, .05, .1],
+];
 /* Ambient lights, in fractions of the 1916x821 environment picture. */
 /* Hanging lanterns: [x (centre), y (top), height] as fractions of the 1915x821 environment. */
 const LANTERNS: [number, number, number][] = [[.30, .03, .30], [.40, .03, .17], [.70, .04, .13], [.172, .25, .12]];
@@ -219,6 +226,25 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     start();
     return () => window.removeEventListener('deviceorientation', on);
   }, [quiet, reduced]);
+  /* FRIENDS — tap a thing in the scene and it tells you how it feels. */
+  const [friend, setFriend] = useState<{ f: Friend; x: number; y: number } | null>(null);
+  const friendTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(friendTimer.current), []);
+  const meet = (id: string, e: React.MouseEvent) => {
+    const f = FRIENDS[id]; if (!f) return;
+    e.stopPropagation();
+    const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setFriend({ f, x: r.left + r.width / 2, y: r.top + r.height / 2 });
+    sound.play('tap'); speak(`${f.line} ${f.lesson}`, quiet);
+    window.clearTimeout(friendTimer.current);
+    friendTimer.current = window.setTimeout(() => setFriend(null), 14_000);
+  };
+  const [wave, setWave] = useState(0);
+  useEffect(() => {
+    if (quiet || reduced) return;
+    const t = window.setInterval(() => setWave((n) => (n + 1) % 10), 6000);
+    return () => window.clearInterval(t);
+  }, [quiet, reduced]);
   const [hour] = useState(() => new Date().getHours());
   /* The place has its own night air — the same bed the hub uses for this hour.
      Silent while sound is off (the default) and in the quiet state. */
@@ -361,21 +387,36 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
 
   const aim = look ?? hint;
   const pose: Pose = flash ?? (teaching || aim !== null ? 'happy' : gaze);
-  return <main ref={home} onPointerDown={spark} className={`mg-home ${quiet || reduced ? 'mg-still' : ''} ${leaving !== null ? `hs-leaving hs-leaving-${leaving + 1}` : ''}`} style={{ fontFamily: FONT }}>
+  return <main ref={home} onPointerDown={(e) => { spark(e); if (!(e.target as HTMLElement).closest?.('.hs-friend-card,.hs-friend')) setFriend(null); }} onKeyDown={(e) => { if (e.key === 'Escape') setFriend(null); }} className={`mg-home ${quiet || reduced ? 'mg-still' : ''} ${leaving !== null ? `hs-leaving hs-leaving-${leaving + 1}` : ''}`} style={{ fontFamily: FONT }}>
     <div className={`hs-loading ${ready ? 'is-done' : ''}`} aria-hidden="true"><img src={`${A}LanternON.webp`} alt="" /></div>
     {sparks.map((p) => <span key={p.id} className="hs-tapspark" style={{ left: p.x, top: p.y }}>{Array.from({ length: 8 }, (_, k) => <i key={k} style={{ ['--a' as string]: `${k * 45}deg` }} />)}</span>)}
+    {friend && <div className="hs-friend-card" role="status" style={{ left: Math.min(Math.max(friend.x, 190), (typeof window === 'undefined' ? 800 : window.innerWidth) - 190), top: Math.min(Math.max(friend.y + 36, 20), (typeof window === 'undefined' ? 600 : window.innerHeight) - 220) }} onClick={(e) => e.stopPropagation()}>
+      <button className="x" aria-label="Close" onClick={() => setFriend(null)}>×</button>
+      <header><b>{friend.f.name}</b><span>{friend.f.feeling}</span></header>
+      <p className="say">“{friend.f.line}”</p>
+      <p className="learn">{friend.f.lesson}</p>
+    </div>}
     <DailyWelcome />
     {askAge && <AgePopup onDone={() => setAskAge(false)} />}
     <div className="hs-tod" aria-hidden="true" style={{ background: dayGrade(hour) }} />
     <div className="hs-sky" aria-hidden="true">
-      <i className="hs-cloud c1" /><i className="hs-cloud c2" /><i className="hs-cloud c3" /><i className="hs-cloud c4" />
+      <i className="hs-cloud c3" /><i className="hs-cloud c4" />
       <b className="hs-shoot s1" /><b className="hs-shoot s2" />
     </div>
     <div className="hs-bg" aria-hidden="true">
+      <i className="hs-rugfx" />
 
       {!quiet && !reduced && FIREFLIES.map((f, i) => <b key={i} className="hs-fly" style={{ left: `${f.x * 100}%`, top: `${f.y * 100}%`, animationDuration: `${f.d}s`, animationDelay: `-${f.s}s`, ['--r' as string]: `${f.r}px` }} />)}
     </div>
     <div className="hs-veil" aria-hidden="true" />
+    <div className="hs-friends">
+      {LANTERNS.map(([x, y, h], i) => <button key={`l${i}`} className={`hs-friend hs-f-lan ${wave === i ? 'is-calling' : ''}`} style={{ left: `${x * 100}%`, top: `${y * 100}%`, height: `${h * 100}%` }}
+        aria-label={`${FRIENDS[LANTERN_FRIENDS[i]].name}, ${FRIENDS[LANTERN_FRIENDS[i]].thing}. Tap to hear how it feels.`} onClick={(e) => meet(LANTERN_FRIENDS[i], e)} />)}
+      {SPOTS.map(([id, x, y, w, h], i) => <button key={id} className={`hs-friend hs-f-spot hs-f-${id} ${wave === 4 + i ? 'is-calling' : ''}`} style={{ left: `${(x - w / 2) * 100}%`, top: `${(y - h / 2) * 100}%`, width: `${w * 100}%`, height: `${h * 100}%` }}
+        aria-label={`${FRIENDS[id].name}, ${FRIENDS[id].thing}. Tap to hear how it feels.`} onClick={(e) => meet(id, e)}>{id === 'wish' && <span aria-hidden="true">✦</span>}</button>)}
+      {(['drift', 'puff'] as const).map((id, i) => <button key={id} className={`hs-friend hs-f-cloud hs-f-${id} ${wave === 8 + i ? 'is-calling' : ''}`}
+        aria-label={`${FRIENDS[id].name}, ${FRIENDS[id].thing}. Tap to hear how it feels.`} onClick={(e) => meet(id, e)} />)}
+    </div>
     <div className="hs-lanterns" aria-hidden="true">
       {LANTERNS.map(([x, y, h], i) => <span key={i} className="hs-lan" style={{ left: `${x * 100}%`, top: `${y * 100}%`, height: `${h * 100}%`, ['--d' as string]: `${(i * 0.7).toFixed(1)}s` }}>
         <img className="off" src={`${A}LanternOFF.webp`} alt="" /><img className="on" src={`${A}LanternON.webp`} alt="" /></span>)}
