@@ -1303,3 +1303,21 @@
   .hs-midday .hs-tod,.hs-morning .hs-tod{background:none!important}
   .hs-midday .hs-spk,.hs-morning .hs-spk{opacity:.85}
 }
+
+/* ===== DOCKED CHROME: small in the corners, so nothing covers the scene ===== */
+@media(min-width:761px) and (min-aspect-ratio:1/1){
+  .hs-stage .mg-top{inset:1% 1% auto}
+  .hs-stage .mg-tools{gap:6px;align-items:center;opacity:.92;transition:opacity .25s}
+  .hs-stage .mg-tools:before{display:none}
+  .hs-stage .mg-sound{min-width:34px;min-height:34px;width:34px;height:34px;border-radius:12px;font-size:15px}
+  .hs-stage .hb-hud{padding:3px 10px 3px 4px;gap:6px;border-radius:14px;min-width:0;background:#171641c0;backdrop-filter:blur(4px)}
+  .hs-stage .hb-badge{width:32px;height:32px;font-size:15px;padding-top:5px}
+  .hs-stage .hb-badge small{font-size:5.5px;top:5px}
+  .hs-stage .hb-name{font-size:11px}.hs-stage .hb-stars{font-size:12px}
+  .hs-stage .hb-left,.hs-stage .hb-hatch{display:none}
+  .hs-stage .hb-hud:hover .hb-left{display:block;position:absolute;right:0;top:100%;margin-top:4px;padding:3px 9px;border-radius:99px;background:#171641f0;white-space:nowrap;font-size:11px}
+  /* the key pill: slimmer, and tucked up against the top edge */
+  .hs-meet{top:1.2vh;padding:.3em .85em;font-size:clamp(10px,.85vw,13px);opacity:.88}
+  .hs-meet:hover,.hs-meet:focus-visible{opacity:1}
+  .hs-meet.is-done{display:none}
+}
