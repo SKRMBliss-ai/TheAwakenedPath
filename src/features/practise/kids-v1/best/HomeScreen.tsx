@@ -274,7 +274,9 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
   const night = hour >= 19 || hour < 6;
   /* The sky follows the hour: morning, midday, evening, night. */
   const phase = night ? 'night' : hour < 10 ? 'morning' : hour < 16 ? 'midday' : 'evening';
-  const total = night ? 11 : 10;
+  const starry = night || (hour >= 16 && hour < 19);
+  const total = night ? 11 : starry ? 10 : 9;
+  const mark = starry ? '✦' : '●';
   /* The place has its own night air — the same bed the hub uses for this hour.
      Silent while sound is off (the default) and in the quiet state. */
   useEffect(() => {
@@ -422,7 +424,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
     {friend && <div className="hs-friend-card" role="status" style={{ left: Math.min(Math.max(friend.x, 190), (typeof window === 'undefined' ? 800 : window.innerWidth) - 190), top: Math.min(Math.max(friend.y + 36, 20), (typeof window === 'undefined' ? 600 : window.innerHeight) - 220) }} onClick={(e) => e.stopPropagation()}>
       <button className="x" aria-label="Close" onClick={() => setFriend(null)}>×</button>
       <header><b>{friend.f.name}</b><span>{friend.f.feeling}</span></header>
-      <p className="kind">✦ A friend — just sharing a feeling</p>
+      <p className="kind">{mark} A friend — just sharing a feeling</p>
       <p className="say">“{friend.f.line}”</p>
       <p className="learn">{friend.f.lesson}</p>
     </div>}
@@ -448,21 +450,21 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
       {(night ? [...PHONE_FRIENDS, PHONE_MOON] : PHONE_FRIENDS).map(([id, x, y, w, h], i) => <button key={id} className={`hs-friend-m ${(wave + 2) % 10 === i || all ? 'is-calling' : ''}`}
         style={{ left: `calc(50vw - var(--pw) / 2 + var(--pw) * ${x - w / 2})`, top: `calc(var(--ph) * ${y - h / 2})`, width: `calc(var(--pw) * ${w})`, height: `calc(var(--ph) * ${h})` }}
         aria-label={`${FRIENDS[id].name}, ${FRIENDS[id].thing}. Tap to hear how it feels.`} onClick={(e) => meet(id, e)}>
-        {id !== 'luna' && <i className="hs-spk-m" aria-hidden="true">✦</i>}</button>)}
-      <button className="hs-meet-m" onClick={callAll} aria-label="Sparkles are friends that share a feeling. Tap to see who you can meet.">✦ friends <em>{met.length}/{total}</em></button>
+        {id !== 'luna' && <i className="hs-spk-m" aria-hidden="true">{mark}</i>}</button>)}
+      <button className="hs-meet-m" onClick={callAll} aria-label="Sparkles are friends that share a feeling. Tap to see who you can meet.">{mark} friends <em>{met.length}/{total}</em></button>
     </div>
     <div className="hs-friends">
       <button className={`hs-meet ${met.length >= total ? 'is-done' : ''}`} onClick={callAll} aria-label="Arrows open another place. Sparkles are friends that share a feeling. Tap to see who you can meet.">
         <span className="k-door"><b aria-hidden="true">→</b> opens a place</span>
-        <span className="k-friend"><b aria-hidden="true">✦</b> {met.length >= total ? 'you met every friend!' : 'a friend’s feeling'}</span>
+        <span className="k-friend"><b aria-hidden="true">{mark}</b> {met.length >= total ? 'you met every friend!' : 'a friend’s feeling'}</span>
         <em>{met.length}/{total}</em>
       </button>
       {LANTERNS.map(([x, y, h], i) => <button key={`l${i}`} className={`hs-friend hs-f-lan ${wave === i || all ? 'is-calling' : ''}`} style={{ left: `${x * 100}%`, top: `${y * 100}%`, height: `${h * 100}%` }}
-        aria-label={`${FRIENDS[LANTERN_FRIENDS[i]].name}, ${FRIENDS[LANTERN_FRIENDS[i]].thing}. Tap to hear how it feels.`} onPointerEnter={() => setLamp(i)} onPointerLeave={() => setLamp(null)} onFocus={() => setLamp(i)} onBlur={() => setLamp(null)} onClick={(e) => meet(LANTERN_FRIENDS[i], e)}><i className="hs-spk" aria-hidden="true">✦</i></button>)}
-      {(night ? [...SPOTS, MOON] : SPOTS).map(([id, x, y, w, h], i) => <button key={id} className={`hs-friend hs-f-spot hs-f-${id} ${wave === 4 + i || all ? 'is-calling' : ''}`} style={{ left: `${(x - w / 2) * 100}%`, top: `${(y - h / 2) * 100}%`, width: `${w * 100}%`, height: `${h * 100}%` }}
-        aria-label={`${FRIENDS[id].name}, ${FRIENDS[id].thing}. Tap to hear how it feels.`} onClick={(e) => meet(id, e)}>{id === 'luna' ? null : id === 'wish' ? <span aria-hidden="true">✦</span> : <i className="hs-spk" aria-hidden="true">✦</i>}</button>)}
+        aria-label={`${FRIENDS[LANTERN_FRIENDS[i]].name}, ${FRIENDS[LANTERN_FRIENDS[i]].thing}. Tap to hear how it feels.`} onPointerEnter={() => setLamp(i)} onPointerLeave={() => setLamp(null)} onFocus={() => setLamp(i)} onBlur={() => setLamp(null)} onClick={(e) => meet(LANTERN_FRIENDS[i], e)}><i className="hs-spk" aria-hidden="true">{mark}</i></button>)}
+      {(night ? [...SPOTS, MOON] : starry ? SPOTS : SPOTS.filter(([id]) => id !== 'wish')).map(([id, x, y, w, h], i) => <button key={id} className={`hs-friend hs-f-spot hs-f-${id} ${wave === 4 + i || all ? 'is-calling' : ''}`} style={{ left: `${(x - w / 2) * 100}%`, top: `${(y - h / 2) * 100}%`, width: `${w * 100}%`, height: `${h * 100}%` }}
+        aria-label={`${FRIENDS[id].name}, ${FRIENDS[id].thing}. Tap to hear how it feels.`} onClick={(e) => meet(id, e)}>{id === 'luna' ? null : id === 'wish' ? <span aria-hidden="true">✦</span> : <i className="hs-spk" aria-hidden="true">{mark}</i>}</button>)}
       {(['drift', 'puff'] as const).map((id, i) => <button key={id} className={`hs-friend hs-f-cloud hs-f-${id}`}
-        aria-label={`${FRIENDS[id].name}, ${FRIENDS[id].thing}. Tap to hear how it feels.`} onClick={(e) => meet(id, e)}><i className="hs-spk" aria-hidden="true">✦</i></button>)}
+        aria-label={`${FRIENDS[id].name}, ${FRIENDS[id].thing}. Tap to hear how it feels.`} onClick={(e) => meet(id, e)}><i className="hs-spk" aria-hidden="true">{mark}</i></button>)}
     </div>
     <div className="hs-lanterns" aria-hidden="true">
       {LANTERNS.map(([x, y, h], i) => <span key={i} className={`hs-lan ${lamp === i ? 'is-hot' : ''}`} style={{ left: `${x * 100}%`, top: `${y * 100}%`, height: `${h * 100}%`, ['--d' as string]: `${(i * 0.7).toFixed(1)}s` }}>

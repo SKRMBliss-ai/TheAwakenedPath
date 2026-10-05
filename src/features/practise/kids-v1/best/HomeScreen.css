@@ -1405,3 +1405,8 @@
   .mg-home:has(.hs-f-spot:hover,.hs-f-spot:focus-visible) .hs-lan .on{opacity:1}
   .mg-home:has(.hs-f-spot:not(.hs-f-snug):hover,.hs-f-spot:not(.hs-f-snug):focus-visible) .hs-card,.mg-home:has(.hs-f-spot:not(.hs-f-snug):hover,.hs-f-spot:not(.hs-f-snug):focus-visible) .hs-corner{filter:blur(3.5px) brightness(.62) saturate(.85);transform:scale(.9)}
 }
+
+/* By day a friend's marker is a soft glowing dot, not a star; the sky has no stars either. */
+.hs-morning .hs-spk,.hs-midday .hs-spk,.hs-morning .hs-spk-m,.hs-midday .hs-spk-m{font-size:calc(var(--iw,100vw)*.011);color:#fffbe0;text-shadow:0 0 6px #fff,0 0 14px #ffe9a0;animation:hs-twinkle 2.6s ease-in-out infinite}
+.hs-morning .hs-friend:hover .hs-spk,.hs-midday .hs-friend:hover .hs-spk{font-size:calc(var(--iw,100vw)*.016)}
+.hs-morning .hs-shoot,.hs-midday .hs-shoot{display:none}
