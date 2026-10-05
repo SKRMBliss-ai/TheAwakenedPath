@@ -1176,3 +1176,7 @@
 }
 .mg-still .hs-meet{animation:none!important}
 @media(prefers-reduced-motion:reduce){.hs-meet{animation:none!important}}
+@media(min-width:761px) and (min-aspect-ratio:1/1){
+  .hs-corner{transition:filter .35s ease,transform .3s ease}
+  .mg-home:has(.hs-f-snug:hover,.hs-f-snug:focus-visible) .hs-corner{filter:blur(3.5px) brightness(.62) saturate(.85)}
+}
