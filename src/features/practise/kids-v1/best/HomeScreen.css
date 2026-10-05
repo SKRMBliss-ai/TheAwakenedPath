@@ -1205,3 +1205,24 @@
 .mg-still .hs-spk,.mg-still .hs-tag{animation:none!important}
 @media(prefers-reduced-motion:reduce){.hs-spk,.hs-tag{animation:none!important}}
 @media(max-width:760px),(max-aspect-ratio:1/1){.hs-tag{background:linear-gradient(#ffb36b,#ff7a3d);color:#fff;border:2px solid #fff8}}
+
+/* ===== REAL CLOUDS, from the painted cloud ===== */
+@media(min-width:761px) and (min-aspect-ratio:1/1){
+  .hs-f-cloud,.hs-cloud{height:auto;aspect-ratio:1100/386;border-radius:0;filter:none;box-shadow:none;
+    background:url('/mind-gym/home/Cloud.webp') center/100% 100% no-repeat}
+  .hs-f-drift{width:21%;top:7%;opacity:.95}
+  .hs-f-puff{width:12%;top:25%;opacity:.9;scale:-1 1}
+  .hs-cloud.c3{width:17%;height:auto;opacity:.55;scale:-1 1;top:3%}
+  .hs-cloud.c4{width:25%;height:auto;opacity:.4;top:33%}
+  .hs-f-cloud:hover,.hs-f-cloud:focus-visible{background-color:transparent;box-shadow:none;filter:brightness(1.12) drop-shadow(0 0 14px #ffd2e8cc)}
+}
+
+/* Hovering a lantern lights it, and the room dims around it like every other hover. */
+@media(min-width:761px) and (min-aspect-ratio:1/1){
+  .hs-f-lan:hover,.hs-f-lan:focus-visible{background:none;box-shadow:none;outline:none}
+  .mg-home:has(.hs-f-lan:hover,.hs-f-lan:focus-visible) .hs-veil{opacity:1}
+  .mg-home:has(.hs-f-lan:hover,.hs-f-lan:focus-visible) .hs-lan .on{opacity:1}
+  .mg-home:has(.hs-f-lan:hover,.hs-f-lan:focus-visible) .hs-card,.mg-home:has(.hs-f-lan:hover,.hs-f-lan:focus-visible) .hs-corner{filter:blur(3.5px) brightness(.62) saturate(.85);transform:scale(.9)}
+  .hs-lan{transition:filter .4s ease,scale .4s ease}
+  .hs-lan.is-hot{scale:1.08;filter:drop-shadow(0 0 22px #ffcf6aee) drop-shadow(0 0 48px #ff9a3a99);z-index:2}
+}
