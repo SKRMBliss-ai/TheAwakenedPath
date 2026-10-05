@@ -1410,3 +1410,17 @@
 .hs-morning .hs-spk,.hs-midday .hs-spk,.hs-morning .hs-spk-m,.hs-midday .hs-spk-m{font-size:calc(var(--iw,100vw)*.011);color:#fffbe0;text-shadow:0 0 6px #fff,0 0 14px #ffe9a0;animation:hs-twinkle 2.6s ease-in-out infinite}
 .hs-morning .hs-friend:hover .hs-spk,.hs-midday .hs-friend:hover .hs-spk{font-size:calc(var(--iw,100vw)*.016)}
 .hs-morning .hs-shoot,.hs-midday .hs-shoot{display:none}
+
+/* A calmer day: paler, gentler blues so the wooden frames lead and the sky stays quiet. */
+@media(min-width:761px) and (min-aspect-ratio:1/1){
+  .hs-midday .hs-sky{background:
+      radial-gradient(ellipse at 52% 52%,#ffffffbb 0,transparent 42%),
+      linear-gradient(180deg,#7fa8dc 0%,#a6c3e8 30%,#c9dcf0 48%,#e3eef6 56%,#dbe7ee 60%,#b4c3d6 66%,#8393b4 76%,#5d6696 100%)}
+  .hs-morning .hs-sky{background:
+      radial-gradient(ellipse at 50% 60%,#fff2c8aa 0,transparent 45%),
+      linear-gradient(180deg,#86a6d8 0%,#a9c3e6 26%,#d6dcf0 42%,#ffdcc0 52%,#f5c3a2 58%,#d4a8b0 64%,#8a85b4 74%,#5a5a90 100%)}
+  .hs-midday .hs-cloud,.hs-morning .hs-cloud{opacity:.7}
+}
+@media(max-width:760px),(max-aspect-ratio:1/1){
+  .hs-midday .hs-sky{background:radial-gradient(ellipse at 52% 50%,#ffffffbb 0,transparent 44%),linear-gradient(180deg,#7fa8dc 0%,#a6c3e8 32%,#c9dcf0 50%,#e3eef6 58%,#dbe7ee 62%,#b4c3d6 68%,#8393b4 78%,#5d6696 100%)}
+}
