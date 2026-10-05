@@ -1240,3 +1240,21 @@
 @media(min-width:761px) and (min-aspect-ratio:1/1) and (prefers-reduced-motion:reduce){
   .hs-cloud.cv-drift,.hs-f-drift{left:42%}.hs-cloud.cv-puff,.hs-f-puff{left:22%}
 }
+
+/* Clouds start inside the sky (not off the edge), and a hovered cloud lights up above the dimmed room. */
+.hs-cloudpop{display:none}
+@media(min-width:761px) and (min-aspect-ratio:1/1){
+  .hs-cloud.cv-drift,.hs-f-drift{animation-delay:-24s}
+  .hs-cloud.cv-puff,.hs-f-puff{animation-delay:-52s}
+  .hs-cloudpop{display:block;position:fixed;left:50%;top:50%;width:var(--iw);height:var(--ih);z-index:-1;pointer-events:none;overflow:hidden;
+    transform:translate(-50%,-50%) scale(1.06) translate(calc(var(--px)*-.5%),calc(var(--py)*-.5%));transition:transform .6s cubic-bezier(.2,.7,.2,1)}
+  .hs-cloudpop .hs-cloud{opacity:0;transition:opacity .35s ease;filter:brightness(1.18) drop-shadow(0 0 22px #ffd2e8dd) drop-shadow(0 0 46px #ff9ad288)}
+  .mg-home:has(.hs-f-drift:hover,.hs-f-drift:focus-visible) .hs-cloudpop .cv-drift,.mg-home:has(.hs-f-puff:hover,.hs-f-puff:focus-visible) .hs-cloudpop .cv-puff{opacity:1}
+  /* the same dim, light and blur as every other hover */
+  .mg-home:has(.hs-f-cloud:hover,.hs-f-cloud:focus-visible) .hs-veil{opacity:1}
+  .mg-home:has(.hs-f-cloud:hover,.hs-f-cloud:focus-visible) .hs-lan .on{opacity:1}
+  .mg-home:has(.hs-f-cloud:hover,.hs-f-cloud:focus-visible) .hs-card,.mg-home:has(.hs-f-cloud:hover,.hs-f-cloud:focus-visible) .hs-corner{filter:blur(3.5px) brightness(.62) saturate(.85);transform:scale(.9)}
+  .mg-home:has(.hs-f-cloud:hover,.hs-f-cloud:focus-visible) .hs-sky .cv-drift,.mg-home:has(.hs-f-cloud:hover,.hs-f-cloud:focus-visible) .hs-sky .cv-puff{filter:none}
+}
+@media(min-width:761px) and (min-aspect-ratio:1/1) and (prefers-reduced-motion:reduce){.hs-cloudpop .hs-cloud{left:42%}.hs-cloudpop .cv-puff{left:22%}}
+.mg-still .hs-cloudpop .cv-drift{left:42%}.mg-still .hs-cloudpop .cv-puff{left:22%}

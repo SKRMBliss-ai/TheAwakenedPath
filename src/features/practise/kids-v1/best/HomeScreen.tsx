@@ -427,6 +427,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
       {!quiet && !reduced && FIREFLIES.map((f, i) => <b key={i} className="hs-fly" style={{ left: `${f.x * 100}%`, top: `${f.y * 100}%`, animationDuration: `${f.d}s`, animationDelay: `-${f.s}s`, ['--r' as string]: `${f.r}px` }} />)}
     </div>
     <div className="hs-veil" aria-hidden="true" />
+    <div className="hs-cloudpop" aria-hidden="true"><i className="hs-cloud cv-drift" /><i className="hs-cloud cv-puff" /></div>
     <span className="hs-rugpop" aria-hidden="true" />
     <div className="hs-friends">
       <button className={`hs-meet ${met.length >= 10 ? 'is-done' : ''}`} onClick={callAll} aria-label="Arrows open another place. Sparkles are friends that share a feeling. Tap to see who you can meet.">
@@ -438,7 +439,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
         aria-label={`${FRIENDS[LANTERN_FRIENDS[i]].name}, ${FRIENDS[LANTERN_FRIENDS[i]].thing}. Tap to hear how it feels.`} onPointerEnter={() => setLamp(i)} onPointerLeave={() => setLamp(null)} onFocus={() => setLamp(i)} onBlur={() => setLamp(null)} onClick={(e) => meet(LANTERN_FRIENDS[i], e)}><i className="hs-spk" aria-hidden="true">✦</i></button>)}
       {SPOTS.map(([id, x, y, w, h], i) => <button key={id} className={`hs-friend hs-f-spot hs-f-${id} ${wave === 4 + i || all ? 'is-calling' : ''}`} style={{ left: `${(x - w / 2) * 100}%`, top: `${(y - h / 2) * 100}%`, width: `${w * 100}%`, height: `${h * 100}%` }}
         aria-label={`${FRIENDS[id].name}, ${FRIENDS[id].thing}. Tap to hear how it feels.`} onClick={(e) => meet(id, e)}>{id === 'wish' ? <span aria-hidden="true">✦</span> : <i className="hs-spk" aria-hidden="true">✦</i>}</button>)}
-      {(['drift', 'puff'] as const).map((id, i) => <button key={id} className={`hs-friend hs-f-cloud hs-f-${id} ${wave === 8 + i || all ? 'is-calling' : ''}`}
+      {(['drift', 'puff'] as const).map((id, i) => <button key={id} className={`hs-friend hs-f-cloud hs-f-${id}`}
         aria-label={`${FRIENDS[id].name}, ${FRIENDS[id].thing}. Tap to hear how it feels.`} onClick={(e) => meet(id, e)}><i className="hs-spk" aria-hidden="true">✦</i></button>)}
     </div>
     <div className="hs-lanterns" aria-hidden="true">
