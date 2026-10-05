@@ -463,7 +463,7 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
         aria-label={`${FRIENDS[LANTERN_FRIENDS[i]].name}, ${FRIENDS[LANTERN_FRIENDS[i]].thing}. Tap to hear how it feels.`} onPointerEnter={() => setLamp(i)} onPointerLeave={() => setLamp(null)} onFocus={() => setLamp(i)} onBlur={() => setLamp(null)} onClick={(e) => meet(LANTERN_FRIENDS[i], e)}><i className="hs-spk" aria-hidden="true">{mark}</i></button>)}
       {(night ? [...SPOTS, MOON] : starry ? SPOTS : SPOTS.filter(([id]) => id !== 'wish')).map(([id, x, y, w, h], i) => <button key={id} className={`hs-friend hs-f-spot hs-f-${id} ${wave === 4 + i || all ? 'is-calling' : ''}`} style={{ left: `${(x - w / 2) * 100}%`, top: `${(y - h / 2) * 100}%`, width: `${w * 100}%`, height: `${h * 100}%` }}
         aria-label={`${FRIENDS[id].name}, ${FRIENDS[id].thing}. Tap to hear how it feels.`} onClick={(e) => meet(id, e)}>{id === 'luna' ? null : id === 'wish' ? <span aria-hidden="true">✦</span> : <i className="hs-spk" aria-hidden="true">{mark}</i>}</button>)}
-      {(['drift', 'puff'] as const).map((id, i) => <button key={id} className={`hs-friend hs-f-cloud hs-f-${id}`}
+      {(['drift', 'puff'] as const).map((id) => <button key={id} className={`hs-friend hs-f-cloud hs-f-${id}`}
         aria-label={`${FRIENDS[id].name}, ${FRIENDS[id].thing}. Tap to hear how it feels.`} onClick={(e) => meet(id, e)}><i className="hs-spk" aria-hidden="true">{mark}</i></button>)}
     </div>
     <div className="hs-lanterns" aria-hidden="true">
