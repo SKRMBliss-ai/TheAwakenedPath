@@ -11,7 +11,7 @@ import { band } from '../kit/band';
 import { thoughtsFor, eventsFor, possibilitiesFor, type Option } from '../kit/storyLabContent';
 import { companionFor, COMPANY } from '../kit/feelingCompanions';
 import * as sound from '../kit/sound';
-import { speak, stopSpeaking } from '../kit/chirpyVoice';
+import { speak, stopSpeaking, onSpeakingChange } from '../kit/chirpyVoice';
 import { playThoughtAudios, stopThoughtAudio } from '../kit/thoughtAudioCache';
 import type { DeepDiveAnswers } from './DeepDive';
 import './StoryLabRoom.css';
@@ -94,6 +94,15 @@ const ROOM_BUBBLES = [
  * the Thought panel. Both are re-measured a few times a second, which also
  * covers window resizes and the filmstrip rescaling.
  */
+/** True while Chirpy's voice is actually sounding, so the boy-and-Chirpy
+    figure on the room floor can show a little "he's talking" bubble instead
+    of standing there silent while the audio plays. */
+function useIsSpeaking() {
+  const [on, setOn] = useState(false);
+  useEffect(() => onSpeakingChange(setOn), []);
+  return on;
+}
+
 function useBubblePath(show: boolean) {
   const [path, setPath] = useState<{ x: number; y: number; dx: number; dy: number } | null>(null);
   useEffect(() => {
@@ -415,11 +424,14 @@ function Panel({ index, step, boy, children }: {
     {/* The Story panel used to skip this to save room, which left the one
         panel that assembles the child's whole story with nobody explaining
         it. It gets the bubble back and the confirm question moves into it,
-        so the panel gains a voice without gaining a box. */}
+        so the panel gains a voice without gaining a box — and without
+        repeating "Here's the story your mind made…" as a heading too. */}
     <div className="sl-ask">
       {/* One bird: Chirpy rides the boy, so he stands here only where no other boy is on screen. */}
       <img className="sl-ask-boy" src={boy} alt="" aria-hidden="true" />
-      <div className="sl-ask-bubble"><h3>{PROMPTS[index - 2]}</h3>{sub && <p>{sub}</p>}</div>
+      <div className="sl-ask-bubble">
+        {index === 4 ? <p>{sub}</p> : <>{PROMPTS[index - 2] && <h3>{PROMPTS[index - 2]}</h3>}{sub && <p>{sub}</p>}</>}
+      </div>
     </div>
     <div className="sl-panel-body">{children}</div>
   </div>;
@@ -445,6 +457,7 @@ export function StoryLabRoom({ carried, onExit, onGrownUp, onSave, onKeepsakes }
      nowhere to go. Wherever a child drags him is where he stays, for good;
      see useFloatingPosition. */
   const boyFloat = useFloatingPosition('story-lab:boy', { xPct: 8, yPct: 31 });
+  const talking = useIsSpeaking();
   const [ageBand] = useState(() => band());
   const [step, setStep] = useState(2);
   const [thought, setThought] = useState('');
@@ -935,7 +948,7 @@ export function StoryLabRoom({ carried, onExit, onGrownUp, onSave, onKeepsakes }
                 {/* Held back until there is a second story to hold against the
                     first. Before that it is a claim about nothing, and it was
                     taking room from the options it is meant to be about. */}
-                {alternative && <p className="sl-truth">More than one story can be true.<br />You get to choose what to believe.</p>}
+                {alternative && <p className="sl-truth sl-truth-in">More than one story can be true.<br />You get to choose what to believe.</p>}
               </>}
 
               {writing && step === index && ownForm}
@@ -969,7 +982,13 @@ export function StoryLabRoom({ carried, onExit, onGrownUp, onSave, onKeepsakes }
         alt={carried.feeling ? `You, feeling ${carried.feeling.toLowerCase()}, with Chirpy` : 'You, with Chirpy'}
         draggable={false}
       />
-      <div className="sl-room-bubble" aria-live="polite"><p className="sl-say-line">{says.line}</p>{says.sub && <p className="sl-say-sub">{says.sub}</p>}</div>
+      <div className="sl-room-bubble" aria-live="polite">
+        <p className="sl-say-line">{says.line}</p>
+        {says.sub && <p className="sl-say-sub">{says.sub}</p>}
+        {/* A beat of motion on top of the words themselves, so it's visibly
+            HIM talking and not just text that appeared on its own. */}
+        {talking && <span className="sl-room-boy-talk" aria-hidden="true"><i /><i /><i /></span>}
+      </div>
     </div>
     <RoomThoughtParticles show={step === 2 && !thought && !loneWide} />
 

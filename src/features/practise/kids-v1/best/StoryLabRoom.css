@@ -251,6 +251,16 @@
 .sl-say-line,.sl-say-sub{margin:0;text-align:center}
 .sl-say-line{font-size:clamp(14px,1.25vw,18px);font-weight:900;line-height:1.18;color:#26136e}
 .sl-say-sub{margin-top:4px;font-size:clamp(11px,.95vw,13.5px);font-weight:750;line-height:1.22;color:#4b3a86}
+/* A little "he's actually talking" tell, inside the same bubble as the
+   words — three dots that bounce only while audio is sounding. */
+.sl-room-boy-talk{display:flex;gap:3px;justify-content:center;margin-top:5px}
+.sl-room-boy-talk i{
+  width:6px;height:6px;border-radius:50%;background:#6b4fb0;
+  animation:sl-talk-dot 1s ease-in-out infinite;
+}
+.sl-room-boy-talk i:nth-child(2){animation-delay:.15s}
+.sl-room-boy-talk i:nth-child(3){animation-delay:.3s}
+@keyframes sl-talk-dot{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-4px);opacity:1}}
 /* Wide enough to have floor either side of the panel: he moves out of the
    panel and the clouds take back the 78px that was being held for him. His
    bubble asks the question, so the panel's own question row is not drawn. */
