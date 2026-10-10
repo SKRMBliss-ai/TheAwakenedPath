@@ -11,7 +11,7 @@ import { band } from '../kit/band';
 import { thoughtsFor, eventsFor, possibilitiesFor, type Option } from '../kit/storyLabContent';
 import { companionFor, COMPANY } from '../kit/feelingCompanions';
 import * as sound from '../kit/sound';
-import { speak, stopSpeaking } from '../kit/chirpyVoice';
+import { speak, stopSpeaking, onSpeakingChange } from '../kit/chirpyVoice';
 import type { DeepDiveAnswers } from './DeepDive';
 import './StoryLabRoom.css';
 
@@ -93,6 +93,15 @@ const ROOM_BUBBLES = [
  * the Thought panel. Both are re-measured a few times a second, which also
  * covers window resizes and the filmstrip rescaling.
  */
+/** True while Chirpy's voice is actually sounding, so the boy-and-Chirpy
+    figure on the room floor can show a little "he's talking" bubble instead
+    of standing there silent while the audio plays. */
+function useIsSpeaking() {
+  const [on, setOn] = useState(false);
+  useEffect(() => onSpeakingChange(setOn), []);
+  return on;
+}
+
 function useBubblePath(show: boolean) {
   const [path, setPath] = useState<{ x: number; y: number; dx: number; dy: number } | null>(null);
   useEffect(() => {
@@ -314,10 +323,12 @@ function Panel({ index, step, chirpy, children, onHome }: {
       <button className="sl-panel-home" onClick={onHome} aria-label="Back to Mind Gym">⌂</button>
     </div>
     <p className="sl-dots" aria-hidden="true">{STEPS.map((label, i) => <span key={label} className={i === index ? 'sl-dot-now' : i < index ? 'sl-dot-done' : ''} />)}</p>
-    {index !== 4 && <div className="sl-ask">
+    <div className="sl-ask">
       <img className="sl-ask-chirpy" src={chirpy} alt={current ? 'Chirpy' : ''} aria-hidden={!current} />
-      <div className="sl-ask-bubble"><h3>{PROMPTS[index - 2]}</h3>{SUBS[index - 2] && <p>{SUBS[index - 2]}</p>}</div>
-    </div>}
+      <div className="sl-ask-bubble">
+        {index === 4 ? <p>{SUBS[index - 2]}</p> : <><h3>{PROMPTS[index - 2]}</h3>{SUBS[index - 2] && <p>{SUBS[index - 2]}</p>}</>}
+      </div>
+    </div>
     <div className="sl-panel-body">{children}</div>
   </div>;
 }
@@ -338,9 +349,11 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
      say nothing, not hold still — a child who arrives angry was getting a
      frozen grid of six sentences while a happy one got eight that floated. */
   const still = !!reduced;
-  /* Sits below the progress strip, between Body and Thought steps by default,
-     and stays wherever a child drags him — see useFloatingPosition. */
-  const boyFloat = useFloatingPosition('story-lab:boy', { xPct: 28, yPct: 78 });
+  /* Sits to the left of the Thought panel, toward the top of the floor,
+     by default, and stays wherever a child drags him — see
+     useFloatingPosition. */
+  const boyFloat = useFloatingPosition('story-lab:boy', { xPct: 4, yPct: 26 });
+  const talking = useIsSpeaking();
   const [ageBand] = useState(() => band());
   const [step, setStep] = useState(2);
   const [thought, setThought] = useState('');
@@ -778,7 +791,7 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
                 <div className={`sl-cards sl-wide ${possibilityRoll.fading ? 'sl-rolling-out' : ''}`} {...hold}>{otherOptions.map(option => <button key={option.text} className={`${option.own ? 'sl-card-own' : ''} ${cardClass(5, option.text)}`} disabled={step !== 5} onClick={() => pick(option)} {...say(option.own ? 'My own idea' : option.text)}>
                   <span className="sl-card-icon" aria-hidden="true">{option.icon === 'mic' ? <Mic size={15} strokeWidth={2.6} /> : option.icon}</span>{option.text}
                 </button>)}</div>
-                <p className="sl-truth">More than one story can be true.<br />You get to choose what to believe.</p>
+                {alternative && <p className="sl-truth sl-truth-in">More than one story can be true.<br />You get to choose what to believe.</p>}
               </>}
 
               {writing && step === index && ownForm}
@@ -804,14 +817,16 @@ export function StoryLabRoom({ carried, onBody, onExit, onGrownUp, onSave, onRef
       The in-panel copy below is still rendered and takes over under 900px,
       where the panel fills the window and there is no floor to sit on.
     */}
-    <img
-      className="sl-room-boy sl-room-boy-floating"
-      key={companion.src}
-      src={companion.src}
-      alt={carried.feeling ? `You, feeling ${carried.feeling.toLowerCase()}, with Chirpy` : 'You, with Chirpy'}
-      draggable={false}
-      {...boyFloat.dragHandlers}
-    />
+    <div className="sl-room-boy sl-room-boy-floating sl-room-boy-wrap" {...boyFloat.dragHandlers}>
+      <img
+        className="sl-room-boy-img"
+        key={companion.src}
+        src={companion.src}
+        alt={carried.feeling ? `You, feeling ${carried.feeling.toLowerCase()}, with Chirpy` : 'You, with Chirpy'}
+        draggable={false}
+      />
+      {talking && <span className="sl-room-boy-talk" aria-hidden="true"><i /><i /><i /></span>}
+    </div>
     <RoomThoughtParticles show={step === 2 && !thought} />
 
     <nav className="sl-rail" aria-label="Journey progress">

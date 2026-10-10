@@ -53,6 +53,17 @@ const VOICE_ENDPOINT = 'https://awakened-path-2026.web.app/api/chirpy-voice';
 let current: HTMLAudioElement | null = null;
 /** Which line he is on, so a late arrival can check it is still wanted. */
 let speaking: string | null = null;
+
+/** Lets UI show "Chirpy is talking" without polling — a tiny pub/sub around
+    the one module-level speaking flag above. */
+const speakingListeners = new Set<(on: boolean) => void>();
+function setSpeakingFlag(on: boolean) {
+  for (const fn of speakingListeners) fn(on);
+}
+export function onSpeakingChange(fn: (on: boolean) => void): () => void {
+  speakingListeners.add(fn);
+  return () => { speakingListeners.delete(fn); };
+}
 /**
  * Lines repeat all evening, so the same text is fetched once per session and
  * then replayed from memory. The Function also sets a long Cache-Control, so
@@ -168,9 +179,10 @@ export function speak(text: string, quiet: boolean, who: Speaker = 'grownup', on
 function play(url: string, text: string, onEnd?: () => void) {
   try {
     const audio = new Audio(url);
-    if (onEnd) audio.onended = () => { if (current === audio) onEnd(); };
+    audio.onended = () => { if (current === audio) { setSpeakingFlag(false); onEnd?.(); } };
     current = audio;
     speaking = text;
+    setSpeakingFlag(true);
     void audio.play().catch(() => browserVoice(text));
   } catch { browserVoice(text); }
 }
@@ -183,6 +195,7 @@ export function stopSpeaking() {
   try { window.speechSynthesis.cancel(); } catch { /* ignore */ }
   if (current) { try { current.pause(); } catch { /* ignore */ } current = null; }
   speaking = null;
+  setSpeakingFlag(false);
 }
 
 /**

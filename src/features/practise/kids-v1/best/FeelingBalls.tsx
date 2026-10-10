@@ -30,14 +30,14 @@ const SIDES = [
   { left: '70%', top: '70%' },
 ];
 
-const SIZE = 86;
+const SIZE = 108;
 
 /** Older children get more feelings. Past six, the balls shrink a little and
     zigzag down each side so they still stay clear of the child in the middle. */
 function layout(count: number) {
-  if (count <= 6) return { size: SIZE, height: 340, spots: SIDES };
-  const size = 70;
-  const height = 470;
+  if (count <= 6) return { size: SIZE, height: 390, spots: SIDES };
+  const size = 86;
+  const height = 520;
   const perSide = Math.ceil(count / 2);
   const step = (height - size) / Math.max(perSide - 1, 1);
   const spots = Array.from({ length: count }, (_, i) => {
@@ -92,7 +92,7 @@ export function FeelingBalls({
               width: size,
               height: size,
               color: '#FFFFFF',
-              fontSize: f.label.length > 9 ? 10 : size < SIZE ? 11.5 : 13.5,
+              fontSize: f.label.length > 9 ? 12.5 : size < SIZE ? 14 : 16.5,
               textShadow: '0 1px 6px rgba(0,0,0,0.5)',
               background: `radial-gradient(circle at 34% 26%, hsl(${f.hue} 92% 76%), hsl(${f.hue} 76% 46%) 72%)`,
               border: '1px solid rgba(255,255,255,0.42)',
