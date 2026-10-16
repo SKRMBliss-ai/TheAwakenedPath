@@ -31,6 +31,11 @@
     ],
     "redirects": [
       {
+        "source": "/twinsouls/@(sim|smritikatyal|smriti)",
+        "destination": "/twinsouls/simkatyal",
+        "type": 301
+      },
+      {
         "source": "/simplypiano{,/**}",
         "destination": "https://simplypiano.web.app",
         "type": 302
@@ -233,6 +238,10 @@
           "functionId": "getLatestVideos",
           "region": "us-central1"
         }
+      },
+      {
+        "source": "/twinsouls/@(shrutikhungar|shruti|simkatyal)",
+        "destination": "/twinsouls/index.html"
       },
       {
         "source": "**/!(*.*)",

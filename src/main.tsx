@@ -9,6 +9,7 @@ import KidsChallengeFlyer from './features/landing/KidsChallengeFlyer'
 import KidsChallengeRegister from './features/landing/KidsChallengeRegister';
 import Policies from './features/landing/Policies'
 import AboutUs from './features/landing/AboutUs'
+import SimKatyal from './features/landing/SimKatyal'
 import SoulfulHome from './features/landing/SoulfulHome'
 import ContentHub from './features/content/ContentHub'
 import ProgrammaticContentView from './features/content/ProgrammaticContentView'
@@ -170,6 +171,12 @@ const isAboutUsRoute = (() => {
   if (typeof window === 'undefined') return false;
   const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
   return p === '/about-us' || p === '/about-us/index.html' || p === '/aboutus';
+})();
+
+const isSimRoute = (() => {
+  if (typeof window === 'undefined') return false;
+  const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
+  return p === '/simkatyal' || p === '/simkatyal/index.html' || p === '/sim';
 })();
 
 const isPoliciesRoute = (() => {
@@ -342,6 +349,13 @@ if (isAdminRoute) {
   root.render(
     <ErrorBoundary featureName="AboutUs">
       <AboutUs />
+      <SiteWidgets />
+    </ErrorBoundary>,
+  );
+} else if (isSimRoute) {
+  root.render(
+    <ErrorBoundary featureName="SimKatyal">
+      <SimKatyal />
       <SiteWidgets />
     </ErrorBoundary>,
   );
