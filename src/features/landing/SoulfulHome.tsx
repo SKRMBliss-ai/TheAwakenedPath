@@ -62,12 +62,6 @@ const SERVICES = [
   { icon: 'M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4L12 3Z', title: '…& everything else', body: 'If a startup needs it, we probably build it. Just ask.' },
 ];
 
-const AUDIENCE_TABS = [
-  { key: 'you' as const,      label: 'For me',          sub: 'Wellbeing & courses', icon: 'M4 20C4 11 11 4 20 4c0 9-7 16-16 16Z|M9 15c2-3 5-5 8-6' },
-  { key: 'brands' as const,   label: 'For my business', sub: 'Websites & apps',      icon: 'M4 7h16v12H4z|M9 7V5h6v2|M4 12h16' },
-  { key: 'products' as const, label: 'Our Products',    sub: 'Apps you can use',     icon: 'M5 8h14M5 14h14M8 3v18M16 3v18M3 8h18v8H3z' },
-];
-
 export default function SoulfulHome() {
   const { palette, toggle: toggleTheme } = useSiteTheme();
   const isDark = palette.isDark;
@@ -79,6 +73,7 @@ export default function SoulfulHome() {
   // ── Audience toggle ──────────────────────────────────────────────────────
   const [audience, setAudience] = useState<'you' | 'brands' | 'products'>(() => {
     if (typeof window === 'undefined') return 'you';
+    if (window.location.pathname.replace(/\/+$/, '').toLowerCase() === '/products') return 'products';
     const param = new URLSearchParams(window.location.search).get('for');
     if (param === 'brands') return 'brands';
     if (param === 'products') return 'products';
@@ -93,9 +88,10 @@ export default function SoulfulHome() {
     track(next === 'brands' ? 'HOME_TAB_BRANDS' : next === 'products' ? 'HOME_TAB_PRODUCTS' : 'HOME_TAB_YOU');
     try {
       const url = new URL(window.location.href);
+      url.searchParams.delete('for');
+      // Products has its own clean URL; the other tabs live on the home path.
+      url.pathname = next === 'products' ? '/products' : '/';
       if (next === 'brands') url.searchParams.set('for', 'brands');
-      else if (next === 'products') url.searchParams.set('for', 'products');
-      else url.searchParams.delete('for');
       window.history.replaceState({}, '', url);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (_) { /* ignore */ }
@@ -219,7 +215,7 @@ export default function SoulfulHome() {
         <SiteHeader
           palette={palette}
           onToggleTheme={toggleTheme}
-          links={audience === 'brands'
+          links={audience !== 'you'
             ? [
                 { label: 'What we build', href: '#services' },
                 { label: 'How it works', href: '#how', secondary: true },
@@ -232,24 +228,24 @@ export default function SoulfulHome() {
                   label: 'Courses',
                   subItems: [
                     {
-                      label: 'Feelings & Emotions',
-                      sub: '7-Episode Guided Course',
+                      label: 'Transform Your Patterns. Transform Your Life.',
+                      sub: 'Feelings & Emotions · 7-Episode Guided Course',
                       href: '/feelingsandemotioncourse',
                       onClick: () => track('HOME_COURSE_FEELINGS_CLICK'),
                     },
                     {
-                      label: 'Power of Now',
-                      sub: 'Coming Soon',
+                      label: 'Live Fully in the Present',
+                      sub: 'Power of Now · Coming Soon',
                       href: '#',
                     },
                     {
-                      label: 'Wisdom Untethered',
-                      sub: 'Coming Soon',
+                      label: 'Free Your Mind, Free Your Life',
+                      sub: 'Wisdom Untethered · Coming Soon',
                       href: '#',
                     },
                     {
-                      label: 'For Kids',
-                      sub: 'Let’s Be Our Best Every Day! (3-Day Challenge)',
+                      label: 'Raise Confident, Joyful Kids',
+                      sub: 'For Kids · Let’s Be Our Best Every Day! (3-Day Challenge)',
                       badge: 'NEW',
                       href: '/tiny-kids-transformations',
                       onClick: () => track('HOME_COURSE_KIDS_CLICK'),
@@ -258,102 +254,15 @@ export default function SoulfulHome() {
                 },
                 { label: 'Free Guides', href: '#tools', secondary: true, onClick: () => chooseAudience('you') },
                 { label: 'Videos', href: '#videos', secondary: true, onClick: () => chooseAudience('you') },
+                { label: 'Products', href: '/products', secondary: true, onClick: () => track('HOME_TAB_PRODUCTS') },
                 { label: 'About Us', href: '/about-us', onClick: () => track('HOME_ABOUT_US') },
                 { label: 'Sign In', href: '/mindgym', secondary: true, onClick: () => track('HOME_SIGN_IN') },
               ]}
-          cta={audience === 'brands'
+          cta={audience !== 'you'
             ? { label: 'Start a project →', href: WHATSAPP, onClick: () => track('HOME_BRANDS_WHATSAPP') }
             : { label: 'Enter Mind Gym →', href: '/mindgym', onClick: () => track('HOME_ENTER_APP') }}
         />
       </div>
-
-      {/* ── Audience toggle — fixed bottom bar. Edge-to-edge tab bar on
-          mobile (the native-app convention); a floating rounded "dock" on
-          desktop (>=860px, via .si-audience-bar) since a full-bleed bar
-          stretched across 1440px+ just looks like three empty lanes. ─── */}
-      <nav
-        role="tablist"
-        aria-label="Choose what you're here for"
-        className="si-audience-bar"
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          zIndex: 50,
-          display: 'flex',
-          alignItems: 'stretch',
-          gap: 2,
-          height: 68,
-          padding: '0 0 env(safe-area-inset-bottom, 0px)',
-          background: isDark
-            ? 'rgba(13,10,18,0.88)'
-            : 'rgba(252,249,245,0.92)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)'}`,
-          boxShadow: '0 -4px 24px rgba(0,0,0,0.10)',
-        }}
-      >
-        {AUDIENCE_TABS.map((t) => {
-          const on = audience === t.key;
-          return (
-            <button
-              key={t.key}
-              role="tab"
-              aria-selected={on}
-              onClick={() => chooseAudience(t.key)}
-              style={{
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 9,
-                border: 'none',
-                background: 'transparent',
-                cursor: 'pointer',
-                padding: '10px 8px',
-                position: 'relative',
-                fontFamily: SANS,
-                transition: 'opacity 0.2s',
-                color: on
-                  ? (isDark ? '#EDE9E3' : '#2A2118')
-                  : (isDark ? 'rgba(237,233,227,0.42)' : 'rgba(42,33,24,0.38)'),
-              }}
-            >
-              {/* Active pill — a fill behind the tab, not just a hairline,
-                  so the selected state reads at a glance instead of needing
-                  the thin top indicator to carry all of it. */}
-              <span
-                className="si-audience-pill"
-                style={{
-                  position: 'absolute', inset: '6px 4px',
-                  borderRadius: 14,
-                  background: on ? (isDark ? 'rgba(196,145,58,0.14)' : 'rgba(74,50,96,0.08)') : 'transparent',
-                  transition: 'background 0.25s',
-                }}
-              />
-              <span style={{
-                position: 'absolute', top: 0, left: '30%', right: '30%',
-                height: 2.5, borderRadius: '0 0 3px 3px',
-                background: on ? '#C4913A' : 'transparent',
-                transition: 'background 0.25s',
-              }} />
-              <span style={{ position: 'relative', opacity: on ? 1 : 0.6, transition: 'opacity 0.2s', flexShrink: 0 }}>
-                <Ico d={t.icon} size={19} />
-              </span>
-              <span className="si-audience-label" style={{ position: 'relative', textAlign: 'left', lineHeight: 1.15 }}>
-                <span style={{ display: 'block', fontSize: 12.5, fontWeight: on ? 800 : 600, letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>
-                  {t.label}
-                </span>
-                <span className="si-audience-sub" style={{ display: 'none', fontSize: 10, fontWeight: 600, opacity: 0.65, marginTop: 1, whiteSpace: 'nowrap' }}>
-                  {t.sub}
-                </span>
-              </span>
-            </button>
-          );
-        })}
-      </nav>
 
       <style>{`
         @media (min-width: 860px) {
@@ -420,16 +329,41 @@ export default function SoulfulHome() {
 
           {/* 6. Our Programs Section */}
           <section className="si-reveal" aria-labelledby="our-programs-heading" style={{ paddingTop: 'clamp(32px, 5vw, 64px)' }}>
-            <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', textAlign: 'center', marginBottom: 'clamp(24px, 4vw, 48px)' }}>
+            <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', textAlign: 'left', marginBottom: 'clamp(24px, 4vw, 48px)' }}>
+              <div style={{
+                fontFamily: SANS,
+                fontSize: 11,
+                fontWeight: 500,
+                letterSpacing: '0.22em',
+                textTransform: 'uppercase',
+                color: palette.INK,
+                opacity: 0.55,
+                marginBottom: 'clamp(14px, 2vw, 22px)'
+              }}>
+                Our Programs · Emotions · Presence · Inner Work
+              </div>
               <h2 id="our-programs-heading" style={{
-                fontFamily: SERIF,
-                fontSize: 'clamp(36px, 5vw, 56px)',
+                fontFamily: SANS,
+                fontWeight: 500,
+                fontSize: 'clamp(44px, 8vw, 104px)',
+                letterSpacing: '-0.02em',
                 margin: 0,
                 color: palette.INK,
-                lineHeight: 1.1
+                lineHeight: 1.02
               }}>
-                Our Programs
+                Transform Your Patterns.<br />Transform Your Life.
               </h2>
+              <p style={{
+                fontFamily: SANS,
+                fontSize: 'clamp(16px, 1.6vw, 19px)',
+                lineHeight: 1.65,
+                color: palette.INK,
+                opacity: 0.75,
+                maxWidth: 560,
+                margin: 'clamp(16px, 2vw, 24px) 0 0'
+              }}>
+                Lasting change doesn&rsquo;t come from learning more. It comes from understanding the patterns that quietly shape your feelings, choices and life. Begin where you are.
+              </p>
             </div>
 
             <FeaturedCourse palette={palette} />
@@ -514,10 +448,11 @@ export default function SoulfulHome() {
         </main>
       )}
 
+
       {/* ════════════════════════════════════════════════════════════════════
           FOR BRANDS — the digital services world (preserved from original)
          ════════════════════════════════════════════════════════════════════ */}
-      {audience === 'brands' && (<>
+      {(audience === 'brands' || audience === 'products') && (<>
         {/* Brands hero */}
         <section style={{ position: 'relative', padding: 'clamp(64px, 8vw, 110px) 24px clamp(48px, 6vw, 80px)', textAlign: 'center', overflow: 'hidden', zIndex: 2 }}>
           {/* Ambient Glowing Aura */}
@@ -833,10 +768,10 @@ export default function SoulfulHome() {
           <section style={{ padding: '64px 24px 80px', textAlign: 'center' }}>
             <div style={{ maxWidth: 1100, margin: '0 auto' }}>
               <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#7A5F44' }}>
-                STUDIO PRODUCTS &amp; ECOSYSTEM
+                Proof · Built by us
               </span>
               <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 4vw, 46px)', fontWeight: 400, margin: '10px 0 16px', color: INK }}>
-                Apps &amp; Digital Experiences You Can Use Today
+                Products we have built and shipped
               </h2>
               <p style={{ fontSize: 14.5, color: INK2, maxWidth: 640, margin: '0 auto 36px', lineHeight: 1.7, fontFamily: SANS }}>
                 From habit tracking and AI mindfulness to luxury digital ateliers and sattvic dining — these are real apps and websites built by Soulful Intelligence Studios.
@@ -880,13 +815,21 @@ export default function SoulfulHome() {
                     tag: 'Mindfulness Platform',
                     title: 'Mind Gym',
                     desc: 'Daily practices for a quieter mind — breathing exercises, presence training, emotional check-ins, and guided mindfulness sessions rooted in The Power of Now.',
-                    href: 'https://www.skrmblissai.in/mindgym',
+                    href: '/mindgym',
                     action: 'Enter Mind Gym →',
-                    video: '/scenes/feelings-orbs.mp4',
-                    youtubeId: 'rLXnxzq_Dlk',
                     img: isDark
                       ? 'https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/AboutJournal%2Fdaily-journey-dark.webp?alt=media'
                       : 'https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/AboutJournal%2Fdaily-journey-light.webp?alt=media',
+                  },
+                  {
+                    type: 'apps',
+                    tag: 'Mindfulness for Kids',
+                    title: 'Mind Gym for Kids',
+                    desc: 'A playful daily space where children name their feelings, meet them as friendly characters, and practise calm — breathing, emotional check-ins and small habits that build up day by day.',
+                    href: '/mindgymforkidsv1',
+                    action: 'Enter Mind Gym for Kids →',
+                    video: '/scenes/feelings-orbs.mp4',
+                    youtubeId: 'rLXnxzq_Dlk',
                   },
                   {
                     type: 'apps',

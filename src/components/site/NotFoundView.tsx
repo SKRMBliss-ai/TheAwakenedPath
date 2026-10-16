@@ -27,8 +27,8 @@ const LINKS: any[] = [
         href: '/feelingsandemotioncourse',
       },
       {
-        label: 'For Kids',
-        sub: 'Let’s Be Our Best Every Day! (3-Day Challenge)',
+        label: 'Raise Confident, Joyful Kids',
+        sub: 'For Kids · Let’s Be Our Best Every Day! (3-Day Challenge)',
         badge: 'NEW',
         href: '/tiny-kids-transformations',
       },

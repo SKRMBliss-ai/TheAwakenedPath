@@ -211,7 +211,8 @@ const knowledgeInfo = (() => {
 const isHomeRoute = (() => {
   if (typeof window === 'undefined') return false;
   const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
-  return p === '' || p === '/index.html';
+  // /products is the home page opened on its "Our Products" tab.
+  return p === '' || p === '/index.html' || p === '/products';
 })();
 
 // The Mind Gym app itself. This is the ONLY path that should fall through to the

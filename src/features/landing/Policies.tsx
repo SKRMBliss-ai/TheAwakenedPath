@@ -54,23 +54,23 @@ export default function Policies() {
             label: 'Courses',
             subItems: [
               {
-                label: 'Feelings & Emotions',
-                sub: '7-Episode Guided Course',
+                label: 'Transform Your Patterns. Transform Your Life.',
+                sub: 'Feelings & Emotions · 7-Episode Guided Course',
                 href: '/feelingsandemotioncourse',
               },
               {
-                label: 'Power of Now',
-                sub: 'Coming Soon',
+                label: 'Live Fully in the Present',
+                sub: 'Power of Now · Coming Soon',
                 href: '#',
               },
               {
-                label: 'Wisdom Untethered',
-                sub: 'Coming Soon',
+                label: 'Free Your Mind, Free Your Life',
+                sub: 'Wisdom Untethered · Coming Soon',
                 href: '#',
               },
               {
-                label: 'For Kids',
-                sub: 'Let’s Be Our Best Every Day! (3-Day Challenge)',
+                label: 'Raise Confident, Joyful Kids',
+                sub: 'For Kids · Let’s Be Our Best Every Day! (3-Day Challenge)',
                 badge: 'NEW',
                 href: '/tiny-kids-transformations',
               },

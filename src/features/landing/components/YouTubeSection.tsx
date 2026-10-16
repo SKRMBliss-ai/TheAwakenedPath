@@ -29,7 +29,7 @@ const YOUTUBE_SUBSCRIBE = 'https://www.youtube.com/@SoulfulIntelligenceStudio?su
 const FS = (file: string) =>
   `https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/EmotionAndFeelingsCourse%2Fsite%2F${encodeURIComponent(file)}?alt=media`;
 
-type StreamKey = 'meditation' | 'music' | 'feelings' | 'untethered';
+type StreamKey = 'meditation' | 'music' | 'mantras' | 'feelings' | 'untethered';
 
 interface Stream {
   key: StreamKey;
@@ -44,6 +44,7 @@ interface Stream {
 const STREAMS: Stream[] = [
   { key: 'meditation', label: 'Meditation',        blurb: 'Guided practice',   accent: '#6E7F6A', href: YOUTUBE_CHANNEL },
   { key: 'music',      label: 'Music',             blurb: 'Sound for stillness', accent: '#C4913A', href: YOUTUBE_CHANNEL },
+  { key: 'mantras',    label: 'Mantras',           blurb: 'Chant & vibration', accent: '#B5534A', href: YOUTUBE_CHANNEL },
   { key: 'feelings',   label: 'Feelings & Emotions', blurb: 'The course',      accent: '#4A3260', href: '/feelingsandemotioncourse' },
   { key: 'untethered', label: 'Wisdom Untethered', blurb: 'The course',        accent: '#7A5F44', href: '/mindgym' },
 ];
@@ -61,6 +62,7 @@ const FEELINGS_VIDEO_IDS = new Set([
 
 const MUSIC_RE = /\b(music|hz|ambient|sitar|flute|drone|raga|instrumental|frequency|tanpura|soundscape|binaural)\b/i;
 const MEDITATION_RE = /\b(meditation|meditate|guided|breathwork|breathing|breath|sleep|relax|body scan|yoga nidra|affirmation|prayer)\b/i;
+const MANTRA_RE = /(mantras?|chant(s|ing)?|japa|om namah|gayatri|mahamrityunjaya|bij|beej)/i;
 const UNTETHERED_RE = /\buntethered\b/i;
 const FEELINGS_RE = /\bfeelings?\s*(&|and)\s*emotions?\b|\bemotions?\s+course\b/i;
 
@@ -78,6 +80,7 @@ function classify(v: Video): StreamKey | null {
   const t = v.title || '';
   if (UNTETHERED_RE.test(t)) return 'untethered';
   if (FEELINGS_VIDEO_IDS.has(v.id) || FEELINGS_RE.test(t)) return 'feelings';
+  if (MANTRA_RE.test(t)) return 'mantras';
   if (MUSIC_RE.test(t)) return 'music';
   if (MEDITATION_RE.test(t)) return 'meditation';
   return null;
@@ -99,6 +102,13 @@ const FALLBACK_BY_STREAM: Record<StreamKey, Video> = {
     thumb: FS('yt-thumb-nature.webp'),
     durationSec: 315,
     publishedAt: '2026-06-02T00:00:00Z',
+  },
+  mantras: {
+    id: 'fallback-mantras',
+    title: 'Om Namah Shivaya | 108 Repetitions for Calm and Clarity',
+    thumb: FS('yt-thumb-presence.webp'),
+    durationSec: 1080,
+    publishedAt: '2026-06-10T00:00:00Z',
   },
   feelings: {
     id: 'fallback-feelings',
@@ -313,7 +323,7 @@ export default function YouTubeSection({ palette, onTrack }: { palette: Palette;
       <style>{`
         .si-stream-grid { display: grid; gap: 22px; grid-template-columns: 1fr; }
         @media (min-width: 640px)  { .si-stream-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (min-width: 1180px) { .si-stream-grid { grid-template-columns: repeat(4, 1fr); } }
+        @media (min-width: 1180px) { .si-stream-grid { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); } }
       `}</style>
 
       {/* Header */}
@@ -326,7 +336,7 @@ export default function YouTubeSection({ palette, onTrack }: { palette: Palette;
             Latest in every stream
           </h2>
           <p style={{ fontFamily: SANS, fontSize: 13.5, color: inkSub }}>
-            Meditation, music and both courses — the newest of each, every week.
+            Meditation, music, mantras and both courses — the newest of each, every week.
           </p>
         </div>
 
