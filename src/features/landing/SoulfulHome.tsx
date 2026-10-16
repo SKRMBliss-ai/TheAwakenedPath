@@ -768,13 +768,13 @@ export default function SoulfulHome() {
           <section style={{ padding: '64px 24px 80px', textAlign: 'center' }}>
             <div style={{ maxWidth: 1100, margin: '0 auto' }}>
               <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#7A5F44' }}>
-                Proof · Built by us
+                Our work
               </span>
               <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 4vw, 46px)', fontWeight: 400, margin: '10px 0 16px', color: INK }}>
-                Products we have built and shipped
+                Built by us. Used by real people.
               </h2>
               <p style={{ fontSize: 14.5, color: INK2, maxWidth: 640, margin: '0 auto 36px', lineHeight: 1.7, fontFamily: SANS }}>
-                From habit tracking and AI mindfulness to luxury digital ateliers and sattvic dining — these are real apps and websites built by Soulful Intelligence Studios.
+                A few of the apps and websites we have designed, built and launched, from habit tracking and AI mindfulness to digital ateliers and sattvic dining.
               </p>
 
               {/* Sub-Filter Tabs */}
@@ -1091,6 +1091,35 @@ export default function SoulfulHome() {
                 ))}
               </div>
             </div>
+          </section>
+          {/* Soft introduction to the other vertical — Mind Gym, for individuals */}
+          <section style={{ padding: '0 24px 96px' }}>
+            <a
+              href="/mindgym"
+              onClick={() => track('PRODUCTS_MINDGYM_SOFT_AD')}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap',
+                maxWidth: 860, margin: '0 auto', padding: '22px 28px', borderRadius: 20,
+                textDecoration: 'none', color: INK,
+                background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(74,50,96,0.05)',
+                border: isDark ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(74,50,96,0.14)',
+              }}
+            >
+              <span>
+                <span style={{ display: 'block', fontSize: 10.5, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#7A5F44', marginBottom: 6 }}>
+                  Also from the studio
+                </span>
+                <span style={{ display: 'block', fontFamily: SERIF, fontSize: 'clamp(20px, 2.6vw, 26px)', lineHeight: 1.25 }}>
+                  Looking for a quieter mind, not a website?
+                </span>
+                <span style={{ display: 'block', fontFamily: SANS, fontSize: 14, color: INK2, marginTop: 4, lineHeight: 1.6 }}>
+                  Mind Gym is our free daily space for emotional clarity, breathing and presence.
+                </span>
+              </span>
+              <span style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: 700, color: isDark ? '#FFDF9E' : '#4A3260', whiteSpace: 'nowrap' }}>
+                Try Mind Gym →
+              </span>
+            </a>
           </section>
         </main>
       )}
