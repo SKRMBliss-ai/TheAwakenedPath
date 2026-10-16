@@ -60,9 +60,12 @@ const twinsoulsDevRedirect = {
   configureServer(server: { middlewares: { use: (fn: (req: any, res: any, next: () => void) => void) => void } }) {
     server.middlewares.use((req, res, next) => {
       const url: string = req.url || '';
-      if (/^\/twinsouls(\/|$|\?)/.test(url)) {
+      // /twinsouls itself is a page of this app now; only its sub-paths
+      // (/twinsouls/shrutikhungar, /twinsouls/simkatyal) are the portfolio.
+      const sub = url.match(/^\/twinsouls\/([^?#]+)/);
+      if (sub) {
         res.statusCode = 302;
-        res.setHeader('Location', 'http://localhost:5174/');
+        res.setHeader('Location', 'http://localhost:5174/' + sub[1]);
         res.end();
         return;
       }

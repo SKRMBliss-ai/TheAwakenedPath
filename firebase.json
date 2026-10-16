@@ -31,6 +31,11 @@
     ],
     "redirects": [
       {
+        "source": "/@(about-us|aboutus)",
+        "destination": "/twinsouls",
+        "type": 301
+      },
+      {
         "source": "/twinsouls/@(sim|smritikatyal|smriti)",
         "destination": "/twinsouls/simkatyal",
         "type": 301
@@ -241,7 +246,7 @@
       },
       {
         "source": "/twinsouls/@(shrutikhungar|shruti|simkatyal)",
-        "destination": "/twinsouls/index.html"
+        "destination": "/twinsouls/app.html"
       },
       {
         "source": "**/!(*.*)",

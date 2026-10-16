@@ -6,7 +6,7 @@ import SiteBackdrop from '../../components/site/SiteBackdrop';
 import { usePageView } from '../../lib/analytics';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// About Us — /about-us
+// Twin Souls (the founders) — /twinsouls
 //
 // The trust page. Every claim here is checkable: real employers, real years,
 // real books, real names. What it deliberately avoids is the unverifiable
@@ -23,7 +23,11 @@ const SANS = "'Outfit', system-ui, -apple-system, sans-serif";
 const GOLD = '#C4913A';
 const PLUM = '#4A3260';
 
-const TWINSOULS_URL = '/twinsouls/';
+/** Each founder's own world lives in the portfolio app under /twinsouls. */
+const WORLD_URL: Record<'shruti' | 'sim', string> = {
+  shruti: '/twinsouls/shrutikhungar',
+  sim: '/twinsouls/simkatyal',
+};
 
 interface Founder {
   key: 'shruti' | 'sim';
@@ -65,16 +69,16 @@ const FOUNDERS: Founder[] = [
     role: 'Presence, Healing & Transformation',
     discipline: ['Presence', 'Emotional Healing', 'Somatic Practice', 'Transformation'],
     proof: [
-      { label: 'India → UK', detail: 'A marriage that carried her across oceans' },
-      { label: 'Autoimmune illness', detail: 'The body saying what words could not' },
-      { label: 'Recurrent loss', detail: 'Including one that was life-threatening' },
-      { label: 'The turning', detail: 'Wayne Dyer, and every teacher after him' },
+      { label: '10+ years', detail: 'Of study and daily practice in presence and emotional work' },
+      { label: 'Many teachers', detail: 'Books, teachers and years of meditation. A few are named on her page' },
+      { label: 'Tested first', detail: 'Every method tried in her own life before it is shared' },
+      { label: 'India & the UK', detail: 'Draws on both traditions and daily lives' },
     ],
     story: [
-      'Sensitive to other people’s feelings from childhood, Sim moved from India to the UK after marriage. What followed were the hardest years of her life: autoimmune illness, unexplained fertility struggles, and repeated loss — one of them nearly fatal.',
-      'She found Wayne Dyer in the middle of it, and something turned. What began as a search for her own healing became a decade of study and practice — Tolle, Singer, Hay, Hawkins — every teaching tested against her own experience before it was ever taught to anyone else.',
+      'Sim has been drawn to understanding feelings since childhood. After moving from India to the UK, a difficult stretch of life pushed her to look for practices that actually worked, rather than ones that only sounded right.',
+      'Reading Wayne Dyer was where it started. Over the next decade it grew into steady study and meditation practice, with Tolle, Singer, Hay, Hawkins and many other teachers, each idea tested in her own life before she taught it to anyone else.',
     ],
-    pull: 'Her pain was not a wound to be hidden. It was a doorway — not a destination.',
+    pull: 'Nothing is taught here that has not first been practised.',
   },
 ];
 
@@ -88,7 +92,7 @@ const LINEAGE = [
 const PROMISE = [
   { title: 'Nothing here is theory', body: 'Every practice was lived through before it was taught. If it did not work in the worst year of her life, it did not make it in.' },
   { title: 'Pay what it is worth to you', body: 'Our courses are pay-what-you-feel with a real floor, not a fake discount. If money is the obstacle, it should not be the obstacle.' },
-  { title: 'We name our sources', body: 'The teachers named on this page did the original work. We point you to them rather than dressing their ideas up as our own.' },
+  { title: 'We credit where we can', body: 'When an idea comes from a particular teacher or book, we say so, so you can read them for yourself. Much of what we know also came from years of meditation, which no list can name.' },
   { title: 'Leave whenever you want', body: 'No lock-in, no auto-renewing trap, and a 14-day refund on anything paid — asked for by email, granted without an interrogation.' },
 ];
 
@@ -98,10 +102,10 @@ export default function AboutUs() {
   const [flipped, setFlipped] = useState<Founder['key'] | null>(null);
 
   usePageSeo({
-    title: 'About Us — Shruti Khungar & Sim Katyal | Soulful Intelligence Studio',
+    title: 'Twin Souls — Shruti Khungar & Sim Katyal | Soulful Intelligence Studio',
     description:
-      'The twin sisters behind Soulful Intelligence Studio and Mind Gym: twenty years of enterprise product engineering, and a lived journey through illness, loss and emotional recovery.',
-    url: 'https://www.skrmblissai.in/about-us',
+      'The twin sisters behind Soulful Intelligence Studio and Mind Gym: twenty years of enterprise product engineering, and a decade of study and practice in presence and emotional wellbeing.',
+    url: 'https://www.skrmblissai.in/twinsouls',
   });
 
   usePageView('PAGE_VISIT_ABOUT_US');
@@ -204,7 +208,6 @@ export default function AboutUs() {
                 },
               ],
             },
-            { label: 'Their worlds', href: TWINSOULS_URL, secondary: true },
           ]}
           cta={{ label: 'Enter Mind Gym →', href: '/mindgym' }}
         />
@@ -218,7 +221,106 @@ export default function AboutUs() {
           <h1 style={{ ...h2, fontSize: 'clamp(36px, 5.6vw, 64px)', maxWidth: 800, margin: '16px auto 0' }}>
             Built by two sisters.
           </h1>
-          <p style={{ ...body, fontSize: 16.5, maxWidth: 620, margin: '24px auto 0' }}>
+          {/* The sisters face each other with a gap between them; the coin turns
+              in that gap, so the two images read as one composition. */}
+          <div style={{ position: 'relative', width: '100%', maxWidth: 760, margin: '28px auto 0' }}>
+          <img
+            src="/marketing/twins-facing.webp"
+            alt="Shruti Khungar and Sim Katyal, facing each other"
+            style={{
+              width: '100%', height: 'auto', display: 'block',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 74%, transparent 99%)',
+              maskImage: 'linear-gradient(to bottom, black 74%, transparent 99%)',
+            }}
+          />
+
+          {/* One coin, two sides: Shruti on one face, Sim on the other, turning
+              slowly. Paused on hover/focus so either face can be looked at. */}
+          <style>{`
+            @keyframes au-twin-spin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
+            .au-twin-scene {
+              position: absolute; left: 50%; top: 40%; width: 29%; aspect-ratio: 1;
+              transform: translate(-50%, -50%);
+              perspective: 1200px; container-type: inline-size;
+            }
+            .au-twin-coin {
+              position: relative; width: 100%; height: 100%;
+              transform-style: preserve-3d;
+              animation: au-twin-spin 24s linear infinite;
+            }
+            .au-twin-scene:hover .au-twin-coin, .au-twin-scene:focus-within .au-twin-coin { animation-play-state: paused; }
+            .au-twin-layer, .au-twin-face { position: absolute; inset: 0; border-radius: 50%; }
+            .au-twin-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden; display: flex; align-items: flex-end; justify-content: center; }
+            .au-twin-front { transform: translateZ(8px); }
+            .au-twin-back { transform: rotateY(180deg) translateZ(8px); }
+            @media (prefers-reduced-motion: reduce) { .au-twin-coin { animation: none; } }
+          `}</style>
+          <div
+            className="au-twin-scene"
+            role="img"
+            aria-label="A coin turning slowly: Shruti Khungar on one side, Sim Katyal on the other"
+          >
+            <div className="au-twin-coin">
+              {/* Rim: stacked discs give the coin real thickness */}
+              {[-6, -4, -2, 0, 2, 4, 6].map((z) => (
+                <div
+                  key={z}
+                  className="au-twin-layer"
+                  style={{
+                    transform: `translateZ(${z}px)`,
+                    background: isDark ? '#3A2A18' : '#B9A98F',
+                    border: `2px solid ${isDark ? 'rgba(196,145,58,0.5)' : 'rgba(74,50,96,0.3)'}`,
+                  }}
+                />
+              ))}
+              {(['shruti', 'sim'] as const).map((k, idx) => {
+                const f = FOUNDERS.find((x) => x.key === k)!;
+                return (
+                  <div
+                    key={k}
+                    className={`au-twin-face ${idx === 0 ? 'au-twin-front' : 'au-twin-back'}`}
+                    style={{
+                      background: isDark
+                        ? 'radial-gradient(circle at 50% 28%, #2A1B3D 0%, #14101B 78%)'
+                        : 'radial-gradient(circle at 50% 28%, #FFFFFF 0%, #EFE7DA 82%)',
+                      border: `3px solid ${isDark ? 'rgba(196,145,58,0.55)' : 'rgba(74,50,96,0.32)'}`,
+                      boxShadow: 'inset 0 0 46px rgba(74,50,96,0.08)',
+                    }}
+                  >
+                    <img
+                      src={f.photo}
+                      alt=""
+                      aria-hidden="true"
+                      style={{
+                        position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)',
+                        height: '90%', width: 'auto', objectFit: 'contain',
+                        opacity: isDark ? 0.7 : 1,
+                      }}
+                    />
+                    <div
+                      aria-hidden="true"
+                      style={{
+                        position: 'absolute', inset: 0,
+                        background: isDark
+                          ? 'linear-gradient(to top, rgba(20,16,27,0.95) 14%, rgba(20,16,27,0) 52%)'
+                          : 'linear-gradient(to top, rgba(255,255,255,0.94) 12%, rgba(255,255,255,0) 50%)',
+                      }}
+                    />
+                    <span style={{
+                      position: 'relative', paddingBottom: '12%',
+                      fontFamily: SERIF, fontSize: '11cqw',
+                      letterSpacing: '0.24em', color: ink, textTransform: 'uppercase',
+                    }}>
+                      {f.name}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          </div>
+
+          <p style={{ ...body, fontSize: 16.5, maxWidth: 620, margin: '32px auto 0' }}>
             Soulful Intelligence Studio is run by twin sisters. Both carry decades of
             meditation practice passed down from their parents — a tradition they inherited
             long before they built anything with it. What they have built here is that
@@ -226,17 +328,6 @@ export default function AboutUs() {
             emotions and the body as one system, turned into a daily practice anyone can use
             to see their own patterns — and change them.
           </p>
-
-          <img
-            src="/marketing/twins-facing.webp"
-            alt="Shruti Khungar and Sim Katyal, facing each other"
-            style={{
-              width: '100%', maxWidth: 760, height: 'auto', display: 'block',
-              margin: '36px auto 0',
-              WebkitMaskImage: 'linear-gradient(to bottom, black 74%, transparent 99%)',
-              maskImage: 'linear-gradient(to bottom, black 74%, transparent 99%)',
-            }}
-          />
         </section>
 
         {/* ── 2. Why & how ───────────────────────────────────────────── */}
@@ -251,7 +342,7 @@ export default function AboutUs() {
                 correct and weightless at the same time.
               </p>
               <p style={{ ...body, marginTop: 14 }}>
-                We built this the other way round. One of us needed it, badly, for years.
+                We built this the other way round. One of us needed it for years.
                 The other knew how to build software that actually holds up. Nothing here
                 was added because it demoed well.
               </p>
@@ -267,7 +358,7 @@ export default function AboutUs() {
               </p>
               <p style={{ ...body, marginTop: 14 }}>
                 And each one is tested against a harder standard than any spec — whether it
-                would have helped Sim on her worst day.
+                would hold up for someone on a hard day.
               </p>
             </div>
           </div>
@@ -411,7 +502,7 @@ export default function AboutUs() {
                     </ul>
 
                     <a
-                      href={TWINSOULS_URL}
+                      href={WORLD_URL[f.key]}
                       className="au-world-link"
                       style={{
                         marginTop: 26, display: 'inline-flex', alignItems: 'center', gap: 8,

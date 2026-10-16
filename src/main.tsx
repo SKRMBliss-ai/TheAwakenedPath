@@ -167,6 +167,14 @@ const isKidsChallengeRoute = (() => {
   return p === '/tiny-kids-transformations' || p === '/tiny-kids-transformations/index.html';
 })();
 
+// /twinsouls (exactly) is the studio's founders page. Its sub-paths belong to the
+// separately built portfolio app and are served by Hosting, never by this bundle.
+const isTwinSoulsRoute = (() => {
+  if (typeof window === 'undefined') return false;
+  const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
+  return p === '/twinsouls';
+})();
+
 const isAboutUsRoute = (() => {
   if (typeof window === 'undefined') return false;
   const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
@@ -263,7 +271,7 @@ const isAdminRoute = (() => {
 })();
 
 // Track /mindgym (main app) visits
-if (!isAboutJournalRoute && !isEmotionalHealthRoute && !isFeelingsCourseRoute && !isPoliciesRoute && !isAboutUsRoute && !isHomeRoute && typeof window !== 'undefined') {
+if (!isAboutJournalRoute && !isEmotionalHealthRoute && !isFeelingsCourseRoute && !isPoliciesRoute && !isAboutUsRoute && !isTwinSoulsRoute && !isHomeRoute && typeof window !== 'undefined') {
   const p = window.location.pathname.toLowerCase();
   if (p === '/mindgym' || p === '/mindgym/') {
     track('PAGE_VISIT_APP', '', '/mindgym');
@@ -345,13 +353,17 @@ if (isAdminRoute) {
       <SiteWidgets />
     </ErrorBoundary>,
   );
-} else if (isAboutUsRoute) {
+} else if (isTwinSoulsRoute) {
   root.render(
-    <ErrorBoundary featureName="AboutUs">
+    <ErrorBoundary featureName="TwinSouls">
       <AboutUs />
       <SiteWidgets />
     </ErrorBoundary>,
   );
+} else if (isAboutUsRoute) {
+  // /about-us was retired in favour of the Twin Souls page. Hosting 301s it in
+  // production; this covers dev and any cached shell.
+  window.location.replace('/twinsouls');
 } else if (isSimRoute) {
   root.render(
     <ErrorBoundary featureName="SimKatyal">

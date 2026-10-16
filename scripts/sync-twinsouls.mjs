@@ -25,7 +25,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { execSync } from 'node:child_process';
-import { existsSync, rmSync, cpSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, rmSync, cpSync, readdirSync, statSync, renameSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -87,5 +87,11 @@ if (existsSync(targetDir)) {
 }
 
 cpSync(distDir, targetDir, { recursive: true });
+
+// /twinsouls itself is now the main app's Twin Souls page (the coin layout),
+// so the portfolio build must NOT sit at /twinsouls/index.html, where Hosting
+// would serve it before any rewrite. It is kept as app.html and reached only
+// through the founder URLs rewritten to it in firebase.json.
+renameSync(path.join(targetDir, 'index.html'), path.join(targetDir, 'app.html'));
 console.log(`sync-twinsouls: mirrored ${distDir} -> ${targetDir} (${dirSizeMB(targetDir)} MB)`);
 console.log('sync-twinsouls: done. Remember to run `npm run build:seo` before deploying.');

@@ -56,7 +56,7 @@ const PILLARS = [
 
 const HOW_WE_WORK = [
   { title: 'Nothing here is theory', body: 'Everything Sim teaches was lived and tested first. If it did not hold up in real life, it is not offered.' },
-  { title: 'We name our sources', body: 'The teachers listed on this page did the original work. We point you to them instead of presenting their ideas as our own.' },
+  { title: 'We credit where we can', body: 'When an idea comes from a particular teacher or book, we say so, so you can read them for yourself. Much of what Sim knows also came from years of meditation, which no list can name.' },
   { title: 'Pay what it is worth to you', body: 'Our courses are pay-what-you-feel, with a real floor rather than a fake discount.' },
   { title: 'Leave whenever you want', body: 'No lock-in and no auto-renewing trap. Anything you pay for has a 14-day refund, asked for by email.' },
 ];
@@ -111,7 +111,7 @@ export default function SimKatyal() {
           { label: 'Home', href: '/' },
           { label: 'Work 1:1', href: '#one-to-one' },
           { label: 'Courses', href: '#courses' },
-          { label: 'About Us', href: '/about-us' },
+          { label: 'Twin Souls', href: '/twinsouls' },
         ]}
         cta={{ label: 'Book a conversation →', href: BOOK_1TO1, onClick: () => track('SIM_BOOK_HEADER') }}
       />
@@ -150,10 +150,10 @@ export default function SimKatyal() {
             <span style={eyebrow}>About Sim</span>
             <h2 style={h2}>Practised before it was taught.</h2>
             <p style={body}>
-              Sim has been sensitive to other people’s feelings since childhood. After moving from India to the UK, she went through a long period of ill health and loss, and began looking seriously for ways to understand what she felt rather than push it away.
+              Sim has been sensitive to other people’s feelings since childhood. After moving from India to the UK, a difficult stretch of life led her to look seriously for practices that actually worked, rather than ones that only sounded right.
             </p>
             <p style={body}>
-              Reading Wayne Dyer was where it started. Over the following years she studied and practised the work of Eckhart Tolle, Michael A. Singer, Louise Hay and others, testing each idea against her own life before sharing it with anyone.
+              Reading Wayne Dyer was where it started. Over the following years she studied and practised the work of Eckhart Tolle, Michael A. Singer, Louise Hay and many other teachers, alongside daily meditation, testing each idea against her own life before sharing it with anyone.
             </p>
             <p style={body}>
               She now teaches what held up. If you would like the longer version, it is on her{' '}
@@ -236,8 +236,8 @@ export default function SimKatyal() {
         <section style={section}>
           <div style={wrap}>
             <span style={eyebrow}>Where the ideas come from</span>
-            <h2 style={h2}>The teachers and books she learned from.</h2>
-            <p style={{ ...body, maxWidth: 620 }}>We name them because they did the original work. Sim’s role is to practise and share it, not to claim it.</p>
+            <h2 style={h2}>A few of the teachers and books that shaped her.</h2>
+            <p style={{ ...body, maxWidth: 620 }}>She has learned from many sources, and from meditation itself. These are some of them, if you would like to go to the source.</p>
             <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', marginTop: 24 }}>
               {TEACHERS.map(([name, book]) => (
                 <div key={name} style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 14, padding: '16px 18px' }}>
@@ -266,7 +266,7 @@ export default function SimKatyal() {
               Sim’s work is guidance and education. It is not medical or psychological treatment, and it is not a replacement for your doctor or therapist. If you are in crisis or unsafe, please contact local emergency services or a qualified professional first.
             </p>
             <p style={{ ...body, fontSize: 14.5, maxWidth: 760 }}>
-              Read the full <a href="/policies" style={{ color: accent }}>privacy, terms and refund policy</a>, or learn about the people behind the studio on the <a href="/about-us" style={{ color: accent }}>About Us</a> page.
+              Read the full <a href="/policies" style={{ color: accent }}>privacy, terms and refund policy</a>, or meet both founders on the <a href="/twinsouls" style={{ color: accent }}>Twin Souls</a> page.
             </p>
           </div>
         </section>
