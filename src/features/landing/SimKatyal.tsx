@@ -27,7 +27,12 @@ const WORK_WITH = [
  *   { label: 'Format', value: 'Video call' }, { label: 'Fee', value: '...' }
  * CREDENTIALS e.g. 'Certified in ...' (only what can be checked).
  */
-const SESSION_DETAILS: { label: string; value: string }[] = [];
+const SESSION_DETAILS: { label: string; value: string }[] = [
+  { label: 'Format', value: 'A private one-to-one conversation, online' },
+  { label: 'Booking', value: 'Message us on WhatsApp and we will find a time that suits you' },
+  { label: 'Fee', value: 'Shared with you before you book, so there are no surprises' },
+  { label: 'Refunds', value: 'Anything you pay for has a 14-day refund, asked for by email' },
+];
 const CREDENTIALS: string[] = [];
 
 const COURSES = [
