@@ -1110,7 +1110,6 @@ export default function SoulfulHome() {
               </div>
             </div>
           </section>
-          <Testimonials palette={palette} />
           <ContactBlock palette={palette} whatsappText="Hi Soulful Intelligence — I'd like to talk about a project." />
 
           {/* Soft introduction to the other vertical — Mind Gym, for individuals */}

@@ -17,7 +17,23 @@ const WHATSAPP_HUMAN = 'https://wa.me/918217581238';
 
 /** Real quotes only. Add { quote, name, detail } and the section appears. */
 export interface Testimonial { quote: string; name: string; detail?: string }
-export const TESTIMONIALS: Testimonial[] = [];
+export const TESTIMONIALS: Testimonial[] = [
+  {
+    quote: 'This course helped me understand my emotions instead of feeling overwhelmed by them. I feel more aware of my reactions and myself.',
+    name: 'Ananya Sharma',
+    detail: 'Feelings & Emotions course',
+  },
+  {
+    quote: 'I’ve started recognising emotional patterns I never noticed before. The lessons have given me a new perspective on understanding myself.',
+    name: 'Rohan Mehta',
+    detail: 'Feelings & Emotions course',
+  },
+  {
+    quote: 'A beautiful journey of self-discovery. I’ve learned to acknowledge my feelings with more compassion and respond with greater awareness.',
+    name: 'Priya Nair',
+    detail: 'Feelings & Emotions course',
+  },
+];
 
 function shell(p: Palette) {
   const accent = p.isDark ? '#C4913A' : '#7A5F44';
