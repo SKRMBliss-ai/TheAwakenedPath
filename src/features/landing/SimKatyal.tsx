@@ -3,6 +3,7 @@ import { useSiteTheme } from '../../lib/siteTheme';
 import { usePageView, track } from '../../lib/analytics';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
 import SiteBackdrop from '../../components/site/SiteBackdrop';
+import { Testimonials } from './components/TrustBlocks';
 
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS = "'Outfit', system-ui, -apple-system, sans-serif";
@@ -19,6 +20,15 @@ const WORK_WITH = [
   'You have read the books, done the work, and something still feels unfinished.',
   'You are ready for change that goes beyond motivation.',
 ];
+
+/**
+ * Fill these in and they appear; leave them empty and nothing is shown.
+ * SESSION_DETAILS e.g. { label: 'Length', value: '60 minutes' },
+ *   { label: 'Format', value: 'Video call' }, { label: 'Fee', value: '...' }
+ * CREDENTIALS e.g. 'Certified in ...' (only what can be checked).
+ */
+const SESSION_DETAILS: { label: string; value: string }[] = [];
+const CREDENTIALS: string[] = [];
 
 const COURSES = [
   {
@@ -81,7 +91,7 @@ export default function SimKatyal() {
     title: 'Sim Katyal — 1:1 Consultation & Courses | Soulful Intelligence Studio',
     description:
       'Work with Sim Katyal 1:1, or learn through her guided courses on feelings, emotional patterns and presence. Rooted in lived experience, not theory.',
-    url: 'https://www.skrmblissai.in/simkatyal',
+    url: 'https://www.skrmblissai.in/twinsouls/simkatyal',
   });
   usePageView('PAGE_VISIT_SIM_KATYAL');
 
@@ -155,9 +165,13 @@ export default function SimKatyal() {
             <p style={body}>
               Reading Wayne Dyer was where it started. Over the following years she studied and practised the work of Eckhart Tolle, Michael A. Singer, Louise Hay and many other teachers, alongside daily meditation, testing each idea against her own life before sharing it with anyone.
             </p>
+            {CREDENTIALS.length > 0 && (
+              <ul style={{ ...body, paddingLeft: 20 }}>
+                {CREDENTIALS.map((c) => <li key={c}>{c}</li>)}
+              </ul>
+            )}
             <p style={body}>
-              She now teaches what held up. If you would like the longer version, it is on her{' '}
-              <a href="/twinsouls/simkatyal" style={{ color: accent }}>personal page</a>.
+              She now teaches what held up.
             </p>
           </div>
         </section>
@@ -195,6 +209,16 @@ export default function SimKatyal() {
                   </li>
                 ))}
               </ul>
+              {SESSION_DETAILS.length > 0 && (
+                <dl style={{ display: 'grid', gridTemplateColumns: 'max-content 1fr', gap: '8px 20px', margin: '0 0 28px', maxWidth: 680 }}>
+                  {SESSION_DETAILS.map((d) => (
+                    <div key={d.label} style={{ display: 'contents' }}>
+                      <dt style={{ ...body, margin: 0, fontWeight: 700, color: ink }}>{d.label}</dt>
+                      <dd style={{ ...body, margin: 0 }}>{d.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
               <a href={BOOK_1TO1} onClick={() => track('SIM_BOOK_1TO1')} style={primaryBtn}>Book a 1:1 conversation</a>
               <p style={{ ...body, fontSize: 13.5, marginTop: 16 }}>
                 Opens WhatsApp. Tell Sim where you are and what you are ready to shift.
@@ -248,6 +272,8 @@ export default function SimKatyal() {
             </div>
           </div>
         </section>
+
+        <Testimonials palette={palette} />
 
         {/* Trust: how we work, and what this is not */}
         <section style={section}>

@@ -184,7 +184,14 @@ const isAboutUsRoute = (() => {
 const isSimRoute = (() => {
   if (typeof window === 'undefined') return false;
   const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
-  return p === '/simkatyal' || p === '/simkatyal/index.html' || p === '/sim';
+  return p === '/twinsouls/simkatyal';
+})();
+
+// Retired addresses for the same page; Hosting 301s them, this covers dev.
+const isOldSimRoute = (() => {
+  if (typeof window === 'undefined') return false;
+  const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
+  return p === '/simkatyal' || p === '/sim';
 })();
 
 const isPoliciesRoute = (() => {
@@ -364,6 +371,8 @@ if (isAdminRoute) {
   // /about-us was retired in favour of the Twin Souls page. Hosting 301s it in
   // production; this covers dev and any cached shell.
   window.location.replace('/twinsouls');
+} else if (isOldSimRoute) {
+  window.location.replace('/twinsouls/simkatyal');
 } else if (isSimRoute) {
   root.render(
     <ErrorBoundary featureName="SimKatyal">

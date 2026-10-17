@@ -61,8 +61,9 @@ const twinsoulsDevRedirect = {
     server.middlewares.use((req, res, next) => {
       const url: string = req.url || '';
       // /twinsouls itself is a page of this app now; only its sub-paths
-      // (/twinsouls/shrutikhungar, /twinsouls/simkatyal) are the portfolio.
-      const sub = url.match(/^\/twinsouls\/([^?#]+)/);
+      // (/twinsouls/shrutikhungar) are the portfolio.
+      // /twinsouls/simkatyal is the consultation page of this app as well.
+      const sub = url.match(/^\/twinsouls\/(?!simkatyal(?:[/?#]|$))([^?#]+)/);
       if (sub) {
         res.statusCode = 302;
         res.setHeader('Location', 'http://localhost:5174/' + sub[1]);
