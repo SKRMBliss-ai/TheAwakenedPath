@@ -191,7 +191,9 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
           width: '100%',
           maxWidth: 1240,
           margin: '0 auto',
-          padding: 'clamp(64px, 10vw, 120px) clamp(24px, 6vw, 96px)',
+          // Top padding is deliberately small on phones: the primary button has to
+          // land above the fold even with the promo bar and header above it.
+          padding: 'clamp(24px, 8vw, 120px) clamp(24px, 6vw, 96px) clamp(64px, 10vw, 120px)',
         }}
       >
         <div
@@ -214,9 +216,9 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
             className="si-hero-mobile-photo"
             style={{
               width: '100%',
-              maxWidth: 380,
+              maxWidth: 'min(380px, 74vw)',
               height: 'auto',
-              margin: '0 auto 28px',
+              margin: '0 auto 14px',
               WebkitMaskImage: 'linear-gradient(to bottom, black 78%, transparent 99%)',
               maskImage: 'linear-gradient(to bottom, black 78%, transparent 99%)',
             }}
