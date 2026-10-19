@@ -8,6 +8,7 @@
  * That is deliberate: an empty list is invisible, a made-up one is a lie.
  */
 import type { Palette } from '../../../lib/siteTheme';
+import { track } from '../../../lib/analytics';
 
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS = "'Outfit', system-ui, -apple-system, sans-serif";
@@ -58,9 +59,9 @@ function shell(p: Palette) {
 export function WhereToBegin({ palette }: { palette: Palette }) {
   const t = shell(palette);
   const steps = [
-    { n: '1', title: 'Try it free', body: 'Mind Gym is a daily space for breathing, presence and emotional check-ins. No payment needed.', href: '/mindgym', cta: 'Open Mind Gym →' },
-    { n: '2', title: 'Go deeper, at your pace', body: 'Understanding Feelings & Emotions is a 7-episode guided course on recognising and changing your patterns.', href: '/feelingsandemotioncourse', cta: 'See the course →' },
-    { n: '3', title: 'Talk to Sim', body: 'A private 1:1 conversation about your own patterns, when you want guidance that is just for you.', href: '/twinsouls/simkatyal', cta: 'About 1:1 sessions →' },
+    { n: '1', img: '/marketing/begin-free.webp', alt: 'An open door in a vine-covered arch, with a path leading into warm morning light', title: 'Try it free', body: 'Mind Gym is a daily space for breathing, presence and emotional check-ins. No payment needed.', href: '/mindgym', cta: 'Open Mind Gym →' },
+    { n: '2', img: '/marketing/begin-course.webp', alt: 'A stone path winding up a hillside toward a glowing sunrise', title: 'Go deeper, at your pace', body: 'Understanding Feelings & Emotions is a 7-episode guided course on recognising and changing your patterns.', href: '/feelingsandemotioncourse', cta: 'See the course →' },
+    { n: '3', img: '/marketing/begin-1to1.webp', alt: 'Two empty armchairs facing each other beside a small table with tea and a candle', title: 'Talk to Sim', body: 'A private 1:1 conversation about your own patterns, when you want guidance that is just for you.', href: '/twinsouls/simkatyal', cta: 'About 1:1 sessions →' },
   ];
   return (
     <section aria-labelledby="where-to-begin" style={t.wrap}>
@@ -68,11 +69,14 @@ export function WhereToBegin({ palette }: { palette: Palette }) {
       <h2 id="where-to-begin" style={t.h2}>Three ways in. Start wherever feels right.</h2>
       <div style={{ display: 'grid', gap: 18, gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', marginTop: 28 }}>
         {steps.map((s) => (
-          <a key={s.n} href={s.href} style={{ display: 'flex', flexDirection: 'column', padding: 26, borderRadius: 20, textDecoration: 'none', background: t.card, border: `1px solid ${t.border}` }}>
+          <a key={s.n} href={s.href} onClick={() => track('WHERE_TO_BEGIN_' + s.n)} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRadius: 20, textDecoration: 'none', background: t.card, border: `1px solid ${t.border}` }}>
+            <img src={s.img} alt={s.alt} loading="lazy" style={{ width: '100%', aspectRatio: '16 / 10', objectFit: 'cover', objectPosition: 'left center', display: 'block' }} />
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: 26 }}>
             <span style={{ fontFamily: SERIF, fontSize: 32, color: t.accent, opacity: 0.7 }}>{s.n}</span>
             <h3 style={{ fontFamily: SANS, fontWeight: 600, fontSize: 20, margin: '6px 0 8px', color: palette.INK }}>{s.title}</h3>
             <p style={{ ...t.body, fontSize: 15, flex: 1 }}>{s.body}</p>
             <span style={{ fontFamily: SANS, fontSize: 14, fontWeight: 700, color: palette.PURPLE_STRONG }}>{s.cta}</span>
+            </div>
           </a>
         ))}
       </div>
@@ -151,9 +155,9 @@ export function ContactBlock({ palette, whatsappText }: { palette: Palette; what
         Share where you are and what you are ready to shift. Questions about a course, a session or a project are all welcome.
       </p>
       <p style={{ ...t.body, marginTop: 8 }}>
-        <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: palette.PURPLE_STRONG, fontWeight: 600 }}>{CONTACT_EMAIL}</a>
+        <a href={`mailto:${CONTACT_EMAIL}`} onClick={() => track('CONTACT_EMAIL')} style={{ color: palette.PURPLE_STRONG, fontWeight: 600 }}>{CONTACT_EMAIL}</a>
         {' · '}
-        <a href={wa} style={{ color: palette.PURPLE_STRONG, fontWeight: 600 }}>WhatsApp</a>
+        <a href={wa} onClick={() => track('CONTACT_WHATSAPP')} style={{ color: palette.PURPLE_STRONG, fontWeight: 600 }}>WhatsApp</a>
       </p>
     </section>
   );
@@ -178,6 +182,41 @@ export function Testimonials({ palette }: { palette: Palette }) {
             </figcaption>
           </figure>
         ))}
+      </div>
+    </section>
+  );
+}
+
+export interface FaqItem { q: string; a: string }
+
+/**
+ * Objection-handling in plain words. Native <details>, so it works with a
+ * keyboard and a screen reader and needs no script. The same questions are
+ * published as FAQPage structured data, which must match what is on screen.
+ */
+export function Faq({ palette, items, heading = 'Questions people ask' }: { palette: Palette; items: FaqItem[]; heading?: string }) {
+  const t = shell(palette);
+  const ld = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: items.map((i) => ({ '@type': 'Question', name: i.q, acceptedAnswer: { '@type': 'Answer', text: i.a } })),
+  };
+  return (
+    <section aria-labelledby="faq-heading" style={{ ...t.wrap, maxWidth: 800 }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
+      <span style={t.eyebrow}>Before you decide</span>
+      <h2 id="faq-heading" style={t.h2}>{heading}</h2>
+      <div style={{ marginTop: 20 }}>
+        {items.map((i) => (
+          <details key={i.q} style={{ borderTop: `1px solid ${t.border}`, padding: '4px 0' }}>
+            <summary style={{ cursor: 'pointer', listStyle: 'none', padding: '16px 0', fontFamily: SANS, fontWeight: 600, fontSize: 17, color: palette.INK, display: 'flex', justifyContent: 'space-between', gap: 16 }}>
+              {i.q}
+              <span aria-hidden="true" style={{ color: t.accent, flexShrink: 0 }}>+</span>
+            </summary>
+            <p style={{ ...t.body, margin: '0 0 18px', maxWidth: 680 }}>{i.a}</p>
+          </details>
+        ))}
+        <div style={{ borderTop: `1px solid ${t.border}` }} />
       </div>
     </section>
   );

@@ -3,7 +3,7 @@ import { useSiteTheme } from '../../lib/siteTheme';
 import { usePageView, track } from '../../lib/analytics';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
 import SiteBackdrop from '../../components/site/SiteBackdrop';
-import { Testimonials } from './components/TrustBlocks';
+import { Testimonials, Faq } from './components/TrustBlocks';
 
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS = "'Outfit', system-ui, -apple-system, sans-serif";
@@ -34,6 +34,13 @@ const SESSION_DETAILS: { label: string; value: string }[] = [
   { label: 'Refunds', value: 'Anything you pay for has a 14-day refund, asked for by email' },
 ];
 const CREDENTIALS: string[] = [];
+
+const SIM_FAQ = [
+  { q: 'Is this therapy?', a: 'No. Sim’s work is guidance and education. It is not medical or psychological treatment and it does not replace your doctor or therapist. It can sit alongside their care.' },
+  { q: 'How do the 1:1 conversations work?', a: 'They are private and held online. Message us on WhatsApp and we will find a time that suits you. The fee is shared with you before you book.' },
+  { q: 'What if I am not sure this is right for me?', a: 'You do not have to decide today. You can start with the free Mind Gym or the Feelings & Emotions course, or write to us with a question first.' },
+  { q: 'Can I get a refund?', a: 'Yes. Anything you pay for has a 14-day refund. Ask for it by email at connect@skrmblissai.in.' },
+];
 
 const COURSES = [
   {
@@ -150,6 +157,9 @@ export default function SimKatyal() {
                 <a href={BOOK_1TO1} onClick={() => track('SIM_BOOK_HERO')} style={primaryBtn}>Book a 1:1 conversation</a>
                 <a href="#courses" style={{ ...primaryBtn, background: 'transparent', color: ink, border: `1px solid ${border}` }}>See her courses</a>
               </div>
+              <p style={{ ...body, fontSize: 13, margin: '14px 0 0' }}>
+                Opens WhatsApp · No obligation · 14-day refund on anything you pay for
+              </p>
             </div>
             <img
               src="/marketing/sim.webp"
@@ -161,7 +171,8 @@ export default function SimKatyal() {
 
         {/* Journey */}
         <section style={section}>
-          <div style={{ ...wrap, maxWidth: 860 }}>
+          <div style={{ ...wrap, display: 'grid', gap: 'clamp(28px, 5vw, 56px)', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', alignItems: 'center' }}>
+            <div>
             <span style={eyebrow}>About Sim</span>
             <h2 style={h2}>Practised before it was taught.</h2>
             <p style={body}>
@@ -178,6 +189,13 @@ export default function SimKatyal() {
             <p style={body}>
               She now teaches what held up.
             </p>
+            </div>
+            <img
+              src="/marketing/sim-journaling.webp"
+              alt="Sim Katyal sitting quietly with her journal"
+              loading="lazy"
+              style={{ width: '100%', maxHeight: 560, objectFit: 'cover', borderRadius: 24, display: 'block' }}
+            />
           </div>
         </section>
 
@@ -202,6 +220,12 @@ export default function SimKatyal() {
         <section id="one-to-one" style={section}>
           <div style={wrap}>
             <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 28, padding: 'clamp(28px, 5vw, 56px)' }}>
+              <img
+                src="/marketing/sim-teaching.webp"
+                alt="Sim Katyal speaking and gesturing as she explains an idea"
+                loading="lazy"
+                style={{ width: '100%', aspectRatio: '16 / 7', objectFit: 'cover', objectPosition: '50% 28%', borderRadius: 18, display: 'block', marginBottom: 28 }}
+              />
               <span style={eyebrow}>Private 1:1 consultation</span>
               <h2 style={h2}>Work with Sim, one to one.</h2>
               <p style={{ ...body, maxWidth: 680 }}>
@@ -237,6 +261,12 @@ export default function SimKatyal() {
           <div style={wrap}>
             <span style={eyebrow}>Courses by Sim</span>
             <h2 style={h2}>Begin on your own, at your own pace.</h2>
+            <img
+              src="/marketing/sim-studio.webp"
+              alt="Sim Katyal at her desk with an open book, recording"
+              loading="lazy"
+              style={{ width: '100%', aspectRatio: '16 / 6', objectFit: 'cover', objectPosition: '50% 35%', borderRadius: 22, display: 'block', margin: '24px 0 8px' }}
+            />
             <div style={{ display: 'grid', gap: 22, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', marginTop: 32 }}>
               {COURSES.map((c) => {
                 const live = Boolean(c.href);
@@ -302,9 +332,17 @@ export default function SimKatyal() {
           </div>
         </section>
 
+        <Faq palette={palette} items={SIM_FAQ} />
+
         {/* Closing */}
         <section style={{ ...section, paddingBottom: 'clamp(72px, 10vw, 140px)' }}>
           <div style={{ ...wrap, maxWidth: 720, textAlign: 'center' }}>
+            <img
+              src="/marketing/sim-candid.webp"
+              alt="Sim Katyal"
+              loading="lazy"
+              style={{ width: 96, height: 96, objectFit: 'cover', objectPosition: '50% 25%', borderRadius: '50%', display: 'block', margin: '0 auto 22px', border: `2px solid ${border}` }}
+            />
             <h2 style={h2}>Begin with a conversation.</h2>
             <p style={body}>Share where you are and what you are ready to shift. No pressure, and no pitch. You can also write to connect@skrmblissai.in.</p>
             <a href={BOOK_1TO1} onClick={() => track('SIM_BOOK_FOOTER')} style={{ ...primaryBtn, marginTop: 10 }}>Book a 1:1 conversation</a>

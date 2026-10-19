@@ -21,7 +21,7 @@ import YouTubeSection from './components/YouTubeSection';
 import FreeGuides from './components/FreeGuides';
 import AiKnowledgeBlock from './components/AiKnowledgeBlock';
 import FinalCta from './components/FinalCta';
-import { WhereToBegin, IsThisForYou, AtAGlance, ContactBlock, Testimonials } from './components/TrustBlocks';
+import { WhereToBegin, IsThisForYou, AtAGlance, ContactBlock, Testimonials, Faq } from './components/TrustBlocks';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Soulful Intelligence — Brand Home (skrmblissai.in root)
@@ -473,6 +473,10 @@ export default function SoulfulHome() {
       {(audience === 'brands' || audience === 'products') && (<>
         {/* Brands hero */}
         <section style={{ position: 'relative', padding: 'clamp(64px, 8vw, 110px) 24px clamp(48px, 6vw, 80px)', textAlign: 'center', overflow: 'hidden', zIndex: 2 }}>
+          {/* Studio artwork. Kept to the edges, with a solid-ish scrim behind the
+              centred text column, so the artwork can never reduce legibility. */}
+          <div aria-hidden="true" style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/marketing/studio-hero.webp)', backgroundSize: 'cover', backgroundPosition: 'right center', opacity: isDark ? 0.16 : 0.45, WebkitMaskImage: 'linear-gradient(to right, transparent 35%, black 85%)', maskImage: 'linear-gradient(to right, transparent 35%, black 85%)', pointerEvents: 'none' }} />
+          <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse 52% 70% at 50% 52%, ${palette.BG} 38%, ${palette.BG}cc 62%, ${palette.BG}00 100%)`, pointerEvents: 'none' }} />
           {/* Ambient Glowing Aura */}
           <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(60% 70% at 50% 0%, ${palette.PURPLE}30 0%, ${palette.BROWN}18 40%, transparent 75%)`, pointerEvents: 'none' }} />
           <div style={{ position: 'absolute', top: '-6%', left: '50%', transform: 'translateX(-50%)', opacity: isDark ? 0.35 : 0.22, pointerEvents: 'none', display: 'flex', justifyContent: 'center' }}>
@@ -1110,6 +1114,15 @@ export default function SoulfulHome() {
               </div>
             </div>
           </section>
+          <Faq
+            palette={palette}
+            heading="Common questions"
+            items={[
+              { q: 'What can you build?', a: 'Websites, web and mobile apps, content and YouTube channel setup, AI chatbots, graphic design and startup setup, from the first idea to launch.' },
+              { q: 'How much does it cost?', a: 'There are no quotes and no pressure. Tell us what you need and we will talk it through. Our work is pay-what-you-feel.' },
+              { q: 'How do we start?', a: 'Message us on WhatsApp or email connect@skrmblissai.in with a few lines about what you want to build.' },
+            ]}
+          />
           <ContactBlock palette={palette} whatsappText="Hi Soulful Intelligence — I'd like to talk about a project." />
 
           {/* Soft introduction to the other vertical — Mind Gym, for individuals */}
