@@ -6,7 +6,7 @@ const SANS = "'Inter', -apple-system, BlinkMacSystemFont, sans-serif";
 // One founder's transparent-background portrait (Marketting/2.png), converted
 // to webp — the original is a 2000x2000 ~4MB PNG. Transparent rather than the
 // white-backdrop frame, which reads as a floating rectangle on a solid banner.
-const PHOTO_URL = '/marketing/sim.webp';
+const PHOTO_URL = '/marketing/sim-banner.webp';
 
 // A single fixed calendar date, not "N days from whenever this page loads" —
 // the latter resets for every visitor on every visit, which is a fake

@@ -106,6 +106,7 @@ export default function AboutUs() {
     description:
       'The twin sisters behind Soulful Intelligence Studio and Mind Gym: twenty years of enterprise product engineering, and a decade of study and practice in presence and emotional wellbeing.',
     url: 'https://www.skrmblissai.in/twinsouls',
+    image: 'https://www.skrmblissai.in/og/twinsouls.jpg',
   });
 
   usePageView('PAGE_VISIT_ABOUT_US');

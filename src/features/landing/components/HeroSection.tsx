@@ -24,8 +24,8 @@ const SANS  = "'Outfit', system-ui, sans-serif";
  * The small avatars use the front-on portraits, which read better at 34px.
  */
 const FOUNDERS = [
-  { key: 'shruti', name: 'Shruti Khungar', photo: '/marketing/shruti-facing.webp', avatar: '/marketing/shruti.webp' },
-  { key: 'sim', name: 'Sim Katyal', photo: '/marketing/sim-facing.webp', avatar: '/marketing/sim.webp' },
+  { key: 'shruti', name: 'Shruti Khungar', photo: '/marketing/shruti-facing.webp', avatar: '/marketing/shruti-avatar.webp' },
+  { key: 'sim', name: 'Sim Katyal', photo: '/marketing/sim-facing.webp', avatar: '/marketing/sim-avatar.webp' },
 ] as const;
 
 interface Props {

@@ -31,6 +31,8 @@ const ROUTES = [
   '/knowyouremotionalhealth',
   '/aboutmindgym',
   '/policies',
+  '/products',
+  '/twinsouls/simkatyal',
   '/guides',
   '/guides/feelings-vs-emotions',
   '/guides/witness-consciousness-guide',

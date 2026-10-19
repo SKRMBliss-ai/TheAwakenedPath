@@ -108,7 +108,7 @@ export default function SoulfulHome() {
       ? 'Soulful Intelligence Studio designs and builds websites, web and mobile apps, content and AI chatbots for startups and growing brands. Pay what you feel it is worth.'
       : 'A studio for a quieter mind and braver ideas. Home of Mind Gym, guided courses on emotions and presence, free wellbeing tools, and pay-what-you-feel digital services for brands & startups.',
     url: isBusinessView ? 'https://www.skrmblissai.in/products' : 'https://www.skrmblissai.in',
-    image: 'https://www.skrmblissai.in/og/home.png',
+    image: isBusinessView ? 'https://www.skrmblissai.in/og/products.jpg' : 'https://www.skrmblissai.in/og/home.png',
     jsonLd: {
       '@context': 'https://schema.org',
       '@graph': [
@@ -318,6 +318,7 @@ export default function SoulfulHome() {
 
           {/* 2.5 Where to begin: free, course, 1:1 */}
           <WhereToBegin palette={palette} />
+          <Testimonials palette={palette} />
 
           {/* Section divider */}
           <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
@@ -394,17 +395,17 @@ export default function SoulfulHome() {
           {/* Section divider */}
           <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
 
-          {/* 8. YouTube section */}
-          <div id="videos">
-            <YouTubeSection palette={palette} onTrack={track} />
+          {/* 9. Free guides */}
+          <div id="tools">
+            <FreeGuides palette={palette} />
           </div>
 
           {/* Section divider */}
           <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
 
-          {/* 9. Free guides */}
-          <div id="tools">
-            <FreeGuides palette={palette} />
+          {/* 8. YouTube section */}
+          <div id="videos">
+            <YouTubeSection palette={palette} onTrack={track} />
           </div>
 
           {/* Section divider */}
@@ -454,7 +455,6 @@ export default function SoulfulHome() {
           {/* 10.5 Decide, check, ask: filter, facts, real quotes (empty until supplied), contact */}
           <IsThisForYou palette={palette} />
           <AtAGlance palette={palette} />
-          <Testimonials palette={palette} />
           <ContactBlock palette={palette} />
 
           {/* 11. Final emotional CTA */}

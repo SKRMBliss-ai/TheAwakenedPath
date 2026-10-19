@@ -211,7 +211,10 @@ function StreamCard({ stream, video, isNewest, isDark }: {
         <div style={{ position: 'relative', aspectRatio: '16/9', background: isDark ? '#1A1018' : '#EDE0CC', overflow: 'hidden' }}>
           {video.thumb && (
             <img
-              src={video.thumb}
+              // The API sends the 1280px maxres frame; the card shows ~270px. hqdefault is
+              // 480px (about a sixth of the bytes) and is 4:3 with baked-in bars, which this
+              // 16:9 object-fit:cover box crops away exactly.
+              src={video.thumb.replace('/maxresdefault.', '/hqdefault.')}
               alt=""
               className="si-thumb-img"
               loading="lazy"

@@ -42,6 +42,12 @@ const SIM_FAQ = [
   { q: 'Can I get a refund?', a: 'Yes. Anything you pay for has a 14-day refund. Ask for it by email at connect@skrmblissai.in.' },
 ];
 
+const HOW_IT_WORKS = [
+  { n: '1', title: 'Send a message', body: 'Tell us in a few lines where you are and what you would like to shift. WhatsApp or email, whichever you prefer.' },
+  { n: '2', title: 'Choose a time', body: 'We reply to agree a time that suits you, and share the fee before anything is booked.' },
+  { n: '3', title: 'Talk, one to one', body: 'A private online conversation about your own patterns, shaped around you.' },
+];
+
 const COURSES = [
   {
     tag: 'Live now',
@@ -104,6 +110,7 @@ export default function SimKatyal() {
     description:
       'Work with Sim Katyal 1:1, or learn through her guided courses on feelings, emotional patterns and presence. Rooted in lived experience, not theory.',
     url: 'https://www.skrmblissai.in/twinsouls/simkatyal',
+    image: 'https://www.skrmblissai.in/og/sim-katyal.jpg',
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'Person',
@@ -265,6 +272,15 @@ export default function SimKatyal() {
                   ))}
                 </dl>
               )}
+              <ol style={{ listStyle: 'none', padding: 0, margin: '0 0 28px', display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+                {HOW_IT_WORKS.map((h) => (
+                  <li key={h.n} style={{ borderTop: `2px solid ${accent}`, paddingTop: 12 }}>
+                    <span style={{ fontFamily: SERIF, fontSize: 24, color: accent }}>{h.n}</span>
+                    <div style={{ fontFamily: SANS, fontWeight: 600, fontSize: 16, color: ink, margin: '4px 0' }}>{h.title}</div>
+                    <p style={{ ...body, fontSize: 14, margin: 0 }}>{h.body}</p>
+                  </li>
+                ))}
+              </ol>
               <a href={BOOK_1TO1} onClick={() => track('SIM_BOOK_1TO1')} style={primaryBtn}>Book a 1:1 conversation</a>
               <p style={{ ...body, fontSize: 13.5, marginTop: 16 }}>
                 Opens WhatsApp. Tell Sim where you are and what you are ready to shift.
