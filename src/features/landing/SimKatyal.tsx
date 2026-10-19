@@ -104,6 +104,16 @@ export default function SimKatyal() {
     description:
       'Work with Sim Katyal 1:1, or learn through her guided courses on feelings, emotional patterns and presence. Rooted in lived experience, not theory.',
     url: 'https://www.skrmblissai.in/twinsouls/simkatyal',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      name: 'Sim Katyal',
+      url: 'https://www.skrmblissai.in/twinsouls/simkatyal',
+      image: 'https://www.skrmblissai.in/marketing/sim.webp',
+      description: 'Guides people through emotional patterns, overthinking and presence, through private conversations and guided courses.',
+      worksFor: { '@type': 'Organization', name: 'Soulful Intelligence Studio', url: 'https://www.skrmblissai.in' },
+      sameAs: ['https://www.youtube.com/@SoulfulIntelligenceStudio'],
+    },
   });
   usePageView('PAGE_VISIT_SIM_KATYAL');
 
@@ -164,6 +174,9 @@ export default function SimKatyal() {
             <img
               src="/marketing/sim.webp"
               alt="Sim Katyal"
+              width={860}
+              height={900}
+              fetchPriority="high"
               style={{ width: '100%', maxHeight: 640, objectFit: 'cover', borderRadius: 24, display: 'block' }}
             />
           </div>
@@ -193,6 +206,8 @@ export default function SimKatyal() {
             <img
               src="/marketing/sim-journaling.webp"
               alt="Sim Katyal sitting quietly with her journal"
+              width={1200}
+              height={1200}
               loading="lazy"
               style={{ width: '100%', maxHeight: 560, objectFit: 'cover', borderRadius: 24, display: 'block' }}
             />
@@ -223,6 +238,8 @@ export default function SimKatyal() {
               <img
                 src="/marketing/sim-teaching.webp"
                 alt="Sim Katyal speaking and gesturing as she explains an idea"
+                width={1400}
+                height={1043}
                 loading="lazy"
                 style={{ width: '100%', aspectRatio: '16 / 7', objectFit: 'cover', objectPosition: '50% 28%', borderRadius: 18, display: 'block', marginBottom: 28 }}
               />
@@ -264,6 +281,8 @@ export default function SimKatyal() {
             <img
               src="/marketing/sim-studio.webp"
               alt="Sim Katyal at her desk with an open book, recording"
+              width={1377}
+              height={768}
               loading="lazy"
               style={{ width: '100%', aspectRatio: '16 / 6', objectFit: 'cover', objectPosition: '50% 35%', borderRadius: 22, display: 'block', margin: '24px 0 8px' }}
             />
@@ -340,6 +359,8 @@ export default function SimKatyal() {
             <img
               src="/marketing/sim-candid.webp"
               alt="Sim Katyal"
+              width={500}
+              height={457}
               loading="lazy"
               style={{ width: 96, height: 96, objectFit: 'cover', objectPosition: '50% 25%', borderRadius: '50%', display: 'block', margin: '0 auto 22px', border: `2px solid ${border}` }}
             />

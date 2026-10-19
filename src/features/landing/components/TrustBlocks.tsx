@@ -70,7 +70,7 @@ export function WhereToBegin({ palette }: { palette: Palette }) {
       <div style={{ display: 'grid', gap: 18, gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', marginTop: 28 }}>
         {steps.map((s) => (
           <a key={s.n} href={s.href} onClick={() => track('WHERE_TO_BEGIN_' + s.n)} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRadius: 20, textDecoration: 'none', background: t.card, border: `1px solid ${t.border}` }}>
-            <img src={s.img} alt={s.alt} loading="lazy" style={{ width: '100%', aspectRatio: '16 / 10', objectFit: 'cover', objectPosition: 'left center', display: 'block' }} />
+            <img src={s.img} alt={s.alt} width={800} height={600} loading="lazy" style={{ width: '100%', aspectRatio: '16 / 10', objectFit: 'cover', objectPosition: 'left center', display: 'block' }} />
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: 26 }}>
             <span style={{ fontFamily: SERIF, fontSize: 32, color: t.accent, opacity: 0.7 }}>{s.n}</span>
             <h3 style={{ fontFamily: SANS, fontWeight: 600, fontSize: 20, margin: '6px 0 8px', color: palette.INK }}>{s.title}</h3>
@@ -204,14 +204,21 @@ export function Faq({ palette, items, heading = 'Questions people ask' }: { pale
   return (
     <section aria-labelledby="faq-heading" style={{ ...t.wrap, maxWidth: 800 }}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
+      <style>{`
+        .tb-faq summary::-webkit-details-marker { display: none; }
+        .tb-faq .tb-plus { transition: transform .2s ease; font-size: 22px; line-height: 1; }
+        .tb-faq details[open] .tb-plus { transform: rotate(45deg); }
+        .tb-faq summary:focus-visible { outline: 2px solid ${t.accent}; outline-offset: 2px; border-radius: 6px; }
+        @media (prefers-reduced-motion: reduce) { .tb-faq .tb-plus { transition: none; } }
+      `}</style>
       <span style={t.eyebrow}>Before you decide</span>
       <h2 id="faq-heading" style={t.h2}>{heading}</h2>
-      <div style={{ marginTop: 20 }}>
+      <div className="tb-faq" style={{ marginTop: 20 }}>
         {items.map((i) => (
           <details key={i.q} style={{ borderTop: `1px solid ${t.border}`, padding: '4px 0' }}>
             <summary style={{ cursor: 'pointer', listStyle: 'none', padding: '16px 0', fontFamily: SANS, fontWeight: 600, fontSize: 17, color: palette.INK, display: 'flex', justifyContent: 'space-between', gap: 16 }}>
               {i.q}
-              <span aria-hidden="true" style={{ color: t.accent, flexShrink: 0 }}>+</span>
+              <span className="tb-plus" aria-hidden="true" style={{ color: t.accent, flexShrink: 0 }}>+</span>
             </summary>
             <p style={{ ...t.body, margin: '0 0 18px', maxWidth: 680 }}>{i.a}</p>
           </details>
