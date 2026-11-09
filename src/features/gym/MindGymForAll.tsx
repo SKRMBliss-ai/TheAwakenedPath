@@ -117,7 +117,7 @@ export default function MindGymForAll({ onEnter }: { onEnter: (route: GymRoute) 
                 who="For ages 5–10"
                 blurb="Play, explore and strengthen your mind."
                 cta="Enter Kids Gym"
-                onClick={() => onEnter('kids')}
+                onClick={() => onEnter('kidsV1')}
               />
               <EntryCard
                 tone="accent2"

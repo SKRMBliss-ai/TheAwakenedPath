@@ -244,7 +244,7 @@ const gymRoute = (() => {
 const isKidsAdminRoute = (() => {
   if (typeof window === 'undefined') return false;
   const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
-  return p === '/mindgymforkidsv1/admin' || p.startsWith('/mindgymforkidsv1/admin/');
+  return p === '/mindgymforkids/admin' || p.startsWith('/mindgymforkids/admin/');
 })();
 
 // Admin cache panel access via ?admin=<token> query parameter

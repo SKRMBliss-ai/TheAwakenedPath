@@ -133,7 +133,7 @@ export default function KidsAdmin() {
         )}
         <div className="ka-account">
           {access.state === 'admin' || access.state === 'not-admin' ? <span>{access.email}</span> : null}
-          <a className="ka-btn ka-btn-small" href="/mindgymforkidsv1">Open the kids app</a>
+          <a className="ka-btn ka-btn-small" href="/mindgymforkids">Open the kids app</a>
           {(access.state === 'admin' || access.state === 'not-admin') && (
             <button className="ka-btn ka-btn-small" onClick={() => void signOut(auth)}>Sign out</button>
           )}

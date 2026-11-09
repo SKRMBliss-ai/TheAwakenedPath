@@ -10,4 +10,4 @@ export function useKidsAdmin(): boolean {
   return admin;
 }
 
-export const ADMIN_PATH = '/mindgymforkidsv1/admin';
+export const ADMIN_PATH = '/mindgymforkids/admin';
