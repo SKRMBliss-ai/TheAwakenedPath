@@ -62,6 +62,9 @@ const EngagementReport = lazy(() => import('./features/admin/EngagementReport'))
 const MembersView = lazy(() => import('./features/community/MembersView').then(m => ({ default: m.MembersView })));
 const CalendarView = lazy(() => import('./features/community/CalendarView').then(m => ({ default: m.CalendarView })));
 const MyBestEveryDay = lazy(() => import('./features/kids/MyBestEveryDay'));
+/** The situation practice gym (also served standalone at /mindgymforadults) —
+ *  here it is the "Start here" tab, the first thing a new person meets. */
+const AdultGym = lazy(() => import('./features/practise/Adult').then(m => ({ default: m.AdultGym })));
 const MeditationPracticeRoom = lazy(() => import('./features/practise/MeditationPracticeRoom'));
 const VirtuesView = lazy(() => import('./features/practice-path/VirtuesView').then(m => ({ default: m.VirtuesView })));
 const CircleView = lazy(() => import('./features/practice-path/CircleView').then(m => ({ default: m.CircleView })));
@@ -549,7 +552,7 @@ const PremiumPaywall = ({ user, checkOut, isProcessing, onSuccess }: any) => {
  * ritual and the reason to come back, so the paywall sits behind it.
  */
 const FREE_TABS = [
-  'home', 'profile', 'paywall', 'music', 'breathe', 'wisdom_untethered',
+  'start', 'home', 'profile', 'paywall', 'music', 'breathe', 'wisdom_untethered',
   'intelligence', 'learn', 'chapters', 'situations', 'meditation',
   'members', 'calendar', 'today', 'mybest',
 ];
@@ -603,7 +606,7 @@ export default function UntetheredApp() {
   const [showSignIn, setShowSignIn] = useState(false);
 
   // ── Persisted navigation state — app resumes exactly where user left off ──
-  const [activeTab, setActiveTab] = usePersistedState<string>('awakened-tab', 'home');
+  const [activeTab, setActiveTab] = usePersistedState<string>('awakened-tab', 'start');
   const [activeQuestionId, setActiveQuestionId] = usePersistedState<string>('awakened-question', 'question1');
   const [viewMode, setViewMode] = usePersistedState<'explanation' | 'practice' | 'video'>(
     'awakened-view-mode',
@@ -1466,6 +1469,38 @@ export default function UntetheredApp() {
         {/* ── Scrollable nav ── */}
         <nav className="flex-1 overflow-y-auto px-4 pb-2 space-y-[0.5vh] no-scrollbar flex flex-col min-h-0">
 
+          {/* Start here — the situation practice gym, the front door of the journey */}
+          {(() => {
+            const isActive = activeTab === 'start';
+            return (
+              <button
+                key="start"
+                onClick={() => onNavigate('start')}
+                aria-current={isActive ? 'page' : undefined}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-[min(8px,1vh)] rounded-2xl transition-all duration-300 group relative",
+                  isActive ? "bg-[var(--bg-surface)]" : "hover:bg-[var(--bg-surface)]/50"
+                )}
+              >
+                {isActive && (
+                  <div className="absolute left-0 top-2.5 bottom-2.5 w-0.5 rounded-full bg-[var(--accent-primary)]" />
+                )}
+                <Sparkles
+                  size={16}
+                  strokeWidth={isActive ? 2.5 : 1.5}
+                  className={isActive ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]"}
+                />
+                <span className={cn(
+                  "text-[12px] uppercase tracking-[0.18em] font-sans transition-colors flex-1 text-left",
+                  isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] font-medium group-hover:text-[var(--text-primary)]"
+                )}>
+                  Start Here
+                </span>
+                {isActive && <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)]" />}
+              </button>
+            );
+          })()}
+
           {/* Dashboard */}
           {(() => {
             const isActive = activeTab === 'home';
@@ -2214,6 +2249,25 @@ export default function UntetheredApp() {
               </motion.div>
             )}
 
+            {/* ── START HERE — bring a situation in, or take today's practice ── */}
+            {activeTab === 'start' && (
+              <motion.div key="start" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <Suspense fallback={<TabFallback />}>
+                  <AdultGym
+                    embedded
+                    hubLabel="Dashboard"
+                    onExitGym={() => onNavigate('home')}
+                    explore={[
+                      { icon: Sun, title: 'Dashboard', sub: 'Today’s journey at a glance', onClick: () => onNavigate('home') },
+                      { icon: Flame, title: 'Practice', sub: 'Journal, breath and practice room', onClick: () => { setPracticeOpen(true); onNavigate('situations'); } },
+                      { icon: GraduationCap, title: 'Courses', sub: 'Go deeper, step by step', onClick: () => { setLearnOpen(true); onNavigate('intelligence'); } },
+                      { icon: Users, title: 'Community', sub: 'Practise alongside others', onClick: () => { setCommunityOpen(true); onNavigate('members'); } },
+                    ]}
+                  />
+                </Suspense>
+              </motion.div>
+            )}
+
             {activeTab === 'home' && (
               <>
                 {/* ── Greeting + breathing hero — the calm welcome comes first ── */}
@@ -2240,6 +2294,30 @@ export default function UntetheredApp() {
                     weeklyAssignment={weeklyAssignment}
                     onNavigate={onNavigate}
                   />
+                </div>
+
+                {/* ── Start here — the situation practice gym ── */}
+                <div className="mt-4 max-w-2xl mx-auto w-full">
+                  <button
+                    onClick={() => onNavigate('start')}
+                    className="group relative w-full flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-3xl border text-left overflow-hidden transition-all active:scale-[0.99]"
+                    style={{ borderColor: 'rgba(46,125,91,0.45)', background: 'linear-gradient(105deg, rgba(46,125,91,0.14), rgba(46,125,91,0.04))' }}
+                  >
+                    <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center flex-shrink-0 border" style={{ background: 'rgba(46,125,91,0.18)', borderColor: 'rgba(46,125,91,0.4)' }}>
+                      <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: '#5FB893' }} />
+                    </div>
+                    <div className="relative min-w-0 flex-1">
+                      <p className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: '#5FB893' }}>Start here</p>
+                      <p className="text-[15px] sm:text-lg font-bold text-[var(--text-primary)]">Something on your mind?</p>
+                      <p className="text-[11px] sm:text-xs text-[var(--text-muted)] mt-0.5">Bring it into a practice room, or take today’s practice.</p>
+                    </div>
+                    <span
+                      className="relative inline-flex items-center gap-1 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-[11px] sm:text-[12px] font-black flex-shrink-0 shadow text-white group-hover:brightness-105 group-hover:gap-1.5 transition-all"
+                      style={{ background: '#2E7D5B' }}
+                    >
+                      Begin <span aria-hidden>→</span>
+                    </span>
+                  </button>
                 </div>
 
                 {/* ── Daily Meditation Room entry card — aligned with the journey column ── */}
@@ -2691,6 +2769,7 @@ export default function UntetheredApp() {
           style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
           {[
+            { id: 'start', icon: Sparkles, label: 'Start' },
             { id: 'home', icon: Home, label: 'Home' },
             // Courses is the hub (CoursesHub renders on the 'intelligence' tab),
             // and on a phone the bottom bar is the only nav most people use.

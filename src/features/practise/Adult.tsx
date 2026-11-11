@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import {
   Bookmark, BookmarkCheck, Brain, CalendarRange, Check, CheckCircle2, ChevronLeft, ChevronRight, Clock, Flame,
-  Home, Mic, RefreshCw, Sprout, Square, Trash2,
+  Home, Mic, RefreshCw, Sprout, Square, Trash2, type LucideIcon,
 } from 'lucide-react';
 import { sfx } from '../../lib/sfx';
 import type { Pattern, PracticeRoom, SavedPractice } from './types';
@@ -40,21 +40,33 @@ const BACKDROP = (
   </div>
 );
 
-function Shell({ children }: { children: ReactNode }) {
+/** One "explore the rest of the app" destination, shown under the doors when
+ *  the gym is embedded as the starting point of a larger app (/mindgym). */
+export interface ExploreLink {
+  icon: LucideIcon;
+  title: string;
+  sub: string;
+  onClick: () => void;
+}
+
+function BaseShell({ children, embedded }: { children: ReactNode; embedded?: boolean }) {
   return (
-    <PractiseShell variant="adult" theme={GYM_ADULT_THEME} className="ag-stage" backdrop={BACKDROP}>
+    <PractiseShell variant="adult" theme={GYM_ADULT_THEME} className={embedded ? 'ag-stage ag-embed' : 'ag-stage'} backdrop={BACKDROP}>
       {children}
     </PractiseShell>
   );
 }
 
+const StandaloneShell = ({ children }: { children: ReactNode }) => <BaseShell>{children}</BaseShell>;
+const EmbeddedShell = ({ children }: { children: ReactNode }) => <BaseShell embedded>{children}</BaseShell>;
+
 /** Top-right "Mind Gym hub" button — the way out, present on every inner view. */
-function HubButton({ onClick }: { onClick: () => void }) {
+function HubButton({ onClick, label }: { onClick: () => void; label: string }) {
   return (
     <button
       onClick={onClick}
-      aria-label="Go to the Mind Gym hub"
-      title="Mind Gym hub"
+      aria-label={`Go to the ${label}`}
+      title={label}
       className="grid h-11 w-11 place-items-center rounded-full transition hover:bg-black/5"
       style={{ color: 'var(--p-muted)' }}
     >
@@ -108,7 +120,21 @@ function PlanProgress({ sp, className }: { sp: SavedPractice; className?: string
   );
 }
 
-export function AdultGym({ onExitGym }: { onExitGym: () => void }) {
+export function AdultGym({
+  onExitGym,
+  embedded = false,
+  hubLabel = 'Mind Gym hub',
+  explore,
+}: {
+  onExitGym: () => void;
+  /** True when rendered inside another app's shell (the /mindgym "Start here"
+   *  tab): draws as a contained panel and leaves page chrome to the host. */
+  embedded?: boolean;
+  /** What the way-out button leads to ("Mind Gym hub" / "Dashboard"). */
+  hubLabel?: string;
+  /** Where to go for more, shown under the doors. */
+  explore?: ExploreLink[];
+}) {
   const store = usePractiseStore();
   const [view, setView] = useState<View>('home');
   const [room, setRoom] = useState<PracticeRoom | null>(null);
@@ -122,7 +148,8 @@ export function AdultGym({ onExitGym }: { onExitGym: () => void }) {
   const [sessionFrom, setSessionFrom] = useState<View>('home');
 
   const speech = useSpeechInput(situation, setSituation);
-  const hub = <HubButton onClick={onExitGym} />;
+  const hub = <HubButton onClick={onExitGym} label={hubLabel} />;
+  const Shell = embedded ? EmbeddedShell : StandaloneShell;
 
   const go = (v: View) => {
     if (speech.listening) speech.stop();
@@ -156,9 +183,10 @@ export function AdultGym({ onExitGym }: { onExitGym: () => void }) {
         room={room}
         variant="adult"
         theme={GYM_ADULT_THEME}
-        shellClassName="ag-stage"
+        shellClassName={embedded ? 'ag-stage ag-embed' : 'ag-stage'}
         backdrop={BACKDROP}
         onHub={onExitGym}
+        hubLabel={hubLabel}
         onExit={() => go(sessionFrom === 'created' ? 'home' : sessionFrom)}
         onComplete={() => { /* progress written in-engine; ownership actions live in My Practices */ }}
       />
@@ -531,6 +559,11 @@ export function AdultGym({ onExitGym }: { onExitGym: () => void }) {
 
   return (
     <Shell>
+      {embedded ? (
+        <div className="mb-5 text-[11px] font-bold uppercase tracking-[0.2em]" style={{ color: 'var(--p-accent)' }}>
+          Start here
+        </div>
+      ) : (
       <div className="mb-6 flex items-center gap-2">
         <button
           onClick={onExitGym}
@@ -542,6 +575,7 @@ export function AdultGym({ onExitGym }: { onExitGym: () => void }) {
         </button>
         <div className="flex-1 text-right text-sm font-semibold" style={{ color: 'var(--p-ink)' }}>Adult Gym</div>
       </div>
+      )}
       <Fade keyId="home">
         <div className="flex items-center gap-4">
           <img
@@ -614,6 +648,29 @@ export function AdultGym({ onExitGym }: { onExitGym: () => void }) {
             );
           })}
         </div>
+
+        {explore && explore.length > 0 && (
+          <div>
+            <SectionLabel>Want more? Explore Mind Gym</SectionLabel>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {explore.map((e) => {
+                const Icon = e.icon;
+                return (
+                  <Card key={e.title} onClick={() => { sfx.pop(); e.onClick(); }} ariaLabel={`${e.title}. ${e.sub}`} className="!p-4">
+                    <span
+                      className="grid h-10 w-10 place-items-center rounded-full"
+                      style={{ background: 'var(--p-accent-soft)', color: 'var(--p-accent)' }}
+                    >
+                      <Icon size={18} aria-hidden />
+                    </span>
+                    <div className="mt-3 text-sm font-semibold" style={{ color: 'var(--p-ink)' }}>{e.title}</div>
+                    <div className="text-[12px] leading-snug" style={{ color: 'var(--p-muted)' }}>{e.sub}</div>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <JourneyStrip />
       </Fade>

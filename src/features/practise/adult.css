@@ -11,10 +11,24 @@
  * `backdrop` prop). Everything is scoped under .ag-stage.
  */
 
-.ag-stage,
-.ag-stage > div {
+.ag-stage:not(.ag-embed),
+.ag-stage:not(.ag-embed) > div {
   min-height: 100vh;
   min-height: 100dvh;
+}
+
+/* Embedded in another app's shell (/mindgym "Start here"): a contained cream
+   room rather than a full page. */
+.ag-embed {
+  max-width: 56rem;
+  margin: 0 auto;
+  border-radius: 28px;
+  overflow: hidden;
+  border: 1px solid var(--p-line);
+  box-shadow: 0 10px 40px -18px rgba(20, 14, 10, 0.45);
+}
+.ag-embed > div {
+  min-height: 70vh;
 }
 
 .ag-backdrop {

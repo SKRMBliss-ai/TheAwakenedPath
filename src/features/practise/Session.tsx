@@ -24,6 +24,7 @@ export function Session({
   onComplete,
   theme,
   onHub,
+  hubLabel = 'Mind Gym hub',
   shellClassName,
   backdrop,
 }: {
@@ -35,6 +36,8 @@ export function Session({
   theme?: Record<string, string>;
   /** If given, a "Mind Gym hub" button is shown on every step and at the end. */
   onHub?: () => void;
+  /** Name of where `onHub` leads. */
+  hubLabel?: string;
   /** Passed straight through to PractiseShell. */
   shellClassName?: string;
   backdrop?: ReactNode;
@@ -115,7 +118,7 @@ export function Session({
           )}
           <div className="w-full max-w-xs space-y-3 pt-2">
             <PrimaryButton onClick={onExit}>{kidly ? 'Back to my gym' : 'Back to the gym'}</PrimaryButton>
-            {onHub && <GhostButton onClick={onHub}>Mind Gym hub</GhostButton>}
+            {onHub && <GhostButton onClick={onHub}>{hubLabel}</GhostButton>}
           </div>
         </div>
       </PractiseShell>
@@ -134,8 +137,8 @@ export function Session({
           onHub && (
             <button
               onClick={onHub}
-              aria-label="Leave and go to the Mind Gym hub"
-              title="Mind Gym hub"
+              aria-label={`Leave and go to the ${hubLabel}`}
+              title={hubLabel}
               className="grid h-11 w-11 place-items-center rounded-full transition hover:bg-black/5"
               style={{ color: 'var(--p-muted)' }}
             >
