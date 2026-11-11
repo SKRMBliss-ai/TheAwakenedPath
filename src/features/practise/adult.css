@@ -31,6 +31,27 @@
   min-height: 70vh;
 }
 
+/* On the app's light theme the page is already cream, so the room needs no
+   frame: it sits straight on the page like the other tabs. (On the dark theme
+   the cream panel stays — the gym's ink colours are made for a light ground.) */
+body.light-mode .ag-embed {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+body.light-mode .ag-embed > div {
+  min-height: 0;
+  overflow: visible;
+  background: transparent !important;
+}
+body.light-mode .ag-embed > div > div {
+  padding-top: 0;
+}
+body.light-mode .ag-embed .ag-backdrop {
+  display: none;
+}
+
 .ag-backdrop {
   position: absolute;
   inset: 0;
