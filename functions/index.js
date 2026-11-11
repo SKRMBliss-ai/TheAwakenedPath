@@ -1852,19 +1852,35 @@ exports.witnessPresence = onRequest({ secrets: [geminiKey], cors: true, maxInsta
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({
-            model: "gemini-3.8-flash",
-            systemInstruction: `
+        // Newest model first; if Google is overloaded (503), rate-limiting (429)
+        // or has retired/renamed it (404), fall back to a lighter model rather
+        // than leaving the person with nothing.
+        const MODELS = ["gemini-3.8-flash", "gemini-3.5-flash-lite"];
+        let text = null;
+        let lastError = null;
+        for (const modelName of MODELS) {
+            try {
+                const model = genAI.getGenerativeModel({
+                    model: modelName,
+                    systemInstruction: `
                 Act as a Presence Coach based on 'The Power of Now'.
                 Witness the 'voice in the head'.
                 Reflect back from the perspective of the Witness.
                 Guidelines: Compassionate, non-judgmental, focused on the 'gap', provide one 'Zen' action.
             `
-        });
-
-        const result = await model.generateContent(thought);
-        const response = await result.response;
-        const text = response.text();
+                });
+                const result = await model.generateContent(thought);
+                const response = await result.response;
+                text = response.text();
+                break;
+            } catch (e) {
+                lastError = e;
+                const status = e && (e.status || e.code);
+                console.warn(`witnessPresence: ${modelName} failed (${status || e.message}); ${modelName === MODELS[MODELS.length - 1] ? "no more models" : "trying next"}`);
+                if (![404, 429, 500, 503, 504].includes(Number(status))) break;
+            }
+        }
+        if (text === null) throw lastError || new Error("No model answered");
 
         res.json({ reflection: text });
     } catch (error) {
