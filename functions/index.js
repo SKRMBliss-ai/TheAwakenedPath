@@ -41,6 +41,36 @@ const isAdminEmail = (e) => !!e && ADMIN_EMAILS.includes(String(e).toLowerCase()
 
 // Define the secrets created in Google Cloud Secret Manager
 const geminiKey = defineSecret("AWAKENED_PATH_GEMINI_KEY");
+
+/**
+ * Gemini with a safety net. The newest model is tried first; if Google is
+ * overloaded (503), rate-limiting (429), has retired it (404) or it simply
+ * hangs past `timeoutMs`, a lighter model answers instead. Only errors another
+ * model cannot fix (400 bad request, 401/403 bad key) stop early.
+ * Returns an object with the two calls this file uses.
+ */
+const GEMINI_MODELS = ["gemini-3.8-flash", "gemini-3.5-flash-lite"];
+function geminiWithFallback(genAI, params = {}, timeoutMs = 12000) {
+    const make = (name) => genAI.getGenerativeModel({ ...params, model: name }, { timeout: timeoutMs });
+    const run = async (fn) => {
+        let last = null;
+        for (const name of GEMINI_MODELS) {
+            try {
+                return await fn(make(name));
+            } catch (e) {
+                last = e;
+                const status = Number(e && (e.status || e.code));
+                console.warn(`gemini: ${name} failed (${status || (e && e.message)}); ${name === GEMINI_MODELS[GEMINI_MODELS.length - 1] ? "no more models" : "trying next"}`);
+                if ([400, 401, 403].includes(status)) break;
+            }
+        }
+        throw last || new Error("No Gemini model answered");
+    };
+    return {
+        generateContent: (request) => run((m) => m.generateContent(request)),
+        startChat: (opts) => ({ sendMessage: (msg) => run((m) => m.startChat(opts).sendMessage(msg)) }),
+    };
+}
 const razorpayKeyId = defineSecret("RAZORPAY_KEY_ID");
 const razorpayKeySecret = defineSecret("RAZORPAY_KEY_SECRET");
 const emailUser = defineSecret("EMAIL_USER");
@@ -1902,7 +1932,7 @@ exports.getGrounding = onRequest({ secrets: [geminiKey], cors: true, maxInstance
 
     try {
         const genAI = new GoogleGenerativeAI(geminiKey.value());
-        const model = genAI.getGenerativeModel({ model: "gemini-3.8-flash" });
+        const model = geminiWithFallback(genAI, { model: "gemini-3.8-flash" });
         const prompt = `The user is in a state of: "${emotion}". Generate a customized 1-minute 'No-Mind' grounding exercise.`;
 
         const result = await model.generateContent(prompt);
@@ -1924,7 +1954,7 @@ exports.getDailyMeditation = onRequest({ secrets: [geminiKey], cors: true, maxIn
 
     try {
         const genAI = new GoogleGenerativeAI(geminiKey.value());
-        const model = genAI.getGenerativeModel({
+        const model = geminiWithFallback(genAI, {
             model: "gemini-3.8-flash",
             systemInstruction: `
                 You are a Presence Master. Generate a fresh, experiential meditation script for Day ${dayNumber}.
@@ -1936,7 +1966,7 @@ exports.getDailyMeditation = onRequest({ secrets: [geminiKey], cors: true, maxIn
                 - Include "human" elements: use ellipses (...) for pauses, exclamation (!) for subtle emphasis.
                 - Return JSON format: { "title": "...", "steps": [ { "title": "Step 1", "instructions": ["point 1", "point 2"], "audioScript": "..." }, ... ] }
             `
-        });
+        }, 25000);
 
         const prompt = `Generate Day ${dayNumber} Meditation. Focus on a fresh gateway to Presence that feels lived, not read.`;
 
@@ -2178,7 +2208,7 @@ exports.siteChat = onCall({
 
     try {
         const genAI = new GoogleGenerativeAI(geminiKey.value());
-        const model = genAI.getGenerativeModel({
+        const model = geminiWithFallback(genAI, {
             model: "gemini-3.8-flash",
             systemInstruction: `${SYSTEM_INSTRUCTION}\n\n# ACCOUNT CONTEXT\n${accountContext}`,
         });
@@ -3489,7 +3519,7 @@ async function getDailyEmailContent(apiKey, video) {
 
     try {
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-3.8-flash" });
+        const model = geminiWithFallback(genAI, { model: "gemini-3.8-flash" }, 25000);
         const prompt = `
 You are a Presence Coach who sends a daily evening email to spiritual seekers studying 'The Untethered Soul' and 'The Power of Now'.
 
@@ -5536,10 +5566,10 @@ exports.kidsContent = onCall({ secrets: [geminiKey], maxInstances: 5 }, async (r
         let parsed;
         try {
             const genAI = new GoogleGenerativeAI(geminiKey.value());
-            const model = genAI.getGenerativeModel({
+            const model = geminiWithFallback(genAI, {
                 model: "gemini-3.8-flash",
                 generationConfig: { responseMimeType: "application/json", temperature: 0.9 },
-            });
+            }, 25000);
             const result = await model.generateContent(prompt);
             parsed = JSON.parse(result.response.text());
         } catch (e) {
