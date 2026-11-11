@@ -1868,7 +1868,7 @@ exports.witnessPresence = onRequest({ secrets: [geminiKey], cors: true, maxInsta
                 Reflect back from the perspective of the Witness.
                 Guidelines: Compassionate, non-judgmental, focused on the 'gap', provide one 'Zen' action.
             `
-                });
+                }, { timeout: 12000 }); // a hung model must not eat the whole request
                 const result = await model.generateContent(thought);
                 const response = await result.response;
                 text = response.text();
@@ -1877,7 +1877,8 @@ exports.witnessPresence = onRequest({ secrets: [geminiKey], cors: true, maxInsta
                 lastError = e;
                 const status = e && (e.status || e.code);
                 console.warn(`witnessPresence: ${modelName} failed (${status || e.message}); ${modelName === MODELS[MODELS.length - 1] ? "no more models" : "trying next"}`);
-                if (![404, 429, 500, 503, 504].includes(Number(status))) break;
+                // Only stop early for errors another model can't fix (bad request / bad key).
+                if ([400, 401, 403].includes(Number(status))) break;
             }
         }
         if (text === null) throw lastError || new Error("No model answered");
