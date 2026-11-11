@@ -641,7 +641,7 @@ export function AdultGym({
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold leading-snug" style={{ color: 'var(--p-ink)' }}>{d.title}</div>
-                  <div className="truncate text-[13px]" style={{ color: 'var(--p-muted)' }}>{d.sub}</div>
+                  <div className="line-clamp-2 text-[13px] leading-snug" style={{ color: 'var(--p-muted)' }}>{d.sub}</div>
                 </div>
                 <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--p-line)' }} aria-hidden />
               </Card>
