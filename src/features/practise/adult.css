@@ -31,25 +31,55 @@
   min-height: 70vh;
 }
 
-/* On the app's light theme the page is already cream, so the room needs no
-   frame: it sits straight on the page like the other tabs. (On the dark theme
-   the cream panel stays — the gym's ink colours are made for a light ground.) */
-body.light-mode .ag-embed {
+/* Inside the app the room needs no frame: it sits straight on the page like
+   the other tabs, on both of the app's themes. */
+body.light-mode .ag-embed,
+body.dark-mode .ag-embed {
   border: 0;
   border-radius: 0;
   box-shadow: none;
   overflow: visible;
 }
-body.light-mode .ag-embed > div {
+body.light-mode .ag-embed > div,
+body.dark-mode .ag-embed > div {
   min-height: 0;
   overflow: visible;
   background: transparent !important;
 }
-body.light-mode .ag-embed > div > div {
+body.light-mode .ag-embed > div > div,
+body.dark-mode .ag-embed > div > div {
   padding-top: 0;
 }
-body.light-mode .ag-embed .ag-backdrop {
+body.light-mode .ag-embed .ag-backdrop,
+body.dark-mode .ag-embed .ag-backdrop {
   display: none;
+}
+
+/* Dark theme: the same sage palette on a dark ground. The tokens are set
+   inline by PractiseShell, hence !important. --p-accent is lightened so it
+   reads as text and icons; --p-accent-fill keeps the deeper green for
+   surfaces that carry white text. */
+body.dark-mode .ag-embed {
+  --p-bg: transparent !important;
+  --p-bg2: transparent !important;
+  --p-surface: #211f1d !important;
+  --p-ink: #f3eee7 !important;
+  --p-muted: #a8a097 !important;
+  --p-accent: #7fd0a8 !important;
+  --p-accent-fill: #2e7d5b;
+  --p-accent-soft: rgba(127, 208, 168, 0.14) !important;
+  --p-line: rgba(255, 255, 255, 0.13) !important;
+  --p-cta-1: #2e7d5b !important;
+  --p-cta-2: #256848 !important;
+}
+body.dark-mode .ag-embed .p-card {
+  border: 1px solid var(--p-line);
+}
+body.dark-mode .ag-embed button.hover\:bg-black\/5:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+body.dark-mode .ag-embed ::placeholder {
+  color: #7d766e;
 }
 
 .ag-backdrop {

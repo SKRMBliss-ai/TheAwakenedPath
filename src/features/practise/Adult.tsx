@@ -499,7 +499,7 @@ export function AdultGym({
                       <button
                         onClick={() => startSession(sp.room)}
                         className="min-h-[44px] flex-1 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-white"
-                        style={{ background: 'var(--p-accent)' }}
+                        style={{ background: 'var(--p-accent-fill, var(--p-accent))' }}
                       >
                         {info && !info.complete && !info.doneToday ? `Practise day ${info.day}` : 'Practise'}
                       </button>
@@ -614,7 +614,7 @@ export function AdultGym({
                         <button
                           onClick={() => { sfx.pop(); startSession(sp.room, 'home'); }}
                           className="min-h-[44px] flex-shrink-0 rounded-xl px-4 text-[13px] font-semibold text-white"
-                          style={{ background: 'var(--p-accent)' }}
+                          style={{ background: 'var(--p-accent-fill, var(--p-accent))' }}
                         >
                           Practise day {info.day}
                         </button>

@@ -81,7 +81,7 @@ export function BreathOrb({ onDone, variant = 'adult' }: { onDone?: () => void; 
         <button
           onClick={onDone}
           className="min-h-[44px] rounded-full px-5 py-2 text-sm font-semibold text-white transition active:scale-95"
-          style={{ background: kids ? 'var(--p-accent)' : 'var(--p-accent)', opacity: rounds < 1 ? 0.5 : 1 }}
+          style={{ background: 'var(--p-accent-fill, var(--p-accent))', opacity: rounds < 1 ? 0.5 : 1 }}
         >
           {rounds < 1 ? 'Keep breathing…' : 'Continue'}
         </button>
