@@ -106,7 +106,7 @@ export async function askCoach(opts: { pattern?: Pattern; response: string }): P
 
   try {
     const ctl = new AbortController();
-    const timer = window.setTimeout(() => ctl.abort(), 15000);
+    const timer = window.setTimeout(() => ctl.abort(), 30000);
     const res = await fetch(`${API_BASE}/api/witness`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -135,7 +135,7 @@ export async function askDailyCounsel(summary: string): Promise<string | null> {
   ].join('\n\n');
   try {
     const ctl = new AbortController();
-    const timer = window.setTimeout(() => ctl.abort(), 15000);
+    const timer = window.setTimeout(() => ctl.abort(), 30000);
     const res = await fetch(`${API_BASE}/api/witness`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
