@@ -138,11 +138,14 @@ export function TopBar({
   right,
   light,
   backLabel = 'Back',
+  backText,
 }: {
   title?: string;
   onBack?: () => void;
   /** Accessible name for the back button — say where it goes. */
   backLabel?: string;
+  /** If set, the back button shows this word beside its arrow (clearer than an arrow alone). */
+  backText?: string;
   step?: number;
   total?: number;
   right?: ReactNode;
@@ -158,10 +161,15 @@ export function TopBar({
           onClick={onBack}
           aria-label={backLabel}
           title={backLabel}
-          className={cn('grid h-11 w-11 flex-shrink-0 place-items-center rounded-full transition', light ? 'hover:bg-white/10' : 'hover:bg-black/5')}
+          className={cn(
+            'flex h-11 flex-shrink-0 items-center justify-center rounded-full transition',
+            backText ? 'gap-0.5 pl-2 pr-3.5 text-[13px] font-semibold' : 'w-11',
+            light ? 'hover:bg-white/10' : 'hover:bg-black/5',
+          )}
           style={{ color: muted }}
         >
           <ChevronLeft size={20} aria-hidden />
+          {backText}
         </button>
       ) : (
         <div className="h-11 w-11 flex-shrink-0" />
@@ -178,7 +186,7 @@ export function TopBar({
           </div>
         )}
       </div>
-      <div className="flex h-11 w-11 flex-shrink-0 items-center justify-end">{right}</div>
+      <div className="flex h-11 min-w-[2.75rem] flex-shrink-0 items-center justify-end">{right}</div>
     </div>
   );
 }

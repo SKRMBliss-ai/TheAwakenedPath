@@ -33,6 +33,7 @@ export type StepKind =
   | 'observe'   // notice a thought without believing/acting on it
   | 'space'     // create space — a guided breath
   | 'choices'   // explore the choices available in the moment
+  | 'respond'   // write how you'd respond next time (adult gym; coached)
   | 'reflect';  // what did you discover? + one small real-life intention
 
 export interface SessionStep {
@@ -118,4 +119,27 @@ export interface SavedPractice {
   challengeDone?: number;
   /** Local day ('YYYY-MM-DD') the plan was last practised — one day counts once. */
   challengeLastDay?: string;
+}
+
+/** A planned response the person wrote, kept so progress can be shown. */
+export interface ResponseEntry {
+  id: string;
+  roomId: string;
+  roomTitle: string;
+  /** Local day, 'YYYY-MM-DD'. */
+  date: string;
+  /** What the person wrote — their own words. */
+  text: string;
+  /** Markers present in `text` (see coach.ts). */
+  markers: string[];
+  /** The coach's suggested wording, if they asked for one. */
+  suggestion?: string;
+  /** True if they chose to use the suggestion. */
+  usedSuggestion?: boolean;
+}
+
+/** A once-a-day "how are you" check-in. */
+export interface CheckIn {
+  date: string;
+  mood: 'calm' | 'okay' | 'stretched' | 'heavy';
 }

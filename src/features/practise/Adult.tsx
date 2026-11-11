@@ -1,20 +1,22 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import {
-  Bookmark, BookmarkCheck, Brain, CalendarRange, Check, CheckCircle2, ChevronLeft, ChevronRight, Clock, Flame,
+  Bookmark, BookmarkCheck, Brain, HeartHandshake, CalendarRange, Check, CheckCircle2, ChevronLeft, ChevronRight, Clock, Flame,
   Home, Mic, RefreshCw, Sprout, Square, Trash2, type LucideIcon,
 } from 'lucide-react';
 import { sfx } from '../../lib/sfx';
+import { getLocalDayString } from '../../lib/utils';
 import type { Pattern, PracticeRoom, SavedPractice } from './types';
 import { CHALLENGE_DAYS, challengeInfo, usePractiseStore } from './store';
 import { buildBespokeRoom, draftPattern, STRENGTHS, TODAYS_PRACTICES } from './content';
 import { Session } from './Session';
+import { CoachView } from './CoachView';
 import { Card, Fade, GhostButton, PatternIcon, PractiseShell, PrimaryButton, RoomIcon, StrengthIcon, TopBar } from './ui';
 import { GYM_ADULT_THEME } from './theme';
 import { useSpeechInput } from './useSpeechInput';
 import './adult.css';
 
-type View = 'home' | 'intake' | 'pattern' | 'created' | 'session' | 'today' | 'saved';
+type View = 'home' | 'intake' | 'pattern' | 'created' | 'session' | 'today' | 'saved' | 'coach';
 
 const CHARACTER = '/assets/gym/adult-character@160.webp';
 const CHARACTER_2X = '/assets/gym/adult-character@320.webp';
@@ -148,7 +150,9 @@ export function AdultGym({
   const [sessionFrom, setSessionFrom] = useState<View>('home');
 
   const speech = useSpeechInput(situation, setSituation);
-  const hub = <HubButton onClick={onExitGym} label={hubLabel} />;
+  // Embedded in the host app, its own nav is the way out — the back button
+  // here only ever goes up one level, so there is a single, labelled way back.
+  const hub = embedded ? undefined : <HubButton onClick={onExitGym} label={hubLabel} />;
   const Shell = embedded ? EmbeddedShell : StandaloneShell;
 
   const go = (v: View) => {
@@ -187,9 +191,23 @@ export function AdultGym({
         backdrop={BACKDROP}
         onHub={onExitGym}
         hubLabel={hubLabel}
+        compactNav={embedded}
         onExit={() => go(sessionFrom === 'created' ? 'home' : sessionFrom)}
         onComplete={() => { /* progress written in-engine; ownership actions live in My Practices */ }}
       />
+    );
+  }
+
+  /* ── Daily check-in with the coach ────────────────────────────────────── */
+  if (view === 'coach') {
+    return (
+      <Shell>
+        <TopBar backText="Back" title="Daily check-in" onBack={() => go('home')} backLabel="Back to Start here" right={hub} />
+        <CoachView
+          onStart={(r) => startSession(r, 'coach')}
+          onIntake={() => { setSituation(''); go('intake'); }}
+        />
+      </Shell>
     );
   }
 
@@ -197,7 +215,7 @@ export function AdultGym({
   if (view === 'intake') {
     return (
       <Shell>
-        <TopBar title="I have something on my mind" onBack={() => go('home')} backLabel="Back to the Adult Gym" step={1} total={3} right={hub} />
+        <TopBar backText="Back" title="I have something on my mind" onBack={() => go('home')} backLabel="Back to the Adult Gym" step={1} total={3} right={hub} />
         <AnimatePresence mode="wait">
           <Fade keyId="intake">
             <h2 className="text-xl font-bold" style={{ color: 'var(--p-ink)' }}>Tell us what’s happening.</h2>
@@ -280,7 +298,7 @@ export function AdultGym({
     const blanks = (['thought', 'feeling', 'urge'] as const).filter((k) => !pattern[k].trim()).length;
     return (
       <Shell>
-        <TopBar title="Your situation, in four parts" onBack={() => go('intake')} backLabel="Back to what you wrote" step={2} total={3} right={hub} />
+        <TopBar backText="Back" title="Your situation, in four parts" onBack={() => go('intake')} backLabel="Back to what you wrote" step={2} total={3} right={hub} />
         <AnimatePresence mode="wait">
           <Fade keyId="pattern">
             <h2 className="text-xl font-bold" style={{ color: 'var(--p-ink)' }}>Let’s lay it out together.</h2>
@@ -326,7 +344,7 @@ export function AdultGym({
     const saved = isSaved(room);
     return (
       <Shell>
-        <TopBar title="Practice room created" onBack={() => go('pattern')} backLabel="Back to the four parts" step={3} total={3} right={hub} />
+        <TopBar backText="Back" title="Practice room created" onBack={() => go('pattern')} backLabel="Back to the four parts" step={3} total={3} right={hub} />
         <AnimatePresence mode="wait">
           <Fade keyId="created">
             <div className="flex flex-col items-center text-center">
@@ -362,7 +380,7 @@ export function AdultGym({
     const saved = isSaved(todays);
     return (
       <Shell>
-        <TopBar title="Today’s Practice" onBack={() => go('home')} backLabel="Back to the Adult Gym" right={hub} />
+        <TopBar backText="Back" title="Today’s Practice" onBack={() => go('home')} backLabel="Back to the Adult Gym" right={hub} />
         <AnimatePresence mode="wait">
           <Fade keyId={`today-${todays.id}`}>
             <p className="mb-4 text-sm" style={{ color: 'var(--p-muted)' }}>Nothing specific on your mind? Let’s train one thing today.</p>
@@ -424,7 +442,7 @@ export function AdultGym({
   if (view === 'saved') {
     return (
       <Shell>
-        <TopBar title="My Practices" onBack={() => go('home')} backLabel="Back to the Adult Gym" right={hub} />
+        <TopBar backText="Back" title="My Practices" onBack={() => go('home')} backLabel="Back to the Adult Gym" right={hub} />
         {store.saved.length === 0 ? (
           <div className="mt-10 text-center">
             <img
@@ -592,6 +610,21 @@ export function AdultGym({
             <h1 className="text-2xl font-bold leading-tight" style={{ color: 'var(--p-ink)' }}>What would you like to work on today?</h1>
           </div>
         </div>
+
+        <Card onClick={() => { sfx.pop(); go('coach'); }} ariaLabel="Daily check-in with your coach" className="mt-6 flex items-center gap-4 !p-4">
+          <div className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl" style={{ background: 'var(--p-accent-soft)', color: 'var(--p-accent)' }}>
+            <HeartHandshake size={22} aria-hidden />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="font-semibold leading-snug" style={{ color: 'var(--p-ink)' }}>Daily check-in</div>
+            <div className="line-clamp-2 text-[13px] leading-snug" style={{ color: 'var(--p-muted)' }}>
+              {store.checkins[0]?.date === getLocalDayString()
+                ? 'Checked in today — see how your responses are changing.'
+                : 'How are you today? Your coach helps you see progress and pick what’s next.'}
+            </div>
+          </div>
+          <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--p-line)' }} aria-hidden />
+        </Card>
 
         {activePlans.length > 0 && (
           <div className="mt-6">

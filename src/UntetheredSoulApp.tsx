@@ -607,6 +607,8 @@ export default function UntetheredApp() {
 
   // ── Persisted navigation state — app resumes exactly where user left off ──
   const [activeTab, setActiveTab] = usePersistedState<string>('awakened-tab', 'start');
+  /** Bumped when "Start" is tapped, so the gym returns to its front door even if it is already open. */
+  const [startKey, setStartKey] = useState(0);
   const [activeQuestionId, setActiveQuestionId] = usePersistedState<string>('awakened-question', 'question1');
   const [viewMode, setViewMode] = usePersistedState<'explanation' | 'practice' | 'video'>(
     'awakened-view-mode',
@@ -1456,8 +1458,12 @@ export default function UntetheredApp() {
           {/* Mobile close button */}
           <button
             onClick={() => setIsSidebarOpen(false)}
-            className="lg:hidden w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-all flex-shrink-0 ml-1"
+            className={cn(
+              "lg:hidden w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-all flex-shrink-0 ml-1",
+              !isSidebarOpen && "invisible"
+            )}
             aria-label="Close menu"
+            tabIndex={isSidebarOpen ? 0 : -1}
           >
             <X className="w-4 h-4" />
           </button>
@@ -1475,7 +1481,7 @@ export default function UntetheredApp() {
             return (
               <button
                 key="start"
-                onClick={() => onNavigate('start')}
+                onClick={() => { setStartKey((k) => k + 1); onNavigate('start'); }}
                 aria-current={isActive ? 'page' : undefined}
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-[min(8px,1vh)] rounded-2xl transition-all duration-300 group relative",
@@ -2142,7 +2148,7 @@ export default function UntetheredApp() {
             )}
             
             {/* Internal Return to Dashboard Button */}
-            {activeTab !== 'home' && (
+            {activeTab !== 'home' && activeTab !== 'start' && (
               <motion.button
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -2254,6 +2260,7 @@ export default function UntetheredApp() {
               <motion.div key="start" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
                 <Suspense fallback={<TabFallback />}>
                   <AdultGym
+                    key={startKey}
                     embedded
                     hubLabel="Dashboard"
                     onExitGym={() => onNavigate('home')}
@@ -2782,7 +2789,7 @@ export default function UntetheredApp() {
             return (
               <button
                 key={id}
-                onClick={() => onNavigate(id)}
+                onClick={() => { if (id === 'start') setStartKey((k) => k + 1); onNavigate(id); }}
                 className="flex-1 min-w-0 flex flex-col items-center justify-center gap-1 py-2.5 active:scale-95 transition-transform"
                 style={{ color: active ? 'var(--accent-primary)' : 'var(--text-muted)' }}
                 aria-label={label}

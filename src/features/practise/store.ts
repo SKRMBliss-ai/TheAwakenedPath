@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { PracticeRoom, Reflection, SavedPractice, StrengthId } from './types';
+import type { CheckIn, PracticeRoom, Reflection, ResponseEntry, SavedPractice, StrengthId } from './types';
 import { getLocalDayString } from '../../lib/utils';
 
 /**
@@ -26,7 +26,13 @@ interface PractiseState {
   saved: SavedPractice[];
   /** Reflections, newest first. */
   reflections: Reflection[];
+  /** Planned responses the person wrote, newest first. */
+  responses: ResponseEntry[];
+  /** Daily check-ins, newest first (one per day). */
+  checkins: CheckIn[];
 
+  addResponse: (r: ResponseEntry) => void;
+  setCheckin: (c: CheckIn) => void;
   setGym: (g: 'adult' | 'kids') => void;
   /** Record a completed session: bumps count/streak/minutes and the strengths trained. */
   completeSession: (room: PracticeRoom, minutes?: number) => void;
@@ -82,6 +88,12 @@ export const usePractiseStore = create<PractiseState>()(
       strengths: { ...ZERO_STRENGTHS },
       saved: [],
       reflections: [],
+      responses: [],
+      checkins: [],
+
+      addResponse: (r) => set((s) => ({ responses: [r, ...s.responses].slice(0, 200) })),
+      setCheckin: (c) =>
+        set((s) => ({ checkins: [c, ...s.checkins.filter((x) => x.date !== c.date)].slice(0, 120) })),
 
       setGym: (g) => set({ lastGym: g }),
 
@@ -158,6 +170,8 @@ export const usePractiseStore = create<PractiseState>()(
           ...current,
           ...p,
           strengths: { ...ZERO_STRENGTHS, ...(p.strengths ?? {}) },
+          responses: p.responses ?? [],
+          checkins: p.checkins ?? [],
         };
       },
     },
