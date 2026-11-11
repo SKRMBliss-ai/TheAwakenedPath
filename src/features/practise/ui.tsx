@@ -1,7 +1,11 @@
 import { type ReactNode } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft } from 'lucide-react';
+import {
+  Brain, ChevronLeft, Cloud, Compass, Ear, Eye, Feather, Footprints, Heart, Leaf, MessageCircle, Moon,
+  PersonStanding, Shield, Tag, Wind, Zap, type LucideIcon,
+} from 'lucide-react';
 import { cn } from '../../lib/utils';
+import type { Pattern, PracticeRoom, RoomIconId, StrengthId } from './types';
 
 /**
  * Shared Practise UI primitives. Palette + components are built to match the
@@ -64,6 +68,7 @@ export function PractiseShell({
   className,
   mode = 'light',
   theme,
+  backdrop,
 }: {
   variant: Variant;
   children: ReactNode;
@@ -73,6 +78,9 @@ export function PractiseShell({
    *  see GYM_ADULT_THEME below for why this exists rather than editing
    *  THEME.adult directly. */
   theme?: Record<string, string>;
+  /** Decorative layer painted behind the content (e.g. the Adult gym's scene
+   *  + hover-blur veil — see adult.css). Must be pointer-events:none. */
+  backdrop?: ReactNode;
 }) {
   const cosmic = mode === 'cosmic' && variant === 'adult';
   const palette = theme ? { ...THEME[variant], ...theme } : THEME[variant];
@@ -91,6 +99,7 @@ export function PractiseShell({
         }
       >
         {cosmic && <Stars />}
+        {backdrop}
         <div className="relative mx-auto w-full max-w-2xl px-5 py-6 sm:py-8">{children}</div>
       </div>
     </div>
@@ -128,9 +137,12 @@ export function TopBar({
   total,
   right,
   light,
+  backLabel = 'Back',
 }: {
   title?: string;
   onBack?: () => void;
+  /** Accessible name for the back button — say where it goes. */
+  backLabel?: string;
   step?: number;
   total?: number;
   right?: ReactNode;
@@ -144,14 +156,15 @@ export function TopBar({
       {onBack ? (
         <button
           onClick={onBack}
-          aria-label="Back"
-          className={cn('grid h-9 w-9 place-items-center rounded-full transition', light ? 'hover:bg-white/10' : 'hover:bg-black/5')}
+          aria-label={backLabel}
+          title={backLabel}
+          className={cn('grid h-11 w-11 flex-shrink-0 place-items-center rounded-full transition', light ? 'hover:bg-white/10' : 'hover:bg-black/5')}
           style={{ color: muted }}
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft size={20} aria-hidden />
         </button>
       ) : (
-        <div className="h-9 w-9" />
+        <div className="h-11 w-11 flex-shrink-0" />
       )}
       <div className="min-w-0 flex-1 text-center">
         {title && (
@@ -165,7 +178,7 @@ export function TopBar({
           </div>
         )}
       </div>
-      <div className="flex h-9 w-9 items-center justify-end">{right}</div>
+      <div className="flex h-11 w-11 flex-shrink-0 items-center justify-end">{right}</div>
     </div>
   );
 }
@@ -193,17 +206,33 @@ export function Card({
   className,
   onClick,
   style,
+  ariaLabel,
 }: {
   children: ReactNode;
   className?: string;
   onClick?: () => void;
   style?: React.CSSProperties;
+  ariaLabel?: string;
 }) {
   return (
     <div
       onClick={onClick}
+      // A clickable card is a button: reachable and operable from the keyboard.
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-label={ariaLabel}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
       className={cn(
-        'rounded-3xl p-5 shadow-[0_2px_20px_rgba(30,40,35,0.06)]',
+        'p-card rounded-3xl p-5 shadow-[0_2px_20px_rgba(30,40,35,0.06)]',
         onClick && 'cursor-pointer transition hover:-translate-y-0.5 hover:shadow-[0_6px_28px_rgba(30,40,35,0.10)]',
         className,
       )}
@@ -296,9 +325,10 @@ export function Chip({
   return (
     <button
       onClick={onClick}
+      aria-pressed={!!selected}
       className={cn(
         'rounded-full border text-left font-medium transition active:scale-[0.98]',
-        big ? 'px-4 py-3 text-sm' : 'px-3.5 py-2 text-[13px]',
+        big ? 'min-h-[44px] px-4 py-3 text-sm' : 'min-h-[44px] px-3.5 py-2 text-[13px]',
       )}
       style={{
         background: selected ? selBg : 'var(--p-surface)',
@@ -423,6 +453,64 @@ export function LevelBadge({ level, points }: { level: number; points: number })
         {level}
       </span>
       ⭐ {points}
+    </div>
+  );
+}
+
+/* ── Icons (line icons instead of emoji artwork) ────────────────────────── */
+
+const ROOM_ICONS: Record<RoomIconId, LucideIcon> = {
+  wind: Wind, eye: Eye, compass: Compass, leaf: Leaf, heart: Heart, brain: Brain,
+  body: PersonStanding, tag: Tag, cloud: Cloud, ear: Ear, feather: Feather, shield: Shield, moon: Moon,
+};
+
+const STRENGTH_ICONS: Record<StrengthId, LucideIcon> = {
+  awareness: Eye,
+  pausing: Wind,
+  perspective: Compass,
+  'letting-go': Leaf,
+  'self-compassion': Heart,
+};
+
+const PATTERN_ICONS: Record<keyof Pattern, LucideIcon> = {
+  event: Zap,
+  thought: MessageCircle,
+  feeling: Heart,
+  urge: Footprints,
+};
+
+/** The line icon for a strength ("area you've practised"). */
+export function StrengthIcon({ id, size = 16, className }: { id: StrengthId; size?: number; className?: string }) {
+  const Icon = STRENGTH_ICONS[id] ?? Eye;
+  return <Icon size={size} className={className} aria-hidden />;
+}
+
+/** The line icon for one part of a pattern (event / thought / feeling / urge). */
+export function PatternIcon({ part, size = 16, className }: { part: keyof Pattern; size?: number; className?: string }) {
+  const Icon = PATTERN_ICONS[part];
+  return <Icon size={size} className={className} aria-hidden />;
+}
+
+/** A room's icon on its gradient tile. Rooms saved before icons existed carry
+ *  only an emoji `glyph`, so fall back to bespoke -> brain, else the room's
+ *  first strength. */
+export function RoomIcon({ room, size = 48, className }: { room: PracticeRoom; size?: number; className?: string }) {
+  const Icon =
+    (room.icon && ROOM_ICONS[room.icon]) ||
+    (room.bespoke ? Brain : STRENGTH_ICONS[room.strengths[0]]) ||
+    Leaf;
+  return (
+    <div
+      aria-hidden
+      className={cn('grid flex-shrink-0 place-items-center text-white', className)}
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size * 0.32,
+        background: 'linear-gradient(150deg, var(--p-tile-1, #8B7BF0), var(--p-tile-2, #4A2E9E))',
+      }}
+    >
+      <Icon size={Math.round(size * 0.44)} strokeWidth={1.9} />
     </div>
   );
 }

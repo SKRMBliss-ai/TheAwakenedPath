@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Home, Leaf, MessageCircle } from 'lucide-react';
 import { getLocalDayString } from '../../lib/utils';
 import { sfx } from '../../lib/sfx';
-import type { PracticeRoom, Reflection, SessionStep } from './types';
-import { usePractiseStore } from './store';
+import type { Pattern, PracticeRoom, Reflection, SessionStep } from './types';
+import { CHALLENGE_DAYS, challengeInfo, usePractiseStore } from './store';
 import { BreathOrb } from './BreathOrb';
-import { Card, Chip, Fade, PractiseShell, PrimaryButton, StepDots, TopBar, type Variant } from './ui';
+import { Card, Chip, Fade, GhostButton, PatternIcon, PractiseShell, PrimaryButton, StepDots, TopBar, type Variant } from './ui';
 
 /**
  * The shared Practice Session engine. Both gyms run their rooms through this —
@@ -22,6 +23,9 @@ export function Session({
   onExit,
   onComplete,
   theme,
+  onHub,
+  shellClassName,
+  backdrop,
 }: {
   room: PracticeRoom;
   variant: Variant;
@@ -29,6 +33,11 @@ export function Session({
   onComplete: (r: Reflection) => void;
   /** Passed straight through to PractiseShell — see GYM_ADULT_THEME in ui.tsx. */
   theme?: Record<string, string>;
+  /** If given, a "Mind Gym hub" button is shown on every step and at the end. */
+  onHub?: () => void;
+  /** Passed straight through to PractiseShell. */
+  shellClassName?: string;
+  backdrop?: ReactNode;
 }) {
   const store = usePractiseStore();
   const [idx, setIdx] = useState(0);
@@ -74,16 +83,20 @@ export function Session({
   };
 
   if (done) {
+    // If this room is on a 10-day plan, say where the plan now stands.
+    const saved = store.saved.find((sp) => sp.room.id === room.id);
+    const plan = saved ? challengeInfo(saved) : null;
     return (
-      <PractiseShell variant={variant} theme={theme}>
+      <PractiseShell variant={variant} theme={theme} className={shellClassName} backdrop={backdrop}>
         <div className="flex min-h-[70vh] flex-col items-center justify-center gap-5 text-center">
           <motion.div
             initial={{ scale: 0.6, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 200, damping: 14 }}
-            className="text-6xl"
+            className={kidly ? 'text-6xl' : 'grid h-20 w-20 place-items-center rounded-full'}
+            style={kidly ? undefined : { background: 'var(--p-accent-soft)', color: 'var(--p-accent)' }}
           >
-            {kidly ? '⭐' : '🌿'}
+            {kidly ? '⭐' : <Leaf size={36} strokeWidth={1.8} aria-hidden />}
           </motion.div>
           <h2 className="text-2xl font-bold" style={{ color: 'var(--p-ink)' }}>
             {kidly ? 'You did it!' : 'You just practised.'}
@@ -93,8 +106,16 @@ export function Session({
               ? 'Your mind got a little stronger today. Come back tomorrow!'
               : 'That’s a rep. Strength is built one practice at a time — come back tomorrow.'}
           </p>
-          <div className="w-full max-w-xs pt-2">
+          {plan && (
+            <p className="rounded-full px-3 py-1.5 text-[13px] font-semibold" style={{ background: 'var(--p-accent-soft)', color: 'var(--p-accent)' }}>
+              {plan.complete
+                ? `10-day plan complete — all ${CHALLENGE_DAYS} days done.`
+                : `10-day plan · Day ${plan.day} of ${CHALLENGE_DAYS} done`}
+            </p>
+          )}
+          <div className="w-full max-w-xs space-y-3 pt-2">
             <PrimaryButton onClick={onExit}>{kidly ? 'Back to my gym' : 'Back to the gym'}</PrimaryButton>
+            {onHub && <GhostButton onClick={onHub}>Mind Gym hub</GhostButton>}
           </div>
         </div>
       </PractiseShell>
@@ -102,12 +123,26 @@ export function Session({
   }
 
   return (
-    <PractiseShell variant={variant} theme={theme}>
+    <PractiseShell variant={variant} theme={theme} className={shellClassName} backdrop={backdrop}>
       <TopBar
         title={room.title}
         onBack={idx === 0 ? onExit : () => setIdx((i) => i - 1)}
+        backLabel={idx === 0 ? 'Leave this practice' : 'Previous step'}
         step={idx + 1}
         total={steps.length}
+        right={
+          onHub && (
+            <button
+              onClick={onHub}
+              aria-label="Leave and go to the Mind Gym hub"
+              title="Mind Gym hub"
+              className="grid h-11 w-11 place-items-center rounded-full transition hover:bg-black/5"
+              style={{ color: 'var(--p-muted)' }}
+            >
+              <Home size={18} aria-hidden />
+            </button>
+          )
+        }
       />
       <div className="mb-6">
         <StepDots total={steps.length} current={idx} />
@@ -185,14 +220,14 @@ function StepBody({
           {heading}
           {room.pattern && (
             <Card className="space-y-3">
-              <PatternRow label="Event" value={room.pattern.event} glyph="⚡" />
-              <PatternRow label="Thought" value={room.pattern.thought} glyph="💭" />
-              <PatternRow label="Feeling" value={room.pattern.feeling} glyph="❤️" />
-              <PatternRow label="Urge" value={room.pattern.urge} glyph="🌀" />
+              <PatternRow label="What happened" value={room.pattern.event} part="event" />
+              <PatternRow label="What my mind said" value={room.pattern.thought} part="thought" />
+              <PatternRow label="What I felt" value={room.pattern.feeling} part="feeling" />
+              <PatternRow label="What I wanted to do" value={room.pattern.urge} part="urge" />
             </Card>
           )}
           <p className="mt-4 text-center text-[13px]" style={{ color: 'var(--p-muted)' }}>
-            This is a first draft — you can’t get it wrong. Ready to work with it?
+These are your words, not a diagnosis — you can’t get it wrong. Ready to work with it?
           </p>
         </div>
       );
@@ -229,7 +264,12 @@ function StepBody({
                 className="rounded-[28px] px-6 py-6 text-center text-lg font-semibold shadow-sm"
                 style={{ background: 'var(--p-surface)', border: '1px solid var(--p-line)', color: 'var(--p-ink)' }}
               >
-                💭 “{step.floatingThought}”
+                {variant === 'kids' ? (
+                  '💭 '
+                ) : (
+                  <MessageCircle size={22} className="mx-auto mb-2" style={{ color: 'var(--p-accent)' }} aria-hidden />
+                )}
+                “{step.floatingThought}”
               </div>
             </motion.div>
           )}
@@ -291,15 +331,22 @@ function StepBody({
   }
 }
 
-function PatternRow({ label, value, glyph }: { label: string; value: string; glyph: string }) {
+function PatternRow({ label, value, part }: { label: string; value: string; part: keyof Pattern }) {
+  // Parts the person left blank are simply not shown — nothing is invented.
+  if (!value.trim()) return null;
   return (
     <div className="flex items-start gap-3">
-      <span className="mt-0.5 text-lg">{glyph}</span>
-      <div>
+      <span
+        className="mt-0.5 grid h-8 w-8 flex-shrink-0 place-items-center rounded-full"
+        style={{ background: 'var(--p-accent-soft)', color: 'var(--p-accent)' }}
+      >
+        <PatternIcon part={part} size={16} />
+      </span>
+      <div className="min-w-0">
         <div className="text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--p-muted)' }}>
           {label}
         </div>
-        <div className="text-sm" style={{ color: 'var(--p-ink)' }}>
+        <div className="break-words text-sm" style={{ color: 'var(--p-ink)' }}>
           {value}
         </div>
       </div>

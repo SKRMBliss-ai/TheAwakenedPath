@@ -1,15 +1,23 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { Brain, Sprout, RefreshCw, Bookmark, Mic, Flame, CheckCircle2, Clock, Trash2, CalendarRange } from 'lucide-react';
+import {
+  Bookmark, BookmarkCheck, Brain, CalendarRange, Check, CheckCircle2, ChevronLeft, ChevronRight, Clock, Flame,
+  Home, Mic, RefreshCw, Sprout, Square, Trash2,
+} from 'lucide-react';
 import { sfx } from '../../lib/sfx';
-import type { Pattern, PracticeRoom } from './types';
-import { usePractiseStore } from './store';
+import type { Pattern, PracticeRoom, SavedPractice } from './types';
+import { CHALLENGE_DAYS, challengeInfo, usePractiseStore } from './store';
 import { buildBespokeRoom, draftPattern, STRENGTHS, TODAYS_PRACTICES } from './content';
 import { Session } from './Session';
-import { Card, Fade, GhostButton, PractiseShell, PrimaryButton, TopBar } from './ui';
+import { Card, Fade, GhostButton, PatternIcon, PractiseShell, PrimaryButton, RoomIcon, StrengthIcon, TopBar } from './ui';
 import { GYM_ADULT_THEME } from './theme';
+import { useSpeechInput } from './useSpeechInput';
+import './adult.css';
 
 type View = 'home' | 'intake' | 'pattern' | 'created' | 'session' | 'today' | 'saved';
+
+const CHARACTER = '/assets/gym/adult-character@160.webp';
+const CHARACTER_2X = '/assets/gym/adult-character@320.webp';
 
 /** Greeting by time of day — small warmth, no data required. */
 function greeting() {
@@ -20,9 +28,84 @@ function greeting() {
 }
 
 /** Today's practice rotates by day so it feels different each time (VISION §8). */
-function practiceOfToday(): PracticeRoom {
-  const day = Math.floor(Date.now() / 864e5);
-  return TODAYS_PRACTICES[day % TODAYS_PRACTICES.length];
+function indexOfToday(): number {
+  return Math.floor(Date.now() / 864e5) % TODAYS_PRACTICES.length;
+}
+
+/** The scene + hover-blur veil behind every Adult gym screen (see adult.css). */
+const BACKDROP = (
+  <div className="ag-backdrop" aria-hidden>
+    <div className="ag-scene" />
+    <div className="ag-veil" />
+  </div>
+);
+
+function Shell({ children }: { children: ReactNode }) {
+  return (
+    <PractiseShell variant="adult" theme={GYM_ADULT_THEME} className="ag-stage" backdrop={BACKDROP}>
+      {children}
+    </PractiseShell>
+  );
+}
+
+/** Top-right "Mind Gym hub" button — the way out, present on every inner view. */
+function HubButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label="Go to the Mind Gym hub"
+      title="Mind Gym hub"
+      className="grid h-11 w-11 place-items-center rounded-full transition hover:bg-black/5"
+      style={{ color: 'var(--p-muted)' }}
+    >
+      <Home size={18} aria-hidden />
+    </button>
+  );
+}
+
+/** Ten segments, one per day of the plan. */
+function PlanProgress({ sp, className }: { sp: SavedPractice; className?: string }) {
+  const info = challengeInfo(sp);
+  if (!info) return null;
+  const label = info.complete
+    ? `10-day plan complete`
+    : `10-day plan · Day ${info.day} of ${CHALLENGE_DAYS}`;
+  const note = info.complete
+    ? 'All ten days practised.'
+    : info.doneToday
+      ? 'Done for today — the next day opens tomorrow.'
+      : info.done === 0
+        ? 'Practise today to complete day 1.'
+        : `Practise today to complete day ${info.day}.`;
+  return (
+    <div className={className}>
+      <div className="flex items-center gap-1.5 text-[12px] font-semibold" style={{ color: 'var(--p-accent)' }}>
+        <CalendarRange size={14} aria-hidden /> {label}
+      </div>
+      <div
+        className="mt-2 flex gap-1"
+        role="progressbar"
+        aria-label={`${sp.room.title}: 10-day plan`}
+        aria-valuemin={0}
+        aria-valuemax={CHALLENGE_DAYS}
+        aria-valuenow={info.done}
+        aria-valuetext={`${info.done} of ${CHALLENGE_DAYS} days done`}
+      >
+        {Array.from({ length: CHALLENGE_DAYS }).map((_, i) => (
+          <span
+            key={i}
+            className="h-2 flex-1 rounded-full"
+            style={{
+              background: i < info.done ? 'var(--p-accent)' : 'var(--p-line)',
+              outline: !info.complete && !info.doneToday && i === info.done ? '2px solid var(--p-accent)' : undefined,
+              outlineOffset: 1,
+            }}
+          />
+        ))}
+      </div>
+      <div className="mt-1.5 text-[12px]" style={{ color: 'var(--p-muted)' }}>{note}</div>
+    </div>
+  );
 }
 
 export function AdultGym({ onExitGym }: { onExitGym: () => void }) {
@@ -32,23 +115,52 @@ export function AdultGym({ onExitGym }: { onExitGym: () => void }) {
   const [situation, setSituation] = useState('');
   const [pattern, setPattern] = useState<Pattern>(draftPattern(''));
   const [roomName, setRoomName] = useState('');
+  const [todayIdx, setTodayIdx] = useState(indexOfToday);
+  /** Room id awaiting "really remove?" confirmation in My Practices. */
+  const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
+  /** Where the running session was started from, so leaving returns there. */
+  const [sessionFrom, setSessionFrom] = useState<View>('home');
 
-  const todays = useMemo(practiceOfToday, []);
+  const speech = useSpeechInput(situation, setSituation);
+  const hub = <HubButton onClick={onExitGym} />;
 
-  const startSession = (r: PracticeRoom) => {
-    setRoom(r);
-    setView('session');
+  const go = (v: View) => {
+    if (speech.listening) speech.stop();
+    setConfirmRemove(null);
+    setView(v);
+    window.scrollTo({ top: 0 });
   };
+
+  const startSession = (r: PracticeRoom, from: View = view) => {
+    setRoom(r);
+    setSessionFrom(from === 'session' ? 'home' : from);
+    go('session');
+  };
+
+  const isSaved = (r: PracticeRoom) => store.saved.some((sp) => sp.room.id === r.id);
+
+  /** Plans still running, the ones not yet practised today first. */
+  const activePlans = useMemo(
+    () =>
+      store.saved
+        .filter((sp) => { const i = challengeInfo(sp); return i && !i.complete; })
+        .sort((a, b) => Number(challengeInfo(a)!.doneToday) - Number(challengeInfo(b)!.doneToday)),
+    [store.saved],
+  );
 
   /* ── Session host ─────────────────────────────────────────────────────── */
   if (view === 'session' && room) {
     return (
       <Session
+        key={room.id}
         room={room}
         variant="adult"
         theme={GYM_ADULT_THEME}
-        onExit={() => setView('home')}
-        onComplete={() => { /* progress written in-engine; ownership actions live in Saved */ }}
+        shellClassName="ag-stage"
+        backdrop={BACKDROP}
+        onHub={onExitGym}
+        onExit={() => go(sessionFrom === 'created' ? 'home' : sessionFrom)}
+        onComplete={() => { /* progress written in-engine; ownership actions live in My Practices */ }}
       />
     );
   }
@@ -56,239 +168,433 @@ export function AdultGym({ onExitGym }: { onExitGym: () => void }) {
   /* ── Situation intake ─────────────────────────────────────────────────── */
   if (view === 'intake') {
     return (
-      <PractiseShell variant="adult" theme={GYM_ADULT_THEME}>
-        <TopBar title="I have something on my mind" onBack={() => setView('home')} step={1} total={3} />
+      <Shell>
+        <TopBar title="I have something on my mind" onBack={() => go('home')} backLabel="Back to the Adult Gym" step={1} total={3} right={hub} />
         <AnimatePresence mode="wait">
           <Fade keyId="intake">
             <h2 className="text-xl font-bold" style={{ color: 'var(--p-ink)' }}>Tell us what’s happening.</h2>
             <p className="mt-1 mb-5 text-sm" style={{ color: 'var(--p-muted)' }}>
-              You can type or speak naturally. There’s no right or wrong way to say it.
+              {speech.supported ? 'Type or speak, in your own words.' : 'Write it in your own words.'} What happened, what your mind said,
+              how it felt, what you wanted to do — as much or as little as you like.
             </p>
+            <label htmlFor="ag-situation" className="sr-only">What’s happening</label>
             <textarea
+              id="ag-situation"
               value={situation}
               onChange={(e) => setSituation(e.target.value)}
+              readOnly={speech.listening}
               rows={6}
               autoFocus
               placeholder="e.g. Every time my manager criticises my work, I feel defensive and spend the whole evening thinking about it."
               className="w-full resize-none rounded-2xl p-4 text-sm outline-none"
               style={{ background: 'var(--p-surface)', border: '1px solid var(--p-line)', color: 'var(--p-ink)' }}
             />
-            <button
-              className="mt-3 flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-medium"
-              style={{ background: 'var(--p-accent-soft)', color: 'var(--p-accent)' }}
-              onClick={() => sfx.tap()}
-            >
-              <Mic size={15} /> Or hold to speak
-            </button>
+            {speech.supported && (
+              <div className="mt-3">
+                <button
+                  type="button"
+                  aria-pressed={speech.listening}
+                  onClick={() => { sfx.tap(); speech.toggle(); }}
+                  className={`flex min-h-[44px] items-center gap-2 rounded-full px-4 py-2 text-[13px] font-semibold ${speech.listening ? 'ag-listening' : ''}`}
+                  style={
+                    speech.listening
+                      ? { background: '#FBE9E6', color: '#B03A2E' }
+                      : { background: 'var(--p-accent-soft)', color: 'var(--p-accent)' }
+                  }
+                >
+                  {speech.listening ? <Square size={14} fill="currentColor" aria-hidden /> : <Mic size={16} aria-hidden />}
+                  {speech.listening ? 'Listening… tap to stop' : 'Speak instead'}
+                </button>
+                <p className="mt-2 text-[12px]" style={{ color: 'var(--p-muted)' }} role="status" aria-live="polite">
+                  {speech.error
+                    ?? (speech.listening
+                      ? 'Your words appear above as you speak.'
+                      : 'Speech is turned into text by your browser — in some browsers that uses the browser maker’s speech service. Typing stays on this device.')}
+                </p>
+              </div>
+            )}
             <div className="mt-8">
               <PrimaryButton
                 disabled={situation.trim().length < 3}
-                onClick={() => { setPattern(draftPattern(situation)); setRoomName(''); sfx.chime(); setView('pattern'); }}
+                onClick={() => { speech.stop(); setPattern(draftPattern(situation)); setRoomName(''); sfx.chime(); go('pattern'); }}
               >
                 Continue
               </PrimaryButton>
             </div>
           </Fade>
         </AnimatePresence>
-      </PractiseShell>
+      </Shell>
     );
   }
 
   /* ── Pattern mirror ───────────────────────────────────────────────────── */
   if (view === 'pattern') {
-    const field = (label: string, glyph: string, key: keyof Pattern) => (
+    const field = (label: string, key: keyof Pattern, placeholder: string) => (
       <div>
-        <div className="mb-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--p-muted)' }}>
-          <span>{glyph}</span>{label}
-        </div>
+        <label
+          htmlFor={`ag-pattern-${key}`}
+          className="mb-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide"
+          style={{ color: 'var(--p-muted)' }}
+        >
+          <PatternIcon part={key} size={14} className="flex-shrink-0" />
+          {label}
+        </label>
         <input
+          id={`ag-pattern-${key}`}
           value={pattern[key]}
           onChange={(e) => setPattern((p) => ({ ...p, [key]: e.target.value }))}
-          className="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none"
+          placeholder={placeholder}
+          className="min-h-[44px] w-full rounded-xl px-3.5 py-2.5 text-sm outline-none"
           style={{ background: 'var(--p-surface)', border: '1px solid var(--p-line)', color: 'var(--p-ink)' }}
         />
       </div>
     );
+    const blanks = (['thought', 'feeling', 'urge'] as const).filter((k) => !pattern[k].trim()).length;
     return (
-      <PractiseShell variant="adult" theme={GYM_ADULT_THEME}>
-        <TopBar title="Understanding your situation" onBack={() => setView('intake')} step={2} total={3} />
+      <Shell>
+        <TopBar title="Your situation, in four parts" onBack={() => go('intake')} backLabel="Back to what you wrote" step={2} total={3} right={hub} />
         <AnimatePresence mode="wait">
           <Fade keyId="pattern">
-            <h2 className="text-xl font-bold" style={{ color: 'var(--p-ink)' }}>Let’s unpack this together.</h2>
+            <h2 className="text-xl font-bold" style={{ color: 'var(--p-ink)' }}>Let’s lay it out together.</h2>
             <p className="mt-1 mb-5 text-sm" style={{ color: 'var(--p-muted)' }}>
-              Here’s what we noticed. Adjust anything — there are no right answers.
+              This is only what you wrote, sorted into four parts — nothing has been analysed or added.
+              {blanks > 0 ? ' Where your words didn’t cover a part, it’s left empty for you.' : ''} Change anything; there are no right answers.
             </p>
             <Card className="space-y-4">
-              {field('What happened?', '⚡', 'event')}
-              {field('What did your mind say?', '💭', 'thought')}
-              {field('What did you feel?', '❤️', 'feeling')}
-              {field('What did you want to do?', '🌀', 'urge')}
+              {field('What happened?', 'event', 'The moment itself, as plainly as you can')}
+              {field('What did your mind say?', 'thought', 'Optional — the thought that showed up')}
+              {field('What did you feel?', 'feeling', 'Optional — a word or two')}
+              {field('What did you want to do?', 'urge', 'Optional — the pull or the reaction')}
             </Card>
             <div className="mt-5">
-              <div className="mb-1 text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--p-muted)' }}>
+              <label htmlFor="ag-room-name" className="mb-1 block text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--p-muted)' }}>
                 Name this practice
-              </div>
+              </label>
               <input
+                id="ag-room-name"
                 value={roomName}
                 onChange={(e) => setRoomName(e.target.value)}
                 placeholder="e.g. Defensiveness Practice Room"
-                className="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none"
+                className="min-h-[44px] w-full rounded-xl px-3.5 py-2.5 text-sm outline-none"
                 style={{ background: 'var(--p-surface)', border: '1px solid var(--p-line)', color: 'var(--p-ink)' }}
               />
             </div>
             <div className="mt-8">
-              <PrimaryButton onClick={() => { setRoom(buildBespokeRoom(pattern, roomName)); sfx.success(); setView('created'); }}>
+              <PrimaryButton
+                disabled={!pattern.event.trim()}
+                onClick={() => { setRoom(buildBespokeRoom(pattern, roomName)); sfx.success(); go('created'); }}
+              >
                 Create my practice room
               </PrimaryButton>
             </div>
           </Fade>
         </AnimatePresence>
-      </PractiseShell>
+      </Shell>
     );
   }
 
   /* ── Room created ─────────────────────────────────────────────────────── */
   if (view === 'created' && room) {
+    const saved = isSaved(room);
     return (
-      <PractiseShell variant="adult" theme={GYM_ADULT_THEME}>
-        <TopBar title="Practice Room Created" onBack={() => setView('pattern')} />
+      <Shell>
+        <TopBar title="Practice room created" onBack={() => go('pattern')} backLabel="Back to the four parts" step={3} total={3} right={hub} />
         <AnimatePresence mode="wait">
           <Fade keyId="created">
             <div className="flex flex-col items-center text-center">
-              <div
-                className="grid h-24 w-24 place-items-center rounded-3xl text-5xl shadow-lg"
-                style={{ background: 'linear-gradient(150deg, #8B7BF0, #4A2E9E)', boxShadow: '0 10px 28px rgba(74,46,158,0.35)' }}
-              >
-                {room.glyph}
-              </div>
-              <h2 className="mt-5 text-2xl font-bold" style={{ color: 'var(--p-ink)' }}>We’ve created a practice just for you.</h2>
+              <RoomIcon room={room} size={96} className="shadow-lg" />
+              <h2 className="mt-5 text-2xl font-bold" style={{ color: 'var(--p-ink)' }}>Your practice room is ready.</h2>
+              <p className="mt-1 text-sm" style={{ color: 'var(--p-muted)' }}>Built around the situation you described.</p>
             </div>
             <Card className="mt-6">
               <div className="text-lg font-bold" style={{ color: 'var(--p-ink)' }}>{room.title}</div>
-              <div className="mt-1 text-sm" style={{ color: 'var(--p-muted)' }}>{room.whatPractising}</div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {room.strengths.map((s) => {
-                  const meta = STRENGTHS.find((x) => x.id === s);
-                  return (
-                    <span key={s} className="rounded-full px-2.5 py-1 text-[12px] font-medium" style={{ background: 'var(--p-accent-soft)', color: 'var(--p-accent)' }}>
-                      {meta?.glyph} {meta?.label}
-                    </span>
-                  );
-                })}
-              </div>
+              <div className="mt-1 break-words text-sm" style={{ color: 'var(--p-muted)' }}>{room.whatPractising}</div>
+              <StrengthTags room={room} />
             </Card>
             <div className="mt-6 space-y-3">
-              <PrimaryButton onClick={() => startSession(room)}>Enter practice room</PrimaryButton>
-              <GhostButton onClick={() => { store.savePractice(room); sfx.tap(); setView('home'); }}>Save to my gym</GhostButton>
+              <PrimaryButton onClick={() => { if (!saved) store.savePractice(room); startSession(room, 'saved'); }}>
+                Enter practice room
+              </PrimaryButton>
+              <GhostButton onClick={() => { store.savePractice(room); sfx.tap(); go('saved'); }}>
+                {saved ? 'Go to my practices' : 'Save for later'}
+              </GhostButton>
             </div>
+            <p className="mt-3 text-center text-[12px]" style={{ color: 'var(--p-muted)' }}>
+              Entering also saves this room to My Practices, on this device only.
+            </p>
           </Fade>
         </AnimatePresence>
-      </PractiseShell>
+      </Shell>
     );
   }
 
   /* ── Today's practice ─────────────────────────────────────────────────── */
   if (view === 'today') {
+    const todays = TODAYS_PRACTICES[todayIdx % TODAYS_PRACTICES.length];
+    const saved = isSaved(todays);
     return (
-      <PractiseShell variant="adult" theme={GYM_ADULT_THEME}>
-        <TopBar title="Today’s Practice" onBack={() => setView('home')} />
+      <Shell>
+        <TopBar title="Today’s Practice" onBack={() => go('home')} backLabel="Back to the Adult Gym" right={hub} />
         <AnimatePresence mode="wait">
-          <Fade keyId="today">
+          <Fade keyId={`today-${todays.id}`}>
             <p className="mb-4 text-sm" style={{ color: 'var(--p-muted)' }}>Nothing specific on your mind? Let’s train one thing today.</p>
             <div
-              className="relative overflow-hidden rounded-[28px] p-6"
+              className="p-card relative overflow-hidden rounded-[28px] p-6"
               style={{ background: 'linear-gradient(150deg, #8B7BF0, #4A2E9E)', boxShadow: '0 14px 32px rgba(74,46,158,0.3)' }}
             >
               <div
                 className="pointer-events-none absolute -right-6 -top-8 h-28 w-28 rounded-full opacity-40"
                 style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.6), transparent 70%)' }}
               />
-              <div className="text-4xl">{todays.glyph}</div>
+              <RoomIcon room={todays} size={56} className="ring-1 ring-white/30" />
               <div className="mt-3 text-xl font-bold text-white">{todays.title}</div>
-              <div className="mt-1 text-sm text-white/75">{todays.whatPractising}</div>
+              <div className="mt-1 text-sm text-white/80">{todays.whatPractising}</div>
+              <div className="mt-3 text-[12px] font-medium text-white/70">
+                {todays.steps.length} steps · about 5 minutes
+              </div>
             </div>
             <div className="mt-6 space-y-3">
               <PrimaryButton onClick={() => startSession(todays)}>Begin practice</PrimaryButton>
-              <GhostButton onClick={() => { sfx.tap(); startSession(TODAYS_PRACTICES[(TODAYS_PRACTICES.indexOf(todays) + 1) % TODAYS_PRACTICES.length]); }}>
-                Swap for a different one
-              </GhostButton>
+              <div className="flex gap-3">
+                <GhostButton onClick={() => { sfx.tap(); setTodayIdx((i) => (i + 1) % TODAYS_PRACTICES.length); }}>
+                  Show another
+                </GhostButton>
+                <GhostButton onClick={() => { sfx.tap(); if (saved) go('saved'); else store.savePractice(todays); }}>
+                  <span className="inline-flex items-center justify-center gap-1.5">
+                    {saved ? <BookmarkCheck size={16} aria-hidden /> : <Bookmark size={16} aria-hidden />}
+                    {saved ? 'Saved' : 'Save'}
+                  </span>
+                </GhostButton>
+              </div>
             </div>
           </Fade>
         </AnimatePresence>
-      </PractiseShell>
+
+        <SectionLabel>All practices · {TODAYS_PRACTICES.length}</SectionLabel>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {TODAYS_PRACTICES.map((p, i) => (
+            <Card
+              key={p.id}
+              onClick={() => { sfx.pop(); setTodayIdx(i); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              ariaLabel={`${p.title}. ${p.whatPractising}`}
+              className="flex items-center gap-3 !p-4"
+              style={i === todayIdx ? { borderColor: 'var(--p-accent)' } : undefined}
+            >
+              <RoomIcon room={p} size={44} />
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold" style={{ color: 'var(--p-ink)' }}>{p.title}</div>
+                <div className="text-[12px] leading-snug" style={{ color: 'var(--p-muted)' }}>{p.whatPractising}</div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </Shell>
     );
   }
 
   /* ── My practices ─────────────────────────────────────────────────────── */
   if (view === 'saved') {
     return (
-      <PractiseShell variant="adult" theme={GYM_ADULT_THEME}>
-        <TopBar title="My Practices" onBack={() => setView('home')} />
+      <Shell>
+        <TopBar title="My Practices" onBack={() => go('home')} backLabel="Back to the Adult Gym" right={hub} />
         {store.saved.length === 0 ? (
-          <div className="mt-16 text-center">
-            <div className="text-5xl">🏋️</div>
-            <p className="mt-4 text-sm" style={{ color: 'var(--p-muted)' }}>
-              Nothing saved yet. When you create a practice room, save it here to keep training it.
+          <div className="mt-10 text-center">
+            <img
+              src={CHARACTER}
+              srcSet={`${CHARACTER} 1x, ${CHARACTER_2X} 2x`}
+              alt=""
+              width={120}
+              height={120}
+              className="mx-auto h-[120px] w-[120px] rounded-full object-cover object-top"
+              style={{ background: 'var(--p-accent-soft)' }}
+            />
+            <p className="mx-auto mt-4 max-w-xs text-sm" style={{ color: 'var(--p-muted)' }}>
+              Nothing saved yet. Save a practice to keep training it — and to turn it into a 10-day plan.
             </p>
+            <div className="mx-auto mt-6 max-w-xs space-y-3">
+              <PrimaryButton onClick={() => go('today')}>Browse practices</PrimaryButton>
+              <GhostButton onClick={() => { setSituation(''); go('intake'); }}>Create one from a situation</GhostButton>
+            </div>
           </div>
         ) : (
           <div className="space-y-3">
-            {store.saved.map((sp) => (
-              <Card key={sp.room.id}>
-                <div className="flex items-start gap-3">
-                  <div
-                    className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl text-2xl"
-                    style={{ background: 'linear-gradient(150deg, #8B7BF0, #4A2E9E)' }}
-                  >
-                    {sp.room.glyph}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="font-bold" style={{ color: 'var(--p-ink)' }}>{sp.room.title}</div>
-                    <div className="truncate text-[13px]" style={{ color: 'var(--p-muted)' }}>{sp.room.whatPractising}</div>
-                    {sp.challengeDay && (
-                      <div className="mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ background: 'var(--p-accent-soft)', color: 'var(--p-accent)' }}>
-                        <CalendarRange size={12} /> 10-Day Challenge · Day {sp.challengeDay}
-                      </div>
-                    )}
-                  </div>
-                  <button onClick={() => { store.removePractice(sp.room.id); sfx.tap(); }} aria-label="Remove" className="rounded-full p-1.5 hover:bg-black/5" style={{ color: 'var(--p-muted)' }}>
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-                <div className="mt-4 flex gap-2">
-                  <button onClick={() => startSession(sp.room)} className="flex-1 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-white" style={{ background: 'var(--p-accent)' }}>
-                    Practise
-                  </button>
-                  {!sp.challengeDay && (
-                    <button onClick={() => { store.makeChallenge(sp.room.id); sfx.success(); }} className="flex-1 rounded-xl px-3 py-2.5 text-[13px] font-semibold" style={{ background: 'var(--p-accent-soft)', color: 'var(--p-accent)' }}>
-                      Make 10-day
+            {store.saved.map((sp) => {
+              const info = challengeInfo(sp);
+              const confirming = confirmRemove === sp.room.id;
+              return (
+                <Card key={sp.room.id}>
+                  <div className="flex items-start gap-3">
+                    <RoomIcon room={sp.room} size={48} />
+                    <div className="min-w-0 flex-1">
+                      <div className="font-bold" style={{ color: 'var(--p-ink)' }}>{sp.room.title}</div>
+                      <div className="line-clamp-2 break-words text-[13px]" style={{ color: 'var(--p-muted)' }}>{sp.room.whatPractising}</div>
+                    </div>
+                    <button
+                      onClick={() => { sfx.tap(); setConfirmRemove(confirming ? null : sp.room.id); }}
+                      aria-label={`Remove ${sp.room.title}`}
+                      aria-expanded={confirming}
+                      title="Remove"
+                      className="-mr-2 -mt-2 grid h-11 w-11 flex-shrink-0 place-items-center rounded-full hover:bg-black/5"
+                      style={{ color: 'var(--p-muted)' }}
+                    >
+                      <Trash2 size={17} aria-hidden />
                     </button>
+                  </div>
+
+                  {info && <PlanProgress sp={sp} className="mt-4" />}
+
+                  {confirming ? (
+                    <div className="mt-4 rounded-2xl p-3" role="alertdialog" aria-label={`Remove ${sp.room.title}?`} style={{ background: '#FBEFEC' }}>
+                      <p className="text-[13px] font-medium" style={{ color: '#8E2F25' }}>
+                        Remove “{sp.room.title}” from your gym?{info ? ' Its 10-day plan progress goes with it.' : ''} This can’t be undone.
+                      </p>
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          autoFocus
+                          onClick={() => { sfx.tap(); setConfirmRemove(null); }}
+                          className="min-h-[44px] flex-1 rounded-xl px-3 text-[13px] font-semibold"
+                          style={{ background: 'var(--p-surface)', color: 'var(--p-ink)', border: '1px solid var(--p-line)' }}
+                        >
+                          Keep it
+                        </button>
+                        <button
+                          onClick={() => { store.removePractice(sp.room.id); sfx.tap(); setConfirmRemove(null); }}
+                          className="min-h-[44px] flex-1 rounded-xl px-3 text-[13px] font-semibold text-white"
+                          style={{ background: '#B03A2E' }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-4 flex gap-2">
+                      <button
+                        onClick={() => startSession(sp.room)}
+                        className="min-h-[44px] flex-1 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-white"
+                        style={{ background: 'var(--p-accent)' }}
+                      >
+                        {info && !info.complete && !info.doneToday ? `Practise day ${info.day}` : 'Practise'}
+                      </button>
+                      {!info ? (
+                        <button
+                          onClick={() => { store.makeChallenge(sp.room.id); sfx.success(); }}
+                          className="min-h-[44px] flex-1 rounded-xl px-3 py-2.5 text-[13px] font-semibold"
+                          style={{ background: 'var(--p-accent-soft)', color: 'var(--p-accent)' }}
+                        >
+                          Start 10-day plan
+                        </button>
+                      ) : info.complete ? (
+                        <button
+                          onClick={() => { store.makeChallenge(sp.room.id); sfx.success(); }}
+                          className="min-h-[44px] flex-1 rounded-xl px-3 py-2.5 text-[13px] font-semibold"
+                          style={{ background: 'var(--p-accent-soft)', color: 'var(--p-accent)' }}
+                        >
+                          Start again
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => { store.endChallenge(sp.room.id); sfx.tap(); }}
+                          className="min-h-[44px] flex-1 rounded-xl px-3 py-2.5 text-[13px] font-semibold"
+                          style={{ background: 'transparent', color: 'var(--p-muted)', border: '1px solid var(--p-line)' }}
+                        >
+                          End plan
+                        </button>
+                      )}
+                    </div>
                   )}
-                </div>
-              </Card>
-            ))}
+                </Card>
+              );
+            })}
+            <div className="pt-3">
+              <GhostButton onClick={() => go('today')}>Browse more practices</GhostButton>
+            </div>
           </div>
         )}
-      </PractiseShell>
+      </Shell>
     );
   }
 
   /* ── Home / front door ────────────────────────────────────────────────── */
+  const resume = activePlans[0] ?? store.saved[0];
   const doors: { icon: typeof Brain; title: string; sub: string; tint: [string, string]; onClick: () => void }[] = [
-    { icon: Brain, title: 'I have something on my mind', sub: 'Something is stuck — bring it in.', tint: ['#8B7BF0', '#4A2E9E'], onClick: () => { setSituation(''); setView('intake'); } },
-    { icon: Sprout, title: 'I want to grow', sub: 'Give me today’s practice.', tint: ['#6FE0C6', '#1FA987'], onClick: () => setView('today') },
-    { icon: RefreshCw, title: 'Continue my practice', sub: 'Pick up where I left off.', tint: ['#5FC2E8', '#2E6FCF'], onClick: () => (store.saved[0] ? startSession(store.saved[0].room) : setView('today')) },
-    { icon: Bookmark, title: 'My saved practices', sub: 'Choose from my gym.', tint: ['#E88FD8', '#9B4FC9'], onClick: () => setView('saved') },
+    { icon: Brain, title: 'I have something on my mind', sub: 'Something is stuck — bring it in.', tint: ['#8B7BF0', '#4A2E9E'], onClick: () => { setSituation(''); go('intake'); } },
+    { icon: Sprout, title: 'I want to grow', sub: `Today’s practice, or any of ${TODAYS_PRACTICES.length}.`, tint: ['#6FE0C6', '#1FA987'], onClick: () => { setTodayIdx(indexOfToday()); go('today'); } },
+    {
+      icon: RefreshCw,
+      title: 'Continue my practice',
+      sub: resume ? resume.room.title : 'Nothing saved yet — start with today’s.',
+      tint: ['#5FC2E8', '#2E6FCF'],
+      onClick: () => (resume ? startSession(resume.room, 'home') : go('today')),
+    },
+    { icon: Bookmark, title: 'My saved practices', sub: store.saved.length ? `${store.saved.length} in my gym.` : 'Choose from my gym.', tint: ['#E88FD8', '#9B4FC9'], onClick: () => go('saved') },
   ];
 
   return (
-    <PractiseShell variant="adult" theme={GYM_ADULT_THEME}>
-      <TopBar title="Adult Gym" onBack={onExitGym} />
+    <Shell>
+      <div className="mb-6 flex items-center gap-2">
+        <button
+          onClick={onExitGym}
+          aria-label="Back to the Mind Gym hub"
+          className="-ml-2 flex min-h-[44px] items-center gap-1 rounded-full pl-2 pr-4 text-[13px] font-semibold transition hover:bg-black/5"
+          style={{ color: 'var(--p-muted)' }}
+        >
+          <ChevronLeft size={18} aria-hidden /> Mind Gym
+        </button>
+        <div className="flex-1 text-right text-sm font-semibold" style={{ color: 'var(--p-ink)' }}>Adult Gym</div>
+      </div>
       <Fade keyId="home">
-        <p className="text-[13px] font-semibold" style={{ color: 'var(--p-accent)' }}>{greeting()}</p>
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--p-ink)' }}>What would you like to work on today?</h1>
+        <div className="flex items-center gap-4">
+          <img
+            src={CHARACTER}
+            srcSet={`${CHARACTER} 1x, ${CHARACTER_2X} 2x`}
+            alt=""
+            width={64}
+            height={64}
+            className="h-16 w-16 flex-shrink-0 rounded-full object-cover object-top"
+            style={{ background: 'var(--p-accent-soft)', border: '2px solid var(--p-surface)', boxShadow: '0 4px 14px rgba(38,31,24,0.12)' }}
+          />
+          <div className="min-w-0">
+            <p className="text-[13px] font-semibold" style={{ color: 'var(--p-accent)' }}>{greeting()}</p>
+            <h1 className="text-2xl font-bold leading-tight" style={{ color: 'var(--p-ink)' }}>What would you like to work on today?</h1>
+          </div>
+        </div>
 
-        <div className="mt-5 space-y-3">
+        {activePlans.length > 0 && (
+          <div className="mt-6">
+            <SectionLabel flush>Your 10-day {activePlans.length > 1 ? 'plans' : 'plan'}</SectionLabel>
+            <div className="space-y-3">
+              {activePlans.map((sp) => {
+                const info = challengeInfo(sp)!;
+                return (
+                  <Card key={sp.room.id}>
+                    <div className="flex items-center gap-3">
+                      <RoomIcon room={sp.room} size={44} />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-bold" style={{ color: 'var(--p-ink)' }}>{sp.room.title}</div>
+                      </div>
+                      {info.doneToday ? (
+                        <span className="inline-flex min-h-[44px] items-center gap-1 text-[13px] font-semibold" style={{ color: 'var(--p-accent)' }}>
+                          <Check size={16} aria-hidden /> Today
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => { sfx.pop(); startSession(sp.room, 'home'); }}
+                          className="min-h-[44px] flex-shrink-0 rounded-xl px-4 text-[13px] font-semibold text-white"
+                          style={{ background: 'var(--p-accent)' }}
+                        >
+                          Practise day {info.day}
+                        </button>
+                      )}
+                    </div>
+                    <PlanProgress sp={sp} className="mt-3" />
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
           {doors.map((d) => {
             const Icon = d.icon;
             return (
@@ -297,12 +603,13 @@ export function AdultGym({ onExitGym }: { onExitGym: () => void }) {
                   className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl shadow-sm"
                   style={{ background: `linear-gradient(150deg, ${d.tint[0]}, ${d.tint[1]})` }}
                 >
-                  <Icon size={20} className="text-white" />
+                  <Icon size={21} className="text-white" strokeWidth={1.9} aria-hidden />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-semibold" style={{ color: 'var(--p-ink)' }}>{d.title}</div>
-                  <div className="text-[13px]" style={{ color: 'var(--p-muted)' }}>{d.sub}</div>
+                  <div className="font-semibold leading-snug" style={{ color: 'var(--p-ink)' }}>{d.title}</div>
+                  <div className="truncate text-[13px]" style={{ color: 'var(--p-muted)' }}>{d.sub}</div>
                 </div>
+                <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--p-line)' }} aria-hidden />
               </Card>
             );
           })}
@@ -310,7 +617,32 @@ export function AdultGym({ onExitGym }: { onExitGym: () => void }) {
 
         <JourneyStrip />
       </Fade>
-    </PractiseShell>
+    </Shell>
+  );
+}
+
+function SectionLabel({ children, flush }: { children: ReactNode; flush?: boolean }) {
+  return (
+    <div className={`${flush ? '' : 'mt-8 '}mb-2 text-[11px] font-bold uppercase tracking-[0.18em]`} style={{ color: 'var(--p-muted)' }}>
+      {children}
+    </div>
+  );
+}
+
+function StrengthTags({ room }: { room: PracticeRoom }) {
+  return (
+    <div className="mt-4 flex flex-wrap gap-2">
+      {room.strengths.map((s) => (
+        <span
+          key={s}
+          className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-medium"
+          style={{ background: 'var(--p-accent-soft)', color: 'var(--p-accent)' }}
+        >
+          <StrengthIcon id={s} size={13} />
+          {STRENGTHS.find((x) => x.id === s)?.label}
+        </span>
+      ))}
+    </div>
   );
 }
 
@@ -321,17 +653,15 @@ function JourneyStrip() {
     const Icon = icon;
     return (
       <div className="flex-1 text-center">
-        <Icon size={18} className="mx-auto" style={{ color: 'var(--p-accent)' }} />
+        <Icon size={18} className="mx-auto" style={{ color: 'var(--p-accent)' }} aria-hidden />
         <div className="mt-1 text-lg font-bold" style={{ color: 'var(--p-ink)' }}>{value}</div>
         <div className="text-[11px]" style={{ color: 'var(--p-muted)' }}>{label}</div>
       </div>
     );
   };
   return (
-    <div className="mt-8">
-      <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--p-muted)' }}>
-        Your practice journey
-      </div>
+    <div>
+      <SectionLabel>Your practice journey</SectionLabel>
       <Card>
         <div className="flex items-center justify-around">
           {stat(Flame, String(streak), 'Day streak')}
@@ -340,17 +670,30 @@ function JourneyStrip() {
         </div>
         <div className="my-4 h-px" style={{ background: 'var(--p-line)' }} />
         <div className="mb-2 text-[11px] font-semibold" style={{ color: 'var(--p-muted)' }}>Areas you’ve been practising</div>
-        <div className="space-y-1.5">
-          {STRENGTHS.map((s) => (
-            <div key={s.id} className="flex items-center gap-2">
-              <span className="w-6 text-center">{s.glyph}</span>
-              <span className="flex-1 text-[13px]" style={{ color: 'var(--p-ink)' }}>{s.label}</span>
-              <span className="tracking-tight">
-                {'★'.repeat(strengths[s.id])}
-                <span style={{ color: 'var(--p-line)' }}>{'★'.repeat(5 - strengths[s.id])}</span>
-              </span>
-            </div>
-          ))}
+        <div className="space-y-2.5">
+          {STRENGTHS.map((s) => {
+            const level = Math.min(5, strengths[s.id] ?? 0);
+            return (
+              <div key={s.id} className="flex items-center gap-3">
+                <span
+                  className="grid h-7 w-7 flex-shrink-0 place-items-center rounded-full"
+                  style={{ background: 'var(--p-accent-soft)', color: 'var(--p-accent)' }}
+                >
+                  <StrengthIcon id={s.id} size={14} />
+                </span>
+                <span className="flex-1 text-[13px]" style={{ color: 'var(--p-ink)' }}>{s.label}</span>
+                <span className="flex gap-1" role="img" aria-label={`${level} of 5 practice marks`}>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <span
+                      key={i}
+                      className="h-2 w-4 rounded-full"
+                      style={{ background: i < level ? 'var(--p-accent)' : 'var(--p-line)' }}
+                    />
+                  ))}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </Card>
     </div>
