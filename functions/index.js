@@ -1775,7 +1775,7 @@ exports.textToSpeech = onRequest({ secrets: [geminiKey], cors: true, maxInstance
     if (promptContext) {
         try {
             const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-3.8-flash" });
             const prompt = `
                 Act as a Presence Coach.
                 Generate a short 1-2 sentence spoken script for: ${promptContext}
@@ -1853,7 +1853,7 @@ exports.witnessPresence = onRequest({ secrets: [geminiKey], cors: true, maxInsta
 
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.0-flash",
+            model: "gemini-3.8-flash",
             systemInstruction: `
                 Act as a Presence Coach based on 'The Power of Now'.
                 Witness the 'voice in the head'.
@@ -1885,7 +1885,7 @@ exports.getGrounding = onRequest({ secrets: [geminiKey], cors: true, maxInstance
 
     try {
         const genAI = new GoogleGenerativeAI(geminiKey.value());
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-3.8-flash" });
         const prompt = `The user is in a state of: "${emotion}". Generate a customized 1-minute 'No-Mind' grounding exercise.`;
 
         const result = await model.generateContent(prompt);
@@ -1908,7 +1908,7 @@ exports.getDailyMeditation = onRequest({ secrets: [geminiKey], cors: true, maxIn
     try {
         const genAI = new GoogleGenerativeAI(geminiKey.value());
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.0-flash",
+            model: "gemini-3.8-flash",
             systemInstruction: `
                 You are a Presence Master. Generate a fresh, experiential meditation script for Day ${dayNumber}.
                 Focus: A specific anchor to the 'Now' (senses, breath, inner body, or space).
@@ -1952,7 +1952,7 @@ exports.analyzeEmotion = onRequest({ secrets: [geminiKey], cors: true, maxInstan
 
     try {
         const genAI = new GoogleGenerativeAI(geminiKey.value());
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-3.8-flash" });
         const prompt = `Analyze the emotional resonance of this text: "${text}". 
         Return exactly ONE word from this list that best matches the overarching feeling: CALM, JOY, FOCUS, PANIC, ANGER, SAD, NEUTRAL.
         Do not add any markup or markdown. Just the single word.`;
@@ -2162,7 +2162,7 @@ exports.siteChat = onCall({
     try {
         const genAI = new GoogleGenerativeAI(geminiKey.value());
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.0-flash",
+            model: "gemini-3.8-flash",
             systemInstruction: `${SYSTEM_INSTRUCTION}\n\n# ACCOUNT CONTEXT\n${accountContext}`,
         });
 
@@ -3472,7 +3472,7 @@ async function getDailyEmailContent(apiKey, video) {
 
     try {
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-3.8-flash" });
         const prompt = `
 You are a Presence Coach who sends a daily evening email to spiritual seekers studying 'The Untethered Soul' and 'The Power of Now'.
 
@@ -5520,7 +5520,7 @@ exports.kidsContent = onCall({ secrets: [geminiKey], maxInstances: 5 }, async (r
         try {
             const genAI = new GoogleGenerativeAI(geminiKey.value());
             const model = genAI.getGenerativeModel({
-                model: "gemini-2.0-flash",
+                model: "gemini-3.8-flash",
                 generationConfig: { responseMimeType: "application/json", temperature: 0.9 },
             });
             const result = await model.generateContent(prompt);
