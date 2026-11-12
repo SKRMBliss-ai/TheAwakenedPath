@@ -68,7 +68,7 @@ const FAQ = [
   { q: 'What ages is it for?', a: 'It is designed for children about 5 to 10. Younger children can join with a grown-up reading along; older children may prefer to explore on their own.' },
   { q: 'Does my child need me with them?', a: 'We suggest a grown-up joins for the first sessions, then stays nearby. The grown-up section explains how to support at home.' },
   { q: 'What is the Zoom class?', a: 'A live class for kids on Zoom, run by the Soulful Intelligence team, that builds on the Mind Gym practice. It is sold as a monthly or a yearly package. The schedule is shown in the class section once confirmed.' },
-  { q: 'Can I cancel the Zoom class?', a: 'Monthly and yearly packages are subscriptions. Cancellation terms are listed on our policies page; contact us if you need help.' },
+  { q: 'Can I cancel the Zoom class?', a: 'Yes. Monthly and yearly packages are subscriptions, and you can cancel any time by emailing or messaging us on WhatsApp. Our money-back guarantee applies: if the class is not right for your child, we refund you in full, no questions asked, typically within 5–7 business days to your original payment method.' },
   { q: 'What about the 3-day challenge?', a: 'The free-to-register 3-day weekend challenge is still available. See the section below; registration is on its own page.' },
 ];
 
@@ -166,7 +166,7 @@ function ZoomPlans({ palette }: { palette: Palette }) {
         <p style={{ margin: 0, fontFamily: SANS, fontSize: 13.5, color: palette.INK2, minHeight: 20 }}>
           {featured
             ? (perMonth ? `Works out to ${perMonth} a month — less than paying monthly.` : 'Billed once a year. Cheaper per month than the monthly plan.')
-            : 'Pay month to month.'}
+            : 'Pay month to month. Cancel any time.'}
         </p>
         <button type="button" onClick={() => buy(plan)} disabled={!priced || isProcessing}
           aria-label={`Subscribe to the ${plan.label.toLowerCase()} kids Zoom class`}
@@ -855,8 +855,8 @@ export default function KidsMindGymSales() {
         <ZoomPlans palette={palette} />
         <p style={{ textAlign: 'center', fontSize: 12.5, color: palette.INK2, margin: '18px auto 0', maxWidth: 560 }}>
           <ShieldCheck size={14} style={{ verticalAlign: '-2px' }} aria-hidden="true" /> Payments by Razorpay{' '}
-          (PayPal where available). Subscriptions renew until cancelled. Refund and cancellation terms for the class will be shown here before booking opens.{' '}
-          <a href="/policies" style={{ color: palette.PURPLE_STRONG, display: "inline-block", padding: "14px 6px" }}>Policies</a>
+          (PayPal where available). Subscriptions renew until cancelled. Money-back guarantee, the same as our course policy: if the class is not right for your child, tell us any time and we refund you in full, no questions asked. To cancel or ask for a refund, email or WhatsApp us; refunds go back to your original payment method, typically within 5–7 business days.{' '}
+          <a href="/policies#refund" style={{ color: palette.PURPLE_STRONG, display: "inline-block", padding: "14px 6px" }}>Policies</a>
         </p>
       </section>
 
