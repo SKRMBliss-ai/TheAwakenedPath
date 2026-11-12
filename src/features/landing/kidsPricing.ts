@@ -79,7 +79,7 @@ export const KIDS_ZOOM_SCHEDULE = {
   days: 'Every Friday · Saturday · Sunday' as string | null,
   time: null as string | null,          // TODO(owner): e.g. "4:00 PM UK time"
   lengthMinutes: null as number | null, // TODO(owner): e.g. 40
-  ages: 'About 5–10 years',
+  ages: '3–12 years',
   groupSize: null as string | null,     // TODO(owner)
 };
 

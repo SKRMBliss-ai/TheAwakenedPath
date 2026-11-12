@@ -14,6 +14,25 @@ const SERIF = "'Cormorant Garamond', Georgia, serif";
 
 type State = 'checking' | 'ready' | 'missing';
 
+const probe = (src: string) =>
+  fetch(src, { method: 'HEAD' })
+    .then((r) => r.ok && (r.headers.get('content-type') || '').startsWith('video/'))
+    .catch(() => false);
+
+/** Names of the videos whose files exist under public/. Empty until checked. */
+export function useAvailableKidsVideos(videos: KidsVideoConfig[]): Set<string> {
+  const [live, setLive] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    let alive = true;
+    Promise.all(videos.map((x) => probe(x.src).then((ok) => (ok ? x.name : null)))).then((names) => {
+      if (alive) setLive(new Set(names.filter((n): n is KidsVideoConfig['name'] => n !== null)));
+    });
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return live;
+}
+
 export default function KidsVideo({
   video, palette, large = false,
 }: { video: KidsVideoConfig; palette: Palette; large?: boolean }) {

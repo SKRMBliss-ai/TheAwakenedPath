@@ -200,7 +200,7 @@ export default function SoulfulHome() {
 
       {/* ── Kids Challenge announcement strip ────────────────────────────── */}
       <a
-        href={KIDS_REGISTER_PATH}
+        href="/tiny-kids-transformations"
         onClick={() => trackKids('KIDS_ANNOUNCEMENT_BAR', '/')}
         style={{
           position: 'relative', zIndex: 51, display: 'flex', alignItems: 'center',
@@ -210,8 +210,8 @@ export default function SoulfulHome() {
           fontFamily: SANS, fontSize: 12.5, fontWeight: 700,
         }}
       >
-        <span>🌈 New for kids — &ldquo;Let&rsquo;s Be Our Best Every Day!&rdquo;, a live 3-day challenge, ages 3–12</span>
-        <span style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>Reserve a place →</span>
+        <span>🌈 New for kids — the Kids Mind Gym, with live Zoom classes included, ages 3–12</span>
+        <span style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>See membership →</span>
       </a>
 
       {/* ── Navigation header ────────────────────────────────────────────── */}
@@ -249,7 +249,7 @@ export default function SoulfulHome() {
                     },
                     {
                       label: 'For Kids',
-                      sub: 'Let’s Be Our Best Every Day! (3-Day Challenge)',
+                      sub: 'Kids Mind Gym · live Zoom classes included',
                       badge: 'NEW',
                       href: '/tiny-kids-transformations',
                       onClick: () => track('HOME_COURSE_KIDS_CLICK'),

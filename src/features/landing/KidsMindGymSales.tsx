@@ -20,7 +20,7 @@ import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
 import KidsBackdrop from '../../components/site/KidsBackdrop';
 import { useRazorpay } from '../../hooks/useRazorpay';
 import { usePaypal } from '../../hooks/usePaypal';
-import KidsVideo from './components/KidsVideo';
+import KidsVideo, { useAvailableKidsVideos } from './components/KidsVideo';
 import KidsWallOfFame from './components/KidsWallOfFame';
 import { KIDS_AD_VIDEO, KIDS_GUIDE_VIDEOS } from './kidsVideos';
 import {
@@ -29,13 +29,14 @@ import {
 } from './kidsPricing';
 import FeaturedCourse from './components/FeaturedCourse';
 import {
-  KIDS_TITLE, KIDS_DAYS, KIDS_CHART_IMG, KIDS_TAGLINE, KIDS_TIME, KIDS_AGE_BANDS, KIDS_INCLUDES,
+  KIDS_DAYS, KIDS_CHART_IMG, KIDS_TAGLINE, KIDS_TIME, KIDS_AGE_BANDS, KIDS_INCLUDES,
   KIDS_ONLY_DIARY_IMG, KIDS_TEACHER_IMG, KIDS_TEACHER_POINTS, KIDS_TEACHER_QUOTE, trackKids,
 } from './kidsChallengeData';
 
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS = "'Outfit', system-ui, -apple-system, sans-serif";
 const APP_PATH = '/mindgymforkids';
+const ALL_VIDEOS = [KIDS_AD_VIDEO, ...KIDS_GUIDE_VIDEOS];
 const WHATSAPP_URL = 'https://wa.me/918217581238'; // same number as the site footer
 const URL_ = 'https://www.skrmblissai.in/tiny-kids-transformations';
 
@@ -65,7 +66,7 @@ const STEPS = [
 
 const FAQ = [
   { q: 'Is this therapy?', a: 'No. It is practice and play for emotional skills such as naming feelings, pausing and making kind choices. It is not therapy, diagnosis or medical care, and it does not replace a professional if your child needs one.' },
-  { q: 'What ages is it for?', a: 'It is designed for children about 5 to 10. Younger children can join with a grown-up reading along; older children may prefer to explore on their own.' },
+  { q: 'What ages is it for?', a: 'It is designed for children ages 3 to 12. Children of 3 to 5 take part with a grown-up alongside; older children can explore more on their own.' },
   { q: 'Does my child need me with them?', a: 'We suggest a grown-up joins for the first sessions, then stays nearby. The grown-up section explains how to support at home.' },
   { q: 'What does membership include?', a: 'The full Kids Mind Gym app, plus live Zoom classes for kids run by the Soulful Intelligence team every Friday, Saturday and Sunday. The Zoom classes are included in the membership; there is nothing extra to pay.' },
   { q: 'Can I cancel?', a: (KIDS_MEMBERSHIP_RECURRING
@@ -230,6 +231,10 @@ function ZoomPlans({ palette }: { palette: Palette }) {
           </span>
         )}
         <h3 style={{ margin: 0, fontFamily: SERIF, fontSize: 28, fontWeight: 500, color: palette.INK }}>{plan.label}</h3>
+        <span style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 999,
+          background: palette.BAND, color: palette.ON_BAND, fontFamily: SANS, fontSize: 11.5, fontWeight: 800 }}>
+          <ShieldCheck size={14} aria-hidden="true" /> 100% money-back guarantee
+        </span>
         <p style={{ margin: 0, fontFamily: SANS, fontSize: 36, fontWeight: 700, color: palette.INK, lineHeight: 1.1 }}>
           {priced ? formatKidsPrice(plan.price as number) : 'Price to be set'}
           {priced && <span style={{ fontSize: 15, fontWeight: 500, color: palette.INK2 }}> / {plan.period}</span>}
@@ -371,15 +376,15 @@ export default function KidsMindGymSales() {
   const sched = KIDS_ZOOM_SCHEDULE;
 
   usePageSeo({
-    title: 'Kids Mind Gym — Feelings, Stories & Games for Ages 5–10 | Live Zoom Class',
+    title: 'Kids Mind Gym — Feelings, Stories & Games for Ages 3–12 | Live Zoom Classes Included',
     description:
-      'Kids Mind Gym helps children about 5 to 10 practise noticing feelings, calming down and making kind choices through games, stories and a diary. Join the live Zoom class monthly or yearly.',
+      'Kids Mind Gym helps children ages 3 to 12 practise noticing feelings, calming down and making kind choices through games, stories and a daily diary. Membership includes live Zoom classes every Friday, Saturday and Sunday.',
     url: URL_,
     image: 'https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2Fposter.png?alt=media',
     jsonLd: [
       {
         '@context': 'https://schema.org', '@type': 'WebPage', name: 'Kids Mind Gym', url: URL_,
-        description: 'Practice and games for children about 5 to 10 to build emotional skills, with an optional live Zoom class.',
+        description: 'Practice and games for children ages 3 to 12 to build emotional skills, with live Zoom classes included in membership.',
         publisher: { '@type': 'Organization', name: 'Soulful Intelligence Studio', url: 'https://www.skrmblissai.in' },
       },
       {
@@ -390,6 +395,21 @@ export default function KidsMindGymSales() {
   });
 
   useEffect(() => { trackKids('PAGE_VISIT_KIDS_MINDGYM_SALES'); }, []);
+  const liveVideos = useAvailableKidsVideos(ALL_VIDEOS);
+
+  // Phone-only floating Join pill: appears after the hero, hides while the plans are on screen.
+  const [showJoin, setShowJoin] = useState(false);
+  useEffect(() => {
+    const onScroll = () => {
+      const plans = document.getElementById('zoom');
+      const r = plans?.getBoundingClientRect();
+      const plansVisible = !!r && r.top < window.innerHeight && r.bottom > 0;
+      setShowJoin(window.scrollY > 520 && !plansVisible);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   // Reveal-on-scroll for shared components that use .si-reveal (FeaturedCourse).
   useEffect(() => {
@@ -432,7 +452,7 @@ export default function KidsMindGymSales() {
           { label: 'Membership', href: '#zoom', secondary: true },
           { label: 'Questions', href: '#faq', secondary: true },
         ]}
-        cta={{ label: 'Try the Kids Mind Gym →', href: APP_PATH, onClick: () => trackKids('KIDS_HEADER_CTA') }}
+        cta={{ label: 'Join the Kids Mind Gym →', href: '#zoom', onClick: () => trackKids('KIDS_HEADER_CTA') }}
       />
 
       {/* Hero */}
@@ -441,7 +461,7 @@ export default function KidsMindGymSales() {
           <div>
             <span style={{ display: 'inline-block', padding: '7px 14px', borderRadius: 999, border: `1px solid ${border}`,
               fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: palette.BROWN, marginBottom: 18 }}>
-              For kids about 5–10 · And their grown-ups
+              For kids ages 3–12 · And their grown-ups
             </span>
             <h1 style={{ fontFamily: SERIF, fontSize: 'clamp(38px, 6vw, 66px)', fontWeight: 400, lineHeight: 1.08,
               letterSpacing: '-0.02em', margin: '0 0 16px' }}>
@@ -454,8 +474,8 @@ export default function KidsMindGymSales() {
               games, stories and a daily diary. A few minutes at a time, with you alongside.
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-              <Cta palette={palette} label="Try the Kids Mind Gym" href={APP_PATH} event="KIDS_HERO_CTA" />
-              <Cta palette={palette} label="See membership" href="#zoom" event="KIDS_HERO_ZOOM" ghost />
+              <Cta palette={palette} label="Join the Kids Mind Gym" href="#zoom" event="KIDS_HERO_CTA" />
+              <Cta palette={palette} label="Try it first" href={APP_PATH} event="KIDS_HERO_TRY" ghost />
             </div>
             <p style={{ fontSize: 12.5, color: palette.INK2, opacity: 0.8, marginTop: 14 }}>
               Practice and play for emotional skills. Not therapy or medical care.
@@ -463,7 +483,8 @@ export default function KidsMindGymSales() {
           </div>
           <figure className="mgk-card" style={{ margin: 0, borderRadius: 32, overflow: 'hidden',
             border: `1px solid ${palette.BAND_BORDER}`, background: palette.BAND }}>
-            <img src={KIDS_CHART_IMG}
+            <img src="/marketing/kids/hero-sim-diary.webp" width={1200} height={1272} fetchPriority="high"
+              onError={(e) => { if (e.currentTarget.src !== KIDS_CHART_IMG) e.currentTarget.src = KIDS_CHART_IMG; }}
               alt="Sim Katyal with her son, holding the Let's Be Our Best Every Day! daily diary chart"
               style={{ width: '100%', height: 'auto', display: 'block' }} />
             <figcaption style={{ padding: '12px 18px', fontSize: 13.5, fontWeight: 700, color: palette.ON_BAND, textAlign: 'center' }}>
@@ -630,7 +651,7 @@ export default function KidsMindGymSales() {
                 ))}
               </ul>
 
-              <Cta palette={palette} label="Try the Kids Mind Gym" href={APP_PATH} event="KIDS_JOURNAL_CTA" />
+              <Cta palette={palette} label="Join the Kids Mind Gym" href="#zoom" event="KIDS_JOURNAL_CTA" />
             </div>
           </div>
 
@@ -693,6 +714,36 @@ export default function KidsMindGymSales() {
             </p>
           </div>
         </div>
+      </section>
+
+      {/* Zoom class */}
+      <section id="zoom" style={sec()}>
+        <SectionTitle palette={palette} kicker="Membership" title="Join the Kids Mind Gym"
+          sub="One membership: the full Kids Mind Gym app, with live Zoom classes included. Choose monthly, or save with yearly." />
+        <div style={{ ...wrap, display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', marginBottom: 32 }}>
+          {[
+            { icon: Calendar, label: 'Days', v: sched.days },
+            { icon: Video, label: 'Time', v: sched.time ?? KIDS_TIME },
+            { icon: Smile, label: 'Length', v: sched.lengthMinutes ? `${sched.lengthMinutes} minutes` : '30–40 minutes' },
+            { icon: Users, label: 'Ages', v: sched.ages },
+          ].filter((c) => c.v).map(({ icon: Icon, label, v }) => (
+            <div key={label} className="mgk-card" style={{ ...box, padding: '12px 18px', display: 'flex', gap: 10, alignItems: 'center', minWidth: 170 }}>
+              <Icon size={18} color={palette.PURPLE_STRONG} aria-hidden="true" />
+              <span style={{ fontSize: 13.5 }}>
+                <span style={{ display: 'block', fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: palette.INK2 }}>{label}</span>
+                <strong>{v}</strong>
+              </span>
+            </div>
+          ))}
+        </div>
+        <ZoomPlans palette={palette} />
+        <p style={{ textAlign: 'center', fontSize: 12.5, color: palette.INK2, margin: '18px auto 0', maxWidth: 560 }}>
+          <ShieldCheck size={14} style={{ verticalAlign: '-2px' }} aria-hidden="true" /> {KIDS_MEMBERSHIP_RECURRING
+            ? 'Payments by Razorpay. Membership renews automatically each month or year until you cancel.'
+            : 'Payments by Razorpay and PayPal. One-time payment for a month or a year; it never renews on its own.'}{' '}
+          100% money-back guarantee, no questions asked: any time on the monthly plan, and within the first 30 days on the yearly plan. To cancel or ask for a refund, email or WhatsApp us; refunds go back to your original payment method, typically within 5–7 business days.{' '}
+          <a href="/policies#refund" style={{ color: palette.PURPLE_STRONG, display: "inline-block", padding: "14px 6px" }}>Policies</a>
+        </p>
       </section>
 
       {/* ═══ Know Your Teacher ══════════════════════════════════════════════ */}
@@ -776,22 +827,26 @@ export default function KidsMindGymSales() {
         </div>
       </section>
 
-      {/* See inside */}
-      <section id="see-inside" style={{ ...sec(), background: palette.BAND, color: palette.ON_BAND }}>
-        <SectionTitle palette={{ ...palette, INK: palette.ON_BAND, INK2: palette.ON_BAND_SOFT, BROWN: palette.ON_BAND_ACCENT }}
-          kicker="See inside" title="A short guide for every area" sub="Start with the short film, then eight quick videos, one for each part of the Kids Mind Gym." />
-        <div id="ad" style={{ ...wrap, maxWidth: 820, marginBottom: 28 }}><KidsVideo video={KIDS_AD_VIDEO} palette={palette} large /></div>
-        <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 18 }}>
-          {KIDS_GUIDE_VIDEOS.map((g) => (
-            <figure key={g.name} style={{ margin: 0 }}>
-              <KidsVideo video={g} palette={palette} />
-              <figcaption style={{ marginTop: 8, fontSize: 13.5, lineHeight: 1.5, color: palette.ON_BAND_SOFT }}>
-                <strong style={{ color: palette.ON_BAND }}>{g.title}.</strong> {g.blurb}
-              </figcaption>
-            </figure>
-          ))}
-        </div>
-      </section>
+      {/* See inside — only videos whose files exist are shown; the whole section hides when none do */}
+      {liveVideos.size > 0 && (
+        <section id="see-inside" style={{ ...sec(), background: palette.BAND, color: palette.ON_BAND }}>
+          <SectionTitle palette={{ ...palette, INK: palette.ON_BAND, INK2: palette.ON_BAND_SOFT, BROWN: palette.ON_BAND_ACCENT }}
+            kicker="See inside" title="Take a look around" sub="Short videos from inside the Kids Mind Gym." />
+          {liveVideos.has(KIDS_AD_VIDEO.name) && (
+            <div id="ad" style={{ ...wrap, maxWidth: 820, marginBottom: 28 }}><KidsVideo video={KIDS_AD_VIDEO} palette={palette} large /></div>
+          )}
+          <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 18 }}>
+            {KIDS_GUIDE_VIDEOS.filter((g) => liveVideos.has(g.name)).map((g) => (
+              <figure key={g.name} style={{ margin: 0 }}>
+                <KidsVideo video={g} palette={palette} />
+                <figcaption style={{ marginTop: 8, fontSize: 13.5, lineHeight: 1.5, color: palette.ON_BAND_SOFT }}>
+                  <strong style={{ color: palette.ON_BAND }}>{g.title}.</strong> {g.blurb}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* How it works */}
       <section id="how" style={sec()}>
@@ -999,65 +1054,28 @@ export default function KidsMindGymSales() {
 
       <KidsWallOfFame palette={palette} />
 
-      {/* Zoom class */}
-      <section id="zoom" style={sec()}>
-        <SectionTitle palette={palette} kicker="Membership" title="Join the Kids Mind Gym"
-          sub="One membership: the full Kids Mind Gym app, with live Zoom classes included. Choose monthly, or save with yearly." />
-        <div style={{ ...wrap, display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', marginBottom: 32 }}>
-          {[
-            { icon: Calendar, label: 'Days', v: sched.days },
-            { icon: Video, label: 'Time', v: sched.time },
-            { icon: Smile, label: 'Length', v: sched.lengthMinutes ? `${sched.lengthMinutes} minutes` : null },
-            { icon: Users, label: 'Ages', v: sched.ages },
-          ].map(({ icon: Icon, label, v }) => (
-            <div key={label} className="mgk-card" style={{ ...box, padding: '12px 18px', display: 'flex', gap: 10, alignItems: 'center', minWidth: 170 }}>
-              <Icon size={18} color={palette.PURPLE_STRONG} aria-hidden="true" />
-              <span style={{ fontSize: 13.5 }}>
-                <span style={{ display: 'block', fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: palette.INK2 }}>{label}</span>
-                <strong>{v ?? 'To be announced'}</strong>
-              </span>
-            </div>
-          ))}
-        </div>
-        <ZoomPlans palette={palette} />
-        <p style={{ textAlign: 'center', fontSize: 12.5, color: palette.INK2, margin: '18px auto 0', maxWidth: 560 }}>
-          <ShieldCheck size={14} style={{ verticalAlign: '-2px' }} aria-hidden="true" /> {KIDS_MEMBERSHIP_RECURRING
-            ? 'Payments by Razorpay. Membership renews automatically each month or year until you cancel.'
-            : 'Payments by Razorpay and PayPal. One-time payment for a month or a year; it never renews on its own.'}{' '}
-          100% money-back guarantee, no questions asked: any time on the monthly plan, and within the first 30 days on the yearly plan. To cancel or ask for a refund, email or WhatsApp us; refunds go back to your original payment method, typically within 5–7 business days.{' '}
-          <a href="/policies#refund" style={{ color: palette.PURPLE_STRONG, display: "inline-block", padding: "14px 6px" }}>Policies</a>
-        </p>
-      </section>
-
-      {/* 3-day challenge */}
-      <section id="challenge" style={sec()}>
-        <div className="mgk-card" style={{ ...box, ...wrap, maxWidth: 900, padding: 'clamp(22px, 4vw, 36px)' }}>
+      {/* Session schedule — belongs with the three session days above */}
+      <section id="schedule" style={{ ...sec(), paddingTop: 0 }}>
+        <div className="mgk-card" style={{ ...box, ...wrap, maxWidth: 560, padding: 'clamp(20px, 4vw, 30px)' }}>
           <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: palette.BROWN }}>
             Included with membership
           </span>
-          <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(26px, 3.4vw, 36px)', fontWeight: 400, margin: '8px 0 10px' }}>{KIDS_TITLE}</h2>
-          <p style={{ fontSize: 15, lineHeight: 1.7, color: palette.INK2, margin: '0 0 14px' }}>
-            A playful 3-day weekend challenge on Zoom, Friday to Sunday: {KIDS_DAYS.map((d) => d.title).join(', ')}. These live Zoom sessions
-            are included with Kids Mind Gym membership; we send the Zoom link after you join.
+          <h3 style={{ fontFamily: SERIF, fontSize: 26, fontWeight: 500, margin: '6px 0 4px' }}>Session schedule</h3>
+          <p style={{ margin: '0 0 12px', fontSize: 13.5, fontWeight: 700, color: palette.INK2 }}>
+            Every Friday · Saturday · Sunday · 30–40 minutes · {KIDS_TIME}
           </p>
-          <div style={{ border: `1px solid ${border}`, borderRadius: 18, padding: '16px 18px', margin: '0 0 18px', maxWidth: 460 }}>
-            <p style={{ margin: '0 0 2px', fontFamily: SERIF, fontSize: 21 }}>Session schedule</p>
-            <p style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 700, color: palette.INK2 }}>
-              Every Friday · Saturday · Sunday · 30–40 minutes · {KIDS_TIME}
-            </p>
-            {[
-              ['India (IST)', '8:30 PM'], ['USA – New York (ET)', '11:00 AM'], ['USA – Chicago (CT)', '10:00 AM'],
-              ['USA – Denver (MT)', '9:00 AM'], ['USA – Los Angeles (PT)', '8:00 AM'],
-            ].map(([place, t]) => (
-              <div key={place} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 14, fontWeight: 600, padding: '4px 0' }}>
-                <span>{place}</span><span>{t}</span>
-              </div>
-            ))}
-            <p style={{ margin: '10px 0 0', fontSize: 11.5, color: palette.INK2 }}>
-              Times may change with daylight saving. Please check your local time at registration.
-            </p>
-          </div>
-          <Cta palette={palette} label="See membership" href="#zoom" event="KIDS_CHALLENGE_CTA" ghost />
+          {[
+            ['India (IST)', '8:30 PM'], ['USA – New York (ET)', '11:00 AM'], ['USA – Chicago (CT)', '10:00 AM'],
+            ['USA – Denver (MT)', '9:00 AM'], ['USA – Los Angeles (PT)', '8:00 AM'],
+          ].map(([place, t]) => (
+            <div key={place} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 14, fontWeight: 600, padding: '4px 0' }}>
+              <span>{place}</span><span>{t}</span>
+            </div>
+          ))}
+          <p style={{ margin: '10px 0 16px', fontSize: 11.5, color: palette.INK2 }}>
+            Times may change with daylight saving. We send the Zoom link by email after you join.
+          </p>
+          <Cta palette={palette} label="Join the Kids Mind Gym" href="#zoom" event="KIDS_SCHEDULE_CTA" />
         </div>
       </section>
 
@@ -1205,7 +1223,7 @@ export default function KidsMindGymSales() {
 
               <div>
                 <a
-                  href={APP_PATH}
+                  href="#zoom"
                   onClick={() => trackKids('KIDS_FINAL_CTA')}
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: 9,
@@ -1218,7 +1236,7 @@ export default function KidsMindGymSales() {
                   onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
                   onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 >
-                  <Heart size={18} fill="currentColor" /> Try the Kids Mind Gym
+                  <Heart size={18} fill="currentColor" /> Join the Kids Mind Gym
                 </a>
               </div>
             </div>
@@ -1228,6 +1246,14 @@ export default function KidsMindGymSales() {
 
       <div style={{ position: 'relative', zIndex: 2 }}><SiteFooter palette={palette} /></div>
 
+      {KIDS_ZOOM_BOOKING_OPEN && KIDS_ZOOM_PLANS.monthly.price != null && (
+        <a href="#zoom" className="mgk-join-pill" data-show={showJoin ? '1' : '0'} onClick={() => trackKids('KIDS_STICKY_JOIN')}
+          aria-label="Join the Kids Mind Gym" tabIndex={showJoin ? 0 : -1}
+          style={{ background: palette.PURPLE_STRONG, color: palette.ON_ACCENT, fontFamily: SANS }}>
+          Join · {formatKidsPrice(KIDS_ZOOM_PLANS.monthly.price)}/mo
+        </a>
+      )}
+
       <style>{`
         .mgk-blur { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0;
           backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
@@ -1235,6 +1261,14 @@ export default function KidsMindGymSales() {
         body:has(.mgk-card:hover, .mgk-card:focus-within) .mgk-blur { opacity: 1; }
         @media (hover: none) { .mgk-blur { opacity: 1; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); } }
         .mgk-card { transition: transform .25s ease, box-shadow .25s ease; }
+        .mgk-join-pill { display: none; }
+        @media (max-width: 640px) {
+          .mgk-join-pill { display: inline-flex; align-items: center; justify-content: center; position: fixed; z-index: 40;
+            left: 50%; bottom: 22px; transform: translate(-50%, 90px); min-height: 48px; padding: 0 20px; border-radius: 999px;
+            font-size: 14.5px; font-weight: 800; text-decoration: none; white-space: nowrap; max-width: calc(100vw - 176px);
+            box-shadow: 0 10px 28px rgba(0,0,0,.35); transition: transform .3s ease; }
+          .mgk-join-pill[data-show="1"] { transform: translate(-50%, 0); }
+        }
         @media (hover: hover) { .mgk-card:hover { transform: translateY(-3px); } }
         @media (max-width: 900px) {
           .si-kids-grid-2, .si-kids-footer-grid, .si-journal-grid { grid-template-columns: 1fr !important; }
