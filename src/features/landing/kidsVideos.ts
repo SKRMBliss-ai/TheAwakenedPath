@@ -33,7 +33,7 @@ export const KIDS_GUIDE_VIDEOS: KidsVideoConfig[] = [
   v('Guide2-feelings', 'Feelings', 'Naming and understanding what they feel.'),
   v('Guide3-storylab', 'Story Lab', 'Making up stories that explore feelings and choices.'),
   v('Guide4-games', 'Games', 'Playful games that practise calm, focus and kindness.'),
-  v('Guide5-diary', 'Diary', 'A private place to write or draw about their day.'),
+  v('Guide5-diary', 'Diary', 'A place of their own to write or draw about their day.'),
   v('Guide6-corner', 'Calm corner', 'Simple tools for when big feelings arrive.'),
   v('Guide7-rewards', 'Rewards', 'Small celebrations for showing up and practising.'),
   v('Guide8-grownup', 'For grown-ups', 'What parents can see and how to support at home.'),

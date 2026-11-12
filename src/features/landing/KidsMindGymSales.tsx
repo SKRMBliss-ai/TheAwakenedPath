@@ -35,13 +35,14 @@ import {
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS = "'Outfit', system-ui, -apple-system, sans-serif";
 const APP_PATH = '/mindgymforkids';
+const WHATSAPP_URL = 'https://wa.me/918217581238'; // same number as the site footer
 const URL_ = 'https://www.skrmblissai.in/tiny-kids-transformations';
 
 const AREAS = [
   { icon: Smile, title: 'Feelings', body: 'Name what they feel and learn that every feeling is okay to have.' },
   { icon: BookOpen, title: 'Story Lab', body: 'Make up stories where characters face feelings and choices.' },
   { icon: Gamepad2, title: 'Games', body: 'Short playful games that practise calm, focus and kindness.' },
-  { icon: NotebookPen, title: 'Diary', body: 'A private place to write or draw about their day.' },
+  { icon: NotebookPen, title: 'Diary', body: 'A place of their own to write or draw about their day.' },
   { icon: Leaf, title: 'Calm corner', body: 'Simple breathing and pause tools for when feelings feel big.' },
   { icon: Star, title: 'Rewards', body: 'Small celebrations for showing up and practising.' },
 ];
@@ -165,7 +166,7 @@ function ZoomPlans({ palette }: { palette: Palette }) {
         <p style={{ margin: 0, fontFamily: SANS, fontSize: 13.5, color: palette.INK2, minHeight: 20 }}>
           {featured
             ? (perMonth ? `Works out to ${perMonth} a month — less than paying monthly.` : 'Billed once a year. Cheaper per month than the monthly plan.')
-            : 'Pay month to month. Cancel any time.'}
+            : 'Pay month to month.'}
         </p>
         <button type="button" onClick={() => buy(plan)} disabled={!priced || isProcessing}
           aria-label={`Subscribe to the ${plan.label.toLowerCase()} kids Zoom class`}
@@ -190,7 +191,7 @@ function ZoomPlans({ palette }: { palette: Palette }) {
       {!math && (
         <p data-placeholder="kids-pricing" style={{ maxWidth: 640, margin: '20px auto 0', textAlign: 'center',
           fontFamily: SANS, fontSize: 12.5, fontWeight: 700, color: palette.BROWN }}>
-          PLACEHOLDER — prices and plan IDs are not set yet (see src/features/landing/kidsPricing.ts). Buying is switched off until they are.
+          Class prices and dates are being finalised. Booking opens here as soon as they are confirmed — message us if you would like to be told.
         </p>
       )}
     </>
@@ -306,6 +307,25 @@ export default function KidsMindGymSales() {
           </figure>
         </div>
       </header>
+
+      {/* Trust strip — plain facts only, no claims we cannot back up */}
+      <section aria-label="Good to know" style={{ ...sec(), paddingTop: 0, paddingBottom: 0 }}>
+        <ul style={{ ...wrap, listStyle: 'none', padding: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+          {[
+            { icon: Heart, t: 'Made by a parent', b: 'Created by Sim Katyal, a mum, from what helped her own son.' },
+            { icon: ShieldCheck, t: 'Honest about what it is', b: 'Practice and play for emotional skills. Not therapy or medical care.' },
+            { icon: Users, t: 'You stay involved', b: 'Designed for a grown-up to sit alongside, especially at the start.' },
+            { icon: Smile, t: 'Real people to talk to', b: 'Ask us anything on WhatsApp or email before you begin.' },
+          ].map(({ icon: Icon, t, b }) => (
+            <li key={t} className="mgk-card" style={{ ...box, padding: '16px 18px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+              <Icon size={20} color={palette.PURPLE_STRONG} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />
+              <span style={{ fontSize: 13.5, lineHeight: 1.55, color: palette.INK2 }}>
+                <strong style={{ display: 'block', fontSize: 14.5, color: palette.INK }}>{t}</strong>{b}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       {/* What kids get */}
       <section id="inside" style={sec()}>
@@ -890,6 +910,16 @@ export default function KidsMindGymSales() {
               <p style={{ fontSize: 15, lineHeight: 1.75, color: palette.INK2, margin: '0 0 16px' }}>{f.a}</p>
             </details>
           ))}
+        </div>
+      </section>
+
+      {/* Talk to us */}
+      <section id="contact" style={{ ...sec(), textAlign: 'center' }}>
+        <SectionTitle palette={palette} kicker="Still unsure?" title="Talk to a real person first"
+          sub="Ask about your child, the Mind Gym or the Zoom class. We reply ourselves." />
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
+          <Cta palette={palette} label="Message us on WhatsApp" href={WHATSAPP_URL} event="KIDS_CONTACT_WHATSAPP" />
+          <Cta palette={palette} label="Email connect@skrmblissai.in" href="mailto:connect@skrmblissai.in" event="KIDS_CONTACT_EMAIL" ghost />
         </div>
       </section>
 
