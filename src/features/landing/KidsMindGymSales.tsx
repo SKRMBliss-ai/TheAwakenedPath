@@ -8,19 +8,19 @@
  *
  * No testimonials, counts or ratings anywhere on the page.
  */
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getAuth } from 'firebase/auth';
 import {
   Heart, BookOpen, Gamepad2, NotebookPen, Leaf, Star, Users, Smile, ShieldCheck, Video, Calendar, Sparkles, Clock, MapPin,
 } from 'lucide-react';
 import { usePageSeo } from '../../lib/seo';
-import { showToast } from '../../lib/toast';
 import { useSiteTheme, type Palette } from '../../lib/siteTheme';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
 import KidsBackdrop from '../../components/site/KidsBackdrop';
 import { useRazorpay } from '../../hooks/useRazorpay';
 import { usePaypal } from '../../hooks/usePaypal';
 import KidsVideo from './components/KidsVideo';
+import KidsWallOfFame from './components/KidsWallOfFame';
 import { KIDS_AD_VIDEO, KIDS_GUIDE_VIDEOS } from './kidsVideos';
 import {
   KIDS_ZOOM_PLANS, KIDS_ZOOM_CURRENCY, KIDS_ZOOM_SCHEDULE, KIDS_ZOOM_BOOKING_OPEN, formatKidsPrice, kidsZoomYearlyMath,
@@ -52,7 +52,6 @@ const AREAS = [
 const MINDGYM_INCLUDES = [
   'The Kids Mind Gym: feelings, Story Lab, games and a calm corner',
   'A digital daily diary with gentle prompts to fill in each day',
-  'The printed “Let’s Be Our Best Every Day!” diary chart',
   'Rewards that celebrate showing up and practising',
   'A grown-ups section with simple ways to support at home',
 ];
@@ -67,8 +66,8 @@ const FAQ = [
   { q: 'Is this therapy?', a: 'No. It is practice and play for emotional skills such as naming feelings, pausing and making kind choices. It is not therapy, diagnosis or medical care, and it does not replace a professional if your child needs one.' },
   { q: 'What ages is it for?', a: 'It is designed for children about 5 to 10. Younger children can join with a grown-up reading along; older children may prefer to explore on their own.' },
   { q: 'Does my child need me with them?', a: 'We suggest a grown-up joins for the first sessions, then stays nearby. The grown-up section explains how to support at home.' },
-  { q: 'What is the Zoom class?', a: 'A live class for kids on Zoom, run by the Soulful Intelligence team, that builds on the Mind Gym practice. It is sold as a monthly or a yearly package. The schedule is shown in the class section once confirmed.' },
-  { q: 'Can I cancel the Zoom class?', a: 'Yes. Monthly and yearly packages are subscriptions, and you can cancel any time by emailing or messaging us on WhatsApp. Our 100% money-back guarantee applies, no questions asked: any time on the monthly plan, and within the first 30 days on the yearly plan. After 30 days a yearly plan can still be cancelled so it does not renew. Refunds go to your original payment method, typically within 5–7 business days.' },
+  { q: 'What is the Zoom class?', a: 'A live class for kids on Zoom, run by the Soulful Intelligence team, that builds on the Mind Gym practice. It runs every Friday, Saturday and Sunday and is sold as a monthly or a yearly package.' },
+  { q: 'Can I cancel the Zoom class?', a: 'Yes. Both packages are one-time payments that never renew on their own, so there is nothing to cancel later. Our 100% money-back guarantee applies, no questions asked: any time on the monthly package, and within the first 30 days on the yearly package. Email or WhatsApp us and refunds go to your original payment method, typically within 5–7 business days.' },
   { q: 'What about the 3-day challenge?', a: 'The free-to-register 3-day weekend challenge is still available. See the section below; registration is on its own page.' },
 ];
 
@@ -108,48 +107,79 @@ function SectionTitle({ palette, kicker, title, sub }: { palette: Palette; kicke
   );
 }
 
-/** Zoom class pricing + checkout. Buy buttons are disabled until the owner sets a price. */
+/** Zoom class passes + checkout. Same guest flow as the Feelings course:
+ *  one-time payment by Razorpay (cards, UPI, wallets) or PayPal (incl. Apple
+ *  Pay where PayPal offers it) and Google Pay. No account needed. */
 function ZoomPlans({ palette }: { palette: Palette }) {
-  const { subscribe, isProcessing } = useRazorpay();
-  const { renderSubscription } = usePaypal();
+  const { checkOut, isProcessing } = useRazorpay();
+  const { renderCheckout, renderGooglePay, isAvailable: paypalAvailable } = usePaypal();
   const math = kidsZoomYearlyMath();
-  const paypalRendered = useRef(false);
   const cardBg = palette.CARD;
+  const [picked, setPicked] = useState<KidsZoomPlan | null>(null);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [done, setDone] = useState<string | null>(null);
+  const formRef = useRef<HTMLDivElement>(null);
 
-  // PayPal buttons only appear once a plan id AND price exist.
-  useEffect(() => {
-    if (paypalRendered.current) return;
-    (['monthly', 'yearly'] as const).forEach((k) => {
-      const p = KIDS_ZOOM_PLANS[k];
-      if (p.paypalPlanId && p.price != null && KIDS_ZOOM_BOOKING_OPEN) {
-        paypalRendered.current = true;
-        renderSubscription(`kids-paypal-${k}`, p.paypalPlanId, () =>
-          showToast('Subscription confirmed — we will email your class details.', { type: 'success' }));
-      }
-    });
-  }, [renderSubscription]);
+  const emailOk = email.includes('@') && !!email.split('@')[1]?.includes('.');
+  const formReady = name.trim().length > 0 && emailOk;
 
-  const buy = (plan: KidsZoomPlan) => {
-    if (plan.price == null || !KIDS_ZOOM_BOOKING_OPEN) return;
-    const user = getAuth().currentUser;
-    if (!user) {
-      showToast('Please sign in to Mind Gym first, then come back to subscribe.', { type: 'info' });
-      window.location.href = '/mindgym';
-      return;
-    }
-    trackKids(`KIDS_ZOOM_BUY_${plan.period.toUpperCase()}`);
-    subscribe(user.uid, user.email || '', user.displayName || '', plan.razorpayPlanId, KIDS_ZOOM_CURRENCY,
-      () => showToast('Subscription active — we will email your class details.', { type: 'success' }));
+  const onPaid = (plan: KidsZoomPlan, paidEmail: string) => {
+    trackKids(`KIDS_ZOOM_PAID_${plan.period.toUpperCase()}`, undefined, plan.productId, paidEmail);
+    setPicked(null);
+    setDone(paidEmail);
   };
+
+  // PayPal (and Apple Pay inside it) + Google Pay render once the form is valid.
+  useEffect(() => {
+    if (!picked || !formReady || !KIDS_ZOOM_BOOKING_OPEN) return;
+    const userId = getAuth().currentUser?.uid || 'guest_pending';
+    const paidEmail = email.trim();
+    const plan = picked;
+    const t = setTimeout(() => {
+      renderCheckout('kids-paypal-container', userId, paidEmail, plan.productId, KIDS_ZOOM_CURRENCY,
+        () => onPaid(plan, paidEmail), phone.trim());
+      renderGooglePay('kids-googlepay-container', userId, paidEmail, plan.productId, KIDS_ZOOM_CURRENCY,
+        () => onPaid(plan, paidEmail), phone.trim());
+    }, 500);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [picked, formReady, name, email, phone]);
+
+  const pick = (plan: KidsZoomPlan) => {
+    if (plan.price == null || !KIDS_ZOOM_BOOKING_OPEN) return;
+    trackKids(`KIDS_ZOOM_PICK_${plan.period.toUpperCase()}`);
+    setDone(null);
+    setPicked(plan);
+    setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60);
+  };
+
+  const payRazorpay = () => {
+    if (!picked || !formReady) return;
+    const plan = picked;
+    const paidEmail = email.trim();
+    const userId = getAuth().currentUser?.uid || 'guest_pending';
+    trackKids(`KIDS_ZOOM_PAY_CLICK_${plan.period.toUpperCase()}`);
+    checkOut(userId, paidEmail, name.trim(), plan.productId, KIDS_ZOOM_CURRENCY, () => onPaid(plan, paidEmail), phone.trim());
+  };
+
+  const input: React.CSSProperties = {
+    width: '100%', minHeight: 48, borderRadius: 14, border: `1px solid ${palette.BORDER}`, background: palette.BG,
+    color: palette.INK, fontFamily: SANS, fontSize: 16, padding: '10px 14px', boxSizing: 'border-box',
+  };
+  const label: React.CSSProperties = { display: 'block', fontSize: 12.5, fontWeight: 700, color: palette.INK2, marginBottom: 6 };
 
   const card = (plan: KidsZoomPlan, featured: boolean) => {
     const priced = plan.price != null;
     const canBuy = priced && KIDS_ZOOM_BOOKING_OPEN;
-    const perMonth = featured && math ? formatKidsPrice(KIDS_ZOOM_CURRENCY === 'INR' ? Math.round(math.perMonth) : math.perMonth) : null;
+    const perMonth = featured && math
+      ? formatKidsPrice(KIDS_ZOOM_CURRENCY === 'INR' ? Math.round(math.perMonth) : math.perMonth) : null;
+    const active = picked?.period === plan.period;
     return (
       <div key={plan.period} className="mgk-card" style={{
         flex: '1 1 280px', maxWidth: 420, background: cardBg, borderRadius: 28, padding: '28px 24px',
-        border: `${featured ? 2 : 1}px solid ${featured ? palette.PURPLE_STRONG : palette.BORDER}`,
+        border: `${featured || active ? 2 : 1}px solid ${featured || active ? palette.PURPLE_STRONG : palette.BORDER}`,
         position: 'relative', display: 'flex', flexDirection: 'column', gap: 10,
       }}>
         {featured && (
@@ -164,22 +194,21 @@ function ZoomPlans({ palette }: { palette: Palette }) {
           {priced ? formatKidsPrice(plan.price as number) : 'Price to be set'}
           {priced && <span style={{ fontSize: 15, fontWeight: 500, color: palette.INK2 }}> / {plan.period}</span>}
         </p>
-        <p style={{ margin: 0, fontFamily: SANS, fontSize: 13.5, color: palette.INK2, minHeight: 20 }}>
+        <p style={{ margin: 0, fontFamily: SANS, fontSize: 13.5, lineHeight: 1.55, color: palette.INK2 }}>
           {featured
-            ? (perMonth ? `12 months for the price of 9. Works out to about ${perMonth} a month.` : 'Billed once a year. Cheaper per month than the monthly plan.')
-            : 'Pay month to month. Cancel any time. 100% money back, any time.'}
-          {featured && priced ? ' 100% money back in the first 30 days.' : ''}
+            ? `12 months for the price of 9${perMonth ? `, about ${perMonth} a month` : ''}. 100% money back in the first 30 days.`
+            : 'One month of classes. 100% money back, any time.'}
+          {' '}One-time payment, no auto-renewal.
         </p>
-        <button type="button" onClick={() => buy(plan)} disabled={!canBuy || isProcessing}
-          aria-label={`Subscribe to the ${plan.label.toLowerCase()} kids Zoom class`}
+        <button type="button" onClick={() => pick(plan)} disabled={!canBuy}
+          aria-label={`Book the ${plan.label.toLowerCase()} kids Zoom class`}
           style={{
             marginTop: 8, minHeight: 48, borderRadius: 999, border: 'none', fontFamily: SANS, fontSize: 15, fontWeight: 700,
             background: canBuy ? palette.PURPLE_STRONG : palette.BORDER, color: canBuy ? palette.ON_ACCENT : palette.INK2,
-            cursor: canBuy ? 'pointer' : 'not-allowed', opacity: isProcessing ? 0.7 : 1,
+            cursor: canBuy ? 'pointer' : 'not-allowed',
           }}>
-          {canBuy ? `Join ${plan.label.toLowerCase()}` : 'Booking opens soon'}
+          {canBuy ? `Book ${plan.label.toLowerCase()}` : 'Booking opens soon'}
         </button>
-        {plan.paypalPlanId && canBuy && <div id={`kids-paypal-${plan.period === 'month' ? 'monthly' : 'yearly'}`} />}
       </div>
     );
   };
@@ -190,9 +219,63 @@ function ZoomPlans({ palette }: { palette: Palette }) {
         {card(KIDS_ZOOM_PLANS.monthly, false)}
         {card(KIDS_ZOOM_PLANS.yearly, true)}
       </div>
+
+      {done && (
+        <div role="status" style={{ maxWidth: 560, margin: '24px auto 0', padding: '20px 22px', borderRadius: 20,
+          background: palette.BAND, color: palette.ON_BAND, textAlign: 'center', fontFamily: SANS, fontSize: 15, lineHeight: 1.6 }}>
+          <strong style={{ display: 'block', fontFamily: SERIF, fontSize: 24, fontWeight: 500 }}>Thank you — your place is booked.</strong>
+          A confirmation is on its way to {done}. We will send your Zoom link and class times there shortly.
+        </div>
+      )}
+
+      {picked && (
+        <div ref={formRef} id="kids-zoom-checkout" style={{ maxWidth: 560, margin: '24px auto 0', padding: 'clamp(18px, 4vw, 26px)',
+          borderRadius: 24, background: cardBg, border: `1px solid ${palette.BORDER}` }}>
+          <h3 style={{ margin: '0 0 4px', fontFamily: SERIF, fontSize: 26, fontWeight: 500 }}>
+            Book the {picked.label.toLowerCase()} class
+          </h3>
+          <p style={{ margin: '0 0 16px', fontSize: 14, color: palette.INK2 }}>
+            {formatKidsPrice(picked.price as number)} · one-time payment · no account needed
+          </p>
+          <div style={{ display: 'grid', gap: 12 }}>
+            <label><span style={label}>Parent or guardian name</span>
+              <input style={input} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" /></label>
+            <label><span style={label}>Email (your Zoom link is sent here)</span>
+              <input style={input} type="email" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" /></label>
+            <label><span style={label}>WhatsApp number (optional)</span>
+              <input style={input} type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" /></label>
+          </div>
+          <button type="button" onClick={payRazorpay} disabled={!formReady || isProcessing}
+            style={{ width: '100%', marginTop: 16, minHeight: 50, borderRadius: 999, border: 'none', fontFamily: SANS, fontSize: 15.5, fontWeight: 700,
+              background: formReady ? palette.PURPLE_STRONG : palette.BORDER, color: formReady ? palette.ON_ACCENT : palette.INK2,
+              cursor: formReady ? 'pointer' : 'not-allowed', opacity: isProcessing ? 0.7 : 1 }}>
+            {isProcessing ? 'Opening secure payment…' : `Pay ${formatKidsPrice(picked.price as number)} — card, UPI or wallet`}
+          </button>
+          {formReady && paypalAvailable !== false && (
+            <>
+              <p style={{ textAlign: 'center', fontSize: 12, color: palette.INK2, margin: '14px 0 8px' }}>or pay with</p>
+              <div id="kids-googlepay-container" style={{ marginBottom: 8 }} />
+              <div id="kids-paypal-container" />
+            </>
+          )}
+          {!formReady && (
+            <p style={{ textAlign: 'center', fontSize: 12, color: palette.INK2, margin: '12px 0 0' }}>
+              Enter your name and email to see all payment options.
+            </p>
+          )}
+          <p style={{ fontSize: 12, color: palette.INK2, margin: '14px 0 0', lineHeight: 1.55 }}>
+            By paying you agree to our <a href="/policies" style={{ color: palette.PURPLE_STRONG }}>terms and refund policy</a>.
+          </p>
+          <button type="button" onClick={() => setPicked(null)}
+            style={{ display: 'block', margin: '8px auto 0', minHeight: 44, background: 'none', border: 'none', color: palette.INK2,
+              fontFamily: SANS, fontSize: 13.5, textDecoration: 'underline', cursor: 'pointer' }}>
+            Cancel
+          </button>
+        </div>
+      )}
+
       {!KIDS_ZOOM_BOOKING_OPEN && (
-        <p data-placeholder="kids-pricing" style={{ maxWidth: 640, margin: '20px auto 0', textAlign: 'center',
-          fontFamily: SANS, fontSize: 12.5, fontWeight: 700, color: palette.BROWN }}>
+        <p style={{ maxWidth: 640, margin: '20px auto 0', textAlign: 'center', fontFamily: SANS, fontSize: 12.5, fontWeight: 700, color: palette.BROWN }}>
           Online booking opens here shortly. To reserve a place now, message us on WhatsApp or email and we will set it up with you.
         </p>
       )}
@@ -413,7 +496,7 @@ export default function KidsMindGymSales() {
                 fontFamily: SANS, fontSize: 11.5, fontWeight: 800, letterSpacing: '0.1em',
                 textTransform: 'uppercase',
               }}>
-                <Sparkles size={14} /> Yours to keep
+                <Sparkles size={14} /> Filled in daily
               </div>
             </div>
 
@@ -425,21 +508,21 @@ export default function KidsMindGymSales() {
                 fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.2em',
                 textTransform: 'uppercase', color: palette.ON_BAND_ACCENT, marginBottom: 18,
               }}>
-                Printed diary provided · Digital diary in Mind Gym
+                Daily diary · Inside the Mind Gym
               </span>
 
               <h2 style={{
                 fontFamily: SERIF, fontSize: 'clamp(30px, 4vw, 50px)', fontWeight: 400,
                 lineHeight: 1.1, letterSpacing: '-0.015em', color: palette.ON_BAND, margin: '0 0 16px',
               }}>
-                One diary on paper.<br />One inside the Mind Gym.
+                A daily diary,<br />inside the Mind Gym.
               </h2>
 
               <p style={{
                 fontFamily: SANS, fontSize: 15.5, lineHeight: 1.7,
                 color: palette.ON_BAND_SOFT, margin: '0 0 24px', maxWidth: 460,
               }}>
-                Your child gets this printed daily diary to fill in by hand. The Kids Mind Gym has a digital diary with the same kind of daily guidance, so the practice carries on every day — on paper, on screen, or both.
+                The Kids Mind Gym has a digital diary your child fills in each day, with the same daily guidance as the chart shown here: seven small practices, tracked in thought, word and action.
               </p>
 
               <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'grid', gap: 10 }}>
@@ -834,6 +917,8 @@ export default function KidsMindGymSales() {
         </div>
       </section>
 
+      <KidsWallOfFame palette={palette} />
+
       {/* Zoom class */}
       <section id="zoom" style={sec()}>
         <SectionTitle palette={palette} kicker="Live Zoom class" title="Learn together, live"
@@ -857,7 +942,7 @@ export default function KidsMindGymSales() {
         <ZoomPlans palette={palette} />
         <p style={{ textAlign: 'center', fontSize: 12.5, color: palette.INK2, margin: '18px auto 0', maxWidth: 560 }}>
           <ShieldCheck size={14} style={{ verticalAlign: '-2px' }} aria-hidden="true" /> Payments by Razorpay{' '}
-          (PayPal where available). Subscriptions renew until cancelled. 100% money-back guarantee, no questions asked: any time on the monthly plan, and within the first 30 days on the yearly plan. After that you can still cancel the yearly plan any time and it simply will not renew. To cancel or ask for a refund, email or WhatsApp us; refunds go back to your original payment method, typically within 5–7 business days.{' '}
+          and PayPal. One-time payment, no auto-renewal. 100% money-back guarantee, no questions asked: any time on the monthly plan, and within the first 30 days on the yearly plan. To cancel or ask for a refund, email or WhatsApp us; refunds go back to your original payment method, typically within 5–7 business days.{' '}
           <a href="/policies#refund" style={{ color: palette.PURPLE_STRONG, display: "inline-block", padding: "14px 6px" }}>Policies</a>
         </p>
       </section>

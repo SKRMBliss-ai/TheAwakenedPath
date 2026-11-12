@@ -6,18 +6,16 @@
 //   Yearly   3 months free = 9 × monthly → $171 / ₹13,491
 // Guarantee: 100% money back — any time on monthly, first 30 days on yearly.
 //
-// ⚠ Booking is still OFF (KIDS_ZOOM_BOOKING_OPEN). To open it:
-//   1. Add `kids_zoom_monthly` and `kids_zoom_yearly` to SUBSCRIPTION_PLANS and
-//      SUBSCRIPTION_PLANS_INR in functions/index.js with the SAME amounts as
-//      below, and deploy that function. The backend rejects unknown plan ids.
-//   2. Optionally set `paypalPlanId` (P-xxxx) to show the PayPal button too.
-//   3. Set the class time in KIDS_ZOOM_SCHEDULE.
-//   4. Flip KIDS_ZOOM_BOOKING_OPEN to true.
+// Sold as ONE-TIME passes (no auto-renewal) through the same guest checkout as
+// the Feelings course: Razorpay + PayPal + Google Pay. The amounts are charged
+// by the backend from COURSE_PRICES / COURSE_PRICES_INR in functions/index.js
+// (ids kids_zoom_monthly / kids_zoom_yearly) — change BOTH places together.
+// KIDS_ZOOM_BOOKING_OPEN = false switches the buy buttons off.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type KidsCurrency = 'USD' | 'INR';
 
-export const KIDS_ZOOM_BOOKING_OPEN = false;
+export const KIDS_ZOOM_BOOKING_OPEN = true;
 
 /** Months charged for the yearly plan (12 months for the price of 9). */
 export const KIDS_ZOOM_YEARLY_PAID_MONTHS = 9;
@@ -38,10 +36,8 @@ function detectCurrency(): KidsCurrency {
 export const KIDS_ZOOM_CURRENCY: KidsCurrency = detectCurrency();
 
 export interface KidsZoomPlan {
-  /** Backend plan key — must exist in functions/index.js before booking opens. */
-  razorpayPlanId: string;
-  /** PayPal Billing Plan id (P-xxx). Empty = no PayPal button. */
-  paypalPlanId: string;
+  /** Backend product id — a key of COURSE_PRICES in functions/index.js. */
+  productId: string;
   /** Price per billing period in major units of KIDS_ZOOM_CURRENCY. */
   price: number | null;
   label: string;
@@ -50,15 +46,13 @@ export interface KidsZoomPlan {
 
 export const KIDS_ZOOM_PLANS: { monthly: KidsZoomPlan; yearly: KidsZoomPlan } = {
   monthly: {
-    razorpayPlanId: 'kids_zoom_monthly',
-    paypalPlanId: '',
+    productId: 'kids_zoom_monthly',
     price: MONTHLY[KIDS_ZOOM_CURRENCY],
     label: 'Monthly',
     period: 'month',
   },
   yearly: {
-    razorpayPlanId: 'kids_zoom_yearly',
-    paypalPlanId: '',
+    productId: 'kids_zoom_yearly',
     price: MONTHLY[KIDS_ZOOM_CURRENCY] * KIDS_ZOOM_YEARLY_PAID_MONTHS,
     label: 'Yearly',
     period: 'year',

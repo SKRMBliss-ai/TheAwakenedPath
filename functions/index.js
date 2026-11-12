@@ -177,7 +177,11 @@ const COURSE_PRICES = {
     "the-watcher-identity": 14.99,
     "tired-of-searching-guru": 14.99,
     "track_2": 14.99,
-    "you-are-space": 14.99
+    "you-are-space": 14.99,
+    // Kids live Zoom class passes (one-time payments, no auto-renewal).
+    // Keep in sync with src/features/landing/kidsPricing.ts.
+    "kids_zoom_monthly": 19,
+    "kids_zoom_yearly": 171
 };
 
 // COURSE_PRICES mixes real courses with individually-purchasable soundscape
@@ -185,7 +189,8 @@ const COURSE_PRICES = {
 // `purchasedCourses`. List the courses explicitly rather than excluding them
 // one by one, so a new course added above cannot silently leak into the
 // track library (which is how emotion_feelings_course ended up there).
-const COURSE_IDS = new Set(['emotion_feelings_course', 'wisdom_untethered', 'all_access']);
+const COURSE_IDS = new Set(['emotion_feelings_course', 'wisdom_untethered', 'all_access', 'kids_zoom_monthly', 'kids_zoom_yearly']);
+const isKidsZoomPass = (id) => id === 'kids_zoom_monthly' || id === 'kids_zoom_yearly';
 const isSoundscapeTrack = (id) => !!COURSE_PRICES[id] && !COURSE_IDS.has(id);
 
 const COURSE_PRICES_INR = {
@@ -204,7 +209,9 @@ const COURSE_PRICES_INR = {
     "the-watcher-identity": 899,
     "tired-of-searching-guru": 899,
     "track_2": 899,
-    "you-are-space": 899
+    "you-are-space": 899,
+    "kids_zoom_monthly": 1499,
+    "kids_zoom_yearly": 13491
 };
 
 // Multi-currency pricing. INR/USD tables above cover every course; the extra
@@ -1044,7 +1051,15 @@ async function grantPurchase({
 
     // Send the right email: guests must be told to sign up with THIS email
     // to unlock; existing users get the standard welcome.
-    if (userEmail) {
+    if (isKidsZoomPass(courseId)) {
+        // A class booking, not app access: confirm to the parent and tell the
+        // team so someone sends the Zoom link. Never the course-access email.
+        try {
+            await sendKidsZoomBookingEmails({ toEmail: userEmail, phone: String(guestPhone || '').trim(), courseId, amount, currency, paymentId, provider });
+        } catch (emailErr) {
+            console.error("Failed to send kids Zoom booking emails:", emailErr);
+        }
+    } else if (userEmail) {
         try {
             if (isGuest) {
                 await sendGuestAccessEmail(userEmail);
@@ -2593,6 +2608,41 @@ async function sendWelcomeEmail(toEmail, planName) {
  * Guest checkout confirmation — the buyer has no account yet, so the ONE thing
  * they must do is create an account with THIS SAME email to unlock the course.
  */
+async function sendKidsZoomBookingEmails({ toEmail, phone, courseId, amount, currency, paymentId, provider }) {
+    const transporter = getTransporter();
+    const plan = courseId === 'kids_zoom_yearly' ? 'Yearly (12 months)' : 'Monthly (1 month)';
+    const guarantee = courseId === 'kids_zoom_yearly'
+        ? '100% money back within the first 30 days, no questions asked.'
+        : '100% money back any time, no questions asked.';
+    await transporter.sendMail({
+        from: '"SKRM Bliss AI" <skrmblissai@gmail.com>',
+        to: ADMIN_EMAILS.join(', '),
+        subject: `New Kids Zoom class booking — ${plan}`,
+        html: `<div style="font-family:sans-serif;padding:20px;">
+            <h2 style="color:#4A3260;">New Kids Zoom class booking</h2>
+            <p><strong>Plan:</strong> ${plan}</p>
+            <p><strong>Email:</strong> ${toEmail || 'N/A'}</p>
+            <p><strong>Phone:</strong> ${phone || 'N/A'}</p>
+            <p><strong>Paid:</strong> ${currency || ''} ${amount ?? ''} via ${provider || ''} (${paymentId || ''})</p>
+            <p>Please send the Zoom link and class times to this parent.</p>
+        </div>`,
+    });
+    if (!toEmail) return;
+    await transporter.sendMail({
+        from: '"Soulful Intelligence" <connect@skrmblissai.in>',
+        to: toEmail,
+        subject: "Your child's place in the Kids Zoom class is booked",
+        html: `<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:24px;color:#3A342C;line-height:1.6;">
+            <h2 style="color:#4A3260;">Thank you — your booking is confirmed</h2>
+            <p>Plan: <strong>${plan}</strong> · Paid: ${currency || ''} ${amount ?? ''}</p>
+            <p>Classes run every Friday, Saturday and Sunday on Zoom. We will send your Zoom link and class times to this email address${phone ? ' and on WhatsApp' : ''} shortly.</p>
+            <p>${guarantee} To cancel or ask for a refund, reply to this email or message us on WhatsApp at +91 82175 81238.</p>
+            <p>This is a one-time payment. It does not renew automatically.</p>
+            <p>With warmth,<br/>Sim Katyal &amp; the Soulful Intelligence team</p>
+        </div>`,
+    });
+}
+
 async function sendGuestAccessEmail(toEmail) {
     const transporter = getTransporter();
     // ?claim=1 makes Mind Gym open the real sign-in screen (Google /
