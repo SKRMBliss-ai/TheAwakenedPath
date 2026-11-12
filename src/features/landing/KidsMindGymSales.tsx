@@ -27,7 +27,7 @@ import {
   KIDS_ZOOM_PLANS, KIDS_ZOOM_CURRENCY, KIDS_ZOOM_SCHEDULE, formatKidsPrice, kidsZoomYearlyMath,
   type KidsZoomPlan,
 } from './kidsPricing';
-import { KIDS_REGISTER_PATH, KIDS_TITLE, KIDS_DAYS, KIDS_CHART_IMG, trackKids } from './kidsChallengeData';
+import { KIDS_REGISTER_PATH, KIDS_TITLE, KIDS_DAYS, KIDS_CHART_IMG, KIDS_TAGLINE, KIDS_TIME, trackKids } from './kidsChallengeData';
 
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS = "'Outfit', system-ui, -apple-system, sans-serif";
@@ -248,8 +248,10 @@ export default function KidsMindGymSales() {
             </span>
             <h1 style={{ fontFamily: SERIF, fontSize: 'clamp(38px, 6vw, 66px)', fontWeight: 400, lineHeight: 1.08,
               letterSpacing: '-0.02em', margin: '0 0 16px' }}>
-              Big feelings, <span style={{ color: palette.BROWN }}>small steps.</span>
+              Let&rsquo;s Be Our <span style={{ color: palette.BROWN }}>Best</span> Every Day!
             </h1>
+            <p style={{ fontFamily: SERIF, fontSize: 'clamp(18px, 2.3vw, 24px)', fontStyle: 'italic', color: palette.INK2,
+              margin: '0 0 18px', lineHeight: 1.5 }}>{KIDS_TAGLINE}</p>
             <p style={{ fontSize: 17, lineHeight: 1.7, color: palette.INK2, margin: '0 0 24px', maxWidth: 520 }}>
               The Kids Mind Gym gives your child a playful place to notice what they feel, calm down and make kind choices — through
               games, stories and a daily diary. A few minutes at a time, with you alongside.
@@ -262,7 +264,15 @@ export default function KidsMindGymSales() {
               Practice and play for emotional skills. Not therapy or medical care.
             </p>
           </div>
-          <div id="ad"><KidsVideo video={KIDS_AD_VIDEO} palette={palette} large /></div>
+          <figure className="mgk-card" style={{ margin: 0, borderRadius: 32, overflow: 'hidden',
+            border: `1px solid ${palette.BAND_BORDER}`, background: palette.BAND }}>
+            <img src={KIDS_CHART_IMG}
+              alt="Sim Katyal with her son, holding the Let's Be Our Best Every Day! daily diary chart"
+              style={{ width: '100%', height: 'auto', display: 'block' }} />
+            <figcaption style={{ padding: '12px 18px', fontSize: 13.5, fontWeight: 700, color: palette.ON_BAND, textAlign: 'center' }}>
+              Guided by Sim Katyal · Guide
+            </figcaption>
+          </figure>
         </div>
       </header>
 
@@ -293,25 +303,11 @@ export default function KidsMindGymSales() {
         </div>
       </section>
 
-      {/* Guide — the earlier Sim + diary banner, shown as is */}
-      <section id="guide" style={sec()}>
-        <SectionTitle palette={palette} kicker="Your guide" title="Guided by Sim Katyal"
-          sub="Sim is a mum who began this work to help her own young son understand his feelings, and now shares the same simple tools with other families." />
-        <figure className="mgk-card" style={{ ...wrap, maxWidth: 900, margin: '0 auto', borderRadius: 28, overflow: 'hidden',
-          border: `1px solid ${palette.BAND_BORDER}`, background: palette.BAND }}>
-          <img src={KIDS_CHART_IMG} loading="lazy"
-            alt="Sim Katyal with her son and the Let's Be Our Best Every Day! poster and daily diary"
-            style={{ width: '100%', height: 'auto', display: 'block' }} />
-          <figcaption style={{ padding: '12px 18px', fontSize: 13.5, fontWeight: 700, color: palette.ON_BAND, textAlign: 'center' }}>
-            Guided by Sim Katyal · Guide, Soulful Intelligence
-          </figcaption>
-        </figure>
-      </section>
-
       {/* See inside */}
       <section id="see-inside" style={{ ...sec(), background: palette.BAND, color: palette.ON_BAND }}>
         <SectionTitle palette={{ ...palette, INK: palette.ON_BAND, INK2: palette.ON_BAND_SOFT, BROWN: palette.ON_BAND_ACCENT }}
-          kicker="See inside" title="A short guide for every area" sub="Eight quick videos, one for each part of the Kids Mind Gym." />
+          kicker="See inside" title="A short guide for every area" sub="Start with the short film, then eight quick videos, one for each part of the Kids Mind Gym." />
+        <div id="ad" style={{ ...wrap, maxWidth: 820, marginBottom: 28 }}><KidsVideo video={KIDS_AD_VIDEO} palette={palette} large /></div>
         <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 18 }}>
           {KIDS_GUIDE_VIDEOS.map((g) => (
             <figure key={g.name} style={{ margin: 0 }}>
@@ -396,6 +392,23 @@ export default function KidsMindGymSales() {
             A playful 3-day weekend challenge on Zoom, Friday to Sunday: {KIDS_DAYS.map((d) => d.title).join(', ')}. Registration is free
             and donation-based; details are sent after you register.
           </p>
+          <div style={{ border: `1px solid ${border}`, borderRadius: 18, padding: '16px 18px', margin: '0 0 18px', maxWidth: 460 }}>
+            <p style={{ margin: '0 0 2px', fontFamily: SERIF, fontSize: 21 }}>Session schedule</p>
+            <p style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 700, color: palette.INK2 }}>
+              Every Friday · Saturday · Sunday · 30–40 minutes · {KIDS_TIME}
+            </p>
+            {[
+              ['India (IST)', '8:30 PM'], ['USA – New York (ET)', '11:00 AM'], ['USA – Chicago (CT)', '10:00 AM'],
+              ['USA – Denver (MT)', '9:00 AM'], ['USA – Los Angeles (PT)', '8:00 AM'],
+            ].map(([place, t]) => (
+              <div key={place} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 14, fontWeight: 600, padding: '4px 0' }}>
+                <span>{place}</span><span>{t}</span>
+              </div>
+            ))}
+            <p style={{ margin: '10px 0 0', fontSize: 11.5, color: palette.INK2 }}>
+              Times may change with daylight saving. Please check your local time at registration.
+            </p>
+          </div>
           <Cta palette={palette} label="Register for the challenge" href={KIDS_REGISTER_PATH} event="KIDS_CHALLENGE_CTA" ghost />
         </div>
       </section>
