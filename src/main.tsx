@@ -4,7 +4,7 @@ import UntetheredApp from './UntetheredSoulApp'
 import AboutJournal from './features/landing/AboutJournal'
 import EmotionalHealthCheck from './features/landing/EmotionalHealthCheck'
 import EmotionFeelingsCourse from './features/landing/EmotionFeelingsCourse'
-import KidsChallenge from './features/landing/KidsChallenge'
+import KidsMindGymSales from './features/landing/KidsMindGymSales'
 import KidsChallengeFlyer from './features/landing/KidsChallengeFlyer'
 import KidsChallengeRegister from './features/landing/KidsChallengeRegister';
 import Policies from './features/landing/Policies'
@@ -332,8 +332,8 @@ if (isAdminRoute) {
 
 } else if (isKidsChallengeRoute) {
   root.render(
-    <ErrorBoundary featureName="KidsChallenge">
-      <KidsChallenge />
+    <ErrorBoundary featureName="KidsMindGymSales">
+      <KidsMindGymSales />
       <SiteWidgets />
     </ErrorBoundary>,
   );
