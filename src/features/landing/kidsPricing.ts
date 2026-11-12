@@ -18,6 +18,16 @@ export type KidsCurrency = 'USD' | 'INR';
 
 export const KIDS_ZOOM_BOOKING_OPEN = true;
 
+/**
+ * false (now): one-time payment for a month / a year through the course
+ *   checkout (Razorpay, PayPal, Google Pay). Works today.
+ * true: recurring Razorpay subscription (plans kids_membership_* are already on
+ *   the backend). Turn on ONLY after Subscriptions is enabled on the Razorpay
+ *   account — on 12 Nov 2026 Razorpay answered every subscription request,
+ *   including the existing premium_monthly plan, with 401 Unauthorized.
+ */
+export const KIDS_MEMBERSHIP_RECURRING = false;
+
 /** Months charged for the yearly plan (12 months for the price of 9). */
 export const KIDS_ZOOM_YEARLY_PAID_MONTHS = 9;
 export const KIDS_ZOOM_YEARLY_GUARANTEE_DAYS = 30;
@@ -37,8 +47,10 @@ function detectCurrency(): KidsCurrency {
 export const KIDS_ZOOM_CURRENCY: KidsCurrency = detectCurrency();
 
 export interface KidsZoomPlan {
-  /** Backend plan id — a key of SUBSCRIPTION_PLANS in functions/index.js. */
+  /** Recurring: a key of SUBSCRIPTION_PLANS in functions/index.js. */
   productId: string;
+  /** One-time: a key of COURSE_PRICES in functions/index.js. */
+  oneTimeProductId: string;
   /** Price per billing period in major units of KIDS_ZOOM_CURRENCY. */
   price: number | null;
   label: string;
@@ -48,12 +60,14 @@ export interface KidsZoomPlan {
 export const KIDS_ZOOM_PLANS: { monthly: KidsZoomPlan; yearly: KidsZoomPlan } = {
   monthly: {
     productId: 'kids_membership_monthly',
+    oneTimeProductId: 'kids_zoom_monthly',
     price: MONTHLY[KIDS_ZOOM_CURRENCY],
     label: 'Monthly',
     period: 'month',
   },
   yearly: {
     productId: 'kids_membership_yearly',
+    oneTimeProductId: 'kids_zoom_yearly',
     price: MONTHLY[KIDS_ZOOM_CURRENCY] * KIDS_ZOOM_YEARLY_PAID_MONTHS,
     label: 'Yearly',
     period: 'year',

@@ -19,11 +19,12 @@ import { useSiteTheme, type Palette } from '../../lib/siteTheme';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
 import KidsBackdrop from '../../components/site/KidsBackdrop';
 import { useRazorpay } from '../../hooks/useRazorpay';
+import { usePaypal } from '../../hooks/usePaypal';
 import KidsVideo from './components/KidsVideo';
 import KidsWallOfFame from './components/KidsWallOfFame';
 import { KIDS_AD_VIDEO, KIDS_GUIDE_VIDEOS } from './kidsVideos';
 import {
-  KIDS_ZOOM_PLANS, KIDS_ZOOM_CURRENCY, KIDS_ZOOM_SCHEDULE, KIDS_ZOOM_BOOKING_OPEN, formatKidsPrice, kidsZoomYearlyMath,
+  KIDS_ZOOM_PLANS, KIDS_ZOOM_CURRENCY, KIDS_ZOOM_SCHEDULE, KIDS_ZOOM_BOOKING_OPEN, KIDS_MEMBERSHIP_RECURRING, formatKidsPrice, kidsZoomYearlyMath,
   type KidsZoomPlan,
 } from './kidsPricing';
 import FeaturedCourse from './components/FeaturedCourse';
@@ -67,7 +68,9 @@ const FAQ = [
   { q: 'What ages is it for?', a: 'It is designed for children about 5 to 10. Younger children can join with a grown-up reading along; older children may prefer to explore on their own.' },
   { q: 'Does my child need me with them?', a: 'We suggest a grown-up joins for the first sessions, then stays nearby. The grown-up section explains how to support at home.' },
   { q: 'What does membership include?', a: 'The full Kids Mind Gym app, plus live Zoom classes for kids run by the Soulful Intelligence team every Friday, Saturday and Sunday. The Zoom classes are included in the membership; there is nothing extra to pay.' },
-  { q: 'Can I cancel?', a: 'Yes, any time. Membership renews automatically each month or year until you cancel; email or WhatsApp us and we stop it. Our 100% money-back guarantee applies, no questions asked: any time on the monthly plan, and within the first 30 days on the yearly plan. Refunds go to your original payment method, typically within 5–7 business days.' },
+  { q: 'Can I cancel?', a: (KIDS_MEMBERSHIP_RECURRING
+    ? 'Yes, any time. Membership renews automatically each month or year until you cancel; email or WhatsApp us and we stop it.'
+    : 'Yes. Membership is a one-time payment for a month or a year and never renews on its own, so there is nothing to cancel later.') + ' Our 100% money-back guarantee applies, no questions asked: any time on the monthly plan, and within the first 30 days on the yearly plan. Refunds go to your original payment method, typically within 5–7 business days.' },
   { q: 'How do the live Zoom sessions work?', a: 'They follow the three-day rhythm shown on this page: Meet Yourself on Friday, Understand Yourself on Saturday and Grow Yourself on Sunday, 30 to 40 minutes each. They are included with Kids Mind Gym membership, and we send the Zoom link by email after you join.' },
 ];
 
@@ -107,11 +110,21 @@ function SectionTitle({ palette, kicker, title, sub }: { palette: Palette; kicke
   );
 }
 
-/** Kids Mind Gym membership (app + live Zoom classes included), billed as a
- *  recurring Razorpay subscription. A subscription has to belong to an account,
- *  so the parent signs in first (Google here, or email via /mindgym). */
+/** Kids Mind Gym membership (app + live Zoom classes included). Two billing
+ *  modes, switched by KIDS_MEMBERSHIP_RECURRING in kidsPricing.ts:
+ *   - one-time (default): guest checkout like the Feelings course — Razorpay,
+ *     PayPal (with Apple Pay where offered) and Google Pay; the parent renews
+ *     by paying again.
+ *   - recurring: a Razorpay subscription, which needs a signed-in account. */
 function ZoomPlans({ palette }: { palette: Palette }) {
-  const { subscribe, isProcessing } = useRazorpay();
+  const { subscribe, checkOut, isProcessing } = useRazorpay();
+  const { renderCheckout, renderGooglePay, isAvailable: paypalAvailable } = usePaypal();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const emailOk = email.includes('@') && !!email.split('@')[1]?.includes('.');
+  const formReady = name.trim().length > 0 && emailOk;
+  const recurring = KIDS_MEMBERSHIP_RECURRING;
   const math = kidsZoomYearlyMath();
   const cardBg = palette.CARD;
   const [picked, setPicked] = useState<KidsZoomPlan | null>(null);
@@ -122,6 +135,43 @@ function ZoomPlans({ palette }: { palette: Palette }) {
 
   // Mind Gym creates anonymous accounts for quick entry; those cannot hold a membership.
   useEffect(() => onAuthStateChanged(getAuth(), (u) => setUser(u && !u.isAnonymous ? u : null)), []);
+
+  const onPaidOnce = (plan: KidsZoomPlan, paidEmail: string) => {
+    trackKids(`KIDS_MEMBERSHIP_PAID_${plan.period.toUpperCase()}`, undefined, plan.oneTimeProductId, paidEmail);
+    setPicked(null);
+    setDone(paidEmail);
+  };
+
+  // One-time mode: PayPal (and Apple Pay inside it) + Google Pay render once the form is valid.
+  useEffect(() => {
+    if (recurring || !picked || !formReady || !KIDS_ZOOM_BOOKING_OPEN) return;
+    const userId = getAuth().currentUser?.uid || 'guest_pending';
+    const paidEmail = email.trim();
+    const plan = picked;
+    const t = setTimeout(() => {
+      renderCheckout('kids-paypal-container', userId, paidEmail, plan.oneTimeProductId, KIDS_ZOOM_CURRENCY,
+        () => onPaidOnce(plan, paidEmail), phone.trim());
+      renderGooglePay('kids-googlepay-container', userId, paidEmail, plan.oneTimeProductId, KIDS_ZOOM_CURRENCY,
+        () => onPaidOnce(plan, paidEmail), phone.trim());
+    }, 500);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recurring, picked, formReady, name, email, phone]);
+
+  const payOnce = () => {
+    if (!picked || !formReady) return;
+    const plan = picked;
+    const paidEmail = email.trim();
+    const userId = getAuth().currentUser?.uid || 'guest_pending';
+    trackKids(`KIDS_MEMBERSHIP_PAY_CLICK_${plan.period.toUpperCase()}`);
+    checkOut(userId, paidEmail, name.trim(), plan.oneTimeProductId, KIDS_ZOOM_CURRENCY, () => onPaidOnce(plan, paidEmail), phone.trim());
+  };
+
+  const input: React.CSSProperties = {
+    width: '100%', minHeight: 48, borderRadius: 14, border: `1px solid ${palette.BORDER}`, background: palette.BG,
+    color: palette.INK, fontFamily: SANS, fontSize: 16, padding: '10px 14px', boxSizing: 'border-box',
+  };
+  const label: React.CSSProperties = { display: 'block', fontSize: 12.5, fontWeight: 700, color: palette.INK2, marginBottom: 6 };
 
   const pick = (plan: KidsZoomPlan) => {
     if (plan.price == null || !KIDS_ZOOM_BOOKING_OPEN) return;
@@ -190,7 +240,7 @@ function ZoomPlans({ palette }: { palette: Palette }) {
             'Live Zoom classes included',
             featured
               ? `12 months for the price of 9${perMonth ? `, about ${perMonth} a month` : ''}`
-              : 'Renews monthly, cancel any time',
+              : (recurring ? 'Renews monthly, cancel any time' : 'One month at a time, no auto-renewal'),
             featured ? '100% money back in the first 30 days' : '100% money back, any time',
           ].map((line) => (
             <li key={line} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
@@ -233,10 +283,38 @@ function ZoomPlans({ palette }: { palette: Palette }) {
             Kids Mind Gym membership · {picked.label}
           </h3>
           <p style={{ margin: '0 0 16px', fontSize: 14, color: palette.INK2 }}>
-            {formatKidsPrice(picked.price as number)} a {picked.period} · app and live Zoom classes · renews each {picked.period} until you cancel
+            {formatKidsPrice(picked.price as number)} a {picked.period} · app and live Zoom classes ·{' '}
+            {recurring ? `renews each ${picked.period} until you cancel` : 'one-time payment, no auto-renewal'}
           </p>
 
-          {!user ? (
+          {!recurring ? (
+            <>
+              <div style={{ display: 'grid', gap: 12 }}>
+                <label><span style={label}>Parent or guardian name</span>
+                  <input style={input} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" /></label>
+                <label><span style={label}>Email (your Zoom link is sent here)</span>
+                  <input style={input} type="email" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" /></label>
+                <label><span style={label}>WhatsApp number (optional)</span>
+                  <input style={input} type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" /></label>
+              </div>
+              <button type="button" onClick={payOnce} disabled={!formReady || isProcessing}
+                style={{ ...bigBtn(formReady), marginTop: 16, opacity: isProcessing ? 0.7 : 1 }}>
+                {isProcessing ? 'Opening secure payment…' : `Join for ${formatKidsPrice(picked.price as number)} — card, UPI or wallet`}
+              </button>
+              {formReady && paypalAvailable !== false && (
+                <>
+                  <p style={{ textAlign: 'center', fontSize: 12, color: palette.INK2, margin: '14px 0 8px' }}>or pay with</p>
+                  <div id="kids-googlepay-container" style={{ marginBottom: 8 }} />
+                  <div id="kids-paypal-container" />
+                </>
+              )}
+              {!formReady && (
+                <p style={{ textAlign: 'center', fontSize: 12, color: palette.INK2, margin: '12px 0 0' }}>
+                  Enter your name and email to see all payment options.
+                </p>
+              )}
+            </>
+          ) : !user ? (
             <>
               <p style={{ margin: '0 0 12px', fontSize: 14, lineHeight: 1.6, color: palette.INK2 }}>
                 First, sign in so the membership is saved to your account. Your child uses the same sign-in to open the Mind Gym.
@@ -943,7 +1021,10 @@ export default function KidsMindGymSales() {
         </div>
         <ZoomPlans palette={palette} />
         <p style={{ textAlign: 'center', fontSize: 12.5, color: palette.INK2, margin: '18px auto 0', maxWidth: 560 }}>
-          <ShieldCheck size={14} style={{ verticalAlign: '-2px' }} aria-hidden="true" /> Payments by Razorpay. Membership renews automatically each month or year until you cancel. 100% money-back guarantee, no questions asked: any time on the monthly plan, and within the first 30 days on the yearly plan. To cancel or ask for a refund, email or WhatsApp us; refunds go back to your original payment method, typically within 5–7 business days.{' '}
+          <ShieldCheck size={14} style={{ verticalAlign: '-2px' }} aria-hidden="true" /> {KIDS_MEMBERSHIP_RECURRING
+            ? 'Payments by Razorpay. Membership renews automatically each month or year until you cancel.'
+            : 'Payments by Razorpay and PayPal. One-time payment for a month or a year; it never renews on its own.'}{' '}
+          100% money-back guarantee, no questions asked: any time on the monthly plan, and within the first 30 days on the yearly plan. To cancel or ask for a refund, email or WhatsApp us; refunds go back to your original payment method, typically within 5–7 business days.{' '}
           <a href="/policies#refund" style={{ color: palette.PURPLE_STRONG, display: "inline-block", padding: "14px 6px" }}>Policies</a>
         </p>
       </section>
