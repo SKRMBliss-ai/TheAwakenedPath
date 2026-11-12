@@ -15,7 +15,7 @@ import TinyTransformation from './components/TinyTransformation';
 import FeatureGrid from './components/FeatureGrid';
 import FeaturedCourse from './components/FeaturedCourse';
 import KidsChallengeCrossSell from './components/KidsChallengeCrossSell';
-import { KIDS_REGISTER_PATH, trackKids } from './kidsChallengeData';
+import { trackKids } from './kidsChallengeData';
 import InteractiveReflection from './components/InteractiveReflection';
 import YouTubeSection from './components/YouTubeSection';
 import FreeGuides from './components/FreeGuides';
