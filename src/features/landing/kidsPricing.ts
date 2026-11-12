@@ -1,67 +1,85 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Kids Zoom class — pricing, plan IDs and schedule.
+// Kids Zoom class — pricing, plan IDs and schedule. One place for all of it.
 //
-// ⚠ PLACEHOLDERS. Nothing here is a real price. The owner must fill in every
-// field marked TODO below. While `price` is null the sales page shows
-// "Price to be confirmed" and the buy buttons stay disabled, so nothing can be
-// charged at an invented amount.
+// Prices were chosen by the owner (Nov 2026):
+//   Monthly  $19 / ₹1,499
+//   Yearly   3 months free = 9 × monthly → $171 / ₹13,491
+// Guarantee: 100% money back — any time on monthly, first 30 days on yearly.
 //
-// To go live:
-//   1. Set `price` (major units of `currency`, e.g. 19 for $19) for both plans.
-//   2. Set `razorpayPlanId` for both plans. The backend
-//      (functions/index.js → createRazorpaySubscription) only accepts plan ids
-//      it knows (today: premium_monthly / premium_yearly), so a matching entry
-//      must be added to SUBSCRIPTION_PLANS / SUBSCRIPTION_PLANS_INR there with
-//      the same id and price. That is a functions deploy, kept out of this change.
-//   3. Optionally set `paypalPlanId` (P-xxxx) to show the PayPal button too.
-//   4. Fill in `KIDS_ZOOM_SCHEDULE`.
+// ⚠ Booking is still OFF (KIDS_ZOOM_BOOKING_OPEN). To open it:
+//   1. Add `kids_zoom_monthly` and `kids_zoom_yearly` to SUBSCRIPTION_PLANS and
+//      SUBSCRIPTION_PLANS_INR in functions/index.js with the SAME amounts as
+//      below, and deploy that function. The backend rejects unknown plan ids.
+//   2. Optionally set `paypalPlanId` (P-xxxx) to show the PayPal button too.
+//   3. Set the class time in KIDS_ZOOM_SCHEDULE.
+//   4. Flip KIDS_ZOOM_BOOKING_OPEN to true.
 // ─────────────────────────────────────────────────────────────────────────────
 
+export type KidsCurrency = 'USD' | 'INR';
+
+export const KIDS_ZOOM_BOOKING_OPEN = false;
+
+/** Months charged for the yearly plan (12 months for the price of 9). */
+export const KIDS_ZOOM_YEARLY_PAID_MONTHS = 9;
+export const KIDS_ZOOM_YEARLY_GUARANTEE_DAYS = 30;
+
+const MONTHLY: Record<KidsCurrency, number> = { USD: 19, INR: 1499 };
+
+/** INR for visitors in India, USD for everyone else (same rule as the course page). */
+function detectCurrency(): KidsCurrency {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return tz === 'Asia/Kolkata' || tz === 'Asia/Calcutta' ? 'INR' : 'USD';
+  } catch {
+    return 'USD';
+  }
+}
+
+export const KIDS_ZOOM_CURRENCY: KidsCurrency = detectCurrency();
+
 export interface KidsZoomPlan {
-  /** Matches the backend plan key. TODO(owner): confirm / add on the backend. */
+  /** Backend plan key — must exist in functions/index.js before booking opens. */
   razorpayPlanId: string;
-  /** PayPal Billing Plan id (P-xxx). Empty = no PayPal button. TODO(owner) */
+  /** PayPal Billing Plan id (P-xxx). Empty = no PayPal button. */
   paypalPlanId: string;
-  /** Price per billing period in major units of `currency`. null = not set. TODO(owner) */
+  /** Price per billing period in major units of KIDS_ZOOM_CURRENCY. */
   price: number | null;
   label: string;
   period: 'month' | 'year';
 }
 
-export const KIDS_ZOOM_CURRENCY: 'USD' | 'INR' = 'USD'; // TODO(owner): confirm
-
 export const KIDS_ZOOM_PLANS: { monthly: KidsZoomPlan; yearly: KidsZoomPlan } = {
   monthly: {
-    razorpayPlanId: 'kids_zoom_monthly', // TODO(owner): placeholder id, not on the backend yet
+    razorpayPlanId: 'kids_zoom_monthly',
     paypalPlanId: '',
-    price: null,
+    price: MONTHLY[KIDS_ZOOM_CURRENCY],
     label: 'Monthly',
     period: 'month',
   },
   yearly: {
-    razorpayPlanId: 'kids_zoom_yearly', // TODO(owner): placeholder id, not on the backend yet
+    razorpayPlanId: 'kids_zoom_yearly',
     paypalPlanId: '',
-    price: null,
+    price: MONTHLY[KIDS_ZOOM_CURRENCY] * KIDS_ZOOM_YEARLY_PAID_MONTHS,
     label: 'Yearly',
     period: 'year',
   },
 };
 
-/** Live class schedule. TODO(owner): all values are placeholders until supplied. */
+/** Live class schedule. Time, length and group size are still to be supplied. */
 export const KIDS_ZOOM_SCHEDULE = {
-  days: null as string | null,          // e.g. "Saturdays"
-  time: null as string | null,          // e.g. "4:00 PM UK time"
-  lengthMinutes: null as number | null, // e.g. 40
+  days: 'Every Friday · Saturday · Sunday' as string | null,
+  time: null as string | null,          // TODO(owner): e.g. "4:00 PM UK time"
+  lengthMinutes: null as number | null, // TODO(owner): e.g. 40
   ages: 'About 5–10 years',
-  groupSize: null as string | null,
+  groupSize: null as string | null,     // TODO(owner)
 };
 
 export const kidsZoomConfigured = () =>
   KIDS_ZOOM_PLANS.monthly.price != null && KIDS_ZOOM_PLANS.yearly.price != null;
 
-export function formatKidsPrice(amount: number, currency = KIDS_ZOOM_CURRENCY): string {
+export function formatKidsPrice(amount: number, currency: KidsCurrency = KIDS_ZOOM_CURRENCY): string {
   try {
-    return new Intl.NumberFormat('en', {
+    return new Intl.NumberFormat(currency === 'INR' ? 'en-IN' : 'en-US', {
       style: 'currency', currency, maximumFractionDigits: amount % 1 ? 2 : 0,
     }).format(amount);
   } catch {

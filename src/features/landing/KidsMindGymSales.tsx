@@ -23,7 +23,7 @@ import { usePaypal } from '../../hooks/usePaypal';
 import KidsVideo from './components/KidsVideo';
 import { KIDS_AD_VIDEO, KIDS_GUIDE_VIDEOS } from './kidsVideos';
 import {
-  KIDS_ZOOM_PLANS, KIDS_ZOOM_CURRENCY, KIDS_ZOOM_SCHEDULE, formatKidsPrice, kidsZoomYearlyMath,
+  KIDS_ZOOM_PLANS, KIDS_ZOOM_CURRENCY, KIDS_ZOOM_SCHEDULE, KIDS_ZOOM_BOOKING_OPEN, formatKidsPrice, kidsZoomYearlyMath,
   type KidsZoomPlan,
 } from './kidsPricing';
 import FeaturedCourse from './components/FeaturedCourse';
@@ -68,7 +68,7 @@ const FAQ = [
   { q: 'What ages is it for?', a: 'It is designed for children about 5 to 10. Younger children can join with a grown-up reading along; older children may prefer to explore on their own.' },
   { q: 'Does my child need me with them?', a: 'We suggest a grown-up joins for the first sessions, then stays nearby. The grown-up section explains how to support at home.' },
   { q: 'What is the Zoom class?', a: 'A live class for kids on Zoom, run by the Soulful Intelligence team, that builds on the Mind Gym practice. It is sold as a monthly or a yearly package. The schedule is shown in the class section once confirmed.' },
-  { q: 'Can I cancel the Zoom class?', a: 'Yes. Monthly and yearly packages are subscriptions, and you can cancel any time by emailing or messaging us on WhatsApp. Our money-back guarantee applies: if the class is not right for your child, we refund you in full, no questions asked, typically within 5–7 business days to your original payment method.' },
+  { q: 'Can I cancel the Zoom class?', a: 'Yes. Monthly and yearly packages are subscriptions, and you can cancel any time by emailing or messaging us on WhatsApp. Our 100% money-back guarantee applies, no questions asked: any time on the monthly plan, and within the first 30 days on the yearly plan. After 30 days a yearly plan can still be cancelled so it does not renew. Refunds go to your original payment method, typically within 5–7 business days.' },
   { q: 'What about the 3-day challenge?', a: 'The free-to-register 3-day weekend challenge is still available. See the section below; registration is on its own page.' },
 ];
 
@@ -121,7 +121,7 @@ function ZoomPlans({ palette }: { palette: Palette }) {
     if (paypalRendered.current) return;
     (['monthly', 'yearly'] as const).forEach((k) => {
       const p = KIDS_ZOOM_PLANS[k];
-      if (p.paypalPlanId && p.price != null) {
+      if (p.paypalPlanId && p.price != null && KIDS_ZOOM_BOOKING_OPEN) {
         paypalRendered.current = true;
         renderSubscription(`kids-paypal-${k}`, p.paypalPlanId, () =>
           showToast('Subscription confirmed — we will email your class details.', { type: 'success' }));
@@ -130,7 +130,7 @@ function ZoomPlans({ palette }: { palette: Palette }) {
   }, [renderSubscription]);
 
   const buy = (plan: KidsZoomPlan) => {
-    if (plan.price == null) return;
+    if (plan.price == null || !KIDS_ZOOM_BOOKING_OPEN) return;
     const user = getAuth().currentUser;
     if (!user) {
       showToast('Please sign in to Mind Gym first, then come back to subscribe.', { type: 'info' });
@@ -144,7 +144,8 @@ function ZoomPlans({ palette }: { palette: Palette }) {
 
   const card = (plan: KidsZoomPlan, featured: boolean) => {
     const priced = plan.price != null;
-    const perMonth = featured && math ? formatKidsPrice(math.perMonth) : null;
+    const canBuy = priced && KIDS_ZOOM_BOOKING_OPEN;
+    const perMonth = featured && math ? formatKidsPrice(KIDS_ZOOM_CURRENCY === 'INR' ? Math.round(math.perMonth) : math.perMonth) : null;
     return (
       <div key={plan.period} className="mgk-card" style={{
         flex: '1 1 280px', maxWidth: 420, background: cardBg, borderRadius: 28, padding: '28px 24px',
@@ -165,19 +166,20 @@ function ZoomPlans({ palette }: { palette: Palette }) {
         </p>
         <p style={{ margin: 0, fontFamily: SANS, fontSize: 13.5, color: palette.INK2, minHeight: 20 }}>
           {featured
-            ? (perMonth ? `Works out to ${perMonth} a month — less than paying monthly.` : 'Billed once a year. Cheaper per month than the monthly plan.')
-            : 'Pay month to month. Cancel any time.'}
+            ? (perMonth ? `12 months for the price of 9. Works out to about ${perMonth} a month.` : 'Billed once a year. Cheaper per month than the monthly plan.')
+            : 'Pay month to month. Cancel any time. 100% money back, any time.'}
+          {featured && priced ? ' 100% money back in the first 30 days.' : ''}
         </p>
-        <button type="button" onClick={() => buy(plan)} disabled={!priced || isProcessing}
+        <button type="button" onClick={() => buy(plan)} disabled={!canBuy || isProcessing}
           aria-label={`Subscribe to the ${plan.label.toLowerCase()} kids Zoom class`}
           style={{
             marginTop: 8, minHeight: 48, borderRadius: 999, border: 'none', fontFamily: SANS, fontSize: 15, fontWeight: 700,
-            background: priced ? palette.PURPLE_STRONG : palette.BORDER, color: priced ? palette.ON_ACCENT : palette.INK2,
-            cursor: priced ? 'pointer' : 'not-allowed', opacity: isProcessing ? 0.7 : 1,
+            background: canBuy ? palette.PURPLE_STRONG : palette.BORDER, color: canBuy ? palette.ON_ACCENT : palette.INK2,
+            cursor: canBuy ? 'pointer' : 'not-allowed', opacity: isProcessing ? 0.7 : 1,
           }}>
-          {priced ? `Join ${plan.label.toLowerCase()}` : 'Opening soon'}
+          {canBuy ? `Join ${plan.label.toLowerCase()}` : 'Booking opens soon'}
         </button>
-        {plan.paypalPlanId && priced && <div id={`kids-paypal-${plan.period === 'month' ? 'monthly' : 'yearly'}`} />}
+        {plan.paypalPlanId && canBuy && <div id={`kids-paypal-${plan.period === 'month' ? 'monthly' : 'yearly'}`} />}
       </div>
     );
   };
@@ -188,10 +190,10 @@ function ZoomPlans({ palette }: { palette: Palette }) {
         {card(KIDS_ZOOM_PLANS.monthly, false)}
         {card(KIDS_ZOOM_PLANS.yearly, true)}
       </div>
-      {!math && (
+      {!KIDS_ZOOM_BOOKING_OPEN && (
         <p data-placeholder="kids-pricing" style={{ maxWidth: 640, margin: '20px auto 0', textAlign: 'center',
           fontFamily: SANS, fontSize: 12.5, fontWeight: 700, color: palette.BROWN }}>
-          Class prices and dates are being finalised. Booking opens here as soon as they are confirmed — message us if you would like to be told.
+          Online booking opens here shortly. To reserve a place now, message us on WhatsApp or email and we will set it up with you.
         </p>
       )}
     </>
@@ -855,7 +857,7 @@ export default function KidsMindGymSales() {
         <ZoomPlans palette={palette} />
         <p style={{ textAlign: 'center', fontSize: 12.5, color: palette.INK2, margin: '18px auto 0', maxWidth: 560 }}>
           <ShieldCheck size={14} style={{ verticalAlign: '-2px' }} aria-hidden="true" /> Payments by Razorpay{' '}
-          (PayPal where available). Subscriptions renew until cancelled. Money-back guarantee, the same as our course policy: if the class is not right for your child, tell us any time and we refund you in full, no questions asked. To cancel or ask for a refund, email or WhatsApp us; refunds go back to your original payment method, typically within 5–7 business days.{' '}
+          (PayPal where available). Subscriptions renew until cancelled. 100% money-back guarantee, no questions asked: any time on the monthly plan, and within the first 30 days on the yearly plan. After that you can still cancel the yearly plan any time and it simply will not renew. To cancel or ask for a refund, email or WhatsApp us; refunds go back to your original payment method, typically within 5–7 business days.{' '}
           <a href="/policies#refund" style={{ color: palette.PURPLE_STRONG, display: "inline-block", padding: "14px 6px" }}>Policies</a>
         </p>
       </section>
