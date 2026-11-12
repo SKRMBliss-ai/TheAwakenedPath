@@ -29,7 +29,7 @@ import {
 import FeaturedCourse from './components/FeaturedCourse';
 import {
   KIDS_REGISTER_PATH, KIDS_TITLE, KIDS_DAYS, KIDS_CHART_IMG, KIDS_TAGLINE, KIDS_TIME, KIDS_AGE_BANDS, KIDS_INCLUDES,
-  KIDS_ONLY_DIARY_IMG, KIDS_TEACHER_IMG, KIDS_TEACHER_POINTS, KIDS_TEACHER_QUOTE, KIDS_POSTER_IMG, trackKids,
+  KIDS_ONLY_DIARY_IMG, KIDS_TEACHER_IMG, KIDS_TEACHER_POINTS, KIDS_TEACHER_QUOTE, trackKids,
 } from './kidsChallengeData';
 
 const SERIF = "'Cormorant Garamond', Georgia, serif";
@@ -855,7 +855,7 @@ export default function KidsMindGymSales() {
         <ZoomPlans palette={palette} />
         <p style={{ textAlign: 'center', fontSize: 12.5, color: palette.INK2, margin: '18px auto 0', maxWidth: 560 }}>
           <ShieldCheck size={14} style={{ verticalAlign: '-2px' }} aria-hidden="true" /> Payments by Razorpay{' '}
-          (PayPal where available). Subscriptions renew until cancelled.{' '}
+          (PayPal where available). Subscriptions renew until cancelled. Refund and cancellation terms for the class will be shown here before booking opens.{' '}
           <a href="/policies" style={{ color: palette.PURPLE_STRONG, display: "inline-block", padding: "14px 6px" }}>Policies</a>
         </p>
       </section>
@@ -969,8 +969,8 @@ export default function KidsMindGymSales() {
               onMouseLeave={(e) => { e.currentTarget.style.transform = 'rotate(-1.4deg)'; }}
             >
               <img
-                src={KIDS_POSTER_IMG}
-                alt="Sim Katyal and her son on the Let's Be Our Best Every Day! poster"
+                src="/marketing/kids/closing-poster.webp"
+                alt="Sim Katyal and her son. Let's Be Our Best Every Day! Helping children understand their feelings, make better choices and grow a little every day."
                 loading="lazy"
                 style={{ width: '100%', height: 'auto', objectFit: 'cover', display: 'block' }}
               />
