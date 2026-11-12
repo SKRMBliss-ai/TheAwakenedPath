@@ -9,16 +9,16 @@
  * No testimonials, counts or ratings anywhere on the page.
  */
 import { useEffect, useRef, useState } from 'react';
-import { getAuth } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, type User } from 'firebase/auth';
 import {
   Heart, BookOpen, Gamepad2, NotebookPen, Leaf, Star, Users, Smile, ShieldCheck, Video, Calendar, Sparkles, Clock, MapPin,
 } from 'lucide-react';
 import { usePageSeo } from '../../lib/seo';
+import { showToast } from '../../lib/toast';
 import { useSiteTheme, type Palette } from '../../lib/siteTheme';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
 import KidsBackdrop from '../../components/site/KidsBackdrop';
 import { useRazorpay } from '../../hooks/useRazorpay';
-import { usePaypal } from '../../hooks/usePaypal';
 import KidsVideo from './components/KidsVideo';
 import KidsWallOfFame from './components/KidsWallOfFame';
 import { KIDS_AD_VIDEO, KIDS_GUIDE_VIDEOS } from './kidsVideos';
@@ -28,7 +28,7 @@ import {
 } from './kidsPricing';
 import FeaturedCourse from './components/FeaturedCourse';
 import {
-  KIDS_REGISTER_PATH, KIDS_TITLE, KIDS_DAYS, KIDS_CHART_IMG, KIDS_TAGLINE, KIDS_TIME, KIDS_AGE_BANDS, KIDS_INCLUDES,
+  KIDS_TITLE, KIDS_DAYS, KIDS_CHART_IMG, KIDS_TAGLINE, KIDS_TIME, KIDS_AGE_BANDS, KIDS_INCLUDES,
   KIDS_ONLY_DIARY_IMG, KIDS_TEACHER_IMG, KIDS_TEACHER_POINTS, KIDS_TEACHER_QUOTE, trackKids,
 } from './kidsChallengeData';
 
@@ -66,9 +66,9 @@ const FAQ = [
   { q: 'Is this therapy?', a: 'No. It is practice and play for emotional skills such as naming feelings, pausing and making kind choices. It is not therapy, diagnosis or medical care, and it does not replace a professional if your child needs one.' },
   { q: 'What ages is it for?', a: 'It is designed for children about 5 to 10. Younger children can join with a grown-up reading along; older children may prefer to explore on their own.' },
   { q: 'Does my child need me with them?', a: 'We suggest a grown-up joins for the first sessions, then stays nearby. The grown-up section explains how to support at home.' },
-  { q: 'What is the Zoom class?', a: 'A live class for kids on Zoom, run by the Soulful Intelligence team, that builds on the Mind Gym practice. It runs every Friday, Saturday and Sunday and is sold as a monthly or a yearly package.' },
-  { q: 'Can I cancel the Zoom class?', a: 'Yes. Both packages are one-time payments that never renew on their own, so there is nothing to cancel later. Our 100% money-back guarantee applies, no questions asked: any time on the monthly package, and within the first 30 days on the yearly package. Email or WhatsApp us and refunds go to your original payment method, typically within 5–7 business days.' },
-  { q: 'What about the 3-day challenge?', a: 'The free-to-register 3-day weekend challenge is still available. See the section below; registration is on its own page.' },
+  { q: 'What does membership include?', a: 'The full Kids Mind Gym app, plus live Zoom classes for kids run by the Soulful Intelligence team every Friday, Saturday and Sunday. The Zoom classes are included in the membership; there is nothing extra to pay.' },
+  { q: 'Can I cancel?', a: 'Yes, any time. Membership renews automatically each month or year until you cancel; email or WhatsApp us and we stop it. Our 100% money-back guarantee applies, no questions asked: any time on the monthly plan, and within the first 30 days on the yearly plan. Refunds go to your original payment method, typically within 5–7 business days.' },
+  { q: 'How do the live Zoom sessions work?', a: 'They follow the three-day rhythm shown on this page: Meet Yourself on Friday, Understand Yourself on Saturday and Grow Yourself on Sunday, 30 to 40 minutes each. They are included with Kids Mind Gym membership, and we send the Zoom link by email after you join.' },
 ];
 
 function Cta({ palette, label, href, event, ghost = false }: {
@@ -107,68 +107,58 @@ function SectionTitle({ palette, kicker, title, sub }: { palette: Palette; kicke
   );
 }
 
-/** Zoom class passes + checkout. Same guest flow as the Feelings course:
- *  one-time payment by Razorpay (cards, UPI, wallets) or PayPal (incl. Apple
- *  Pay where PayPal offers it) and Google Pay. No account needed. */
+/** Kids Mind Gym membership (app + live Zoom classes included), billed as a
+ *  recurring Razorpay subscription. A subscription has to belong to an account,
+ *  so the parent signs in first (Google here, or email via /mindgym). */
 function ZoomPlans({ palette }: { palette: Palette }) {
-  const { checkOut, isProcessing } = useRazorpay();
-  const { renderCheckout, renderGooglePay, isAvailable: paypalAvailable } = usePaypal();
+  const { subscribe, isProcessing } = useRazorpay();
   const math = kidsZoomYearlyMath();
   const cardBg = palette.CARD;
   const [picked, setPicked] = useState<KidsZoomPlan | null>(null);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [user, setUser] = useState<User | null>(null);
+  const [signingIn, setSigningIn] = useState(false);
   const [done, setDone] = useState<string | null>(null);
   const formRef = useRef<HTMLDivElement>(null);
 
-  const emailOk = email.includes('@') && !!email.split('@')[1]?.includes('.');
-  const formReady = name.trim().length > 0 && emailOk;
-
-  const onPaid = (plan: KidsZoomPlan, paidEmail: string) => {
-    trackKids(`KIDS_ZOOM_PAID_${plan.period.toUpperCase()}`, undefined, plan.productId, paidEmail);
-    setPicked(null);
-    setDone(paidEmail);
-  };
-
-  // PayPal (and Apple Pay inside it) + Google Pay render once the form is valid.
-  useEffect(() => {
-    if (!picked || !formReady || !KIDS_ZOOM_BOOKING_OPEN) return;
-    const userId = getAuth().currentUser?.uid || 'guest_pending';
-    const paidEmail = email.trim();
-    const plan = picked;
-    const t = setTimeout(() => {
-      renderCheckout('kids-paypal-container', userId, paidEmail, plan.productId, KIDS_ZOOM_CURRENCY,
-        () => onPaid(plan, paidEmail), phone.trim());
-      renderGooglePay('kids-googlepay-container', userId, paidEmail, plan.productId, KIDS_ZOOM_CURRENCY,
-        () => onPaid(plan, paidEmail), phone.trim());
-    }, 500);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [picked, formReady, name, email, phone]);
+  // Mind Gym creates anonymous accounts for quick entry; those cannot hold a membership.
+  useEffect(() => onAuthStateChanged(getAuth(), (u) => setUser(u && !u.isAnonymous ? u : null)), []);
 
   const pick = (plan: KidsZoomPlan) => {
     if (plan.price == null || !KIDS_ZOOM_BOOKING_OPEN) return;
-    trackKids(`KIDS_ZOOM_PICK_${plan.period.toUpperCase()}`);
+    trackKids(`KIDS_MEMBERSHIP_PICK_${plan.period.toUpperCase()}`);
     setDone(null);
     setPicked(plan);
     setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60);
   };
 
-  const payRazorpay = () => {
-    if (!picked || !formReady) return;
-    const plan = picked;
-    const paidEmail = email.trim();
-    const userId = getAuth().currentUser?.uid || 'guest_pending';
-    trackKids(`KIDS_ZOOM_PAY_CLICK_${plan.period.toUpperCase()}`);
-    checkOut(userId, paidEmail, name.trim(), plan.productId, KIDS_ZOOM_CURRENCY, () => onPaid(plan, paidEmail), phone.trim());
+  const googleSignIn = async () => {
+    setSigningIn(true);
+    try {
+      await signInWithPopup(getAuth(), new GoogleAuthProvider());
+    } catch {
+      showToast('Sign-in was not completed. Please try again.', { type: 'error' });
+    } finally {
+      setSigningIn(false);
+    }
   };
 
-  const input: React.CSSProperties = {
-    width: '100%', minHeight: 48, borderRadius: 14, border: `1px solid ${palette.BORDER}`, background: palette.BG,
-    color: palette.INK, fontFamily: SANS, fontSize: 16, padding: '10px 14px', boxSizing: 'border-box',
+  const start = () => {
+    if (!picked || !user) return;
+    const plan = picked;
+    const paidEmail = user.email || '';
+    trackKids(`KIDS_MEMBERSHIP_PAY_CLICK_${plan.period.toUpperCase()}`);
+    subscribe(user.uid, paidEmail, user.displayName || '', plan.productId, KIDS_ZOOM_CURRENCY, () => {
+      trackKids(`KIDS_MEMBERSHIP_STARTED_${plan.period.toUpperCase()}`, undefined, plan.productId, paidEmail);
+      setPicked(null);
+      setDone(paidEmail || 'your email');
+    });
   };
-  const label: React.CSSProperties = { display: 'block', fontSize: 12.5, fontWeight: 700, color: palette.INK2, marginBottom: 6 };
+
+  const bigBtn = (on: boolean): React.CSSProperties => ({
+    width: '100%', minHeight: 50, borderRadius: 999, border: 'none', fontFamily: SANS, fontSize: 15.5, fontWeight: 700,
+    background: on ? palette.PURPLE_STRONG : palette.BORDER, color: on ? palette.ON_ACCENT : palette.INK2,
+    cursor: on ? 'pointer' : 'not-allowed',
+  });
 
   const card = (plan: KidsZoomPlan, featured: boolean) => {
     const priced = plan.price != null;
@@ -194,20 +184,24 @@ function ZoomPlans({ palette }: { palette: Palette }) {
           {priced ? formatKidsPrice(plan.price as number) : 'Price to be set'}
           {priced && <span style={{ fontSize: 15, fontWeight: 500, color: palette.INK2 }}> / {plan.period}</span>}
         </p>
-        <p style={{ margin: 0, fontFamily: SANS, fontSize: 13.5, lineHeight: 1.55, color: palette.INK2 }}>
-          {featured
-            ? `12 months for the price of 9${perMonth ? `, about ${perMonth} a month` : ''}. 100% money back in the first 30 days.`
-            : 'One month of classes. 100% money back, any time.'}
-          {' '}One-time payment, no auto-renewal.
-        </p>
+        <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 6, fontFamily: SANS, fontSize: 13.5, lineHeight: 1.5, color: palette.INK2 }}>
+          {[
+            'The full Kids Mind Gym app',
+            'Live Zoom classes included',
+            featured
+              ? `12 months for the price of 9${perMonth ? `, about ${perMonth} a month` : ''}`
+              : 'Renews monthly, cancel any time',
+            featured ? '100% money back in the first 30 days' : '100% money back, any time',
+          ].map((line) => (
+            <li key={line} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+              <span style={{ flexShrink: 0, marginTop: 3 }}><Check color={palette.PURPLE_STRONG} /></span>{line}
+            </li>
+          ))}
+        </ul>
         <button type="button" onClick={() => pick(plan)} disabled={!canBuy}
-          aria-label={`Book the ${plan.label.toLowerCase()} kids Zoom class`}
-          style={{
-            marginTop: 8, minHeight: 48, borderRadius: 999, border: 'none', fontFamily: SANS, fontSize: 15, fontWeight: 700,
-            background: canBuy ? palette.PURPLE_STRONG : palette.BORDER, color: canBuy ? palette.ON_ACCENT : palette.INK2,
-            cursor: canBuy ? 'pointer' : 'not-allowed',
-          }}>
-          {canBuy ? `Book ${plan.label.toLowerCase()}` : 'Booking opens soon'}
+          aria-label={`Join the Kids Mind Gym, ${plan.label.toLowerCase()} membership`}
+          style={{ ...bigBtn(canBuy), marginTop: 8, minHeight: 48, fontSize: 15 }}>
+          {canBuy ? `Join ${plan.label.toLowerCase()}` : 'Opening soon'}
         </button>
       </div>
     );
@@ -223,60 +217,68 @@ function ZoomPlans({ palette }: { palette: Palette }) {
       {done && (
         <div role="status" style={{ maxWidth: 560, margin: '24px auto 0', padding: '20px 22px', borderRadius: 20,
           background: palette.BAND, color: palette.ON_BAND, textAlign: 'center', fontFamily: SANS, fontSize: 15, lineHeight: 1.6 }}>
-          <strong style={{ display: 'block', fontFamily: SERIF, fontSize: 24, fontWeight: 500 }}>Thank you — your place is booked.</strong>
-          A confirmation is on its way to {done}. We will send your Zoom link and class times there shortly.
+          <strong style={{ display: 'block', fontFamily: SERIF, fontSize: 24, fontWeight: 500 }}>Welcome to the Kids Mind Gym.</strong>
+          Your membership is active. A welcome email is on its way to {done}, and we will send your Zoom link and class times there shortly.
+          <div style={{ marginTop: 14 }}>
+            <a href={APP_PATH} style={{ display: 'inline-flex', alignItems: 'center', minHeight: 44, padding: '0 22px', borderRadius: 999,
+              background: palette.PURPLE_STRONG, color: palette.ON_ACCENT, fontWeight: 700, textDecoration: 'none' }}>Open the Kids Mind Gym</a>
+          </div>
         </div>
       )}
 
       {picked && (
-        <div ref={formRef} id="kids-zoom-checkout" style={{ maxWidth: 560, margin: '24px auto 0', padding: 'clamp(18px, 4vw, 26px)',
+        <div ref={formRef} id="kids-membership-checkout" style={{ maxWidth: 560, margin: '24px auto 0', padding: 'clamp(18px, 4vw, 26px)',
           borderRadius: 24, background: cardBg, border: `1px solid ${palette.BORDER}` }}>
           <h3 style={{ margin: '0 0 4px', fontFamily: SERIF, fontSize: 26, fontWeight: 500 }}>
-            Book the {picked.label.toLowerCase()} class
+            Kids Mind Gym membership · {picked.label}
           </h3>
           <p style={{ margin: '0 0 16px', fontSize: 14, color: palette.INK2 }}>
-            {formatKidsPrice(picked.price as number)} · one-time payment · no account needed
+            {formatKidsPrice(picked.price as number)} a {picked.period} · app and live Zoom classes · renews each {picked.period} until you cancel
           </p>
-          <div style={{ display: 'grid', gap: 12 }}>
-            <label><span style={label}>Parent or guardian name</span>
-              <input style={input} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" /></label>
-            <label><span style={label}>Email (your Zoom link is sent here)</span>
-              <input style={input} type="email" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" /></label>
-            <label><span style={label}>WhatsApp number (optional)</span>
-              <input style={input} type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" /></label>
-          </div>
-          <button type="button" onClick={payRazorpay} disabled={!formReady || isProcessing}
-            style={{ width: '100%', marginTop: 16, minHeight: 50, borderRadius: 999, border: 'none', fontFamily: SANS, fontSize: 15.5, fontWeight: 700,
-              background: formReady ? palette.PURPLE_STRONG : palette.BORDER, color: formReady ? palette.ON_ACCENT : palette.INK2,
-              cursor: formReady ? 'pointer' : 'not-allowed', opacity: isProcessing ? 0.7 : 1 }}>
-            {isProcessing ? 'Opening secure payment…' : `Pay ${formatKidsPrice(picked.price as number)} — card, UPI or wallet`}
-          </button>
-          {formReady && paypalAvailable !== false && (
+
+          {!user ? (
             <>
-              <p style={{ textAlign: 'center', fontSize: 12, color: palette.INK2, margin: '14px 0 8px' }}>or pay with</p>
-              <div id="kids-googlepay-container" style={{ marginBottom: 8 }} />
-              <div id="kids-paypal-container" />
+              <p style={{ margin: '0 0 12px', fontSize: 14, lineHeight: 1.6, color: palette.INK2 }}>
+                First, sign in so the membership is saved to your account. Your child uses the same sign-in to open the Mind Gym.
+              </p>
+              <button type="button" onClick={googleSignIn} disabled={signingIn} style={bigBtn(!signingIn)}>
+                {signingIn ? 'Opening Google…' : 'Continue with Google'}
+              </button>
+              <p style={{ textAlign: 'center', fontSize: 13, color: palette.INK2, margin: '12px 0 0' }}>
+                No Google account?{' '}
+                <a href="/mindgym?claim=1" style={{ color: palette.PURPLE_STRONG, display: 'inline-block', padding: '12px 4px' }}>
+                  Sign in with email
+                </a>, then come back to this page.
+              </p>
+            </>
+          ) : (
+            <>
+              <p style={{ margin: '0 0 12px', fontSize: 14, color: palette.INK2 }}>
+                Signed in as <strong style={{ color: palette.INK }}>{user.email}</strong>. Your Zoom link is sent to this address.
+              </p>
+              <button type="button" onClick={start} disabled={isProcessing} style={{ ...bigBtn(!isProcessing), opacity: isProcessing ? 0.7 : 1 }}>
+                {isProcessing ? 'Opening secure payment…' : `Start membership — ${formatKidsPrice(picked.price as number)} / ${picked.period}`}
+              </button>
+              <p style={{ textAlign: 'center', fontSize: 12, color: palette.INK2, margin: '10px 0 0' }}>
+                Card, UPI and wallets, handled securely by Razorpay.
+              </p>
             </>
           )}
-          {!formReady && (
-            <p style={{ textAlign: 'center', fontSize: 12, color: palette.INK2, margin: '12px 0 0' }}>
-              Enter your name and email to see all payment options.
-            </p>
-          )}
+
           <p style={{ fontSize: 12, color: palette.INK2, margin: '14px 0 0', lineHeight: 1.55 }}>
-            By paying you agree to our <a href="/policies" style={{ color: palette.PURPLE_STRONG }}>terms and refund policy</a>.
+            By joining you agree to our <a href="/policies" style={{ color: palette.PURPLE_STRONG }}>terms and refund policy</a>.
           </p>
           <button type="button" onClick={() => setPicked(null)}
             style={{ display: 'block', margin: '8px auto 0', minHeight: 44, background: 'none', border: 'none', color: palette.INK2,
               fontFamily: SANS, fontSize: 13.5, textDecoration: 'underline', cursor: 'pointer' }}>
-            Cancel
+            Not now
           </button>
         </div>
       )}
 
       {!KIDS_ZOOM_BOOKING_OPEN && (
         <p style={{ maxWidth: 640, margin: '20px auto 0', textAlign: 'center', fontFamily: SANS, fontSize: 12.5, fontWeight: 700, color: palette.BROWN }}>
-          Online booking opens here shortly. To reserve a place now, message us on WhatsApp or email and we will set it up with you.
+          Membership opens here shortly. To join now, message us on WhatsApp or email and we will set it up with you.
         </p>
       )}
     </>
@@ -349,7 +351,7 @@ export default function KidsMindGymSales() {
         links={[
           { label: 'Home', href: '/' },
           { label: 'What kids get', href: '#inside' },
-          { label: 'Zoom class', href: '#zoom', secondary: true },
+          { label: 'Membership', href: '#zoom', secondary: true },
           { label: 'Questions', href: '#faq', secondary: true },
         ]}
         cta={{ label: 'Try the Kids Mind Gym →', href: APP_PATH, onClick: () => trackKids('KIDS_HEADER_CTA') }}
@@ -375,7 +377,7 @@ export default function KidsMindGymSales() {
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
               <Cta palette={palette} label="Try the Kids Mind Gym" href={APP_PATH} event="KIDS_HERO_CTA" />
-              <Cta palette={palette} label="See the Zoom class" href="#zoom" event="KIDS_HERO_ZOOM" ghost />
+              <Cta palette={palette} label="See membership" href="#zoom" event="KIDS_HERO_ZOOM" ghost />
             </div>
             <p style={{ fontSize: 12.5, color: palette.INK2, opacity: 0.8, marginTop: 14 }}>
               Practice and play for emotional skills. Not therapy or medical care.
@@ -921,8 +923,8 @@ export default function KidsMindGymSales() {
 
       {/* Zoom class */}
       <section id="zoom" style={sec()}>
-        <SectionTitle palette={palette} kicker="Live Zoom class" title="Learn together, live"
-          sub="A live class for kids on Zoom that builds on the Mind Gym practice. Choose monthly, or save with the yearly package." />
+        <SectionTitle palette={palette} kicker="Membership" title="Join the Kids Mind Gym"
+          sub="One membership: the full Kids Mind Gym app, with live Zoom classes included. Choose monthly, or save with yearly." />
         <div style={{ ...wrap, display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', marginBottom: 32 }}>
           {[
             { icon: Calendar, label: 'Days', v: sched.days },
@@ -941,8 +943,7 @@ export default function KidsMindGymSales() {
         </div>
         <ZoomPlans palette={palette} />
         <p style={{ textAlign: 'center', fontSize: 12.5, color: palette.INK2, margin: '18px auto 0', maxWidth: 560 }}>
-          <ShieldCheck size={14} style={{ verticalAlign: '-2px' }} aria-hidden="true" /> Payments by Razorpay{' '}
-          and PayPal. One-time payment, no auto-renewal. 100% money-back guarantee, no questions asked: any time on the monthly plan, and within the first 30 days on the yearly plan. To cancel or ask for a refund, email or WhatsApp us; refunds go back to your original payment method, typically within 5–7 business days.{' '}
+          <ShieldCheck size={14} style={{ verticalAlign: '-2px' }} aria-hidden="true" /> Payments by Razorpay. Membership renews automatically each month or year until you cancel. 100% money-back guarantee, no questions asked: any time on the monthly plan, and within the first 30 days on the yearly plan. To cancel or ask for a refund, email or WhatsApp us; refunds go back to your original payment method, typically within 5–7 business days.{' '}
           <a href="/policies#refund" style={{ color: palette.PURPLE_STRONG, display: "inline-block", padding: "14px 6px" }}>Policies</a>
         </p>
       </section>
@@ -951,12 +952,12 @@ export default function KidsMindGymSales() {
       <section id="challenge" style={sec()}>
         <div className="mgk-card" style={{ ...box, ...wrap, maxWidth: 900, padding: 'clamp(22px, 4vw, 36px)' }}>
           <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: palette.BROWN }}>
-            Also available · Ages 3–12
+            Included with membership
           </span>
           <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(26px, 3.4vw, 36px)', fontWeight: 400, margin: '8px 0 10px' }}>{KIDS_TITLE}</h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: palette.INK2, margin: '0 0 14px' }}>
-            A playful 3-day weekend challenge on Zoom, Friday to Sunday: {KIDS_DAYS.map((d) => d.title).join(', ')}. Registration is free
-            and donation-based; details are sent after you register.
+            A playful 3-day weekend challenge on Zoom, Friday to Sunday: {KIDS_DAYS.map((d) => d.title).join(', ')}. These live Zoom sessions
+            are included with Kids Mind Gym membership; we send the Zoom link after you join.
           </p>
           <div style={{ border: `1px solid ${border}`, borderRadius: 18, padding: '16px 18px', margin: '0 0 18px', maxWidth: 460 }}>
             <p style={{ margin: '0 0 2px', fontFamily: SERIF, fontSize: 21 }}>Session schedule</p>
@@ -975,7 +976,7 @@ export default function KidsMindGymSales() {
               Times may change with daylight saving. Please check your local time at registration.
             </p>
           </div>
-          <Cta palette={palette} label="Register for the challenge" href={KIDS_REGISTER_PATH} event="KIDS_CHALLENGE_CTA" ghost />
+          <Cta palette={palette} label="See membership" href="#zoom" event="KIDS_CHALLENGE_CTA" ghost />
         </div>
       </section>
 

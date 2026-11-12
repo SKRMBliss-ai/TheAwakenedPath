@@ -6,11 +6,12 @@
 //   Yearly   3 months free = 9 × monthly → $171 / ₹13,491
 // Guarantee: 100% money back — any time on monthly, first 30 days on yearly.
 //
-// Sold as ONE-TIME passes (no auto-renewal) through the same guest checkout as
-// the Feelings course: Razorpay + PayPal + Google Pay. The amounts are charged
-// by the backend from COURSE_PRICES / COURSE_PRICES_INR in functions/index.js
-// (ids kids_zoom_monthly / kids_zoom_yearly) — change BOTH places together.
-// KIDS_ZOOM_BOOKING_OPEN = false switches the buy buttons off.
+// This is the Kids Mind Gym MEMBERSHIP: the app, with live Zoom classes included.
+// Billed as a recurring Razorpay subscription (monthly or yearly). The amounts are
+// charged by the backend from SUBSCRIPTION_PLANS / SUBSCRIPTION_PLANS_INR in
+// functions/index.js (ids kids_membership_monthly / kids_membership_yearly) —
+// change BOTH places together. A subscription needs a signed-in account.
+// KIDS_ZOOM_BOOKING_OPEN = false switches the join buttons off.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type KidsCurrency = 'USD' | 'INR';
@@ -36,7 +37,7 @@ function detectCurrency(): KidsCurrency {
 export const KIDS_ZOOM_CURRENCY: KidsCurrency = detectCurrency();
 
 export interface KidsZoomPlan {
-  /** Backend product id — a key of COURSE_PRICES in functions/index.js. */
+  /** Backend plan id — a key of SUBSCRIPTION_PLANS in functions/index.js. */
   productId: string;
   /** Price per billing period in major units of KIDS_ZOOM_CURRENCY. */
   price: number | null;
@@ -46,13 +47,13 @@ export interface KidsZoomPlan {
 
 export const KIDS_ZOOM_PLANS: { monthly: KidsZoomPlan; yearly: KidsZoomPlan } = {
   monthly: {
-    productId: 'kids_zoom_monthly',
+    productId: 'kids_membership_monthly',
     price: MONTHLY[KIDS_ZOOM_CURRENCY],
     label: 'Monthly',
     period: 'month',
   },
   yearly: {
-    productId: 'kids_zoom_yearly',
+    productId: 'kids_membership_yearly',
     price: MONTHLY[KIDS_ZOOM_CURRENCY] * KIDS_ZOOM_YEARLY_PAID_MONTHS,
     label: 'Yearly',
     period: 'year',

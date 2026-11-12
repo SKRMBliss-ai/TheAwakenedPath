@@ -308,8 +308,27 @@ const SUBSCRIPTION_PLANS = {
         period: "yearly",
         interval: 1,
         total_count: 10 // 10 years max
+    },
+    // Kids Mind Gym membership — app + live Zoom classes. Keep the amounts in
+    // sync with src/features/landing/kidsPricing.ts.
+    "kids_membership_monthly": {
+        name: "Kids Mind Gym Membership",
+        description: "Monthly membership: Kids Mind Gym app with live Zoom classes included",
+        amount: 19, // USD
+        period: "monthly",
+        interval: 1,
+        total_count: 120
+    },
+    "kids_membership_yearly": {
+        name: "Kids Mind Gym Membership (Annual)",
+        description: "Yearly membership: Kids Mind Gym app with live Zoom classes included",
+        amount: 171, // USD
+        period: "yearly",
+        interval: 1,
+        total_count: 10
     }
 };
+const isKidsMembershipPlan = (id) => id === 'kids_membership_monthly' || id === 'kids_membership_yearly';
 
 const SUBSCRIPTION_PLANS_INR = {
     "premium_monthly": {
@@ -324,6 +343,22 @@ const SUBSCRIPTION_PLANS_INR = {
         name: "Mind Gym Premium Annual (INR)",
         description: "Yearly recurring subscription for full application access",
         amount: 7999, // INR
+        period: "yearly",
+        interval: 1,
+        total_count: 10
+    },
+    "kids_membership_monthly": {
+        name: "Kids Mind Gym Membership (INR)",
+        description: "Monthly membership: Kids Mind Gym app with live Zoom classes included",
+        amount: 1499, // INR
+        period: "monthly",
+        interval: 1,
+        total_count: 120
+    },
+    "kids_membership_yearly": {
+        name: "Kids Mind Gym Membership Annual (INR)",
+        description: "Yearly membership: Kids Mind Gym app with live Zoom classes included",
+        amount: 13491, // INR
         period: "yearly",
         interval: 1,
         total_count: 10
@@ -1483,7 +1518,18 @@ exports.verifyRazorpaySubscription = onRequest({ secrets: [razorpayKeyId, razorp
         // Send Welcome Email (Only if this is the start of a new subscription)
         // Note: For recurring webhook events we wouldn't want to send this every month. 
         // But verifyRazorpaySubscription is only called from Frontend explicitly upon STARTING the subscription.
-        if (userEmail) {
+        const subPlanId = rzpSub.notes.planId || '';
+        if (isKidsMembershipPlan(subPlanId)) {
+            try {
+                await sendKidsZoomBookingEmails({
+                    toEmail: userEmail, phone: '',
+                    courseId: subPlanId === 'kids_membership_yearly' ? 'kids_zoom_yearly' : 'kids_zoom_monthly',
+                    amount: null, currency: null, paymentId: razorpay_payment_id, provider: 'razorpay', recurring: true,
+                });
+            } catch (emailErr) {
+                console.error("Failed to send kids membership emails:", emailErr);
+            }
+        } else if (userEmail) {
             try {
                 await sendWelcomeEmail(userEmail, "Premium Subscription");
             } catch (emailErr) {
@@ -2608,22 +2654,27 @@ async function sendWelcomeEmail(toEmail, planName) {
  * Guest checkout confirmation — the buyer has no account yet, so the ONE thing
  * they must do is create an account with THIS SAME email to unlock the course.
  */
-async function sendKidsZoomBookingEmails({ toEmail, phone, courseId, amount, currency, paymentId, provider }) {
+async function sendKidsZoomBookingEmails({ toEmail, phone, courseId, amount, currency, paymentId, provider, recurring = false }) {
     const transporter = getTransporter();
-    const plan = courseId === 'kids_zoom_yearly' ? 'Yearly (12 months)' : 'Monthly (1 month)';
-    const guarantee = courseId === 'kids_zoom_yearly'
+    const yearly = courseId === 'kids_zoom_yearly';
+    const plan = yearly ? 'Yearly' : 'Monthly';
+    const guarantee = yearly
         ? '100% money back within the first 30 days, no questions asked.'
         : '100% money back any time, no questions asked.';
+    const paid = amount != null ? `${currency || ''} ${amount}` : 'see Razorpay dashboard';
+    const billing = recurring
+        ? `Your membership renews automatically each ${yearly ? 'year' : 'month'} until you cancel. To cancel, reply to this email or message us on WhatsApp.`
+        : 'This is a one-time payment. It does not renew automatically.';
     await transporter.sendMail({
         from: '"SKRM Bliss AI" <skrmblissai@gmail.com>',
         to: ADMIN_EMAILS.join(', '),
-        subject: `New Kids Zoom class booking — ${plan}`,
+        subject: `New Kids Mind Gym member — ${plan}${recurring ? ' (recurring)' : ''}`,
         html: `<div style="font-family:sans-serif;padding:20px;">
-            <h2 style="color:#4A3260;">New Kids Zoom class booking</h2>
-            <p><strong>Plan:</strong> ${plan}</p>
+            <h2 style="color:#4A3260;">New Kids Mind Gym member</h2>
+            <p><strong>Plan:</strong> ${plan}${recurring ? ' — recurring subscription' : ' — one-time pass'}</p>
             <p><strong>Email:</strong> ${toEmail || 'N/A'}</p>
             <p><strong>Phone:</strong> ${phone || 'N/A'}</p>
-            <p><strong>Paid:</strong> ${currency || ''} ${amount ?? ''} via ${provider || ''} (${paymentId || ''})</p>
+            <p><strong>Paid:</strong> ${paid} via ${provider || ''} (${paymentId || ''})</p>
             <p>Please send the Zoom link and class times to this parent.</p>
         </div>`,
     });
@@ -2631,13 +2682,14 @@ async function sendKidsZoomBookingEmails({ toEmail, phone, courseId, amount, cur
     await transporter.sendMail({
         from: '"Soulful Intelligence" <connect@skrmblissai.in>',
         to: toEmail,
-        subject: "Your child's place in the Kids Zoom class is booked",
+        subject: "Welcome to the Kids Mind Gym",
         html: `<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:24px;color:#3A342C;line-height:1.6;">
-            <h2 style="color:#4A3260;">Thank you — your booking is confirmed</h2>
-            <p>Plan: <strong>${plan}</strong> · Paid: ${currency || ''} ${amount ?? ''}</p>
-            <p>Classes run every Friday, Saturday and Sunday on Zoom. We will send your Zoom link and class times to this email address${phone ? ' and on WhatsApp' : ''} shortly.</p>
-            <p>${guarantee} To cancel or ask for a refund, reply to this email or message us on WhatsApp at +91 82175 81238.</p>
-            <p>This is a one-time payment. It does not renew automatically.</p>
+            <h2 style="color:#4A3260;">Thank you — your membership is active</h2>
+            <p>Plan: <strong>${plan}</strong></p>
+            <p>Open the Kids Mind Gym any time at <a href="https://www.skrmblissai.in/mindgymforkids">skrmblissai.in/mindgymforkids</a>, signed in with this email address.</p>
+            <p>Live Zoom classes are included and run every Friday, Saturday and Sunday. We will send your Zoom link and class times to this email address shortly.</p>
+            <p>${guarantee} For a refund, reply to this email or message us on WhatsApp at +91 82175 81238.</p>
+            <p>${billing}</p>
             <p>With warmth,<br/>Sim Katyal &amp; the Soulful Intelligence team</p>
         </div>`,
     });
