@@ -46,6 +46,16 @@ const AREAS = [
   { icon: Star, title: 'Rewards', body: 'Small celebrations for showing up and practising.' },
 ];
 
+// What a family gets with the Kids Mind Gym itself (the Zoom sessions list
+// stays in KIDS_INCLUDES, shown with the live sessions).
+const MINDGYM_INCLUDES = [
+  'The Kids Mind Gym: feelings, Story Lab, games and a calm corner',
+  'A digital daily diary with gentle prompts to fill in each day',
+  'The printed “Let’s Be Our Best Every Day!” diary chart',
+  'Rewards that celebrate showing up and practising',
+  'A grown-ups section with simple ways to support at home',
+];
+
 const STEPS = [
   { n: '1', title: 'Open it together', body: 'Your child picks a place to start. A grown-up sits alongside the first time.' },
   { n: '2', title: 'Play and practise', body: 'A few minutes of feelings, stories or games, at their own pace.' },
@@ -686,7 +696,7 @@ export default function KidsMindGymSales() {
             </div>
 
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 12, position: 'relative' }}>
-              {KIDS_INCLUDES.map((f) => (
+              {MINDGYM_INCLUDES.map((f) => (
                 <li key={f} style={{
                   display: 'flex', gap: 13, alignItems: 'center',
                   padding: '13px 16px', borderRadius: 16,
