@@ -41,12 +41,12 @@ const WHATSAPP_URL = 'https://wa.me/918217581238'; // same number as the site fo
 const URL_ = 'https://www.skrmblissai.in/tiny-kids-transformations';
 
 const AREAS = [
-  { icon: Smile, title: 'Feelings', body: 'Name what they feel and learn that every feeling is okay to have.' },
-  { icon: BookOpen, title: 'Story Lab', body: 'Make up stories where characters face feelings and choices.' },
-  { icon: Gamepad2, title: 'Games', body: 'Short playful games that practise calm, focus and kindness.' },
-  { icon: NotebookPen, title: 'Diary', body: 'A place of their own to write or draw about their day.' },
-  { icon: Leaf, title: 'Calm corner', body: 'Simple breathing and pause tools for when feelings feel big.' },
-  { icon: Star, title: 'Rewards', body: 'Small celebrations for showing up and practising.' },
+  { icon: Smile, img: '/rooms/feelings_card.webp', alt: 'A smiling child holding a glowing jar of light under a rainbow', title: 'Feelings', body: 'Name what they feel and learn that every feeling is okay to have.' },
+  { icon: BookOpen, img: '/rooms/story_card.webp', alt: 'A child reading a storybook while a castle in the clouds appears above', title: 'Story Lab', body: 'Make up stories where characters face feelings and choices.' },
+  { icon: Gamepad2, img: '/rooms/friendship_card.webp', alt: 'Two children happily building a tower of colourful blocks together', title: 'Games', body: 'Short playful games that practise calm, focus and kindness.' },
+  { icon: NotebookPen, img: '/rooms/thought_card.webp', alt: 'A thoughtful child resting their chin on their hand, ready to write', title: 'Diary', body: 'A place of their own to write or draw about their day.' },
+  { icon: Leaf, img: '/rooms/pause_card.webp', alt: 'A child sitting calmly with eyes closed beside a waterfall', title: 'Calm corner', body: 'Simple breathing and pause tools for when feelings feel big.' },
+  { icon: Star, img: '/rooms/kindness_card.webp', alt: 'A child gently watering a sunflower beside a Be Kind sign', title: 'Rewards', body: 'Small celebrations for showing up and practising.' },
 ];
 
 // What a family gets with the Kids Mind Gym itself (the Zoom sessions list
@@ -96,6 +96,34 @@ function Check({ color }: { color: string }) {
       strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M20 6 9 17l-5-5" />
     </svg>
+  );
+}
+
+/** Picture first; hover (web) or tap (phone) or Enter/Space flips it to show the text. */
+function FlipCard({ palette, Icon, img, alt, title, body }: {
+  palette: Palette; Icon: React.ComponentType<{ size?: number; 'aria-hidden'?: boolean | 'true' | 'false' }>;
+  img: string; alt: string; title: string; body: string;
+}) {
+  const [flipped, setFlipped] = useState(false);
+  return (
+    <button type="button" className="mgk-card mgk-flip" data-flipped={flipped ? '1' : '0'} aria-pressed={flipped}
+      aria-label={`${title}. ${flipped ? 'Showing details' : 'Show details'}`}
+      onClick={() => setFlipped((v) => !v)}>
+      <span className="mgk-flip-inner">
+        <span className="mgk-flip-face mgk-flip-front">
+          <img src={img} alt={alt} loading="lazy" width={600} height={800} />
+          <span className="mgk-flip-title">
+            <Icon size={18} aria-hidden="true" /> {title}
+          </span>
+        </span>
+        <span className="mgk-flip-face mgk-flip-back" style={{ background: palette.CARD, border: `1px solid ${palette.BORDER}`, color: palette.INK }}>
+          <span style={{ display: 'inline-grid', placeItems: 'center', width: 44, height: 44, borderRadius: 14,
+            background: palette.BAND, color: palette.ON_BAND, marginBottom: 12 }}><Icon size={22} aria-hidden="true" /></span>
+          <strong style={{ fontFamily: SERIF, fontSize: 26, fontWeight: 500, display: 'block', marginBottom: 8 }}>{title}</strong>
+          <span style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.6, color: palette.INK2, display: 'block' }}>{body}</span>
+        </span>
+      </span>
+    </button>
   );
 }
 
@@ -517,14 +545,12 @@ export default function KidsMindGymSales() {
       <section id="inside" style={sec()}>
         <SectionTitle palette={palette} kicker="What kids get" title="Six places to practise"
           sub="Each area of the Kids Mind Gym is short, friendly and built around one small skill." />
-        <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
-          {AREAS.map(({ icon: Icon, title, body }) => (
-            <article key={title} className="mgk-card" style={{ ...box, padding: '22px 20px' }}>
-              <span style={{ display: 'inline-grid', placeItems: 'center', width: 44, height: 44, borderRadius: 14,
-                background: palette.BAND, color: palette.ON_BAND, marginBottom: 12 }}><Icon size={22} aria-hidden="true" /></span>
-              <h3 style={{ margin: '0 0 6px', fontFamily: SERIF, fontSize: 24, fontWeight: 500 }}>{title}</h3>
-              <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.65, color: palette.INK2 }}>{body}</p>
-            </article>
+        <p style={{ textAlign: 'center', margin: '-12px 0 18px', fontSize: 13, color: palette.INK2 }}>
+          <span className="mgk-hint-hover">Hover over a card</span><span className="mgk-hint-touch">Tap a card</span> to see what is inside.
+        </p>
+        <div className="mgk-areas" style={{ ...wrap }}>
+          {AREAS.map(({ icon: Icon, img, alt, title, body }) => (
+            <FlipCard key={title} palette={palette} Icon={Icon} img={img} alt={alt} title={title} body={body} />
           ))}
         </div>
 
@@ -1261,6 +1287,29 @@ export default function KidsMindGymSales() {
         body:has(.mgk-card:hover, .mgk-card:focus-within) .mgk-blur { opacity: 1; }
         @media (hover: none) { .mgk-blur { opacity: 1; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); } }
         .mgk-card { transition: transform .25s ease, box-shadow .25s ease; }
+        .mgk-areas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        @media (max-width: 860px) { .mgk-areas { grid-template-columns: repeat(2, 1fr); gap: 12px; } }
+        .mgk-flip { padding: 0; border: 0; background: none; cursor: pointer; text-align: left; font: inherit; color: inherit;
+          aspect-ratio: 3 / 4; perspective: 1100px; border-radius: 24px; display: block; width: 100%; }
+        .mgk-flip-inner { position: relative; display: block; width: 100%; height: 100%; transition: transform .6s cubic-bezier(.2,.8,.2,1);
+          transform-style: preserve-3d; }
+        .mgk-flip[data-flipped="1"] .mgk-flip-inner { transform: rotateY(180deg); }
+        .mgk-flip-face { position: absolute; inset: 0; display: block; border-radius: 24px; overflow: hidden;
+          backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+        .mgk-flip-front img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .mgk-flip-front::after { content: ''; position: absolute; inset: 0;
+          background: linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(12,8,20,.78) 100%); }
+        .mgk-flip-title { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; display: flex; align-items: center; gap: 8px;
+          padding: 16px 18px; color: #fff; font-family: ${SERIF}; font-size: 26px; font-weight: 500; }
+        .mgk-flip-back { transform: rotateY(180deg); padding: 22px 20px; box-sizing: border-box; overflow: auto; }
+        .mgk-flip:focus-visible { outline: 3px solid ${palette.PURPLE_STRONG}; outline-offset: 3px; }
+        .mgk-hint-touch { display: none; }
+        @media (hover: hover) { .mgk-flip:hover .mgk-flip-inner { transform: rotateY(180deg); }
+          .mgk-flip:hover[data-flipped="1"] .mgk-flip-inner { transform: rotateY(0deg); } }
+        @media (hover: none) { .mgk-hint-hover { display: none; } .mgk-hint-touch { display: inline; } }
+        @media (max-width: 520px) { .mgk-flip-title { font-size: 21px; padding: 12px 14px; }
+          .mgk-flip-back { padding: 14px 12px; } .mgk-flip-back strong { font-size: 22px !important; }
+          .mgk-flip-back span:last-child { font-size: 13.5px !important; } }
         .mgk-join-pill { display: none; }
         @media (max-width: 640px) {
           .mgk-join-pill { display: inline-flex; align-items: center; justify-content: center; position: fixed; z-index: 40;
@@ -1279,7 +1328,7 @@ export default function KidsMindGymSales() {
         }
         @media (max-width: 520px) { section { padding-left: 16px !important; padding-right: 16px !important; } }
         @media (max-width: 860px) { .mgk-hero { grid-template-columns: 1fr !important; } }
-        @media (prefers-reduced-motion: reduce) { .mgk-blur, .mgk-card { transition: none !important; } .mgk-card:hover { transform: none !important; } }
+        @media (prefers-reduced-motion: reduce) { .mgk-blur, .mgk-card, .mgk-flip-inner { transition: none !important; } .mgk-card:hover { transform: none !important; } }
       `}</style>
     </div>
   );
