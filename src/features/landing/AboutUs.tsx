@@ -3,6 +3,7 @@ import { usePageSeo } from '../../lib/seo';
 import { useSiteTheme } from '../../lib/siteTheme';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
 import SiteBackdrop from '../../components/site/SiteBackdrop';
+import KidsChallengeCrossSell from './components/KidsChallengeCrossSell';
 import { usePageView } from '../../lib/analytics';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -555,6 +556,7 @@ export default function AboutUs() {
       </main>
 
       <div style={{ position: 'relative', zIndex: 2 }}>
+        <KidsChallengeCrossSell palette={palette} source="about" />
         <SiteFooter palette={palette} />
       </div>
     </div>

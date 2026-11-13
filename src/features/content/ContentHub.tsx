@@ -2,6 +2,7 @@ import { Sparkles, ArrowRight } from 'lucide-react';
 import { usePageSeo } from '../../lib/seo';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
 import SiteBackdrop from '../../components/site/SiteBackdrop';
+import KidsChallengeCrossSell from '../landing/components/KidsChallengeCrossSell';
 import { useSiteTheme } from '../../lib/siteTheme';
 import { ARTICLES_REGISTRY } from './data/contentEngineData';
 import { usePageView } from '../../lib/analytics';
@@ -127,6 +128,7 @@ export default function ContentHub() {
         </div>
       </main>
 
+      <KidsChallengeCrossSell palette={palette} source="guides" />
       <SiteFooter palette={palette} />
     </div>
   );

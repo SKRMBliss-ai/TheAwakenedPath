@@ -38,12 +38,12 @@ interface Msg {
 
 const GREETING: Msg = {
   role: 'assistant',
-  text: 'Hello — I can help you find the right course, explain how the kids challenge works, or pass you to the team. What brings you here today?',
+  text: 'Hello — I can help you find the right course, tell you about the Kids Mind Gym, or pass you to the team. What brings you here today?',
 };
 
 const QUICK_REPLIES = [
   { label: 'Which course is right for me?', send: 'Which course is right for me?' },
-  { label: 'Tell me about the kids challenge', send: 'Tell me about the 3-day kids challenge for children.' },
+  { label: 'Tell me about the Kids Mind Gym', send: 'Tell me about the Kids Mind Gym membership for children.' },
   { label: 'What does it cost?', send: 'How does the pricing work?' },
   { label: 'I already bought — where is my access?', send: 'I have already purchased. Where do I find my access?' },
 ];

@@ -1,21 +1,33 @@
 /**
- * KidsChallengeCrossSell.tsx
+ * KidsChallengeCrossSell.tsx — promo banner for the Kids Mind Gym.
  *
- * Cross-sell banner for the 3-day kids challenge, "Let's Be Our Best Every
- * Day!". Rendered on the brand home (wellbeing world) and near the foot of the
- * Feelings & Emotions course page — the adult course is where parents already
- * are, so the children's program is the natural next step from there.
+ * (The file keeps its old name so existing imports keep working; it used to
+ * promote the 3-day challenge and now promotes the Kids Mind Gym membership,
+ * with the live Zoom class included.) Shown on the brand home, the Feelings &
+ * Emotions course page, the About page and the guides hub: places parents
+ * already visit for their own emotional work.
  *
- * Palette-driven so it reads correctly in both site themes.
+ * Palette-driven so it reads correctly in both site themes. Every claim here
+ * matches /tiny-kids-transformations; nothing about results or outcomes.
  */
 import type { Palette } from '../../../lib/siteTheme';
-import {
-  KIDS_PATH, KIDS_REGISTER_PATH, KIDS_TITLE,
-  KIDS_STEPS, KIDS_CHART_IMG, trackKids,
-} from '../kidsChallengeData';
+import { KIDS_PATH, KIDS_STEPS, trackKids } from '../kidsChallengeData';
+import { KIDS_ZOOM_PLANS, formatKidsPrice } from '../kidsPricing';
 
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS  = "'Outfit', system-ui, sans-serif";
+
+type Source = 'home' | 'course' | 'about' | 'guides';
+
+const FROM: Record<Source, string> = {
+  home: '/', course: '/feelingsandemotioncourse', about: '/about-us', guides: '/guides',
+};
+
+const TILES = [
+  { img: '/rooms/feelings_card.webp', alt: 'A smiling child holding a glowing jar of light', label: 'Feelings' },
+  { img: '/rooms/story_card.webp', alt: 'A child reading a storybook with a castle in the clouds', label: 'Story Lab' },
+  { img: '/rooms/pause_card.webp', alt: 'A child sitting calmly beside a waterfall', label: 'Calm corner' },
+];
 
 function Arrow() {
   return (
@@ -32,66 +44,57 @@ export default function KidsChallengeCrossSell({
 }: {
   palette: Palette;
   /** Where this banner is being shown — logged so the placements stay distinguishable. */
-  source?: 'home' | 'course';
+  source?: Source;
 }) {
   const isDark = palette.isDark;
-  const fromPage = source === 'course' ? '/feelingsandemotioncourse' : '/';
+  const fromPage = FROM[source];
+  const price = KIDS_ZOOM_PLANS.monthly.price;
+  const chips = [
+    'Kids Mind Gym app',
+    'Live Zoom class included',
+    'Ages 3–12',
+    ...(price != null ? [`From ${formatKidsPrice(price)} a month`] : []),
+    '100% money-back guarantee',
+  ];
 
   return (
     <section
-      className="si-reveal"
-      style={{ padding: 'clamp(24px, 4vw, 48px) clamp(24px, 6vw, 96px)', position: 'relative', zIndex: 2 }}
-      aria-labelledby="kids-crosssell-heading"
+      style={{ padding: 'clamp(24px, 4vw, 48px) clamp(16px, 6vw, 96px)', position: 'relative', zIndex: 2 }}
+      aria-labelledby={`kids-crosssell-heading-${source}`}
     >
       <div
         className="si-kids-cross"
         style={{
           maxWidth: 1100, margin: '0 auto',
-          display: 'grid',
-          gridTemplateColumns: '1.05fr 0.95fr',
-          borderRadius: 28,
-          overflow: 'hidden',
-          background: palette.CARD,
-          border: `1px solid ${palette.BORDER}`,
+          display: 'grid', gridTemplateColumns: '1.05fr 0.95fr',
+          borderRadius: 28, overflow: 'hidden',
+          background: palette.CARD, border: `1px solid ${palette.BORDER}`,
           boxShadow: isDark ? '0 30px 80px rgba(0,0,0,0.40)' : '0 24px 60px rgba(42,36,32,0.10)',
           position: 'relative',
         }}
       >
-        {/* Diagonal Corner Badge */}
         <div
           className="si-badge-diagonal"
           style={{
-            position: 'absolute',
-            top: 22,
-            left: -35,
-            transform: 'rotate(-45deg)',
-            background: 'linear-gradient(135deg, #783CB4 0%, #4A2860 100%)',
-            color: '#FFFFFF',
-            fontFamily: SANS,
-            fontSize: 10,
-            fontWeight: 800,
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase',
-            padding: '6px 45px',
-            boxShadow: '0 4px 14px rgba(0,0,0,0.3)',
-            zIndex: 10,
-            pointerEvents: 'none',
-            textAlign: 'center',
+            position: 'absolute', top: 22, left: -35, transform: 'rotate(-45deg)',
+            background: 'linear-gradient(135deg, #783CB4 0%, #4A2860 100%)', color: '#FFFFFF',
+            fontFamily: SANS, fontSize: 10, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase',
+            padding: '6px 45px', boxShadow: '0 4px 14px rgba(0,0,0,0.3)', zIndex: 10, pointerEvents: 'none', textAlign: 'center',
           }}
         >
           For Your Kids
         </div>
-        {/* ── Left: the pitch ───────────────────────────────────────────── */}
+
+        {/* ── Left: the pitch ── */}
         <div style={{ padding: 'clamp(32px, 4.5vw, 52px)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div>
             {source === 'course' && (
               <div style={{
                 background: isDark ? 'rgba(201,174,142,0.15)' : 'rgba(122,95,68,0.08)',
-                border: `1px solid ${palette.BORDER}`,
-                borderRadius: 12, padding: '10px 14px', marginBottom: 18,
+                border: `1px solid ${palette.BORDER}`, borderRadius: 12, padding: '10px 14px', marginBottom: 18,
                 fontFamily: SANS, fontSize: 12, color: palette.INK, lineHeight: 1.5,
               }}>
-                💡 <strong>Note for Parents:</strong> This page is for the adult video course. Below is a <em>separate</em> 3-Day Live Zoom challenge for children.
+                💡 <strong>Note for parents:</strong> this page is for the adult video course. Below is a <em>separate</em> app for children.
               </div>
             )}
 
@@ -102,41 +105,31 @@ export default function KidsChallengeCrossSell({
               fontFamily: SANS, fontSize: 9.5, fontWeight: 800, letterSpacing: '0.2em',
               textTransform: 'uppercase', color: palette.BROWN, marginBottom: 14,
             }}>
-              Separate Program · For Children (Ages 3–12)
+              Separate program · For children ages 3–12
             </span>
 
             <h2
-              id="kids-crosssell-heading"
+              id={`kids-crosssell-heading-${source}`}
               style={{
                 fontFamily: SERIF, fontSize: 'clamp(26px, 3vw, 40px)', fontWeight: 400,
                 lineHeight: 1.14, letterSpacing: '-0.01em', color: palette.INK, margin: '0 0 10px',
               }}
             >
-              {KIDS_TITLE}
+              The Kids Mind Gym
             </h2>
 
-            <p style={{
-              fontFamily: SANS, fontSize: 14.5, lineHeight: 1.65, color: palette.INK2,
-              margin: '0 0 18px', maxWidth: 460,
-            }}>
-              {source === 'course'
-                ? 'While you complete your adult reflection modules, give your child their own emotional awareness tools! This is a separate, interactive Live Zoom weekend challenge for kids. No upfront payment required.'
-                : 'A separate 3-day live weekend challenge that helps children notice what they feel, understand their choices, and grow a little every day.'}
+            <p style={{ fontFamily: SANS, fontSize: 14.5, lineHeight: 1.65, color: palette.INK2, margin: '0 0 18px', maxWidth: 470 }}>
+              A playful place for your child to notice what they feel, calm down and make kind choices, through ten short rooms,
+              stories, games and a daily diary. A live Zoom class is included, with printable support material and WhatsApp
+              1-1 support.
             </p>
 
-            {/* Format chips */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, margin: '0 0 24px' }}>
-              {['Live on Zoom', 'Friday–Sunday', '30–40 Mins', 'Ages 3–12', 'No Upfront Payment Required'].map((chip) => (
+              {chips.map((chip) => (
                 <span key={chip} style={{
-                  display: 'inline-flex', alignItems: 'center',
-                  padding: '7px 13px', borderRadius: 999,
-                  background: chip.includes('No Upfront') 
-                    ? (isDark ? 'rgba(74,40,96,0.35)' : 'rgba(235,225,245,0.9)')
-                    : (isDark ? 'rgba(201,174,142,0.09)' : 'rgba(122,95,68,0.055)'),
-                  border: `1px solid ${chip.includes('No Upfront') ? palette.PURPLE_STRONG : palette.BORDER}`,
-                  fontFamily: SANS, fontSize: 11.5, fontWeight: 700,
-                  color: chip.includes('No Upfront') ? (isDark ? '#E8D2FF' : palette.PURPLE_STRONG) : palette.INK2,
-                  whiteSpace: 'nowrap',
+                  display: 'inline-flex', alignItems: 'center', padding: '7px 13px', borderRadius: 999,
+                  background: isDark ? 'rgba(201,174,142,0.09)' : 'rgba(122,95,68,0.055)',
+                  border: `1px solid ${palette.BORDER}`, fontFamily: SANS, fontSize: 11.5, fontWeight: 700, color: palette.INK2,
                 }}>{chip}</span>
               ))}
             </div>
@@ -144,98 +137,65 @@ export default function KidsChallengeCrossSell({
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
             <a
-              href={KIDS_REGISTER_PATH}
-              onClick={() => trackKids('KIDS_CROSSSELL_REGISTER', fromPage)}
+              href={`${KIDS_PATH}#zoom`}
+              onClick={() => trackKids('KIDS_CROSSSELL_JOIN', fromPage)}
               style={{
-                padding: '13px 26px', borderRadius: 999,
+                minHeight: 48, padding: '0 26px', borderRadius: 999,
                 background: palette.PURPLE_STRONG, color: palette.ON_ACCENT,
                 textDecoration: 'none', fontFamily: SANS, fontSize: 13.5, fontWeight: 700,
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                transition: 'transform 0.25s ease',
+                display: 'inline-flex', alignItems: 'center', gap: 8, transition: 'transform 0.25s ease',
               }}
               onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; }}
             >
-              Register Child (No Payment Needed) <Arrow />
+              See membership <Arrow />
             </a>
             <a
-              href={KIDS_PATH}
+              href={`${KIDS_PATH}#features`}
               onClick={() => trackKids('KIDS_CROSSSELL_DETAILS', fromPage)}
               style={{
-                padding: '13px 22px', borderRadius: 999,
-                background: 'transparent', border: `1px solid ${palette.BORDER}`,
-                color: palette.INK, textDecoration: 'none',
-                fontFamily: SANS, fontSize: 13.5, fontWeight: 700,
+                minHeight: 48, padding: '0 22px', borderRadius: 999, display: 'inline-flex', alignItems: 'center',
+                background: 'transparent', border: `1px solid ${palette.BORDER}`, color: palette.INK,
+                textDecoration: 'none', fontFamily: SANS, fontSize: 13.5, fontWeight: 700,
               }}
             >
-              See Program Details
+              See what is inside
             </a>
-            
-            {/* Kids Challenge QR Code */}
-            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-              <img 
-                src="https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2FKidsDiaryCourseQR.png?alt=media" 
-                alt="Scan to Register" 
-                style={{ width: 48, height: 48, borderRadius: 8, border: `1px solid ${palette.BORDER}` }} 
-              />
-              <span style={{ fontSize: 11, color: palette.INK2, fontFamily: SANS, fontWeight: 600, lineHeight: 1.2 }}>
-                Scan to<br/>register
-              </span>
-            </div>
           </div>
         </div>
 
-        {/* ── Right: poster + Notice · Understand · Choose ────────────────── */}
+        {/* ── Right: pictures from the app + Notice · Understand · Choose ── */}
         <div className="si-kids-cross-panel" style={{
           padding: 'clamp(24px, 3.5vw, 36px)',
-          /* Gradient rather than a flat slab, so the column reads as a panel of
-             the same card instead of a hard vertical seam down the middle. */
           background: `linear-gradient(165deg, ${palette.BAND} 0%, ${palette.BAND_TILE} 100%)`,
           borderLeft: `1px solid ${palette.BAND_BORDER}`,
-          display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 12,
-          position: 'relative',
+          display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 12, position: 'relative',
         }}>
-          <div style={{
-            position: 'relative', borderRadius: 20, overflow: 'hidden', marginBottom: 6,
-            border: `1px solid ${palette.BAND_BORDER}`,
-            boxShadow: isDark ? '0 18px 44px rgba(0,0,0,0.4)' : '0 18px 44px rgba(42,36,32,0.16)',
-          }}>
-            <img
-              src={KIDS_CHART_IMG}
-              alt="Let's Be Our Best Every Day! — a 3-day kids challenge for ages 3-12, helping children build emotional awareness, make positive choices and grow a happy heart"
-              loading="lazy"
-              style={{ width: '100%', display: 'block' }}
-              onError={(e) => { (e.currentTarget.parentElement as HTMLElement).style.display = 'none'; }}
-            />
-            <div aria-hidden="true" style={{
-              position: 'absolute', inset: 0, pointerEvents: 'none',
-              background: 'linear-gradient(118deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 46%)',
-            }} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 6 }}>
+            {TILES.map((t) => (
+              <figure key={t.label} style={{
+                margin: 0, position: 'relative', aspectRatio: '3 / 4', borderRadius: 16, overflow: 'hidden',
+                border: `1px solid ${palette.BAND_BORDER}`,
+                boxShadow: isDark ? '0 14px 34px rgba(0,0,0,0.4)' : '0 14px 34px rgba(42,36,32,0.16)',
+              }}>
+                <img src={t.img} alt={t.alt} loading="lazy" width={300} height={400}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                <figcaption style={{
+                  position: 'absolute', left: 0, right: 0, bottom: 0, padding: '18px 8px 8px', textAlign: 'center',
+                  color: '#fff', fontFamily: SERIF, fontSize: 16, fontWeight: 500,
+                  background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(12,8,20,0.8) 100%)',
+                }}>{t.label}</figcaption>
+              </figure>
+            ))}
           </div>
           {KIDS_STEPS.map((s, i) => (
-            <div
-              key={s.label}
-              style={{
-                background: palette.BAND_TILE,
-                border: `1px solid ${palette.BAND_BORDER}`,
-                borderRadius: 18, padding: '15px 18px',
-                display: 'flex', alignItems: 'center', gap: 14,
-                transition: 'transform 0.25s ease, box-shadow 0.25s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateX(4px)';
-                e.currentTarget.style.boxShadow = isDark ? '0 8px 22px rgba(0,0,0,0.28)' : '0 8px 22px rgba(42,36,32,0.12)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'none';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-            >
+            <div key={s.label} style={{
+              background: palette.BAND_TILE, border: `1px solid ${palette.BAND_BORDER}`,
+              borderRadius: 18, padding: '13px 18px', display: 'flex', alignItems: 'center', gap: 14,
+            }}>
               <span style={{
-                width: 30, height: 30, borderRadius: 999, flexShrink: 0,
-                display: 'grid', placeItems: 'center',
-                background: 'rgba(255,255,255,0.55)',
-                fontFamily: SANS, fontSize: 13, fontWeight: 800, color: palette.ON_BAND_ACCENT,
+                width: 30, height: 30, borderRadius: 999, flexShrink: 0, display: 'grid', placeItems: 'center',
+                background: 'rgba(255,255,255,0.55)', fontFamily: SANS, fontSize: 13, fontWeight: 800, color: palette.ON_BAND_ACCENT,
               }}>{i + 1}</span>
               <span>
                 <span style={{
@@ -249,11 +209,8 @@ export default function KidsChallengeCrossSell({
               </span>
             </div>
           ))}
-          <p style={{
-            fontFamily: SANS, fontSize: 11.5, fontWeight: 600, color: palette.ON_BAND_SOFT,
-            margin: '4px 0 0', textAlign: 'center',
-          }}>
-            One small, conscious choice at a time — not perfection.
+          <p style={{ fontFamily: SANS, fontSize: 11.5, fontWeight: 600, color: palette.ON_BAND_SOFT, margin: '4px 0 0', textAlign: 'center' }}>
+            Practice and play for emotional skills. Not therapy or medical care.
           </p>
         </div>
       </div>
@@ -261,16 +218,10 @@ export default function KidsChallengeCrossSell({
       <style>{`
         @media (max-width: 820px) {
           .si-kids-cross { grid-template-columns: 1fr !important; }
-          /* Stacked, the panel sits below the pitch, so the seam is horizontal. */
           .si-kids-cross-panel { border-left: none !important; border-top: 1px solid ${palette.BORDER} !important; }
         }
         @media (max-width: 580px) {
-          .si-badge-diagonal {
-            font-size: 8.5px !important;
-            padding: 4px 34px !important;
-            top: 16px !important;
-            left: -30px !important;
-          }
+          .si-badge-diagonal { font-size: 8.5px !important; padding: 4px 34px !important; top: 16px !important; left: -30px !important; }
         }
       `}</style>
     </section>
