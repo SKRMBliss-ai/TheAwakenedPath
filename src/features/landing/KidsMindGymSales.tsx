@@ -51,17 +51,17 @@ const ZOOM_INCLUDES = [
 ];
 
 // Real rooms from the Kids Mind Gym app (src/features/practise/kids/rooms.ts): name + what the child practises.
-const APP_ROOMS: { name: string; practise: string }[] = [
-  { name: 'Feelings Room', practise: 'Naming what I feel' },
-  { name: 'Thought Room', practise: 'Noticing thoughts' },
-  { name: 'Body Detective', practise: 'Listening to my body' },
-  { name: 'Pause Room', practise: 'Breathing and slowing down' },
-  { name: 'Different Story', practise: 'Seeing another point of view' },
-  { name: 'Friendship Room', practise: 'Kind words and repair' },
-  { name: 'Anger Room', practise: 'Handling big energy safely' },
-  { name: 'Worry Room', practise: 'Facing worries bravely' },
-  { name: 'Kindness Room', practise: 'Growing kindness' },
-  { name: 'Reflection Room', practise: 'Noticing what I learned' },
+const APP_ROOMS: { name: string; practise: string; img: string; alt: string }[] = [
+  { name: 'Feelings Room', practise: 'Naming what I feel', img: '/rooms/feelings_card.webp', alt: 'A smiling child holding a glowing jar of light under a rainbow' },
+  { name: 'Thought Room', practise: 'Noticing thoughts', img: '/rooms/thought_card.webp', alt: 'A thoughtful child resting their chin on their hand' },
+  { name: 'Body Detective', practise: 'Listening to my body', img: '/rooms/body_card.webp', alt: 'A young detective with a magnifying glass beside a glowing figure of a body' },
+  { name: 'Pause Room', practise: 'Breathing and slowing down', img: '/rooms/pause_card.webp', alt: 'A child sitting calmly with eyes closed beside a waterfall' },
+  { name: 'Different Story', practise: 'Seeing another point of view', img: '/rooms/story_card.webp', alt: 'A child reading a storybook while a castle in the clouds appears above' },
+  { name: 'Friendship Room', practise: 'Kind words and repair', img: '/rooms/friendship_card.webp', alt: 'Two children happily building a tower of colourful blocks together' },
+  { name: 'Anger Room', practise: 'Handling big energy safely', img: '/rooms/anger_card.webp', alt: 'A child facing a fiery red character in front of an erupting volcano' },
+  { name: 'Worry Room', practise: 'Facing worries bravely', img: '/rooms/worry_card.webp', alt: 'A worried child surrounded by sad thought clouds and stars' },
+  { name: 'Kindness Room', practise: 'Growing kindness', img: '/rooms/kindness_card.webp', alt: 'A child gently watering a sunflower beside a Be Kind sign' },
+  { name: 'Reflection Room', practise: 'Noticing what I learned', img: '/rooms/reflection_card.webp', alt: 'A child gazing at the night sky through a telescope' },
 ];
 
 const AREAS = [
@@ -789,12 +789,15 @@ export default function KidsMindGymSales() {
       <section id="features" style={sec()}>
         <SectionTitle palette={palette} kicker="Inside the app" title="Ten rooms, one friendly guide"
           sub="Chirpy the bird guides your child through ten short rooms. Each one practises a single skill through a quick, playful exercise." />
-        <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 12 }}>
+        <div className="mgk-rooms" style={{ ...wrap }}>
           {APP_ROOMS.map((r) => (
-            <div key={r.name} className="mgk-card" style={{ ...box, padding: '14px 16px', borderRadius: 18 }}>
-              <strong style={{ display: 'block', fontFamily: SERIF, fontSize: 21, fontWeight: 500 }}>{r.name}</strong>
-              <span style={{ fontSize: 13.5, color: palette.INK2 }}>{r.practise}</span>
-            </div>
+            <figure key={r.name} className="mgk-card mgk-room">
+              <img src={r.img} alt={r.alt} loading="lazy" width={300} height={400} />
+              <figcaption>
+                <strong>{r.name}</strong>
+                <span>{r.practise}</span>
+              </figcaption>
+            </figure>
           ))}
         </div>
         <p style={{ ...wrap, maxWidth: 760, textAlign: 'center', margin: '20px auto 0', fontSize: 14.5, lineHeight: 1.7, color: palette.INK2 }}>
@@ -1340,6 +1343,18 @@ export default function KidsMindGymSales() {
         body:has(.mgk-card:hover, .mgk-card:focus-within) .mgk-blur { opacity: 1; }
         @media (hover: none) { .mgk-blur { opacity: 1; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); } }
         .mgk-card { transition: transform .25s ease, box-shadow .25s ease; }
+        .mgk-rooms { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+        @media (max-width: 1000px) { .mgk-rooms { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 640px) { .mgk-rooms { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
+        .mgk-room { margin: 0; position: relative; aspect-ratio: 3 / 4; border-radius: 20px; overflow: hidden;
+          border: 1px solid ${palette.BORDER}; }
+        .mgk-room img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s ease; }
+        @media (hover: hover) { .mgk-room:hover img { transform: scale(1.05); } }
+        .mgk-room figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 36px 12px 12px; color: #fff;
+          background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(12,8,20,.86) 70%); }
+        .mgk-room strong { display: block; font-family: ${SERIF}; font-size: 21px; font-weight: 500; line-height: 1.15; }
+        .mgk-room span { display: block; font-family: ${SANS}; font-size: 12.5px; line-height: 1.35; opacity: .92; margin-top: 2px; }
+        @media (max-width: 640px) { .mgk-room strong { font-size: 18px; } .mgk-room span { font-size: 11.5px; } }
         .mgk-areas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
         @media (max-width: 860px) { .mgk-areas { grid-template-columns: repeat(2, 1fr); gap: 12px; } }
         .mgk-flip { padding: 0; border: 0; background: none; cursor: pointer; text-align: left; font: inherit; color: inherit;
@@ -1381,7 +1396,7 @@ export default function KidsMindGymSales() {
         }
         @media (max-width: 520px) { section { padding-left: 16px !important; padding-right: 16px !important; } }
         @media (max-width: 860px) { .mgk-hero { grid-template-columns: 1fr !important; } }
-        @media (prefers-reduced-motion: reduce) { .mgk-blur, .mgk-card, .mgk-flip-inner { transition: none !important; } .mgk-card:hover { transform: none !important; } }
+        @media (prefers-reduced-motion: reduce) { .mgk-blur, .mgk-card, .mgk-flip-inner, .mgk-room img { transition: none !important; } .mgk-card:hover { transform: none !important; } }
       `}</style>
     </div>
   );
