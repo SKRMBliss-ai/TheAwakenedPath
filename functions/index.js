@@ -191,6 +191,7 @@ const COURSE_PRICES = {
 // track library (which is how emotion_feelings_course ended up there).
 const COURSE_IDS = new Set(['emotion_feelings_course', 'wisdom_untethered', 'all_access', 'kids_zoom_monthly', 'kids_zoom_yearly']);
 const isKidsZoomPass = (id) => id === 'kids_zoom_monthly' || id === 'kids_zoom_yearly';
+const isFamilyPack = (id) => id === 'family_monthly' || id === 'family_yearly';
 const isSoundscapeTrack = (id) => !!COURSE_PRICES[id] && !COURSE_IDS.has(id);
 
 const COURSE_PRICES_INR = {
@@ -256,6 +257,21 @@ const PWYW_PRODUCTS = {
         days: 30,
         suggested: { USD: 3, INR: 240, EUR: 3, GBP: 3, CAD: 4, AUD: 4, AED: 12, SGD: 4 },
         min: { USD: 2, INR: 99, EUR: 2, GBP: 2, CAD: 3, AUD: 3, AED: 8, SGD: 3 },
+    },
+    // Family package: kids membership + adult Mind Gym app. Fixed price (min == suggested,
+    // so a client can pay more but never less). Keep in sync with
+    // src/features/landing/kidsPricing.ts. Yearly = 10 x monthly.
+    family_monthly: {
+        grantType: "membership",
+        days: 30,
+        suggested: { USD: 25, INR: 1999 },
+        min: { USD: 25, INR: 1999 },
+    },
+    family_yearly: {
+        grantType: "membership",
+        days: 365,
+        suggested: { USD: 250, INR: 19990 },
+        min: { USD: 250, INR: 19990 },
     },
     membership_yearly: {
         grantType: "membership",
@@ -1086,15 +1102,18 @@ async function grantPurchase({
 
     // Send the right email: guests must be told to sign up with THIS email
     // to unlock; existing users get the standard welcome.
-    if (isKidsZoomPass(courseId)) {
-        // A class booking, not app access: confirm to the parent and tell the
-        // team so someone sends the Zoom link. Never the course-access email.
+    if (isKidsZoomPass(courseId) || isFamilyPack(courseId)) {
+        // A class booking: confirm to the parent and tell the team so someone
+        // agrees the class day and sends the Zoom link + printables.
         try {
             await sendKidsZoomBookingEmails({ toEmail: userEmail, phone: String(guestPhone || '').trim(), courseId, amount, currency, paymentId, provider });
         } catch (emailErr) {
             console.error("Failed to send kids Zoom booking emails:", emailErr);
         }
-    } else if (userEmail) {
+    }
+    // Kids passes are not app access, so no access email. The family package
+    // DOES unlock the adult app, so it also gets the normal sign-in email.
+    if (!isKidsZoomPass(courseId) && userEmail) {
         try {
             if (isGuest) {
                 await sendGuestAccessEmail(userEmail);
@@ -2656,8 +2675,9 @@ async function sendWelcomeEmail(toEmail, planName) {
  */
 async function sendKidsZoomBookingEmails({ toEmail, phone, courseId, amount, currency, paymentId, provider, recurring = false }) {
     const transporter = getTransporter();
-    const yearly = courseId === 'kids_zoom_yearly';
-    const plan = yearly ? 'Yearly' : 'Monthly';
+    const yearly = courseId === 'kids_zoom_yearly' || courseId === 'family_yearly';
+    const family = courseId === 'family_monthly' || courseId === 'family_yearly';
+    const plan = (family ? 'Family package — ' : '') + (yearly ? 'Yearly' : 'Monthly');
     const guarantee = yearly
         ? '100% money back within the first 30 days, no questions asked.'
         : '100% money back any time, no questions asked.';
@@ -2675,7 +2695,7 @@ async function sendKidsZoomBookingEmails({ toEmail, phone, courseId, amount, cur
             <p><strong>Email:</strong> ${toEmail || 'N/A'}</p>
             <p><strong>Phone:</strong> ${phone || 'N/A'}</p>
             <p><strong>Paid:</strong> ${paid} via ${provider || ''} (${paymentId || ''})</p>
-            <p>Please message this parent on WhatsApp / email to agree a Saturday or Sunday for the live Zoom class, then send the Zoom link.</p>
+            <p>Please message this parent on WhatsApp / email to agree a Saturday or Sunday for the live Zoom class, then send the Zoom link and the printable diary chart and activity sheets.${family ? ' This is a Family package: the adult Mind Gym app is unlocked on this email address.' : ''}</p>
         </div>`,
     });
     if (!toEmail) return;
@@ -2688,6 +2708,8 @@ async function sendKidsZoomBookingEmails({ toEmail, phone, courseId, amount, cur
             <p>Plan: <strong>${plan}</strong></p>
             <p>Open the Kids Mind Gym any time at <a href="https://www.skrmblissai.in/mindgymforkids">skrmblissai.in/mindgymforkids</a>, signed in with this email address.</p>
             <p>A live Zoom class is included with your membership. It takes place on a Saturday or a Sunday, whichever suits you. We will message you shortly on WhatsApp or email to agree the day and time, then send your Zoom link.</p>
+            <p>We will also send you the printable diary chart and activity sheets to support your child’s understanding, and you can message us on WhatsApp (+91 82175 81238) any time for 1-1 support. We reply the same day or the next.</p>
+            ${family ? '<p>Your Family package also includes the adult Mind Gym app: open <a href="https://www.skrmblissai.in/mindgym?claim=1">skrmblissai.in/mindgym</a> and sign in with this email address.</p>' : ''}
             <p>${guarantee} For a refund, reply to this email or message us on WhatsApp at +91 82175 81238.</p>
             <p>${billing}</p>
             <p>With warmth,<br/>Sim Katyal &amp; the Soulful Intelligence team</p>

@@ -47,6 +47,10 @@ function detectCurrency(): KidsCurrency {
 export const KIDS_ZOOM_CURRENCY: KidsCurrency = detectCurrency();
 
 export interface KidsZoomPlan {
+  /** 'kids' = Kids Mind Gym membership; 'family' = kids membership + the adult Mind Gym app. */
+  kind: 'kids' | 'family';
+  /** Heading shown in the checkout panel. */
+  title: string;
   /** Recurring: a key of SUBSCRIPTION_PLANS in functions/index.js. */
   productId: string;
   /** One-time: a key of COURSE_PRICES in functions/index.js. */
@@ -59,6 +63,8 @@ export interface KidsZoomPlan {
 
 export const KIDS_ZOOM_PLANS: { monthly: KidsZoomPlan; yearly: KidsZoomPlan } = {
   monthly: {
+    kind: 'kids',
+    title: 'Kids Mind Gym membership',
     productId: 'kids_membership_monthly',
     oneTimeProductId: 'kids_zoom_monthly',
     price: MONTHLY[KIDS_ZOOM_CURRENCY],
@@ -66,9 +72,39 @@ export const KIDS_ZOOM_PLANS: { monthly: KidsZoomPlan; yearly: KidsZoomPlan } = 
     period: 'month',
   },
   yearly: {
+    kind: 'kids',
+    title: 'Kids Mind Gym membership',
     productId: 'kids_membership_yearly',
     oneTimeProductId: 'kids_zoom_yearly',
     price: MONTHLY[KIDS_ZOOM_CURRENCY] * KIDS_ZOOM_YEARLY_PAID_MONTHS,
+    label: 'Yearly',
+    period: 'year',
+  },
+};
+
+// Family package: the kids membership PLUS the adult Mind Gym app, one payment.
+// One-time only (adult access is granted as a time-limited membership). The
+// amounts are charged by the backend from PWYW_PRODUCTS (family_monthly /
+// family_yearly) in functions/index.js — change BOTH places together.
+// Yearly = 10 × monthly (2 months free).
+const FAMILY_MONTHLY: Record<KidsCurrency, number> = { USD: 25, INR: 1999 };
+
+export const KIDS_FAMILY_PLANS: { monthly: KidsZoomPlan; yearly: KidsZoomPlan } = {
+  monthly: {
+    kind: 'family',
+    title: 'Family package',
+    productId: 'family_monthly',
+    oneTimeProductId: 'family_monthly',
+    price: FAMILY_MONTHLY[KIDS_ZOOM_CURRENCY],
+    label: 'Monthly',
+    period: 'month',
+  },
+  yearly: {
+    kind: 'family',
+    title: 'Family package',
+    productId: 'family_yearly',
+    oneTimeProductId: 'family_yearly',
+    price: FAMILY_MONTHLY[KIDS_ZOOM_CURRENCY] * 10,
     label: 'Yearly',
     period: 'year',
   },
@@ -97,9 +133,10 @@ export function formatKidsPrice(amount: number, currency: KidsCurrency = KIDS_ZO
 }
 
 /** Yearly per-month cost and the saving vs paying monthly; null until prices are set. */
-export function kidsZoomYearlyMath() {
-  const m = KIDS_ZOOM_PLANS.monthly.price;
-  const y = KIDS_ZOOM_PLANS.yearly.price;
+export function yearlyMath(m: number | null, y: number | null) {
   if (m == null || y == null) return null;
   return { perMonth: y / 12, savePerYear: m * 12 - y, savePct: m > 0 ? Math.round((1 - y / 12 / m) * 100) : 0 };
 }
+
+export const kidsZoomYearlyMath = () => yearlyMath(KIDS_ZOOM_PLANS.monthly.price, KIDS_ZOOM_PLANS.yearly.price);
+export const familyYearlyMath = () => yearlyMath(KIDS_FAMILY_PLANS.monthly.price, KIDS_FAMILY_PLANS.yearly.price);

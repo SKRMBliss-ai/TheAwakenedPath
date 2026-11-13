@@ -24,7 +24,7 @@ import KidsVideo, { useAvailableKidsVideos } from './components/KidsVideo';
 import KidsWallOfFame from './components/KidsWallOfFame';
 import { KIDS_AD_VIDEO, KIDS_GUIDE_VIDEOS } from './kidsVideos';
 import {
-  KIDS_ZOOM_PLANS, KIDS_ZOOM_CURRENCY, KIDS_ZOOM_SCHEDULE, KIDS_ZOOM_BOOKING_OPEN, KIDS_MEMBERSHIP_RECURRING, formatKidsPrice, kidsZoomYearlyMath,
+  KIDS_ZOOM_PLANS, KIDS_ZOOM_CURRENCY, KIDS_ZOOM_SCHEDULE, KIDS_ZOOM_BOOKING_OPEN, KIDS_MEMBERSHIP_RECURRING, KIDS_FAMILY_PLANS, familyYearlyMath, formatKidsPrice, kidsZoomYearlyMath,
   type KidsZoomPlan,
 } from './kidsPricing';
 import FeaturedCourse from './components/FeaturedCourse';
@@ -50,6 +50,20 @@ const ZOOM_INCLUDES = [
   'Best Every Day Champion completion certificate',
 ];
 
+// Real rooms from the Kids Mind Gym app (src/features/practise/kids/rooms.ts): name + what the child practises.
+const APP_ROOMS: { name: string; practise: string }[] = [
+  { name: 'Feelings Room', practise: 'Naming what I feel' },
+  { name: 'Thought Room', practise: 'Noticing thoughts' },
+  { name: 'Body Detective', practise: 'Listening to my body' },
+  { name: 'Pause Room', practise: 'Breathing and slowing down' },
+  { name: 'Different Story', practise: 'Seeing another point of view' },
+  { name: 'Friendship Room', practise: 'Kind words and repair' },
+  { name: 'Anger Room', practise: 'Handling big energy safely' },
+  { name: 'Worry Room', practise: 'Facing worries bravely' },
+  { name: 'Kindness Room', practise: 'Growing kindness' },
+  { name: 'Reflection Room', practise: 'Noticing what I learned' },
+];
+
 const AREAS = [
   { icon: Smile, img: '/rooms/feelings_card.webp', alt: 'A smiling child holding a glowing jar of light under a rainbow', title: 'Feelings', body: 'Name what they feel and learn that every feeling is okay to have.' },
   { icon: BookOpen, img: '/rooms/story_card.webp', alt: 'A child reading a storybook while a castle in the clouds appears above', title: 'Story Lab', body: 'Make up stories where characters face feelings and choices.' },
@@ -63,6 +77,8 @@ const AREAS = [
 const MINDGYM_INCLUDES = [
   'The Kids Mind Gym: feelings, Story Lab, games and a calm corner',
   'A digital daily diary with gentle prompts to fill in each day',
+  'Printable diary chart and activity sheets to support your child’s understanding',
+  'WhatsApp 1-1 support: message us about your child, we reply the same day or the next',
   'Rewards that celebrate showing up and practising',
   'A grown-ups section with simple ways to support at home',
 ];
@@ -162,10 +178,10 @@ function ZoomPlans({ palette }: { palette: Palette }) {
   const [phone, setPhone] = useState('');
   const emailOk = email.includes('@') && !!email.split('@')[1]?.includes('.');
   const formReady = name.trim().length > 0 && emailOk;
-  const recurring = KIDS_MEMBERSHIP_RECURRING;
   const math = kidsZoomYearlyMath();
   const cardBg = palette.CARD;
   const [picked, setPicked] = useState<KidsZoomPlan | null>(null);
+  const recurring = KIDS_MEMBERSHIP_RECURRING && picked?.kind !== 'family';
   const [user, setUser] = useState<User | null>(null);
   const [signingIn, setSigningIn] = useState(false);
   const [done, setDone] = useState<string | null>(null);
@@ -249,10 +265,12 @@ function ZoomPlans({ palette }: { palette: Palette }) {
   });
 
   const card = (plan: KidsZoomPlan, featured: boolean) => {
+    const family = plan.kind === 'family';
+    const m = family ? familyYearlyMath() : math;
     const priced = plan.price != null;
     const canBuy = priced && KIDS_ZOOM_BOOKING_OPEN;
-    const perMonth = featured && math
-      ? formatKidsPrice(KIDS_ZOOM_CURRENCY === 'INR' ? Math.round(math.perMonth) : math.perMonth) : null;
+    const perMonth = featured && m
+      ? formatKidsPrice(KIDS_ZOOM_CURRENCY === 'INR' ? Math.round(m.perMonth) : m.perMonth) : null;
     const active = picked?.period === plan.period;
     return (
       <div key={plan.period} className="mgk-card" style={{
@@ -264,7 +282,7 @@ function ZoomPlans({ palette }: { palette: Palette }) {
           <span style={{ position: 'absolute', top: -13, left: 24, background: palette.PURPLE_STRONG, color: palette.ON_ACCENT,
             borderRadius: 999, padding: '5px 14px', fontFamily: SANS, fontSize: 10.5, fontWeight: 800,
             letterSpacing: '0.14em', textTransform: 'uppercase' }}>
-            {math && math.savePct > 0 ? `Save ${math.savePct}%` : 'Best value'}
+            {m && m.savePct > 0 ? `Save ${m.savePct}%` : 'Best value'}
           </span>
         )}
         <h3 style={{ margin: 0, fontFamily: SERIF, fontSize: 28, fontWeight: 500, color: palette.INK }}>{plan.label}</h3>
@@ -278,11 +296,12 @@ function ZoomPlans({ palette }: { palette: Palette }) {
         </p>
         <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 6, fontFamily: SANS, fontSize: 13.5, lineHeight: 1.5, color: palette.INK2 }}>
           {[
-            'The full Kids Mind Gym app',
-            'Live Zoom class included',
+            ...(family ? ['Everything in the Kids Mind Gym membership', 'Plus the adult Mind Gym app, for you'] : ['The full Kids Mind Gym app', 'Live Zoom class included']),
+            'Printable diary chart and activity sheets',
+            'WhatsApp 1-1 support',
             featured
-              ? `12 months for the price of 9${perMonth ? `, about ${perMonth} a month` : ''}`
-              : (recurring ? 'Renews monthly, cancel any time' : 'One month at a time, no auto-renewal'),
+              ? `${family ? '12 months for the price of 10' : '12 months for the price of 9'}${perMonth ? `, about ${perMonth} a month` : ''}`
+              : ((KIDS_MEMBERSHIP_RECURRING && !family) ? 'Renews monthly, cancel any time' : 'One month at a time, no auto-renewal'),
             featured ? '100% money back in the first 30 days' : '100% money back, any time',
           ].map((line) => (
             <li key={line} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
@@ -291,9 +310,9 @@ function ZoomPlans({ palette }: { palette: Palette }) {
           ))}
         </ul>
         <button type="button" onClick={() => pick(plan)} disabled={!canBuy}
-          aria-label={`Join the Kids Mind Gym, ${plan.label.toLowerCase()} membership`}
+          aria-label={`${family ? 'Join with the Family package' : 'Join the Kids Mind Gym'}, ${plan.label.toLowerCase()}`}
           style={{ ...bigBtn(canBuy), marginTop: 8, minHeight: 48, fontSize: 15 }}>
-          {canBuy ? `Join ${plan.label.toLowerCase()}` : 'Opening soon'}
+          {canBuy ? `${family ? 'Get the Family package' : 'Join'} ${plan.label.toLowerCase()}` : 'Opening soon'}
         </button>
       </div>
     );
@@ -304,6 +323,21 @@ function ZoomPlans({ palette }: { palette: Palette }) {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, justifyContent: 'center', maxWidth: 900, margin: '0 auto' }}>
         {card(KIDS_ZOOM_PLANS.monthly, false)}
         {card(KIDS_ZOOM_PLANS.yearly, true)}
+      </div>
+
+      <div id="family" style={{ maxWidth: 900, margin: '44px auto 0', textAlign: 'center' }}>
+        <span style={{ fontFamily: SANS, fontSize: 10.5, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', color: palette.BROWN }}>Practise together</span>
+        <h3 style={{ fontFamily: SERIF, fontSize: 'clamp(26px, 3.4vw, 36px)', fontWeight: 400, margin: '8px 0 8px', color: palette.INK }}>Add the adult Mind Gym: the Family package</h3>
+        <p style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.65, color: palette.INK2, margin: '0 auto 28px', maxWidth: 620 }}>
+          Children learn best when the grown-up practises too. The Family package gives your child the Kids Mind Gym membership and gives you the adult Mind Gym app, with one payment and one sign-up.
+        </p>
+        <p style={{ fontFamily: SANS, fontSize: 13.5, lineHeight: 1.65, color: palette.INK2, margin: '-12px auto 28px', maxWidth: 620 }}>
+          <strong style={{ color: palette.INK }}>The adult Mind Gym app:</strong> guided practices, the Practice Room, a Journal, Breathe, Sacred Sounds, and the Power of Now and Wisdom Untethered lessons. The separate Feelings &amp; Emotions course is not included.
+        </p>
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, justifyContent: 'center', maxWidth: 900, margin: '0 auto' }}>
+        {card(KIDS_FAMILY_PLANS.monthly, false)}
+        {card(KIDS_FAMILY_PLANS.yearly, true)}
       </div>
 
       {done && (
@@ -322,10 +356,10 @@ function ZoomPlans({ palette }: { palette: Palette }) {
         <div ref={formRef} id="kids-membership-checkout" style={{ maxWidth: 560, margin: '24px auto 0', padding: 'clamp(18px, 4vw, 26px)',
           borderRadius: 24, background: cardBg, border: `1px solid ${palette.BORDER}` }}>
           <h3 style={{ margin: '0 0 4px', fontFamily: SERIF, fontSize: 26, fontWeight: 500 }}>
-            Kids Mind Gym membership · {picked.label}
+            {picked.title} · {picked.label}
           </h3>
           <p style={{ margin: '0 0 16px', fontSize: 14, color: palette.INK2 }}>
-            {formatKidsPrice(picked.price as number)} a {picked.period} · app and live Zoom class ·{' '}
+            {formatKidsPrice(picked.price as number)} a {picked.period} · {picked.kind === 'family' ? 'kids membership and the adult Mind Gym app' : 'app and live Zoom class'} ·{' '}
             {recurring ? `renews each ${picked.period} until you cancel` : 'one-time payment, no auto-renewal'}
           </p>
 
@@ -749,6 +783,23 @@ export default function KidsMindGymSales() {
             </p>
           </div>
         </div>
+      </section>
+
+      {/* Everything inside the app */}
+      <section id="features" style={sec()}>
+        <SectionTitle palette={palette} kicker="Inside the app" title="Ten rooms, one friendly guide"
+          sub="Chirpy the bird guides your child through ten short rooms. Each one practises a single skill through a quick, playful exercise." />
+        <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 12 }}>
+          {APP_ROOMS.map((r) => (
+            <div key={r.name} className="mgk-card" style={{ ...box, padding: '14px 16px', borderRadius: 18 }}>
+              <strong style={{ display: 'block', fontFamily: SERIF, fontSize: 21, fontWeight: 500 }}>{r.name}</strong>
+              <span style={{ fontSize: 13.5, color: palette.INK2 }}>{r.practise}</span>
+            </div>
+          ))}
+        </div>
+        <p style={{ ...wrap, maxWidth: 760, textAlign: 'center', margin: '20px auto 0', fontSize: 14.5, lineHeight: 1.7, color: palette.INK2 }}>
+          Plus Story Lab, games, a daily diary, rewards for showing up and a section for grown-ups. Short sessions, no scores, no pressure.
+        </p>
       </section>
 
       {/* Zoom class */}
