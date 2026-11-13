@@ -29,7 +29,7 @@ import {
 } from './kidsPricing';
 import FeaturedCourse from './components/FeaturedCourse';
 import {
-  KIDS_DAYS, KIDS_CHART_IMG, KIDS_TAGLINE, KIDS_TIME, KIDS_AGE_BANDS, KIDS_INCLUDES,
+  KIDS_DAYS, KIDS_CHART_IMG, KIDS_TAGLINE, KIDS_AGE_BANDS,
   KIDS_ONLY_DIARY_IMG, KIDS_TEACHER_IMG, KIDS_TEACHER_POINTS, KIDS_TEACHER_QUOTE, trackKids,
 } from './kidsChallengeData';
 
@@ -39,6 +39,16 @@ const APP_PATH = '/mindgymforkids';
 const ALL_VIDEOS = [KIDS_AD_VIDEO, ...KIDS_GUIDE_VIDEOS];
 const WHATSAPP_URL = 'https://wa.me/918217581238'; // same number as the site footer
 const URL_ = 'https://www.skrmblissai.in/tiny-kids-transformations';
+
+// What the live Zoom class gives a family (no fixed weekday: the day is agreed on WhatsApp).
+const ZOOM_INCLUDES = [
+  'A live Zoom class on a Saturday or Sunday that suits you',
+  'Day and time agreed with you on WhatsApp',
+  '“Let’s Be Our Best Every Day!” activity chart',
+  'A simple daily reflection practice',
+  'Parent-supported emotional awareness activities',
+  'Best Every Day Champion completion certificate',
+];
 
 const AREAS = [
   { icon: Smile, img: '/rooms/feelings_card.webp', alt: 'A smiling child holding a glowing jar of light under a rainbow', title: 'Feelings', body: 'Name what they feel and learn that every feeling is okay to have.' },
@@ -50,7 +60,6 @@ const AREAS = [
 ];
 
 // What a family gets with the Kids Mind Gym itself (the Zoom sessions list
-// stays in KIDS_INCLUDES, shown with the live sessions).
 const MINDGYM_INCLUDES = [
   'The Kids Mind Gym: feelings, Story Lab, games and a calm corner',
   'A digital daily diary with gentle prompts to fill in each day',
@@ -68,11 +77,11 @@ const FAQ = [
   { q: 'Is this therapy?', a: 'No. It is practice and play for emotional skills such as naming feelings, pausing and making kind choices. It is not therapy, diagnosis or medical care, and it does not replace a professional if your child needs one.' },
   { q: 'What ages is it for?', a: 'It is designed for children ages 3 to 12. Children of 3 to 5 take part with a grown-up alongside; older children can explore more on their own.' },
   { q: 'Does my child need me with them?', a: 'We suggest a grown-up joins for the first sessions, then stays nearby. The grown-up section explains how to support at home.' },
-  { q: 'What does membership include?', a: 'The full Kids Mind Gym app, plus live Zoom classes for kids run by the Soulful Intelligence team every Friday, Saturday and Sunday. The Zoom classes are included in the membership; there is nothing extra to pay.' },
+  { q: 'What does membership include?', a: 'The full Kids Mind Gym app, plus a live Zoom class for your child run by the Soulful Intelligence team. The Zoom class is included in the membership; there is nothing extra to pay.' },
   { q: 'Can I cancel?', a: (KIDS_MEMBERSHIP_RECURRING
     ? 'Yes, any time. Membership renews automatically each month or year until you cancel; email or WhatsApp us and we stop it.'
     : 'Yes. Membership is a one-time payment for a month or a year and never renews on its own, so there is nothing to cancel later.') + ' Our 100% money-back guarantee applies, no questions asked: any time on the monthly plan, and within the first 30 days on the yearly plan. Refunds go to your original payment method, typically within 5–7 business days.' },
-  { q: 'How do the live Zoom sessions work?', a: 'They follow the three-day rhythm shown on this page: Meet Yourself on Friday, Understand Yourself on Saturday and Grow Yourself on Sunday, 30 to 40 minutes each. They are included with Kids Mind Gym membership, and we send the Zoom link by email after you join.' },
+  { q: 'When is the live Zoom class?', a: 'On a Saturday or a Sunday, whichever suits you. After you join we message you on WhatsApp or email to agree the day and time, then send the Zoom link. The class is 30 to 40 minutes and is included with Kids Mind Gym membership.' },
 ];
 
 function Cta({ palette, label, href, event, ghost = false }: {
@@ -139,7 +148,7 @@ function SectionTitle({ palette, kicker, title, sub }: { palette: Palette; kicke
   );
 }
 
-/** Kids Mind Gym membership (app + live Zoom classes included). Two billing
+/** Kids Mind Gym membership (app + live Zoom class included). Two billing
  *  modes, switched by KIDS_MEMBERSHIP_RECURRING in kidsPricing.ts:
  *   - one-time (default): guest checkout like the Feelings course — Razorpay,
  *     PayPal (with Apple Pay where offered) and Google Pay; the parent renews
@@ -270,7 +279,7 @@ function ZoomPlans({ palette }: { palette: Palette }) {
         <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 6, fontFamily: SANS, fontSize: 13.5, lineHeight: 1.5, color: palette.INK2 }}>
           {[
             'The full Kids Mind Gym app',
-            'Live Zoom classes included',
+            'Live Zoom class included',
             featured
               ? `12 months for the price of 9${perMonth ? `, about ${perMonth} a month` : ''}`
               : (recurring ? 'Renews monthly, cancel any time' : 'One month at a time, no auto-renewal'),
@@ -301,7 +310,7 @@ function ZoomPlans({ palette }: { palette: Palette }) {
         <div role="status" style={{ maxWidth: 560, margin: '24px auto 0', padding: '20px 22px', borderRadius: 20,
           background: palette.BAND, color: palette.ON_BAND, textAlign: 'center', fontFamily: SANS, fontSize: 15, lineHeight: 1.6 }}>
           <strong style={{ display: 'block', fontFamily: SERIF, fontSize: 24, fontWeight: 500 }}>Welcome to the Kids Mind Gym.</strong>
-          Your membership is active. A welcome email is on its way to {done}, and we will send your Zoom link and class times there shortly.
+          Your membership is active. A welcome email is on its way to {done}, and we will contact you to agree a Saturday or Sunday that suits you, then send the Zoom link.
           <div style={{ marginTop: 14 }}>
             <a href={APP_PATH} style={{ display: 'inline-flex', alignItems: 'center', minHeight: 44, padding: '0 22px', borderRadius: 999,
               background: palette.PURPLE_STRONG, color: palette.ON_ACCENT, fontWeight: 700, textDecoration: 'none' }}>Open the Kids Mind Gym</a>
@@ -316,7 +325,7 @@ function ZoomPlans({ palette }: { palette: Palette }) {
             Kids Mind Gym membership · {picked.label}
           </h3>
           <p style={{ margin: '0 0 16px', fontSize: 14, color: palette.INK2 }}>
-            {formatKidsPrice(picked.price as number)} a {picked.period} · app and live Zoom classes ·{' '}
+            {formatKidsPrice(picked.price as number)} a {picked.period} · app and live Zoom class ·{' '}
             {recurring ? `renews each ${picked.period} until you cancel` : 'one-time payment, no auto-renewal'}
           </p>
 
@@ -404,15 +413,15 @@ export default function KidsMindGymSales() {
   const sched = KIDS_ZOOM_SCHEDULE;
 
   usePageSeo({
-    title: 'Kids Mind Gym — Feelings, Stories & Games for Ages 3–12 | Live Zoom Classes Included',
+    title: 'Kids Mind Gym — Feelings, Stories & Games for Ages 3–12 | Live Zoom Class Included',
     description:
-      'Kids Mind Gym helps children ages 3 to 12 practise noticing feelings, calming down and making kind choices through games, stories and a daily diary. Membership includes live Zoom classes every Friday, Saturday and Sunday.',
+      'Kids Mind Gym helps children ages 3 to 12 practise noticing feelings, calming down and making kind choices through games, stories and a daily diary. Membership includes a live Zoom class on a Saturday or Sunday that suits you.',
     url: URL_,
     image: 'https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2Fposter.png?alt=media',
     jsonLd: [
       {
         '@context': 'https://schema.org', '@type': 'WebPage', name: 'Kids Mind Gym', url: URL_,
-        description: 'Practice and games for children ages 3 to 12 to build emotional skills, with live Zoom classes included in membership.',
+        description: 'Practice and games for children ages 3 to 12 to build emotional skills, with live Zoom class included in membership.',
         publisher: { '@type': 'Organization', name: 'Soulful Intelligence Studio', url: 'https://www.skrmblissai.in' },
       },
       {
@@ -745,11 +754,11 @@ export default function KidsMindGymSales() {
       {/* Zoom class */}
       <section id="zoom" style={sec()}>
         <SectionTitle palette={palette} kicker="Membership" title="Join the Kids Mind Gym"
-          sub="One membership: the full Kids Mind Gym app, with live Zoom classes included. Choose monthly, or save with yearly." />
+          sub="One membership: the full Kids Mind Gym app, with live Zoom class included. Choose monthly, or save with yearly." />
         <div style={{ ...wrap, display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', marginBottom: 32 }}>
           {[
-            { icon: Calendar, label: 'Days', v: sched.days },
-            { icon: Video, label: 'Time', v: sched.time ?? KIDS_TIME },
+            { icon: Calendar, label: 'Day', v: sched.days },
+            { icon: Video, label: 'Time', v: sched.time },
             { icon: Smile, label: 'Length', v: sched.lengthMinutes ? `${sched.lengthMinutes} minutes` : '30–40 minutes' },
             { icon: Users, label: 'Ages', v: sched.ages },
           ].filter((c) => c.v).map(({ icon: Icon, label, v }) => (
@@ -986,7 +995,7 @@ export default function KidsMindGymSales() {
       {/* ═══ The three days ═════════════════════════════════════════════════ */}
       <section id="days" style={{ position: 'relative', zIndex: 2, padding: 'clamp(56px, 8vw, 88px) clamp(24px, 6vw, 96px)' }}>
         {sectionTitle(
-          'Inside the live Zoom sessions',
+          'Inside the live Zoom class',
           'What will your child experience?',
           'Three short, interactive sessions built around real-life situations children already recognise — short enough to hold attention, meaningful enough to start a habit.',
         )}
@@ -1022,7 +1031,7 @@ export default function KidsMindGymSales() {
                   fontFamily: SANS, fontSize: 11, fontWeight: 800, letterSpacing: '0.05em',
                   margin: '0 auto 16px', display: 'table',
                 }}>
-                  {d.day}
+                  {d.day.replace(/^DAY (\d) – .*$/, "PART $1")}
                 </div>
                 
                 <h3 style={{
@@ -1063,7 +1072,7 @@ export default function KidsMindGymSales() {
             </h3>
 
             <ul style={{ padding: 0, margin: '0 0 16px', listStyle: 'none' }}>
-              {KIDS_INCLUDES.map((item, i) => (
+              {ZOOM_INCLUDES.map((item, i) => (
                 <li key={i} style={{
                   display: 'flex', alignItems: 'flex-start', gap: 10,
                   fontFamily: SANS, fontSize: 14, color: palette.PURPLE_STRONG, fontWeight: 600, lineHeight: 1.4,
@@ -1080,28 +1089,21 @@ export default function KidsMindGymSales() {
 
       <KidsWallOfFame palette={palette} />
 
-      {/* Session schedule — belongs with the three session days above */}
+      {/* Choose your day — no fixed weekday; timing is agreed on WhatsApp */}
       <section id="schedule" style={{ ...sec(), paddingTop: 0 }}>
-        <div className="mgk-card" style={{ ...box, ...wrap, maxWidth: 560, padding: 'clamp(20px, 4vw, 30px)' }}>
+        <div className="mgk-card" style={{ ...box, ...wrap, maxWidth: 560, padding: 'clamp(20px, 4vw, 30px)', textAlign: 'center' }}>
           <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: palette.BROWN }}>
             Included with membership
           </span>
-          <h3 style={{ fontFamily: SERIF, fontSize: 26, fontWeight: 500, margin: '6px 0 4px' }}>Session schedule</h3>
-          <p style={{ margin: '0 0 12px', fontSize: 13.5, fontWeight: 700, color: palette.INK2 }}>
-            Every Friday · Saturday · Sunday · 30–40 minutes · {KIDS_TIME}
+          <h3 style={{ fontFamily: SERIF, fontSize: 26, fontWeight: 500, margin: '6px 0 8px' }}>Pick the day that suits you</h3>
+          <p style={{ margin: '0 0 16px', fontSize: 14.5, lineHeight: 1.65, color: palette.INK2 }}>
+            The live Zoom class takes place on a Saturday or a Sunday, 30–40 minutes. After you join, we message you on WhatsApp to agree
+            the day and time that works for your family in your time zone, then send the Zoom link.
           </p>
-          {[
-            ['India (IST)', '8:30 PM'], ['USA – New York (ET)', '11:00 AM'], ['USA – Chicago (CT)', '10:00 AM'],
-            ['USA – Denver (MT)', '9:00 AM'], ['USA – Los Angeles (PT)', '8:00 AM'],
-          ].map(([place, t]) => (
-            <div key={place} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 14, fontWeight: 600, padding: '4px 0' }}>
-              <span>{place}</span><span>{t}</span>
-            </div>
-          ))}
-          <p style={{ margin: '10px 0 16px', fontSize: 11.5, color: palette.INK2 }}>
-            Times may change with daylight saving. We send the Zoom link by email after you join.
-          </p>
-          <Cta palette={palette} label="Join the Kids Mind Gym" href="#zoom" event="KIDS_SCHEDULE_CTA" />
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
+            <Cta palette={palette} label="Join the Kids Mind Gym" href="#zoom" event="KIDS_SCHEDULE_CTA" />
+            <Cta palette={palette} label="Ask on WhatsApp" href={WHATSAPP_URL} event="KIDS_SCHEDULE_WHATSAPP" ghost />
+          </div>
         </div>
       </section>
 

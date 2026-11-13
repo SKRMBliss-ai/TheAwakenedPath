@@ -210,7 +210,7 @@ export default function SoulfulHome() {
           fontFamily: SANS, fontSize: 12.5, fontWeight: 700,
         }}
       >
-        <span>🌈 New for kids — the Kids Mind Gym, with live Zoom classes included, ages 3–12</span>
+        <span>🌈 New for kids — the Kids Mind Gym, with live Zoom class included, ages 3–12</span>
         <span style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>See membership →</span>
       </a>
 
@@ -249,7 +249,7 @@ export default function SoulfulHome() {
                     },
                     {
                       label: 'For Kids',
-                      sub: 'Kids Mind Gym · live Zoom classes included',
+                      sub: 'Kids Mind Gym · live Zoom class included',
                       badge: 'NEW',
                       href: '/tiny-kids-transformations',
                       onClick: () => track('HOME_COURSE_KIDS_CLICK'),

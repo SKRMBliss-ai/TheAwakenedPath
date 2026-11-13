@@ -198,7 +198,7 @@ export default function AboutUs() {
                 },
                 {
                   label: 'For Kids',
-                  sub: 'Kids Mind Gym · live Zoom classes included',
+                  sub: 'Kids Mind Gym · live Zoom class included',
                   badge: 'NEW',
                   href: '/tiny-kids-transformations',
                 },

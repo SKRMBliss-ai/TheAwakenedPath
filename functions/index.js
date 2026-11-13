@@ -309,11 +309,11 @@ const SUBSCRIPTION_PLANS = {
         interval: 1,
         total_count: 10 // 10 years max
     },
-    // Kids Mind Gym membership — app + live Zoom classes. Keep the amounts in
+    // Kids Mind Gym membership — app + a live Zoom class. Keep the amounts in
     // sync with src/features/landing/kidsPricing.ts.
     "kids_membership_monthly": {
         name: "Kids Mind Gym Membership",
-        description: "Monthly membership: Kids Mind Gym app with live Zoom classes included",
+        description: "Monthly membership: Kids Mind Gym app with a live Zoom class included",
         amount: 19, // USD
         period: "monthly",
         interval: 1,
@@ -321,7 +321,7 @@ const SUBSCRIPTION_PLANS = {
     },
     "kids_membership_yearly": {
         name: "Kids Mind Gym Membership (Annual)",
-        description: "Yearly membership: Kids Mind Gym app with live Zoom classes included",
+        description: "Yearly membership: Kids Mind Gym app with a live Zoom class included",
         amount: 171, // USD
         period: "yearly",
         interval: 1,
@@ -349,7 +349,7 @@ const SUBSCRIPTION_PLANS_INR = {
     },
     "kids_membership_monthly": {
         name: "Kids Mind Gym Membership (INR)",
-        description: "Monthly membership: Kids Mind Gym app with live Zoom classes included",
+        description: "Monthly membership: Kids Mind Gym app with a live Zoom class included",
         amount: 1499, // INR
         period: "monthly",
         interval: 1,
@@ -357,7 +357,7 @@ const SUBSCRIPTION_PLANS_INR = {
     },
     "kids_membership_yearly": {
         name: "Kids Mind Gym Membership Annual (INR)",
-        description: "Yearly membership: Kids Mind Gym app with live Zoom classes included",
+        description: "Yearly membership: Kids Mind Gym app with a live Zoom class included",
         amount: 13491, // INR
         period: "yearly",
         interval: 1,
@@ -2675,7 +2675,7 @@ async function sendKidsZoomBookingEmails({ toEmail, phone, courseId, amount, cur
             <p><strong>Email:</strong> ${toEmail || 'N/A'}</p>
             <p><strong>Phone:</strong> ${phone || 'N/A'}</p>
             <p><strong>Paid:</strong> ${paid} via ${provider || ''} (${paymentId || ''})</p>
-            <p>Please send the Zoom link and class times to this parent.</p>
+            <p>Please message this parent on WhatsApp / email to agree a Saturday or Sunday for the live Zoom class, then send the Zoom link.</p>
         </div>`,
     });
     if (!toEmail) return;
@@ -2687,7 +2687,7 @@ async function sendKidsZoomBookingEmails({ toEmail, phone, courseId, amount, cur
             <h2 style="color:#4A3260;">Thank you — your membership is active</h2>
             <p>Plan: <strong>${plan}</strong></p>
             <p>Open the Kids Mind Gym any time at <a href="https://www.skrmblissai.in/mindgymforkids">skrmblissai.in/mindgymforkids</a>, signed in with this email address.</p>
-            <p>Live Zoom classes are included and run every Friday, Saturday and Sunday. We will send your Zoom link and class times to this email address shortly.</p>
+            <p>A live Zoom class is included with your membership. It takes place on a Saturday or a Sunday, whichever suits you. We will message you shortly on WhatsApp or email to agree the day and time, then send your Zoom link.</p>
             <p>${guarantee} For a refund, reply to this email or message us on WhatsApp at +91 82175 81238.</p>
             <p>${billing}</p>
             <p>With warmth,<br/>Sim Katyal &amp; the Soulful Intelligence team</p>

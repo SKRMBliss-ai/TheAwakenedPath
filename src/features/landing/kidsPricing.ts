@@ -6,7 +6,7 @@
 //   Yearly   3 months free = 9 × monthly → $171 / ₹13,491
 // Guarantee: 100% money back — any time on monthly, first 30 days on yearly.
 //
-// This is the Kids Mind Gym MEMBERSHIP: the app, with live Zoom classes included.
+// This is the Kids Mind Gym MEMBERSHIP: the app, with a live Zoom class included.
 // Billed as a recurring Razorpay subscription (monthly or yearly). The amounts are
 // charged by the backend from SUBSCRIPTION_PLANS / SUBSCRIPTION_PLANS_INR in
 // functions/index.js (ids kids_membership_monthly / kids_membership_yearly) —
@@ -76,8 +76,8 @@ export const KIDS_ZOOM_PLANS: { monthly: KidsZoomPlan; yearly: KidsZoomPlan } = 
 
 /** Live class schedule. Time, length and group size are still to be supplied. */
 export const KIDS_ZOOM_SCHEDULE = {
-  days: 'Every Friday · Saturday · Sunday' as string | null,
-  time: null as string | null,          // TODO(owner): e.g. "4:00 PM UK time"
+  days: 'Saturday or Sunday, your choice' as string | null,
+  time: 'Agreed with you on WhatsApp' as string | null,
   lengthMinutes: null as number | null, // TODO(owner): e.g. 40
   ages: '3–12 years',
   groupSize: null as string | null,     // TODO(owner)
