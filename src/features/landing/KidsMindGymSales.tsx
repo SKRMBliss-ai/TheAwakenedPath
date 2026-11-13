@@ -181,11 +181,19 @@ function ZoomPlans({ palette }: { palette: Palette }) {
   const math = kidsZoomYearlyMath();
   const cardBg = palette.CARD;
   const [picked, setPicked] = useState<KidsZoomPlan | null>(null);
+  const [tab, setTab] = useState<'kids' | 'family'>('kids');
   const recurring = KIDS_MEMBERSHIP_RECURRING && picked?.kind !== 'family';
   const [user, setUser] = useState<User | null>(null);
   const [signingIn, setSigningIn] = useState(false);
   const [done, setDone] = useState<string | null>(null);
   const formRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fromHash = () => { if (window.location.hash === '#family') setTab('family'); };
+    fromHash();
+    window.addEventListener('hashchange', fromHash);
+    return () => window.removeEventListener('hashchange', fromHash);
+  }, []);
 
   // Mind Gym creates anonymous accounts for quick entry; those cannot hold a membership.
   useEffect(() => onAuthStateChanged(getAuth(), (u) => setUser(u && !u.isAnonymous ? u : null)), []);
@@ -264,6 +272,12 @@ function ZoomPlans({ palette }: { palette: Palette }) {
     cursor: on ? 'pointer' : 'not-allowed',
   });
 
+  const changeTab = (k: 'kids' | 'family') => {
+    setTab(k);
+    setPicked((p) => (p && p.kind !== k ? null : p)); // close a checkout that belongs to the other tab
+    trackKids(`KIDS_TAB_${k.toUpperCase()}`);
+  };
+
   const card = (plan: KidsZoomPlan, featured: boolean) => {
     const family = plan.kind === 'family';
     const m = family ? familyYearlyMath() : math;
@@ -320,25 +334,50 @@ function ZoomPlans({ palette }: { palette: Palette }) {
 
   return (
     <>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, justifyContent: 'center', maxWidth: 900, margin: '0 auto' }}>
-        {card(KIDS_ZOOM_PLANS.monthly, false)}
-        {card(KIDS_ZOOM_PLANS.yearly, true)}
+      {/* Tabs: Kids Mind Gym | Family package */}
+      <div role="tablist" aria-label="Choose a package" style={{ display: 'flex', justifyContent: 'center', gap: 6, margin: '0 auto 28px',
+        padding: 5, width: 'fit-content', maxWidth: '100%', borderRadius: 999, background: cardBg, border: `1px solid ${palette.BORDER}` }}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); changeTab(tab === 'kids' ? 'family' : 'kids'); (document.getElementById(tab === 'kids' ? 'tab-family' : 'tab-kids') as HTMLElement | null)?.focus(); }
+        }}>
+        {([['kids', 'Kids Mind Gym'], ['family', 'Family package']] as const).map(([k, text]) => (
+          <button key={k} id={`tab-${k}`} type="button" role="tab" aria-selected={tab === k} aria-controls={`panel-${k}`}
+            tabIndex={tab === k ? 0 : -1} onClick={() => changeTab(k)}
+            style={{ minHeight: 46, padding: '0 clamp(14px, 3vw, 26px)', borderRadius: 999, border: 'none', cursor: 'pointer',
+              fontFamily: SANS, fontSize: 14.5, fontWeight: 700, whiteSpace: 'nowrap',
+              background: tab === k ? palette.PURPLE_STRONG : 'transparent', color: tab === k ? palette.ON_ACCENT : palette.INK2 }}>
+            {text}
+          </button>
+        ))}
       </div>
 
-      <div id="family" style={{ maxWidth: 900, margin: '44px auto 0', textAlign: 'center' }}>
-        <span style={{ fontFamily: SANS, fontSize: 10.5, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', color: palette.BROWN }}>Practise together</span>
-        <h3 style={{ fontFamily: SERIF, fontSize: 'clamp(26px, 3.4vw, 36px)', fontWeight: 400, margin: '8px 0 8px', color: palette.INK }}>Add the adult Mind Gym: the Family package</h3>
-        <p style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.65, color: palette.INK2, margin: '0 auto 28px', maxWidth: 620 }}>
-          Children learn best when the grown-up practises too. The Family package gives your child the Kids Mind Gym membership and gives you the adult Mind Gym app, with one payment and one sign-up.
-        </p>
-        <p style={{ fontFamily: SANS, fontSize: 13.5, lineHeight: 1.65, color: palette.INK2, margin: '-12px auto 28px', maxWidth: 620 }}>
-          <strong style={{ color: palette.INK }}>The adult Mind Gym app:</strong> guided practices, the Practice Room, a Journal, Breathe, Sacred Sounds, and the Power of Now and Wisdom Untethered lessons. The separate Feelings &amp; Emotions course is not included.
-        </p>
-      </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, justifyContent: 'center', maxWidth: 900, margin: '0 auto' }}>
-        {card(KIDS_FAMILY_PLANS.monthly, false)}
-        {card(KIDS_FAMILY_PLANS.yearly, true)}
-      </div>
+      {tab === 'kids' ? (
+        <div role="tabpanel" id="panel-kids" aria-labelledby="tab-kids">
+          <p style={{ textAlign: 'center', fontFamily: SANS, fontSize: 14.5, lineHeight: 1.65, color: palette.INK2, margin: '0 auto 28px', maxWidth: 560 }}>
+            For your child: the app, a live Zoom class, printables and WhatsApp 1-1 support.
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, justifyContent: 'center', maxWidth: 900, margin: '0 auto' }}>
+            {card(KIDS_ZOOM_PLANS.monthly, false)}
+            {card(KIDS_ZOOM_PLANS.yearly, true)}
+          </div>
+        </div>
+      ) : (
+        <div role="tabpanel" id="panel-family" aria-labelledby="tab-family">
+          <div id="family" style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
+            <h3 style={{ fontFamily: SERIF, fontSize: 'clamp(26px, 3.4vw, 36px)', fontWeight: 400, margin: '0 0 8px', color: palette.INK }}>Add the adult Mind Gym: the Family package</h3>
+            <p style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.65, color: palette.INK2, margin: '0 auto 14px', maxWidth: 620 }}>
+              Children learn best when the grown-up practises too. The Family package gives your child the Kids Mind Gym membership and gives you the adult Mind Gym app, with one payment and one sign-up.
+            </p>
+            <p style={{ fontFamily: SANS, fontSize: 13.5, lineHeight: 1.65, color: palette.INK2, margin: '0 auto 28px', maxWidth: 620 }}>
+              <strong style={{ color: palette.INK }}>The adult Mind Gym app:</strong> guided practices, the Practice Room, a Journal, Breathe, Sacred Sounds, and the Power of Now and Wisdom Untethered lessons. The separate Feelings &amp; Emotions course is not included.
+            </p>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, justifyContent: 'center', maxWidth: 900, margin: '0 auto' }}>
+            {card(KIDS_FAMILY_PLANS.monthly, false)}
+            {card(KIDS_FAMILY_PLANS.yearly, true)}
+          </div>
+        </div>
+      )}
 
       {done && (
         <div role="status" style={{ maxWidth: 560, margin: '24px auto 0', padding: '20px 22px', borderRadius: 20,
@@ -827,11 +866,11 @@ export default function KidsMindGymSales() {
         </div>
         <ZoomPlans palette={palette} />
         <p style={{ textAlign: 'center', fontSize: 12.5, color: palette.INK2, margin: '18px auto 0', maxWidth: 560 }}>
-          <ShieldCheck size={14} style={{ verticalAlign: '-2px' }} aria-hidden="true" /> {KIDS_MEMBERSHIP_RECURRING
+          <ShieldCheck size={14} style={{ verticalAlign: "-2px", marginRight: 4 }} aria-hidden="true" />{KIDS_MEMBERSHIP_RECURRING
             ? 'Payments by Razorpay. Membership renews automatically each month or year until you cancel.'
             : 'Payments by Razorpay and PayPal. One-time payment for a month or a year; it never renews on its own.'}{' '}
           100% money-back guarantee, no questions asked: any time on the monthly plan, and within the first 30 days on the yearly plan. To cancel or ask for a refund, email or WhatsApp us; refunds go back to your original payment method, typically within 5–7 business days.{' '}
-          <a href="/policies#refund" style={{ color: palette.PURPLE_STRONG, display: "inline-block", padding: "14px 6px" }}>Policies</a>
+          {" "}<a href="/policies#refund" style={{ color: palette.PURPLE_STRONG, textDecoration: "underline" }}>Refund policy</a>
         </p>
       </section>
 
