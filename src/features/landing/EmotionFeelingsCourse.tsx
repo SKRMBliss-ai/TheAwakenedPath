@@ -583,12 +583,9 @@ export default function EmotionFeelingsCourse() {
   );
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
+  // All purchases go through the one /pricing page.
   const openCheckout = () => {
-    if (typeof window !== 'undefined' && !showCheckout) {
-      window.history.pushState({ checkout: true }, '', '/feelingsandemotioncourse/checkout');
-      window.scrollTo(0, 0);
-    }
-    setShowCheckout(true);
+    window.location.href = '/pricing?select=emotion_feelings_course';
   };
 
   /** Leaves via history so the browser's own Back and this button land in the

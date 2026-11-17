@@ -14,7 +14,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type Currency = 'INR' | 'USD';
-export type Entitlement = 'mantras' | 'sacred_sounds' | 'mind_gym' | 'kids_mind_gym' | 'emotion_course';
+export type Entitlement = 'mantras' | 'sacred_sounds' | 'mind_gym' | 'kids_mind_gym' | 'emotion_course' | 'extra_tools';
 
 export interface Product {
   id: string;
@@ -55,13 +55,13 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: 'membership_monthly', name: 'Mind Gym membership', studio: 'both',
-    unlocks: ['mind_gym', 'emotion_course', 'mantras', 'sacred_sounds'],
+    unlocks: ['mind_gym', 'emotion_course', 'mantras', 'sacred_sounds', 'extra_tools'],
     price: { INR: 240, USD: 3 }, billing: 'month',
-    pitch: 'The whole adult app: practice, every course, Mantras and Sacred Sounds.',
+    pitch: 'The whole adult app: practice, every course, Mantras, Sacred Sounds, Breathe and the Habit Tracker.',
   },
   {
     id: 'membership_yearly', name: 'Mind Gym membership', studio: 'both',
-    unlocks: ['mind_gym', 'emotion_course', 'mantras', 'sacred_sounds'],
+    unlocks: ['mind_gym', 'emotion_course', 'mantras', 'sacred_sounds', 'extra_tools'],
     price: { INR: 2400, USD: 30 }, billing: 'year',
     pitch: 'Everything in the adult app for a year.',
   },
@@ -71,21 +71,60 @@ export const PRODUCTS: Product[] = [
     pitch: 'The kids app, a live Zoom class, printables and WhatsApp support.',
   },
   {
+    id: 'kids_zoom_yearly', name: 'Kids Mind Gym', studio: 'mind', unlocks: ['kids_mind_gym'],
+    price: { INR: 13491, USD: 171 }, billing: 'year',
+    pitch: '12 months for the price of 9: the kids app, live Zoom class, printables and support.',
+  },
+  {
     id: 'family_monthly', name: 'Family package', studio: 'both',
-    unlocks: ['kids_mind_gym', 'mind_gym', 'emotion_course', 'mantras', 'sacred_sounds'],
+    unlocks: ['kids_mind_gym', 'mind_gym', 'emotion_course', 'mantras', 'sacred_sounds', 'extra_tools'],
     price: { INR: 1999, USD: 25 }, billing: 'month',
     pitch: 'Kids Mind Gym for your child, the full adult app for you.',
+  },
+  {
+    id: 'family_yearly', name: 'Family package', studio: 'both',
+    unlocks: ['kids_mind_gym', 'mind_gym', 'emotion_course', 'mantras', 'sacred_sounds', 'extra_tools'],
+    price: { INR: 19990, USD: 250 }, billing: 'year',
+    pitch: '12 months for the price of 10: kids and adult apps together.',
   },
   // ── Everything ───────────────────────────────────────────────────────────
   {
     id: 'all_access', name: 'All Access', studio: 'both',
-    unlocks: ['mind_gym', 'kids_mind_gym', 'emotion_course', 'mantras', 'sacred_sounds'],
+    unlocks: ['mind_gym', 'kids_mind_gym', 'emotion_course', 'mantras', 'sacred_sounds', 'extra_tools'],
     price: { INR: 14999, USD: 199.99 }, billing: 'once',
     pitch: 'Every app, course and library from both studios, for life.',
   },
 ];
 
 export const product = (id: string) => PRODUCTS.find((p) => p.id === id)!;
+
+/** Memberships are pay-what-you-want on the backend; the amount sent is the listed price. */
+export const isPwyw = (id: string) => id.startsWith('membership_') || id.startsWith('family_');
+
+/** Refund promise per product, shown at checkout. Matches /policies#refund. */
+export function refundOf(id: string): string {
+  if (['mantra_lifetime_pass', 'sacred_sounds_pass', 'sound_bundle'].includes(id)) return 'Full refund within 7 days.';
+  if (id === 'kids_zoom_yearly' || id === 'family_yearly') return '100% money back in the first 30 days.';
+  if (id === 'kids_zoom_monthly' || id === 'family_monthly' || id === 'emotion_feelings_course') return '100% money back, any time.';
+  return 'Full refund within 15 days.';
+}
+
+export interface PlanGroup { id: string; title: string; blurb: string; studio: string; ids: string[] }
+
+/** How /pricing lays the products out, by need. */
+export const PLAN_GROUPS: PlanGroup[] = [
+  { id: 'sound', studio: 'Soulful Mantra Studio', title: 'Mantras & Meditation Music', blurb: 'Loop any track and play whole playlists. Pay once, keep it.',
+    ids: ['mantra_lifetime_pass', 'sacred_sounds_pass', 'sound_bundle'] },
+  { id: 'mindgym', studio: 'Soulful Mind Studio', title: 'Mind Gym & Courses', blurb: 'The adult app with every course, or one course on its own.',
+    ids: ['emotion_feelings_course', 'membership_monthly', 'membership_yearly'] },
+  { id: 'kids', studio: 'Soulful Mind Studio', title: 'Kids Mind Gym & Family', blurb: 'For children 3 to 12, with a live Zoom class. Family adds the adult app for you.',
+    ids: ['kids_zoom_monthly', 'kids_zoom_yearly', 'family_monthly'] },
+];
+
+/** Product a library or page should pre-select, by entitlement. */
+export const BEST_FOR: Record<string, string> = { mantras: 'mantra_lifetime_pass', sacred_sounds: 'sacred_sounds_pass' };
+
+export const pricingHref = (select?: string) => (select ? `/pricing?select=${encodeURIComponent(select)}` : '/pricing');
 
 /** INR in India, USD elsewhere (same rule as the course and kids pages). */
 export const CURRENCY: Currency = (() => {

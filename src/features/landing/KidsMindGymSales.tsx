@@ -237,6 +237,10 @@ function ZoomPlans({ palette }: { palette: Palette }) {
 
   const pick = (plan: KidsZoomPlan) => {
     if (plan.price == null || !KIDS_ZOOM_BOOKING_OPEN) return;
+    // All purchases go through the one /pricing page.
+    trackKids(`KIDS_MEMBERSHIP_PICK_${plan.period.toUpperCase()}`);
+    window.location.href = `/pricing?select=${plan.oneTimeProductId}`;
+    return;
     trackKids(`KIDS_MEMBERSHIP_PICK_${plan.period.toUpperCase()}`);
     setDone(null);
     setPicked(plan);

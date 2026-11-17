@@ -1,3 +1,4 @@
+import PathChooser from './components/PathChooser';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, MessageCircle } from 'lucide-react';
@@ -399,6 +400,11 @@ export default function SoulfulHome() {
             onStartPractice={() => { track('HOME_HERO_START'); window.location.href = '/mindgym'; }}
             onExploreMindGym={() => { track('HOME_HERO_EXPLORE'); document.getElementById('mindgym-features')?.scrollIntoView({ behavior: 'smooth' }); }}
           />
+
+          {/* 1b. Choose your path — the five doors across both studios */}
+          <div id="choose">
+            <PathChooser palette={palette} />
+          </div>
 
           {/* Section divider */}
           <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>

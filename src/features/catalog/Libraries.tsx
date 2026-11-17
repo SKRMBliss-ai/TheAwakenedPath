@@ -10,7 +10,7 @@ import { useTheme } from '../../theme/ThemeSystem';
 
 const MANTRA_FALLBACK_COVER = '/marketing/mantras/bowl-lotus.webp';
 
-export function MantraLibrary() {
+export function MantraLibrary({ previewAsGuest = false }: { previewAsGuest?: boolean } = {}) {
   const tracks: LibraryTrack[] = useMemo(() => MANTRAS.map((m) => ({
     id: `mantra:${m.slug}`,
     title: m.name,
@@ -31,7 +31,7 @@ export function MantraLibrary() {
   ], []);
 
   return (
-    <SoundLibrary kind="mantras" kicker="Soulful Mantra Studio" title="Mantras"
+    <SoundLibrary previewAsGuest={previewAsGuest} kind="mantras" kicker="Soulful Mantra Studio" title="Mantras"
       description="Sacred chants by time of day, by deity and for every festival. Tap a chant to listen."
       cover="/marketing/mantras/emblem-sunburst.webp" tracks={tracks} playlists={playlists} />
   );
@@ -45,7 +45,7 @@ const MOOD_BLURB: Record<string, string> = {
   Meditation: 'Guided and ambient, for meditation.',
 };
 
-export function SacredSoundsLibrary() {
+export function SacredSoundsLibrary({ previewAsGuest = false }: { previewAsGuest?: boolean } = {}) {
   const { mode } = useTheme();
   const fallback = VoiceService.getStorageUrl(`/Soundscapes/Images/sacred-bg-${mode === 'dark' ? 'dark' : 'light'}.webp`);
 
@@ -55,8 +55,10 @@ export function SacredSoundsLibrary() {
     subtitle: `${t.mood} · ${t.description.split('. ')[0]}`,
     cover: t.coverImage ? (mode === 'dark' ? t.coverImage.dark : t.coverImage.light) : fallback,
     duration: t.duration,
+    // Played straight from Storage, like the mantras. The old signed-URL route
+    // (getSecureTrackUrl) fails server-side for every track, and these files
+    // are publicly readable anyway, so it added no protection.
     path: t.audioPath,
-    resolve: () => VoiceService.getCloakedUrl(t.id, t.audioPath),
   })), [mode, fallback]);
 
   const playlists: Playlist[] = useMemo(() => {
@@ -65,7 +67,7 @@ export function SacredSoundsLibrary() {
   }, []);
 
   return (
-    <SoundLibrary kind="sacred_sounds" kicker="Soulful Mantra Studio" title="Sacred Sounds"
+    <SoundLibrary previewAsGuest={previewAsGuest} kind="sacred_sounds" kicker="Soulful Mantra Studio" title="Sacred Sounds"
       description="Meditation music for calm, sleep and deep practice. Tap a track to listen."
       cover={fallback} tracks={tracks} playlists={playlists} />
   );

@@ -32,7 +32,7 @@ const MANTRA_BRAND = {
   href: PAGE,
 };
 const PASS_PATH = `${PAGE}/lifetime-pass`;
-const ORDER_PATH = `${PASS_PATH}/checkout`;
+const ORDER_PATH = '/pricing?select=mantra_lifetime_pass';
 const GOLD_BAR = 'linear-gradient(135deg, #E9C98A 0%, #D8AE5E 50%, #EBD29C 100%)';
 const BRAND_VIDEO = '/marketing/mantras/soulful-mantra-studio.mp4';
 const t = (action: string, details = '') => track(action, details, PAGE);

@@ -552,6 +552,9 @@ const PremiumPaywall = ({ user, checkOut, isProcessing, onSuccess }: any) => {
  * PAID_PRACTICE_TABS. Today is deliberately NOT in that list: it is the daily
  * ritual and the reason to come back, so the paywall sits behind it.
  */
+/** Community (members, calendar, live sessions) is closed for everyone for now. */
+const COMMUNITY_OPEN = false;
+
 const FREE_TABS = [
   'start', 'home', 'profile', 'paywall', 'music', 'mantras', 'breathe', 'wisdom_untethered',
   'intelligence', 'learn', 'chapters', 'situations', 'meditation',
@@ -727,6 +730,27 @@ export default function UntetheredApp() {
   }, [isMobile, isSidebarOpen, isSidebarCollapsed]);
 
   // ── Deep-link from email CTA ───────────────────────────────────────────────
+  // Every purchase happens on the one /pricing page, so the old in-app
+  // paywall tab now hands off there (signed-in users keep their account).
+  useEffect(() => {
+    if (activeTab === 'paywall') window.location.href = '/pricing';
+    // Breathe is an Extra tool: paid members only (basic and signed-out go to pricing).
+    if (activeTab === 'breathe' && !loading && !isPremiumUser) window.location.href = '/pricing?select=membership_monthly';
+  }, [activeTab, loading, isPremiumUser]);
+
+  // ?tab=music | ?tab=mantras — the home page's "Meditation Music" card opens
+  // the Sacred Sounds library directly. Both tabs are free to open.
+  useEffect(() => {
+    if (loading) return;
+    const tab = new URLSearchParams(window.location.search).get('tab');
+    if (tab === 'music' || tab === 'mantras') {
+      setActiveTab(tab);
+      const url = new URL(window.location.href);
+      url.searchParams.delete('tab');
+      window.history.replaceState({}, document.title, url.pathname + url.search);
+    }
+  }, [loading]);
+
   // Handles ?practice=questionX&source=email — navigates directly into the
   // specific practice once auth resolves and access is confirmed.
   useEffect(() => {
@@ -838,7 +862,8 @@ export default function UntetheredApp() {
     () => ['insights', 'questions', 'virtues', 'practices', 'stats', 'circle', 'backup', 'chapters', 'situations'].includes(activeTab));
   const [learnOpen, setLearnOpen] = useState(
     () => ['intelligence', 'wisdom_untethered', 'emotion-course', 'videos'].includes(activeTab));
-  const [communityOpen, setCommunityOpen] = useState(
+  // Setter unused while Community is coming soon (COMMUNITY_OPEN = false).
+  const [communityOpen] = useState(
     () => ['meditation', 'today', 'members', 'calendar', 'circle'].includes(activeTab));
 
   const timeOfDayGradient = useMemo(() => {
@@ -1858,8 +1883,11 @@ export default function UntetheredApp() {
           {/* ── Community group — the shared, live side ── */}
           <div className="pt-1 pb-0.5">
             <button
-              onClick={() => setCommunityOpen(o => !o)}
-              className="w-full flex items-center gap-3 px-4 py-[0.5vh] mb-0"
+              type="button"
+              disabled
+              aria-disabled="true"
+              title="Community is coming soon"
+              className="w-full flex items-center gap-3 px-4 py-[0.5vh] mb-0 cursor-not-allowed opacity-70"
             >
               <Users
                 size={14}
@@ -1874,14 +1902,13 @@ export default function UntetheredApp() {
               <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)] flex-1 text-left">
                 Community
               </span>
-              <ChevronRight
-                size={13}
-                className="text-[var(--text-muted)] transition-transform duration-300 flex-shrink-0"
-                style={{ transform: communityOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}
-              />
+              {/* Community is closed for now; flip COMMUNITY_OPEN to bring it back. */}
+              <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[var(--bg-surface)] text-[var(--text-muted)] border border-[var(--border-subtle)] flex-shrink-0">
+                <Lock size={8} /> Coming soon
+              </span>
             </button>
 
-            {communityOpen && (
+            {COMMUNITY_OPEN && communityOpen && (
               <div className="space-y-0.5 ml-2 pl-5 border-l border-[var(--border-subtle)]/40 mt-0.5">
                 {/* Live session first — it is the reason to come back at a set time */}
                 <button
@@ -1959,18 +1986,21 @@ export default function UntetheredApp() {
               <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)] flex-1 text-left">Extra tools</span>
             </div>
             <div className="space-y-0.5 ml-2 pl-5 border-l border-[var(--border-subtle)]/40 mt-0.5">
-              <button onClick={() => onNavigate('breathe')}
+              <button onClick={() => (isPremiumUser ? onNavigate('breathe') : window.location.assign('/pricing?select=membership_monthly'))}
                 className={cn("w-full flex items-center gap-2 px-3 py-[min(6px,0.8vh)] rounded-xl transition-all duration-300 group relative text-left",
                   activeTab === 'breathe' ? "bg-[var(--bg-surface)]" : "hover:bg-[var(--bg-surface)]/40")}>
                 <Wind size={14} strokeWidth={activeTab === 'breathe' ? 2.5 : 1.5} className={cn("flex-shrink-0", activeTab === 'breathe' ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]")} />
                 <span className={cn("text-[12px] tracking-[0.12em] font-sans flex-1 whitespace-nowrap",
                   activeTab === 'breathe' ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] font-medium group-hover:text-[var(--text-primary)]")}>Breathe</span>
+                {!isPremiumUser && <Lock size={9} className="text-[var(--text-muted)] opacity-60 flex-shrink-0" />}
               </button>
               {/* Habit Tracker lives on its own site, so it stays an external link */}
-              <a href="https://www.skrmblissai.in/habitquest2026" target="_blank" rel="noopener noreferrer"
+              <a href={isPremiumUser ? 'https://www.skrmblissai.in/habitquest2026' : '/pricing?select=membership_monthly'}
+                {...(isPremiumUser ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                 className="w-full flex items-center gap-2 px-3 py-[min(6px,0.8vh)] rounded-xl transition-all hover:bg-[var(--bg-surface)]/40 group">
                 <CheckSquare size={14} strokeWidth={1.5} className="flex-shrink-0 text-[var(--text-muted)]" />
                 <span className="text-[12px] tracking-[0.12em] font-sans font-medium flex-1 text-left whitespace-nowrap text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]">Habit Tracker</span>
+                {!isPremiumUser && <Lock size={9} className="text-[var(--text-muted)] opacity-60 flex-shrink-0" />}
               </a>
             </div>
           </div>
@@ -2308,7 +2338,7 @@ export default function UntetheredApp() {
                       { icon: Sun, title: 'Dashboard', sub: 'Today’s journey at a glance', onClick: () => onNavigate('home') },
                       { icon: Flame, title: 'Practice', sub: 'Journal, breath and practice room', onClick: () => { setPracticeOpen(true); onNavigate('situations'); } },
                       { icon: GraduationCap, title: 'Courses', sub: 'Go deeper, step by step', onClick: () => { setLearnOpen(true); onNavigate('intelligence'); } },
-                      { icon: Users, title: 'Community', sub: 'Practise alongside others', onClick: () => { setCommunityOpen(true); onNavigate('members'); } },
+                      { icon: Users, title: 'Community', sub: 'Coming soon', onClick: () => { /* Community is coming soon */ } },
                     ]}
                   />
                 </Suspense>
