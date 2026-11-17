@@ -398,13 +398,13 @@ const SOCIALS: { label: string; url: string; d: string }[] = [
 
 const FOOTER_COLS: { title: string; items: NavLink[] }[] = [
   {
-    title: 'Practise',
+    title: 'What we offer',
     items: [
-      { label: 'Mind Gym', href: '/mindgym' },
-      { label: 'Feelings & Emotions course', href: '/feelingsandemotioncourse' },
-      { label: 'Mantra Studio', href: '/mantras' },
+      { label: 'For me: Adult Mind Gym', href: '/aboutmindgym' },
+      { label: 'For my child: Kids Mind Gym', href: '/tiny-kids-transformations' },
+      { label: 'Mantras & Music', href: '/mantras' },
+      { label: 'Pricing', href: '/pricing' },
       { label: 'Emotional health check', href: '/knowyouremotionalhealth' },
-      { label: 'About Mind Gym', href: '/aboutmindgym' },
     ],
   },
   {

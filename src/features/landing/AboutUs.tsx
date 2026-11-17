@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { usePageSeo } from '../../lib/seo';
 import { useSiteTheme } from '../../lib/siteTheme';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
+import { siteNav } from '../../components/site/siteNav';
 import SiteBackdrop from '../../components/site/SiteBackdrop';
 import KidsChallengeCrossSell from './components/KidsChallengeCrossSell';
 import { usePageView } from '../../lib/analytics';
@@ -176,44 +177,7 @@ export default function AboutUs() {
         <SiteHeader
           palette={palette}
           onToggleTheme={toggleTheme}
-          links={[
-            { label: 'Home', href: '/' },
-            { label: 'Mind Gym', href: '/mindgym' },
-            {
-              label: 'Courses',
-              subItems: [
-                {
-                  label: 'Feelings & Emotions',
-                  sub: '7-Episode Guided Course',
-                  href: '/feelingsandemotioncourse',
-                },
-                {
-                  label: 'Mantra Studio',
-                  sub: 'Sacred Chants & Sadhana',
-                  badge: 'NEW',
-                  href: '/mantras',
-                },
-                {
-                  label: 'Power of Now',
-                  sub: 'Coming Soon',
-                  href: '#',
-                },
-                {
-                  label: 'Wisdom Untethered',
-                  sub: 'Coming Soon',
-                  href: '#',
-                },
-                {
-                  label: 'For Kids',
-                  sub: 'Kids Mind Gym · live Zoom class included',
-                  badge: 'NEW',
-                  href: '/tiny-kids-transformations',
-                },
-              ],
-            },
-            { label: 'Mantras', href: '/mantras' },
-            { label: 'Their worlds', href: TWINSOULS_URL, secondary: true },
-          ]}
+          links={[...siteNav(), { label: 'Their worlds', href: TWINSOULS_URL, secondary: true }]}
           cta={{ label: 'Enter Mind Gym →', href: '/mindgym' }}
         />
       </div>

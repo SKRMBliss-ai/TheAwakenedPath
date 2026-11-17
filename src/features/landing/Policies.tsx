@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { usePageSeo } from '../../lib/seo';
 import { useSiteTheme } from '../../lib/siteTheme';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
+import { siteNav } from '../../components/site/siteNav';
 import SiteBackdrop from '../../components/site/SiteBackdrop';
 import { ShieldCheck, Lock, FileText, ArrowLeft, Mail, MessageSquare } from 'lucide-react';
 import { usePageView } from '../../lib/analytics';
@@ -48,43 +49,8 @@ export default function Policies() {
       <SiteHeader
         palette={palette}
         onToggleTheme={toggleTheme}
-        links={[
-          { label: 'Home', href: '/' },
-          {
-            label: 'Courses',
-            subItems: [
-              {
-                label: 'Feelings & Emotions',
-                sub: '7-Episode Guided Course',
-                href: '/feelingsandemotioncourse',
-              },
-              {
-                label: 'Mantra Studio',
-                sub: 'Sacred Chants & Sadhana',
-                badge: 'NEW',
-                href: '/mantras',
-              },
-              {
-                label: 'Power of Now',
-                sub: 'Coming Soon',
-                href: '#',
-              },
-              {
-                label: 'Wisdom Untethered',
-                sub: 'Coming Soon',
-                href: '#',
-              },
-              {
-                label: 'For Kids',
-                sub: 'Kids Mind Gym · live Zoom class included',
-                badge: 'NEW',
-                href: '/tiny-kids-transformations',
-              },
-            ],
-          },
-          { label: 'Mantras', href: '/mantras' },
-        ]}
-        cta={{ label: 'Back to course', href: '/feelingsandemotioncourse' }}
+        links={siteNav()}
+        cta={{ label: 'See pricing', href: '/pricing' }}
       />
 
       {/* Main Container with generous max-width and outer padding */}
@@ -258,10 +224,10 @@ export default function Policies() {
             }}
           >
             <p style={{ fontSize: 16, fontWeight: 700, margin: '0 0 6px', color: ink }}>
-              Sadhana Lifetime Pass (Soulful Mantra Studio): full refund within 7 days
+              Mantra Pass (Soulful Mantra Studio): full refund within 7 days
             </p>
             <p style={{ fontSize: 14.5, lineHeight: 1.6, color: inkSub, margin: 0 }}>
-              If the Sadhana Lifetime Pass is not right for you, tell us within 7 days of your payment and we will refund you in full,
+              If the Mantra Pass is not right for you, tell us within 7 days of your payment and we will refund you in full,
               with no questions asked. After 7 days the pass is not refundable. Access to the pass ends when a refund is made.
             </p>
           </div>

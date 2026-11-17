@@ -2,7 +2,7 @@
 // Soulful Mantra Studio — /mantras (library hub) and /mantras/<slug> (one mantra).
 //
 // The funnel: free library (text, meaning, our YouTube recording) → one paid
-// product, the Sadhana Lifetime Pass (ad-free loop play in playlists + PDFs + sadhana plans).
+// product, the Mantra Pass (ad-free loop play in playlists + PDFs + sadhana plans).
 // All catalogue and price data lives in mantraData.ts.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -18,8 +18,8 @@ import { usePaypal } from '../../hooks/usePaypal';
 import { VoiceService, useVoiceStatus } from '../../services/voiceService';
 import {
   MANTRAS, MOMENTS, DEITIES, MANTRA_FAQ, PASS_INCLUDES, MANTRA_BASE_URL, MANTRA_SUBSCRIBE_URL,
-  MANTRA_WHATSAPP, MANTRA_WHATSAPP_GROUP, MANTRA_PASS_ID, MANTRA_PASS_OPEN, MANTRA_PASS_REFUND_DAYS, MANTRA_PRICE_RISE, MANTRA_CURRENCY,
-  passPrice, passRegularPrice, findMantra, thumb, waLink, getMantraAudioUrl, type Mantra, type Moment,
+  MANTRA_WHATSAPP, MANTRA_WHATSAPP_GROUP, MANTRA_PASS_ID, MANTRA_PASS_OPEN, MANTRA_PASS_REFUND_DAYS, MANTRA_CURRENCY,
+  passPrice, findMantra, thumb, waLink, getMantraAudioUrl, type Mantra, type Moment,
 } from './mantraData';
 
 const DEVA = "'Noto Serif Devanagari', 'Tiro Devanagari Sanskrit', 'Nirmala UI', 'Mangal', serif";
@@ -471,7 +471,7 @@ function PassCheckout({ palette, layout = 'summary' }: { palette: Palette; layou
         {order && (
           <div style={{ marginBottom: 22, paddingBottom: 22, borderBottom: `1px solid ${palette.BORDER}` }}>
             <Art name="bowl" height={120} style={{ margin: '0 0 14px' }} />
-            <h1 style={{ margin: '0 0 4px', fontFamily: SERIF, fontSize: 'clamp(30px, 4vw, 40px)', fontWeight: 500, lineHeight: 1.1 }}>Sadhana Lifetime Pass</h1>
+            <h1 style={{ margin: '0 0 4px', fontFamily: SERIF, fontSize: 'clamp(30px, 4vw, 40px)', fontWeight: 500, lineHeight: 1.1 }}>Mantra Pass</h1>
             <p style={{ margin: '0 0 12px', fontSize: 13.5, color: palette.INK2 }}>By Soulful Mantra Studio</p>
             <p style={{ margin: '0 0 10px', fontSize: 15.5, lineHeight: 1.65, color: palette.INK2 }}>
               Our whole mantra library in one calm place, sorted by deity, by time of day and by festival.
@@ -500,27 +500,26 @@ function PassCheckout({ palette, layout = 'summary' }: { palette: Palette; layou
 
       <div style={{ background: palette.CARD, border: `2px solid ${palette.PURPLE_STRONG}`, borderRadius: 28, padding: 'clamp(22px, 4vw, 30px)' }}>
         <span style={{ display: 'inline-block', background: palette.PURPLE_STRONG, color: palette.ON_ACCENT, borderRadius: 999,
-          padding: '5px 14px', fontSize: 10.5, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Founding listener price</span>
+          padding: '5px 14px', fontSize: 10.5, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Pay once</span>
         <p style={{ margin: '14px 0 2px', fontFamily: SANS, fontSize: 44, fontWeight: 700, lineHeight: 1.05, color: palette.INK }}>
           {passPrice()}
-          <span style={{ fontSize: 18, fontWeight: 500, color: palette.INK2, textDecoration: 'line-through', marginLeft: 10 }}>{passRegularPrice()}</span>
         </p>
         <p style={{ margin: '0 0 16px', fontSize: 14, lineHeight: 1.55, color: palette.INK2 }}>
-          Pay once. No subscription. The price rises to {passRegularPrice()} {MANTRA_PRICE_RISE}.
+          Pay once. No subscription.
         </p>
 
         {done ? (
           <div role="status" style={{ padding: '18px 18px', borderRadius: 18, background: palette.BAND, color: palette.ON_BAND, fontSize: 15, lineHeight: 1.6 }}>
             <strong style={{ display: 'block', fontFamily: SERIF, fontSize: 24, fontWeight: 500 }}>Thank you. Your pass is confirmed.</strong>
             Your access link is on its way to {done}, usually the same day and always within 24 hours.
-            Not there? <a href={waLink('Hi, I bought the Sadhana Lifetime Pass and need my access link.')} style={{ color: palette.ON_BAND, fontWeight: 700 }}>Message us on WhatsApp</a>.
+            Not there? <a href={waLink('Hi, I bought the Mantra Pass and need my access link.')} style={{ color: palette.ON_BAND, fontWeight: 700 }}>Message us on WhatsApp</a>.
             <a href={PAGE} style={{ display: 'block', marginTop: 10, color: palette.ON_BAND, fontWeight: 700 }}>Back to the mantra library →</a>
           </div>
         ) : !open || !MANTRA_PASS_OPEN ? (
           MANTRA_PASS_OPEN ? (
             <a href={ORDER_PATH} onClick={() => t('MANTRA_PASS_START')} className="sms-btn"
               style={{ ...big(true), display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', boxSizing: 'border-box' }}>
-              Get the Lifetime Pass — {passPrice()}
+              Get the Mantra Pass — {passPrice()}
             </a>
           ) : (
             <button type="button" disabled style={big(false)}>Opening soon</button>
@@ -539,8 +538,8 @@ function PassCheckout({ palette, layout = 'summary' }: { palette: Palette; layou
             </div>
             <dl style={{ margin: '18px 0 0', padding: '14px 16px', borderRadius: 16, border: `1px dashed ${palette.BORDER}`, display: 'grid',
               gridTemplateColumns: '1fr auto', gap: '8px 12px', fontSize: 14, color: palette.INK2 }}>
-              <dt>Sadhana Lifetime Pass</dt>
-              <dd style={{ margin: 0 }}><s style={{ marginRight: 8 }}>{passRegularPrice()}</s>{passPrice()}</dd>
+              <dt>Mantra Pass</dt>
+              <dd style={{ margin: 0 }}>{passPrice()}</dd>
               <dt style={{ fontWeight: 700, color: palette.INK, paddingTop: 8, borderTop: `1px solid ${palette.BORDER}` }}>Amount to pay</dt>
               <dd style={{ margin: 0, fontWeight: 700, color: palette.INK, paddingTop: 8, borderTop: `1px solid ${palette.BORDER}` }}>{passPrice()}</dd>
             </dl>
@@ -576,7 +575,7 @@ function PassBand({ palette, href }: { palette: Palette; href: string }) {
     <section style={{ background: palette.BAND, color: palette.ON_BAND, padding: 'clamp(36px, 6vw, 56px) clamp(16px, 5vw, 96px)' }}>
       <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ flex: '1 1 420px' }}>
-          <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', color: palette.ON_BAND_ACCENT }}>Sadhana Lifetime Pass</span>
+          <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', color: palette.ON_BAND_ACCENT }}>Mantra Pass</span>
           <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(26px, 3.6vw, 38px)', fontWeight: 400, lineHeight: 1.15, margin: '8px 0' }}>
             Every mantra on a loop, without ads.
           </h2>
@@ -586,7 +585,7 @@ function PassBand({ palette, href }: { palette: Palette; href: string }) {
         </div>
         <a href={href} onClick={() => t('MANTRA_BAND_CTA')} className="sms-btn" style={{ display: 'inline-flex', alignItems: 'center', minHeight: 50, padding: '0 28px',
           borderRadius: 999, background: palette.ON_BAND, color: '#FFFFFF', fontFamily: SANS, fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
-          See the Lifetime Pass →
+          See the Mantra Pass →
         </a>
       </div>
     </section>
@@ -640,7 +639,7 @@ function MantraFooter({ palette }: { palette: Palette }) {
           title: 'Mantras',
           items: [
             { label: 'Mantra Library', href: `${PAGE}#library` },
-            { label: 'Sadhana Lifetime Pass', href: PASS_PATH },
+            { label: 'Mantra Pass', href: PASS_PATH },
             { label: 'How to begin', href: `${PAGE}#begin` },
             { label: 'Gita (coming soon)', href: `${PAGE}#gita` },
             { label: 'YouTube channel', href: MANTRA_SUBSCRIBE_URL },
@@ -685,7 +684,7 @@ function Header({ palette, toggle, home }: { palette: Palette; toggle: () => voi
         { label: 'Questions', href: `${base}#faq`, secondary: true },
         { label: 'Soulful Mind Studio ↗', href: MIND_STUDIO_URL, secondary: true },
       ]}
-      cta={{ label: 'Lifetime Pass →', href: PASS_PATH, onClick: () => t('MANTRA_HEADER_CTA') }}
+      cta={{ label: 'Mantra Pass →', href: PASS_PATH, onClick: () => t('MANTRA_HEADER_CTA') }}
     />
   );
 }
@@ -761,7 +760,7 @@ function MantraHub() {
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
             <Btn palette={palette} href="#library" label="Browse the library" event="MANTRA_HERO_BROWSE" />
-            <Btn palette={palette} href="#pass" label={`Lifetime Pass · ${passPrice()}`} event="MANTRA_HERO_PASS" ghost />
+            <Btn palette={palette} href="#pass" label={`Mantra Pass · ${passPrice()}`} event="MANTRA_HERO_PASS" ghost />
           </div>
           <a href={MANTRA_SUBSCRIBE_URL} target="_blank" rel="noopener noreferrer" onClick={() => t('MANTRA_HERO_YOUTUBE')}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginTop: 18, minHeight: 32, fontSize: 13.5, fontWeight: 600, color: palette.INK2 }}>
@@ -849,14 +848,14 @@ function MantraHub() {
         </div>
       </section>
 
-      {/* Lifetime Pass */}
+      {/* Mantra Pass */}
       <section id="pass" style={sec}>
-        <SectionTitle palette={palette} art="bowl" artHeight={130} kicker="Sadhana Lifetime Pass" title="Take the whole library with you"
+        <SectionTitle palette={palette} art="bowl" artHeight={130} kicker="Mantra Pass" title="Take the whole library with you"
           sub="For daily practice without interruption: every mantra on a loop with no ads, organised playlists, the words on paper, and a plan to follow." />
         <PassCheckout palette={palette} />
         <p style={{ textAlign: 'center', margin: '18px 0 0' }}>
           <a href={PASS_PATH} onClick={() => t('MANTRA_PASS_LEARN_MORE')} style={{ display: 'inline-block', padding: '8px 4px', fontSize: 14.5, fontWeight: 700, color: palette.PURPLE_STRONG }}>
-            See everything about the Lifetime Pass →
+            See everything about the Mantra Pass →
           </a>
         </p>
       </section>
@@ -1032,14 +1031,14 @@ function MantraDetail({ m }: { m: Mantra }) {
                 </section>
               )}
 
-              <section style={{ ...box, borderColor: palette.PURPLE_STRONG }} aria-label="Sadhana Lifetime Pass">
+              <section style={{ ...box, borderColor: palette.PURPLE_STRONG }} aria-label="Mantra Pass">
                 <Art name="bowl" height={110} style={{ margin: '0 0 14px' }} />
-                <Kicker palette={palette}>Sadhana Lifetime Pass</Kicker>
+                <Kicker palette={palette}>Mantra Pass</Kicker>
                 <h2 style={{ ...h2, fontSize: 24, marginBottom: 8 }}>Play this chant on a loop, without ads</h2>
                 <p style={{ fontSize: 14.5, lineHeight: 1.65, color: palette.INK2, margin: '0 0 16px' }}>
                   Every mantra in organised playlists by deity, time of day and festival, with a lyrics PDF and a 21 and 40 day plan. {passPrice()} once. Future mantras included.
                 </p>
-                <Btn palette={palette} href={PASS_PATH} label="See the Lifetime Pass" event="MANTRA_DETAIL_PASS" />
+                <Btn palette={palette} href={PASS_PATH} label="See the Mantra Pass" event="MANTRA_DETAIL_PASS" />
               </section>
             </aside>
           </div>
@@ -1078,7 +1077,7 @@ function MantraPassSales() {
   const url = `${MANTRA_BASE_URL}/lifetime-pass`;
 
   usePageSeo({
-    title: 'Sadhana Lifetime Pass: Ad-Free Mantra Playlists, Pay Once | Soulful Mantra Studio',
+    title: 'Mantra Pass: Ad-Free Mantra Playlists, Pay Once | Soulful Mantra Studio',
     description:
       'One payment for our whole mantra library: every chant on a loop without ads, playlists by deity, time of day and festival, lyrics and meaning PDFs, and 21 and 40 day sadhana plans. No subscription.',
     url,
@@ -1091,7 +1090,7 @@ function MantraPassSales() {
   useEffect(() => { t('PAGE_VISIT_MANTRA_PASS'); }, []);
 
   const box: React.CSSProperties = { background: palette.CARD, border: `1px solid ${palette.BORDER}`, borderRadius: 24 };
-  const buy = (event: string, label = `Get the Lifetime Pass — ${passPrice()}`) =>
+  const buy = (event: string, label = `Get the Mantra Pass — ${passPrice()}`) =>
     MANTRA_PASS_OPEN
       ? <Btn palette={palette} href={ORDER_PATH} label={label} event={event} />
       : <span style={{ fontWeight: 700, color: palette.BROWN }}>Opening soon</span>;
@@ -1107,7 +1106,7 @@ function MantraPassSales() {
           {[0, 1].map((k) => (
             <span key={k} style={{ display: 'inline-flex' }}>
               {['One payment, yours to keep', 'No ads, ever', 'Playlists by deity, time of day and festival', 'A new mantra every week',
-                `${MANTRA_PASS_REFUND_DAYS}-day full refund`, 'Founding listener price'].map((x) => (
+                `${MANTRA_PASS_REFUND_DAYS}-day full refund`].map((x) => (
                 <span key={x} style={{ padding: '9px 0', fontSize: 12.5, fontWeight: 800, letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
                   {x}<span style={{ margin: '0 22px', opacity: 0.55 }}>✦</span>
                 </span>
@@ -1130,13 +1129,13 @@ function MantraPassSales() {
               ))}
             </div>
             <figcaption style={{ textAlign: 'center', paddingTop: 14, color: '#241E24' }}>
-              <span style={{ display: 'block', fontFamily: SERIF, fontSize: 'clamp(20px, 2.4vw, 26px)', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Sadhana Lifetime Pass</span>
+              <span style={{ display: 'block', fontFamily: SERIF, fontSize: 'clamp(20px, 2.4vw, 26px)', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Mantra Pass</span>
               <span style={{ display: 'block', fontSize: 11.5, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', opacity: 0.75, marginTop: 2 }}>Soulful Mantra Studio</span>
             </figcaption>
           </figure>
 
           <div>
-            <Kicker palette={palette}>Sadhana Lifetime Pass</Kicker>
+            <Kicker palette={palette}>Mantra Pass</Kicker>
             <h1 style={{ fontFamily: SERIF, fontSize: 'clamp(34px, 4.8vw, 56px)', fontWeight: 400, lineHeight: 1.08, letterSpacing: '-0.02em', margin: '0 0 14px' }}>
               One payment. <span style={{ color: palette.BROWN }}>A lifetime of daily chanting.</span>
             </h1>
@@ -1154,7 +1153,7 @@ function MantraPassSales() {
             </ul>
             {buy('MANTRA_SALES_HERO_CTA')}
             <p style={{ margin: '14px 0 0', fontSize: 13.5, lineHeight: 1.6, color: palette.INK2 }}>
-              <strong style={{ color: palette.INK }}>Pay once, keep it.</strong> <s>{passRegularPrice()}</s> {passPrice()} founding price · full refund within {MANTRA_PASS_REFUND_DAYS} days
+              <strong style={{ color: palette.INK }}>Pay once, keep it.</strong> {passPrice()} once · full refund within {MANTRA_PASS_REFUND_DAYS} days
               <span style={{ display: 'block' }}>UPI, cards, net banking, wallets and PayPal</span>
             </p>
           </div>
@@ -1285,7 +1284,7 @@ function MantraPassSales() {
         <div style={{ maxWidth: 640, margin: '0 auto' }}>
           <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 400, lineHeight: 1.15, margin: '0 0 10px' }}>Begin today, keep it for life.</h2>
           <p style={{ fontSize: 15.5, lineHeight: 1.65, color: palette.INK2, margin: '0 0 20px' }}>
-            Join at the founding price of {passPrice()}. It rises to {passRegularPrice()} {MANTRA_PRICE_RISE}.
+            Pay once: {passPrice()}. No subscription.
           </p>
           {buy('MANTRA_SALES_FINAL_CTA')}
           <p style={{ fontSize: 12.5, lineHeight: 1.6, color: palette.INK2, margin: '16px 0 6px' }}>
@@ -1322,8 +1321,8 @@ function MantraPassSales() {
 function MantraPassOrder() {
   const { palette, toggle } = useSiteTheme();
   usePageSeo({
-    title: 'Order: Sadhana Lifetime Pass | Soulful Mantra Studio',
-    description: 'Complete your order for the Sadhana Lifetime Pass. One payment, no subscription.',
+    title: 'Order: Mantra Pass | Soulful Mantra Studio',
+    description: 'Complete your order for the Mantra Pass. One payment, no subscription.',
     url: `${MANTRA_BASE_URL}/lifetime-pass/checkout`,
   });
   useEffect(() => { t('PAGE_VISIT_MANTRA_ORDER'); }, []);
@@ -1334,7 +1333,7 @@ function MantraPassOrder() {
       <Header palette={palette} toggle={toggle} home={false} />
       <main style={{ ...sec, paddingTop: 'clamp(24px, 4vw, 44px)' }}>
         <nav aria-label="Breadcrumb" style={{ maxWidth: 1000, margin: '0 auto 16px', fontSize: 13, color: palette.INK2 }}>
-          <a href={PASS_PATH} style={{ color: palette.PURPLE_STRONG, fontWeight: 600, display: 'inline-block', padding: '6px 0' }}>← Back to the Lifetime Pass</a>
+          <a href={PASS_PATH} style={{ color: palette.PURPLE_STRONG, fontWeight: 600, display: 'inline-block', padding: '6px 0' }}>← Back to the Mantra Pass</a>
         </nav>
         <PassCheckout palette={palette} layout="order" />
         <p style={{ maxWidth: 1000, margin: '20px auto 0', fontSize: 12.5, lineHeight: 1.6, color: palette.INK2 }}>

@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Soulful Mantra Studio — the mantra library and the Sadhana Lifetime Pass.
+// Soulful Mantra Studio — the mantra library and the Mantra Pass.
 //
 // ONE place for the catalogue and the price. Every entry here is a chant that
 // is published on our own YouTube channel (@SoulfulMantraStudio); do not list a
@@ -24,21 +24,17 @@ export const MANTRA_WHATSAPP_GROUP = 'https://chat.whatsapp.com/Cqh9hajKSS3DeE4A
 
 export const waLink = (text: string) => `${MANTRA_WHATSAPP}?text=${encodeURIComponent(text)}`;
 
-// ── Lifetime Pass ────────────────────────────────────────────────────────────
+// ── Mantra Pass ────────────────────────────────────────────────────────────
 export const MANTRA_PASS_ID = 'mantra_lifetime_pass';
 /** false switches the buy button off (shows "Opening soon"). */
 export const MANTRA_PASS_OPEN = true;
 export const MANTRA_PASS_REFUND_DAYS = 7;
-/** When the founding price ends (shown after "rises to ₹999"). The backend still
- *  charges the founding price until COURSE_PRICES in functions/index.js is changed. */
-export const MANTRA_PRICE_RISE = 'from January 2027';
 
-const PASS_FOUNDING: Record<KidsCurrency, number> = { USD: 4.99, INR: 299 };
-const PASS_REGULAR: Record<KidsCurrency, number> = { USD: 11.99, INR: 999 };
+// Mantra Pass price. Keep in sync with catalog.ts and COURSE_PRICES in functions/index.js.
+const PASS_FOUNDING: Record<KidsCurrency, number> = { USD: 14.99, INR: 999 };
 
 export const MANTRA_CURRENCY: KidsCurrency = KIDS_ZOOM_CURRENCY;
 export const passPrice = () => formatKidsPrice(PASS_FOUNDING[MANTRA_CURRENCY], MANTRA_CURRENCY);
-export const passRegularPrice = () => formatKidsPrice(PASS_REGULAR[MANTRA_CURRENCY], MANTRA_CURRENCY);
 
 // ── Catalogue ────────────────────────────────────────────────────────────────
 export type Moment = 'morning' | 'evening' | 'sleep' | 'festival' | 'allday';
@@ -480,8 +476,8 @@ export const findMantra = (slug: string) => MANTRAS.find((m) => m.slug === slug)
 export const thumb = (videoId: string) => `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
 
 export const PASS_INCLUDES = [
-  'Every mantra without ads, playing on a loop for as long as you like',
-  'Neatly organised playlists: by deity, by time of day (morning, evening lamp, sleep) and by festival',
+  'Every mantra and all meditation music, without ads, playing on a loop for as long as you like',
+  'Neatly organised playlists: by deity, by time of day (morning, evening lamp, sleep), by festival and by mood',
   'A lyrics and meaning PDF for every mantra: Devanagari, transliteration and plain English',
   'A 21-day and a 40-day sadhana plan you can print',
   'Every mantra we record in future, added to your pass free',
@@ -491,10 +487,10 @@ export const PASS_INCLUDES = [
 export const MANTRA_FAQ: { q: string; a: string }[] = [
   {
     q: 'Is the mantra library free?',
-    a: 'Yes. Every mantra page, with the Sanskrit text, transliteration, meaning and our YouTube recording, is free to read and listen to. The Sadhana Lifetime Pass is for people who want to play the mantras on a loop without ads, in organised playlists, with the PDFs and the sadhana plans.',
+    a: 'Yes. Every mantra page, with the Sanskrit text, transliteration, meaning and our YouTube recording, is free to read and listen to. The Mantra Pass is for people who want to play the mantras on a loop without ads, in organised playlists, with the PDFs and the sadhana plans.',
   },
   {
-    q: 'What exactly do I get with the Sadhana Lifetime Pass?',
+    q: 'What exactly do I get with the Mantra Pass?',
     a: `Every mantra in the library, without ads and playing on a loop, organised into playlists by deity, time of day and festival. Also a lyrics and meaning PDF for each mantra, a printable 21-day and 40-day sadhana plan, and every future mantra at no extra cost. You pay once. There is no subscription.`,
   },
   {
@@ -507,7 +503,7 @@ export const MANTRA_FAQ: { q: string; a: string }[] = [
   },
   {
     q: 'Why is the price lower now?',
-    a: `We are a young studio and this is our founding listener price. It goes up for new buyers ${MANTRA_PRICE_RISE}. Anyone who joins now keeps every future mantra free.`,
+    a: 'Every future mantra we record is included in your pass at no extra cost. You pay once.',
   },
   {
     q: 'I am new to mantras. Where do I start?',

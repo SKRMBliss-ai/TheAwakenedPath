@@ -212,13 +212,15 @@ const COURSE_PRICES = {
     // Keep in sync with src/features/landing/kidsPricing.ts.
     "kids_zoom_monthly": 19,
     "kids_zoom_yearly": 171,
-    // Soulful Mantra Studio — Sadhana Lifetime Pass (founding price).
+    // Soulful Mantra Studio — Mantra Pass (mantras + meditation music).
     // Keep in sync with src/features/mantras/mantraData.ts.
-    "mantra_lifetime_pass": 4.99,
+    // Mantra Pass now covers mantras AND meditation music. The two old ids
+    // below are retired (merged into it) and priced the same so old links work.
+    "mantra_lifetime_pass": 14.99,
     // Sacred Sounds (meditation music) pass, and both libraries together.
     // Keep in sync with src/features/catalog/catalog.ts.
-    "sacred_sounds_pass": 4.99,
-    "sound_bundle": 7.99
+    "sacred_sounds_pass": 14.99,
+    "sound_bundle": 14.99
 };
 
 // COURSE_PRICES mixes real courses with individually-purchasable soundscape
@@ -254,9 +256,9 @@ const COURSE_PRICES_INR = {
     "you-are-space": 899,
     "kids_zoom_monthly": 1499,
     "kids_zoom_yearly": 13491,
-    "mantra_lifetime_pass": 299,
-    "sacred_sounds_pass": 299,
-    "sound_bundle": 499
+    "mantra_lifetime_pass": 999,
+    "sacred_sounds_pass": 999,
+    "sound_bundle": 999
 };
 
 // Multi-currency pricing. INR/USD tables above cover every course; the extra
@@ -2786,7 +2788,7 @@ async function sendKidsZoomBookingEmails({ toEmail, phone, courseId, amount, cur
     });
 }
 
-// Sadhana Lifetime Pass (Soulful Mantra Studio): one email to the team so the
+// Mantra Pass (Soulful Mantra Studio): one email to the team so the
 // download link gets sent, one to the buyer confirming what happens next.
 async function sendMantraPassEmails({ toEmail, phone, amount, currency, paymentId, provider }) {
     const transporter = getTransporter();
@@ -2795,9 +2797,9 @@ async function sendMantraPassEmails({ toEmail, phone, amount, currency, paymentI
     await transporter.sendMail({
         from: '"SKRM Bliss AI" <skrmblissai@gmail.com>',
         to: ADMIN_EMAILS.join(', '),
-        subject: 'New Sadhana Lifetime Pass buyer — Soulful Mantra Studio',
+        subject: 'New Mantra Pass buyer — Soulful Mantra Studio',
         html: `<div style="font-family:sans-serif;padding:20px;">
-            <h2 style="color:#4A3260;">New Sadhana Lifetime Pass</h2>
+            <h2 style="color:#4A3260;">New Mantra Pass</h2>
             <p><strong>Email:</strong> ${toEmail || 'N/A'}</p>
             <p><strong>Phone:</strong> ${phone || 'N/A'}</p>
             <p><strong>Paid:</strong> ${paid} via ${provider || ''} (${paymentId || ''})</p>
@@ -2810,9 +2812,9 @@ async function sendMantraPassEmails({ toEmail, phone, amount, currency, paymentI
     await transporter.sendMail({
         from: '"Soulful Mantra Studio" <connect@skrmblissai.in>',
         to: toEmail,
-        subject: 'Your Sadhana Lifetime Pass',
+        subject: 'Your Mantra Pass',
         html: `<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:24px;color:#3A342C;line-height:1.6;">
-            <h2 style="color:#4A3260;">Thank you — your Lifetime Pass is confirmed</h2>
+            <h2 style="color:#4A3260;">Thank you — your Mantra Pass is confirmed</h2>
             ${hasLink
                 ? `<p>Your mantras are here: <a href="${MANTRA_PASS_DOWNLOAD_URL}">${MANTRA_PASS_DOWNLOAD_URL}</a>. Keep this email; new mantras are added to the same place.</p>`
                 : '<p>We are preparing your access link (every mantra on a loop without ads, in playlists by deity, time of day and festival, plus the lyrics and meaning PDFs and the 21 and 40 day sadhana plans). It will reach this email address within 24 hours, usually the same day.</p>'}

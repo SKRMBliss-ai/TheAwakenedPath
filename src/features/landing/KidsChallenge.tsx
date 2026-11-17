@@ -245,38 +245,7 @@ export default function KidsChallenge() {
           { label: 'The 3 days', href: '#days' },
           { label: 'Who it is for', href: '#who', secondary: true },
           { label: 'Questions', href: '#faq', secondary: true },
-          {
-            label: 'Courses',
-            subItems: [
-              {
-                label: 'Feelings & Emotions',
-                sub: '7-Episode Guided Course',
-                href: '/feelingsandemotioncourse',
-              },
-              {
-                label: 'Mantra Studio',
-                sub: 'Sacred Chants & Sadhana',
-                badge: 'NEW',
-                href: '/mantras',
-              },
-              {
-                label: 'Power of Now',
-                sub: 'Coming Soon',
-                href: '#',
-              },
-              {
-                label: 'Wisdom Untethered',
-                sub: 'Coming Soon',
-                href: '#',
-              },
-              {
-                label: 'For Kids',
-                sub: 'Let’s Be Our Best Every Day! (3-Day Challenge)',
-                badge: 'NEW',
-                href: '/tiny-kids-transformations',
-              },
-            ],
-          },
+          { label: 'Pricing', href: '/pricing', secondary: true },
         ]}
         cta={{ label: "Reserve my child's place →", href: KIDS_REGISTER_PATH, onClick: () => trackKids('KIDS_HEADER_CTA') }}
       />

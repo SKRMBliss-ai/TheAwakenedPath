@@ -5,6 +5,7 @@ import { Sparkles, MessageCircle } from 'lucide-react';
 import { usePageSeo } from '../../lib/seo';
 import { useSiteTheme } from '../../lib/siteTheme';
 import { SiteHeader, SiteFooter, SI_LOGO_SRC } from '../../components/site/SiteChrome';
+import { siteNav } from '../../components/site/siteNav';
 import HeroMark from '../../components/site/HeroMark';
 
 // ── New immersive section components ────────────────────────────────────────
@@ -227,49 +228,7 @@ export default function SoulfulHome() {
                 { label: 'For me', href: '?for=you', secondary: true, onClick: () => chooseAudience('you') },
                 { label: 'About Us', href: '/about-us', onClick: () => track('HOME_ABOUT_US') },
               ]
-            : [
-                { label: 'Mind Gym', href: '#mindgym', onClick: () => chooseAudience('you') },
-                {
-                  label: 'Courses',
-                  subItems: [
-                    {
-                      label: 'Feelings & Emotions',
-                      sub: '7-Episode Guided Course',
-                      href: '/feelingsandemotioncourse',
-                      onClick: () => track('HOME_COURSE_FEELINGS_CLICK'),
-                    },
-                    {
-                      label: 'Mantra Studio',
-                      sub: 'Sacred Chants & Sadhana',
-                      badge: 'NEW',
-                      href: '/mantras',
-                      onClick: () => track('HOME_MANTRAS_CLICK'),
-                    },
-                    {
-                      label: 'Power of Now',
-                      sub: 'Coming Soon',
-                      href: '#',
-                    },
-                    {
-                      label: 'Wisdom Untethered',
-                      sub: 'Coming Soon',
-                      href: '#',
-                    },
-                    {
-                      label: 'For Kids',
-                      sub: 'Kids Mind Gym · live Zoom class included',
-                      badge: 'NEW',
-                      href: '/tiny-kids-transformations',
-                      onClick: () => track('HOME_COURSE_KIDS_CLICK'),
-                    },
-                  ],
-                },
-                { label: 'Mantras', href: '/mantras', onClick: () => track('HOME_MANTRAS_CLICK') },
-                { label: 'Free Guides', href: '#tools', secondary: true, onClick: () => chooseAudience('you') },
-                { label: 'Videos', href: '#videos', secondary: true, onClick: () => chooseAudience('you') },
-                { label: 'About Us', href: '/about-us', onClick: () => track('HOME_ABOUT_US') },
-                { label: 'Sign In', href: '/mindgym', secondary: true, onClick: () => track('HOME_SIGN_IN') },
-              ]}
+            : siteNav({ home: true })}
           cta={audience === 'brands'
             ? { label: 'Start a project →', href: WHATSAPP, onClick: () => track('HOME_BRANDS_WHATSAPP') }
             : { label: 'Enter Mind Gym →', href: '/mindgym', onClick: () => track('HOME_ENTER_APP') }}

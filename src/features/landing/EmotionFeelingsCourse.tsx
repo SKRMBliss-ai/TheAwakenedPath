@@ -17,7 +17,6 @@ import { useSiteTheme } from '../../lib/siteTheme';
 import { SiteHeader, SiteFooter } from '../../components/site/SiteChrome';
 import SacredGeometry from './components/SacredGeometry';
 import CursorGlow from './components/CursorGlow';
-import UrgencyBanner from './components/UrgencyBanner';
 import KidsChallengeCrossSell from './components/KidsChallengeCrossSell';
 import HeroMark from '../../components/site/HeroMark';
 import BodyMapShowcase from './components/BodyMapShowcase';
@@ -1040,7 +1039,6 @@ export default function EmotionFeelingsCourse() {
         />
       </div>
 
-      <UrgencyBanner isDark={isDark} onCta={() => openCheckout()} />
 
       {/* ════════════════════════════════════════════════════════════════════
           1. HERO SECTION (Full-Bleed End-to-End)

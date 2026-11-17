@@ -10,55 +10,76 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { getAuth, onAuthStateChanged, type User } from 'firebase/auth';
-import { Check, ShieldCheck, Sparkles, ArrowRight, Loader2 } from 'lucide-react';
+import { Check, ShieldCheck, Loader2 } from 'lucide-react';
 import { usePageSeo } from '../../lib/seo';
 import { track } from '../../lib/analytics';
 import { useSiteTheme, type Palette } from '../../lib/siteTheme';
 import { SiteHeader, SiteFooter, SERIF, SANS } from '../../components/site/SiteChrome';
+import { siteNav } from '../../components/site/siteNav';
 import { useRazorpay } from '../../hooks/useRazorpay';
 import { usePaypal } from '../../hooks/usePaypal';
-import { CURRENCY, PLAN_GROUPS, PRODUCTS, isPwyw, priceOf, product, refundOf, wasOf, type Product } from './catalog';
+import { CURRENCY, DOORS, PRODUCTS, canonicalId, isPwyw, priceOf, product, refundOf, wasOf, type Door, type Product } from './catalog';
 
 const t = (a: string, d = '') => track(a, d, '/pricing');
-const PER: Record<Product['billing'], string> = { once: 'once', month: '/month', year: '/year' };
-const UNLOCK_LABEL: Record<string, string> = {
-  mind_gym: 'Mind Gym app', kids_mind_gym: 'Kids Mind Gym', emotion_course: 'Every course', mantras: 'Mantras', sacred_sounds: 'Meditation Music', extra_tools: 'Breathe & Habit Tracker',
-};
+const PER: Record<Product['billing'], string> = { once: ' once', month: '/month', year: '/year' };
 
-function PlanCard({ palette, p, selected, onPick, featured }: { palette: Palette; p: Product; selected: boolean; onPick: () => void; featured?: boolean }) {
-  const was = wasOf(p.id);
+/** How a plan is named inside its door: "Monthly", "Yearly · save 17%", or its own name if it is an add-on. */
+function optionLabel(id: string, door: Door): string {
+  const p = product(id);
+  const base = product(door.plans[0]);
+  if (p.name !== base.name) return p.billing === 'month' ? `${p.name}, monthly` : p.name;
+  if (p.billing === 'once') return 'One payment, yours to keep';
+  if (p.billing === 'month') return 'Monthly';
+  const monthly = PRODUCTS.find((x) => x.name === p.name && x.billing === 'month');
+  if (!monthly) return 'Yearly';
+  const save = Math.round((1 - p.price[CURRENCY] / (monthly.price[CURRENCY] * 12)) * 100);
+  return save > 0 ? `Yearly · save ${save}%` : 'Yearly';
+}
+
+/** One door as a pricing column: who it is for, what is inside, and its plans. */
+function DoorColumn({ palette, door, selected, onPick }: { palette: Palette; door: Door; selected: string | null; onPick: (id: string) => void }) {
   return (
-    <button type="button" onClick={onPick} aria-pressed={selected}
-      className="pr-card"
-      style={{ textAlign: 'left', background: palette.CARD, color: palette.INK, borderRadius: 24, padding: '22px 22px 20px', cursor: 'pointer',
-        border: `${selected || featured ? 2 : 1}px solid ${selected ? palette.PURPLE_STRONG : featured ? palette.BROWN : palette.BORDER}`,
-        display: 'flex', flexDirection: 'column', gap: 10, position: 'relative', fontFamily: SANS }}>
-      {featured && (
-        <span style={{ position: 'absolute', top: -12, left: 20, background: palette.BROWN, color: palette.ON_ACCENT, borderRadius: 999,
-          padding: '4px 12px', fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Best value</span>
-      )}
-      <span style={{ fontFamily: SERIF, fontSize: 26, fontWeight: 500, lineHeight: 1.15 }}>
-        {p.name}{p.billing === 'year' ? ' · Yearly' : p.billing === 'month' ? ' · Monthly' : ''}
-      </span>
-      <span style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 34, fontWeight: 700, lineHeight: 1 }}>{priceOf(p.id)}</span>
-        <span style={{ fontSize: 14, color: palette.INK2 }}>{PER[p.billing]}</span>
-        {was && <s style={{ fontSize: 14, color: palette.INK2 }}>{was}</s>}
-      </span>
-      <span style={{ fontSize: 14, lineHeight: 1.55, color: palette.INK2 }}>{p.pitch}</span>
-      <span style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-        {p.unlocks.map((u) => (
-          <span key={u} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, fontWeight: 700, padding: '4px 9px', borderRadius: 999,
-            background: palette.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', color: palette.INK2 }}>
-            <Check size={12} aria-hidden="true" /> {UNLOCK_LABEL[u]}
-          </span>
+    <section id={door.id} aria-labelledby={`door-${door.id}`} className="pr-col"
+      style={{ background: palette.CARD, border: `1px solid ${palette.BORDER}`, borderRadius: 28, padding: 'clamp(20px, 2.6vw, 28px)', display: 'flex', flexDirection: 'column', gap: 14, scrollMarginTop: 90 }}>
+      <span style={{ alignSelf: 'flex-start', fontSize: 12, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase',
+        padding: '6px 12px', borderRadius: 999, background: palette.BAND, color: palette.ON_BAND }}>{door.who}</span>
+      <h2 id={`door-${door.id}`} style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 3vw, 36px)', fontWeight: 500, lineHeight: 1.1, margin: 0 }}>{door.title}</h2>
+      <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: palette.INK2 }}>{door.line}</p>
+      <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 7 }}>
+        {door.includes.map((x) => (
+          <li key={x} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 14, lineHeight: 1.45 }}>
+            <Check size={16} color={palette.PURPLE_STRONG} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} /> {x}
+          </li>
         ))}
-      </span>
-      <span style={{ marginTop: 'auto', paddingTop: 6, display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14.5, fontWeight: 700,
-        color: selected ? palette.PURPLE_STRONG : palette.INK }}>
-        {selected ? 'Selected' : 'Choose'} <ArrowRight size={15} aria-hidden="true" />
-      </span>
-    </button>
+      </ul>
+      <div role="radiogroup" aria-label={`${door.title} plans`} style={{ display: 'grid', gap: 10, marginTop: 'auto', paddingTop: 6 }}>
+        {door.plans.map((id) => {
+          const p = product(id);
+          const on = selected === id;
+          return (
+            <button key={id} type="button" role="radio" aria-checked={on} onClick={() => onPick(id)} className="pr-opt"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 56, padding: '10px 16px', borderRadius: 16,
+                cursor: 'pointer', textAlign: 'left', fontFamily: SANS, color: palette.INK,
+                background: on ? (palette.isDark ? 'rgba(191,176,189,0.14)' : 'rgba(105,94,104,0.08)') : 'transparent',
+                border: `${on ? 2 : 1}px solid ${on ? palette.PURPLE_STRONG : palette.BORDER}` }}>
+              <span style={{ fontSize: 14.5, fontWeight: 700, lineHeight: 1.3 }}>{optionLabel(id, door)}</span>
+              <span style={{ fontSize: 16, fontWeight: 800, whiteSpace: 'nowrap' }}>
+                {priceOf(id)}<span style={{ fontSize: 12.5, fontWeight: 500, color: palette.INK2 }}>{PER[p.billing]}</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {door.extra && (
+        <p style={{ margin: 0, fontSize: 13, color: palette.INK2 }}>
+          {door.extra.label}{' '}
+          <button type="button" onClick={() => onPick(door.extra!.id)}
+            style={{ background: 'none', border: 'none', padding: 0, color: palette.PURPLE_STRONG, fontWeight: 700, cursor: 'pointer', fontFamily: SANS, fontSize: 13, textDecoration: 'underline' }}>
+            {priceOf(door.extra.id)} once
+          </button>
+        </p>
+      )}
+    </section>
   );
 }
 
@@ -99,6 +120,11 @@ function Checkout({ palette, id, user, onClose }: { palette: Palette; id: string
           <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: palette.BROWN }}>Your order</span>
           <h2 style={{ fontFamily: SERIF, fontSize: 30, fontWeight: 500, margin: '4px 0 2px' }}>{p.name}</h2>
           <p style={{ margin: 0, fontSize: 14, color: palette.INK2 }}>{p.pitch}</p>
+          <p style={{ margin: '10px 0 0', fontSize: 13, color: palette.INK2 }}>
+            You are buying this one plan. Want something else too?{' '}
+            <a href="#plans" onClick={(e) => { e.preventDefault(); onClose(); document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+              style={{ color: palette.PURPLE_STRONG, fontWeight: 700 }}>Add another plan</a>
+          </p>
         </div>
         <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: palette.INK2, fontSize: 13.5, textDecoration: 'underline', cursor: 'pointer', minHeight: 44 }}>Change</button>
       </div>
@@ -160,7 +186,7 @@ export default function PricingPage() {
   const [user, setUser] = useState<User | null>(null);
   const [selected, setSelected] = useState<string | null>(() => {
     const s = new URLSearchParams(window.location.search).get('select');
-    return s && PRODUCTS.some((p) => p.id === s) ? s : null;
+    return s && PRODUCTS.some((p) => p.id === s) ? canonicalId(s) : null;
   });
   const checkoutRef = useRef<HTMLDivElement>(null);
 
@@ -171,8 +197,8 @@ export default function PricingPage() {
   }, [selected]);
 
   usePageSeo({
-    title: 'Plans & Pricing: Mind Gym, Kids, Courses, Mantras, Meditation Music | SKRM Bliss AI',
-    description: 'Every plan from Soulful Mind Studio and Soulful Mantra Studio on one page. Buy any one on its own, or everything together with All Access.',
+    title: 'Pricing: Adult Mind Gym, Kids Mind Gym, Mantras & Music | SKRM Bliss AI',
+    description: 'Three simple plans: Adult Mind Gym for you, Kids Mind Gym for your child, and the Mantra Pass for mantras and meditation music.',
     url: 'https://www.skrmblissai.in/pricing',
   });
 
@@ -188,39 +214,24 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen w-full antialiased" style={{ fontFamily: SANS, background: palette.BG, color: palette.INK, overflowX: 'hidden' }}>
       <SiteHeader palette={palette} onToggleTheme={toggle}
-        links={[{ label: 'Home', href: '/' }, { label: 'Mind Gym', href: '/mindgym' }, { label: 'Kids', href: '/tiny-kids-transformations' }, { label: 'Mantras', href: '/mantras' }]}
+        links={siteNav()}
         cta={null} />
 
       <header style={{ ...sec, paddingTop: 'clamp(36px, 5vw, 64px)', textAlign: 'center' }}>
-        <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', color: palette.BROWN }}>Plans & pricing · both studios</span>
-        <h1 style={{ fontFamily: SERIF, fontSize: 'clamp(36px, 5.4vw, 58px)', fontWeight: 400, lineHeight: 1.08, margin: '10px auto 12px', maxWidth: 760 }}>
-          Choose what you need. <span style={{ color: palette.BROWN }}>Or take it all.</span>
+        <h1 style={{ fontFamily: SERIF, fontSize: 'clamp(36px, 5.4vw, 58px)', fontWeight: 400, lineHeight: 1.08, margin: '0 auto 12px', maxWidth: 760 }}>
+          Who is this for?
         </h1>
-        <p style={{ fontSize: 16.5, lineHeight: 1.65, color: palette.INK2, margin: '0 auto', maxWidth: 620 }}>
-          Every plan works on its own. Bigger plans include the smaller ones, so you never pay twice for the same thing.
+        <p style={{ fontSize: 16.5, lineHeight: 1.65, color: palette.INK2, margin: '0 auto', maxWidth: 560 }}>
+          Choose one plan. Each is complete on its own.
         </p>
       </header>
 
-      {/* All Access */}
-      <section style={{ ...sec, paddingTop: 0 }}>
-        <div className="pr-all" style={{ ...wrap, borderRadius: 28, padding: 'clamp(22px, 3vw, 34px)', color: '#F4F1EA',
-          background: 'linear-gradient(135deg, #2A2228 0%, #3A2E2A 100%)', border: selected === 'all_access' ? '2px solid #E9C98A' : '2px solid transparent' }}>
-          <div style={{ minWidth: 0 }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#E9C98A' }}>
-              <Sparkles size={14} aria-hidden="true" /> All Access · both studios
-            </span>
-            <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(26px, 3.4vw, 38px)', fontWeight: 400, lineHeight: 1.15, margin: '8px 0 6px' }}>
-              Mind Gym, Kids Mind Gym, every course, Mantras and Meditation Music
-            </h2>
-            <p style={{ margin: 0, fontSize: 15, color: 'rgba(244,241,234,0.82)' }}>{priceOf('all_access')} once, yours for life.</p>
-          </div>
-          <button type="button" onClick={() => pick('all_access')}
-            style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 50, padding: '0 26px', borderRadius: 999, border: 'none',
-              background: '#E9C98A', color: '#241E24', fontFamily: SANS, fontSize: 15.5, fontWeight: 800, cursor: 'pointer' }}>
-            {selected === 'all_access' ? 'Selected' : 'Choose All Access'} <ArrowRight size={16} aria-hidden="true" />
-          </button>
+      {/* The three doors, each with its plans */}
+      <div id="plans" style={{ ...sec, paddingTop: 0, scrollMarginTop: 90 }}>
+        <div className="pr-doors" style={wrap}>
+          {DOORS.map((d) => <DoorColumn key={d.id} palette={palette} door={d} selected={selected} onPick={pick} />)}
         </div>
-      </section>
+      </div>
 
       {/* Checkout appears here once something is chosen */}
       <div ref={checkoutRef} style={{ scrollMarginTop: 90 }}>
@@ -233,24 +244,12 @@ export default function PricingPage() {
         )}
       </div>
 
-      {PLAN_GROUPS.map((g) => (
-        <section key={g.id} id={g.id} style={sec}>
-          <div style={wrap}>
-            <div style={{ marginBottom: 18 }}>
-              <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: palette.BROWN }}>{g.studio}</span>
-              <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 3.6vw, 40px)', fontWeight: 400, margin: '6px 0 4px' }}>{g.title}</h2>
-              <p style={{ margin: 0, fontSize: 15, color: palette.INK2 }}>{g.blurb}</p>
-            </div>
-            <div className="pr-grid">
-              {g.ids.map((id, i) => (
-                <PlanCard key={id} palette={palette} p={product(id)} selected={selected === id} onPick={() => pick(id)} featured={i === g.ids.length - 1} />
-              ))}
-            </div>
-          </div>
-        </section>
-      ))}
-
-      <section style={{ ...sec, textAlign: 'center', paddingBottom: 'clamp(48px, 6vw, 80px)' }}>
+      <section style={{ ...sec, paddingTop: 0, textAlign: 'center', paddingBottom: 'clamp(48px, 6vw, 80px)' }}>
+        <p style={{ fontSize: 14.5, lineHeight: 1.7, color: palette.INK2, margin: '0 0 6px' }}>
+          Want all three for life? <button type="button" onClick={() => pick('all_access')}
+            style={{ background: 'none', border: 'none', padding: 0, color: palette.PURPLE_STRONG, fontWeight: 700, cursor: 'pointer', fontFamily: SANS, fontSize: 14.5, textDecoration: 'underline' }}>
+            All Access, {priceOf('all_access')} once</button>.
+        </p>
         <p style={{ fontSize: 14.5, color: palette.INK2, margin: 0 }}>
           Questions before you choose? <a href="https://wa.me/918217581238" target="_blank" rel="noopener noreferrer" style={{ color: palette.PURPLE_STRONG, fontWeight: 700 }}>Message us on WhatsApp</a>.
         </p>
@@ -259,12 +258,11 @@ export default function PricingPage() {
       <SiteFooter palette={palette} />
 
       <style>{`
-        .pr-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: stretch; }
-        .pr-card { transition: transform .25s ease, box-shadow .25s ease; }
-        .pr-card:hover { transform: translateY(-3px); box-shadow: ${palette.isDark ? '0 14px 34px rgba(0,0,0,.5)' : '0 14px 34px rgba(60,40,30,.12)'}; }
-        .pr-all { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-        @media (max-width: 900px) { .pr-grid { grid-template-columns: 1fr; } .pr-all { flex-direction: column; align-items: flex-start; } }
-        @media (prefers-reduced-motion: reduce) { .pr-card { transition: none; } .pr-card:hover { transform: none; } }
+        .pr-doors { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: stretch; }
+        .pr-opt { transition: border-color .2s ease, background .2s ease; }
+        .pr-opt:hover { border-color: ${palette.PURPLE_STRONG} !important; }
+        @media (max-width: 900px) { .pr-doors { grid-template-columns: 1fr; } }
+        @media (prefers-reduced-motion: reduce) { .pr-opt { transition: none; } }
       `}</style>
     </div>
   );
