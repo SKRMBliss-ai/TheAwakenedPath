@@ -103,7 +103,7 @@ export default function SoulfulHome() {
 
   // Master SEO + AEO + GEO Schema Graph setup
   usePageSeo({
-    title: 'Soulful Intelligence — Where Soul Meets Intelligence | SKRM Bliss AI',
+    title: 'Soulful Mind Studio — Presence, Awareness, Mindfulness | SKRM Bliss AI',
     description: 'A studio for a quieter mind and braver ideas. Home of Mind Gym, guided courses on emotions and presence, free wellbeing tools, and pay-what-you-feel digital services for brands & startups.',
     url: 'https://www.skrmblissai.in',
     image: 'https://www.skrmblissai.in/og/home.png',
