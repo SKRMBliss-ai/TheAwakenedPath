@@ -99,9 +99,9 @@ export default function AboutUs() {
   const [flipped, setFlipped] = useState<Founder['key'] | null>(null);
 
   usePageSeo({
-    title: 'About Us — Shruti Khungar & Sim Katyal | Soulful Intelligence Studio',
+    title: 'About Us — Shruti Khungar & Sim Katyal | Soulful Mind Studio',
     description:
-      'The twin sisters behind Soulful Intelligence Studio and Mind Gym: twenty years of enterprise product engineering, and a lived journey through illness, loss and emotional recovery.',
+      'The twin sisters behind Soulful Mind Studio and Mind Gym: twenty years of enterprise product engineering, and a lived journey through illness, loss and emotional recovery.',
     url: 'https://www.skrmblissai.in/about-us',
   });
 
@@ -227,7 +227,7 @@ export default function AboutUs() {
             Built by two sisters.
           </h1>
           <p style={{ ...body, fontSize: 16.5, maxWidth: 620, margin: '24px auto 0' }}>
-            Soulful Intelligence Studio is run by twin sisters. Both carry decades of
+            Soulful Mind Studio is run by twin sisters. Both carry decades of
             meditation practice passed down from their parents — a tradition they inherited
             long before they built anything with it. What they have built here is that
             inheritance combined with modern, evidence-based method: understanding feelings,
@@ -514,7 +514,7 @@ export default function AboutUs() {
               fontFamily: SANS, fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase',
               color: accent, textAlign: 'center', margin: '14px 0 0',
             }}>
-              — The Soulful Intelligence Promise
+              — The Soulful Mind Studio Promise
             </p>
           </div>
         </section>

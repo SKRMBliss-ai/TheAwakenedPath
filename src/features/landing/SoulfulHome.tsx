@@ -509,7 +509,7 @@ export default function SoulfulHome() {
               }}>
                 "Take what you need. Give what you can. Everything here is offered pay-what-you-feel."
               </p>
-              <p style={{ fontFamily: SANS, fontSize: 13, color: isDark ? 'rgba(237,233,227,0.5)' : '#7A5F44', fontWeight: 600 }}>— The Soulful Intelligence promise</p>
+              <p style={{ fontFamily: SANS, fontSize: 13, color: isDark ? 'rgba(237,233,227,0.5)' : '#7A5F44', fontWeight: 600 }}>— The Soulful Mind Studio promise</p>
             </div>
           </section>
 
@@ -556,7 +556,7 @@ export default function SoulfulHome() {
                 marginBottom: 24,
               }}
             >
-              <Sparkles size={12} /> SOULFUL INTELLIGENCE · DIGITAL STUDIO
+              <Sparkles size={12} /> SOULFUL MIND STUDIO · DIGITAL STUDIO
             </motion.div>
 
             <motion.h1
@@ -847,7 +847,7 @@ export default function SoulfulHome() {
                 Apps &amp; Digital Experiences You Can Use Today
               </h2>
               <p style={{ fontSize: 14.5, color: INK2, maxWidth: 640, margin: '0 auto 36px', lineHeight: 1.7, fontFamily: SANS }}>
-                From habit tracking and AI mindfulness to luxury digital ateliers and sattvic dining — these are real apps and websites built by Soulful Intelligence Studios.
+                From habit tracking and AI mindfulness to luxury digital ateliers and sattvic dining — these are real apps and websites built by Soulful Mind Studio.
               </p>
 
               {/* Sub-Filter Tabs */}
@@ -925,12 +925,12 @@ export default function SoulfulHome() {
                   {
                     type: 'apps',
                     tag: 'Sacred Chants & Sadhana',
-                    title: 'Soulful Mind Studio',
+                    title: 'Soulful Mantra Studio',
                     desc: 'Sacred mantras with traditional Devanagari text, English transliterations, word-by-word meanings, and ad-free looping chant audio for daily sadhana.',
                     href: '/mantras',
                     action: 'Explore Mantras →',
-                    video: '/marketing/mantras/soulful-mind-studio.mp4',
-                    img: '/marketing/mantras/soulful-mind-studio-logo.webp',
+                    video: '/marketing/mantras/soulful-mantra-studio.mp4',
+                    img: '/marketing/mantras/lockup.webp',
                   },
                   {
                     type: 'apps',
