@@ -8,17 +8,18 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getAuth } from 'firebase/auth';
-import { BookOpen, Repeat, ListMusic, FileText, Bell, MessageCircle, ShieldCheck, Sunrise, Play, Youtube } from 'lucide-react';
+import { BookOpen, Repeat, ListMusic, FileText, Bell, MessageCircle, ShieldCheck, Sunrise, Play, Pause, Youtube, Volume2, VolumeX, Music2 } from 'lucide-react';
 import { usePageSeo } from '../../lib/seo';
 import { track } from '../../lib/analytics';
 import { useSiteTheme, type Palette } from '../../lib/siteTheme';
 import { SiteHeader, SiteFooter, SERIF, SANS } from '../../components/site/SiteChrome';
 import { useRazorpay } from '../../hooks/useRazorpay';
 import { usePaypal } from '../../hooks/usePaypal';
+import { VoiceService, useVoiceStatus } from '../../services/voiceService';
 import {
   MANTRAS, MOMENTS, DEITIES, MANTRA_FAQ, PASS_INCLUDES, MANTRA_BASE_URL, MANTRA_SUBSCRIBE_URL,
   MANTRA_WHATSAPP, MANTRA_PASS_ID,MANTRA_PASS_OPEN, MANTRA_PASS_REFUND_DAYS, MANTRA_PRICE_RISE, MANTRA_CURRENCY,
-  passPrice, passRegularPrice, findMantra, thumb, waLink, type Mantra, type Moment,
+  passPrice, passRegularPrice, findMantra, thumb, waLink, getMantraAudioUrl, type Mantra, type Moment,
 } from './mantraData';
 
 const DEVA = "'Noto Serif Devanagari', 'Tiro Devanagari Sanskrit', 'Nirmala UI', 'Mangal', serif";
@@ -89,6 +90,26 @@ function Btn({ palette, href, label, event, ghost = false, external = false }: {
 }
 
 function MantraCard({ palette, m }: { palette: Palette; m: Mantra }) {
+  const { status, category, trackId } = useVoiceStatus();
+  const isPlaying = status === 'playing' && category === 'music' && trackId === m.slug;
+
+  const quickPlay = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    t('MANTRA_QUICK_PLAY', m.slug);
+    if (isPlaying) {
+      VoiceService.pause();
+    } else if (status === 'paused' && trackId === m.slug) {
+      VoiceService.resume('music');
+    } else {
+      VoiceService.playAudioURL(m.audioUrl || getMantraAudioUrl(m.slug), {
+        trackId: m.slug,
+        loop: true,
+        category: 'music',
+      });
+    }
+  };
+
   return (
     <a href={`${PAGE}/${m.slug}`} className="sms-card" onClick={() => t('MANTRA_CARD_CLICK', m.slug)}
       style={{ display: 'flex', flexDirection: 'column', background: palette.CARD, border: `1px solid ${palette.BORDER}`,
@@ -96,6 +117,26 @@ function MantraCard({ palette, m }: { palette: Palette; m: Mantra }) {
       <span style={{ position: 'relative', display: 'block', aspectRatio: '16 / 9', background: palette.BG2, overflow: 'hidden' }}>
         <img src={thumb(m.videos[0].id)} alt="" loading="lazy" width={480} height={270}
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        <button
+          type="button"
+          onClick={quickPlay}
+          aria-label={isPlaying ? `Pause chant ${m.name}` : `Play chant ${m.name}`}
+          style={{
+            position: 'absolute', right: 12, bottom: 12,
+            width: 38, height: 38, borderRadius: '50%',
+            background: isPlaying ? palette.PURPLE_STRONG : 'rgba(0,0,0,0.65)',
+            backdropFilter: 'blur(6px)',
+            color: '#fff', border: '1px solid rgba(255,255,255,0.3)',
+            display: 'grid', placeItems: 'center', cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            transition: 'transform 0.2s ease, background 0.2s ease',
+            zIndex: 2,
+          }}
+          className="sms-btn"
+          title={isPlaying ? 'Pause chant' : 'Play continuous chant'}
+        >
+          {isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" style={{ marginLeft: 2 }} />}
+        </button>
       </span>
       <span style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '16px 18px 18px', flex: 1 }}>
         <span style={{ fontFamily: SANS, fontSize: 10.5, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: palette.BROWN }}>{m.deity}</span>
@@ -108,6 +149,266 @@ function MantraCard({ palette, m }: { palette: Palette; m: Mantra }) {
         </span>
       </span>
     </a>
+  );
+}
+
+/** Soundscape Chanting Player for the single chant loop (plays without ads; download disabled). */
+function MantraSoundscapePlayer({ palette, m }: { palette: Palette; m: Mantra }) {
+  const { status, category, trackId } = useVoiceStatus();
+  const [progress, setProgress] = useState({ currentTime: 0, duration: 0 });
+  const [isSeeking, setIsSeeking] = useState(false);
+  const [seekVal, setSeekVal] = useState(0);
+  const [loop, setLoop] = useState(true);
+  const [volume, setVolume] = useState(VoiceService.volume || 0.8);
+  const [showVolume, setShowVolume] = useState(false);
+
+  const audioUrl = m.audioUrl || getMantraAudioUrl(m.slug);
+  const isPlaying = status === 'playing' && category === 'music' && trackId === m.slug;
+  const isPaused = status === 'paused' && trackId === m.slug;
+  const isActive = trackId === m.slug;
+
+  // Poll progress while this track is active
+  useEffect(() => {
+    if (!isActive) return;
+    const interval = setInterval(() => {
+      if (!isSeeking) {
+        setProgress(VoiceService.audioProgress);
+      }
+    }, 250);
+    return () => clearInterval(interval);
+  }, [isActive, isSeeking]);
+
+  const togglePlay = () => {
+    t('MANTRA_SOUNDSCAPE_TOGGLE', m.slug);
+    if (isPlaying) {
+      VoiceService.pause();
+    } else if (isPaused) {
+      VoiceService.resume('music');
+    } else {
+      VoiceService.playAudioURL(audioUrl, { trackId: m.slug, loop, category: 'music' });
+    }
+  };
+
+  const toggleLoop = () => {
+    const next = !loop;
+    setLoop(next);
+    VoiceService.setLoop(next);
+    t('MANTRA_SOUNDSCAPE_LOOP_TOGGLE', `${m.slug}:${next}`);
+  };
+
+  const handleSeekStart = () => {
+    setIsSeeking(true);
+    setSeekVal(progress.currentTime);
+  };
+
+  const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSeekVal(parseFloat(e.target.value));
+  };
+
+  const handleSeekEnd = () => {
+    VoiceService.seek(seekVal);
+    setProgress((p) => ({ ...p, currentTime: seekVal }));
+    setIsSeeking(false);
+  };
+
+  const handleVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = parseFloat(e.target.value);
+    setVolume(v);
+    VoiceService.setVolume(v);
+  };
+
+  const formatTime = (secs: number) => {
+    if (!isFinite(secs) || isNaN(secs) || secs < 0) return '0:00';
+    const mins = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${mins}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const progressPct = progress.duration > 0
+    ? ((isSeeking ? seekVal : progress.currentTime) / progress.duration) * 100
+    : 0;
+
+  return (
+    <section
+      onContextMenu={(e) => e.preventDefault()}
+      style={{
+        background: palette.isDark ? 'rgba(255,255,255,0.035)' : 'rgba(0,0,0,0.02)',
+        border: `1.5px solid ${isPlaying ? palette.PURPLE_STRONG : palette.BORDER}`,
+        borderRadius: 20,
+        padding: '20px 22px',
+        position: 'relative',
+        overflow: 'hidden',
+        boxShadow: isPlaying
+          ? (palette.isDark ? '0 8px 30px rgba(169,138,103,0.18)' : '0 8px 24px rgba(74,50,96,0.12)')
+          : 'none',
+        transition: 'all 0.3s ease',
+      }}
+      aria-label="Soundscape Chanting Player"
+    >
+      {/* Top row: badge + equalizer */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: 30, height: 30, borderRadius: 8,
+            background: palette.isDark ? 'rgba(169,138,103,0.15)' : 'rgba(74,50,96,0.1)',
+            color: palette.PURPLE_STRONG,
+          }}>
+            <Music2 size={16} aria-hidden="true" />
+          </span>
+          <div>
+            <span style={{
+              fontFamily: SANS, fontSize: 10.5, fontWeight: 800, letterSpacing: '0.18em',
+              textTransform: 'uppercase', color: palette.BROWN, display: 'block', lineHeight: 1.2,
+            }}>
+              Sacred Soundscape · Clean Audio
+            </span>
+            <span style={{ fontFamily: SANS, fontSize: 12, color: palette.INK2 }}>
+              Ad-free single chant loop
+            </span>
+          </div>
+        </div>
+
+        {/* Animated equalizer waves */}
+        {isPlaying && (
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 16 }} aria-hidden="true">
+            {[0, 1, 2, 3].map((i) => (
+              <span
+                key={i}
+                style={{
+                  width: 3,
+                  borderRadius: 2,
+                  background: palette.PURPLE_STRONG,
+                  animation: 'sms-eq 0.75s ease-in-out infinite alternate',
+                  animationDelay: `${i * 0.15}s`,
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Main player controls: Play/Pause button + progress rail */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
+        <button
+          type="button"
+          onClick={togglePlay}
+          aria-label={isPlaying ? `Pause ${m.name}` : `Play ${m.name}`}
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: '50%',
+            border: 'none',
+            background: palette.PURPLE_STRONG,
+            color: palette.ON_ACCENT,
+            display: 'grid',
+            placeItems: 'center',
+            cursor: 'pointer',
+            flexShrink: 0,
+            boxShadow: `0 4px 14px ${palette.PURPLE_STRONG}40`,
+            transition: 'transform 0.2s ease',
+          }}
+          className="sms-btn"
+        >
+          {isPlaying ? (
+            <Pause size={20} fill="currentColor" aria-hidden="true" />
+          ) : (
+            <Play size={20} fill="currentColor" aria-hidden="true" style={{ marginLeft: 2 }} />
+          )}
+        </button>
+
+        {/* Seek rail and time indicators */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            position: 'relative', height: 6, borderRadius: 3,
+            background: palette.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+            cursor: 'pointer', overflow: 'hidden',
+          }}>
+            <div style={{
+              position: 'absolute', top: 0, left: 0, bottom: 0,
+              width: `${progressPct}%`,
+              background: palette.PURPLE_STRONG,
+              transition: isSeeking ? 'none' : 'width 0.2s linear',
+            }} />
+            <input
+              type="range"
+              min={0}
+              max={progress.duration || 100}
+              step={0.1}
+              value={isSeeking ? seekVal : progress.currentTime}
+              onMouseDown={handleSeekStart}
+              onTouchStart={handleSeekStart}
+              onChange={handleSeekChange}
+              onMouseUp={handleSeekEnd}
+              onTouchEnd={handleSeekEnd}
+              style={{
+                position: 'absolute', inset: 0, width: '100%', height: '100%',
+                opacity: 0, cursor: 'pointer', margin: 0,
+              }}
+              aria-label="Seek chant position"
+            />
+          </div>
+          <div style={{
+            display: 'flex', justifyContent: 'space-between',
+            fontFamily: SANS, fontSize: 11, color: palette.INK2, marginTop: 5,
+          }}>
+            <span>{formatTime(isSeeking ? seekVal : progress.currentTime)}</span>
+            <span>{progress.duration > 0 ? formatTime(progress.duration) : '--:--'}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom bar: Continuous Loop toggle + Volume */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, paddingTop: 10, borderTop: `1px solid ${palette.BORDER}` }}>
+        <button
+          type="button"
+          onClick={toggleLoop}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            background: loop ? (palette.isDark ? 'rgba(169,138,103,0.2)' : 'rgba(74,50,96,0.1)') : 'transparent',
+            border: `1px solid ${loop ? palette.PURPLE_STRONG : palette.BORDER}`,
+            borderRadius: 999,
+            padding: '5px 12px',
+            fontSize: 12,
+            fontFamily: SANS,
+            fontWeight: 600,
+            color: loop ? palette.PURPLE_STRONG : palette.INK2,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+          }}
+          title="Loop chant continuously for sadhana"
+        >
+          <Repeat size={13} aria-hidden="true" />
+          <span>{loop ? 'Looping continuously' : 'Loop chant: Off'}</span>
+        </button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button
+            type="button"
+            onClick={() => setShowVolume((v) => !v)}
+            aria-label="Toggle volume slider"
+            style={{
+              background: 'transparent', border: 'none', color: palette.INK2,
+              cursor: 'pointer', display: 'grid', placeItems: 'center', padding: 4,
+            }}
+          >
+            {volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
+          </button>
+          {showVolume && (
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={volume}
+              onChange={handleVolume}
+              style={{ width: 64, cursor: 'pointer', accentColor: palette.PURPLE_STRONG }}
+              aria-label="Volume slider"
+            />
+          )}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -306,6 +607,7 @@ function PageStyles({ palette }: { palette: Palette }) {
       .sms-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
       .sms-ticker { display: inline-flex; white-space: nowrap; animation: sms-ticker 38s linear infinite; }
       @keyframes sms-ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+      @keyframes sms-eq { from { height: 4px; } to { height: 16px; } }
       @media (prefers-reduced-motion: reduce) { .sms-ticker { animation: none; } }
       @media (max-width: 860px) {
         .sms-pass, .sms-detail, .sms-listen, .sms-sales-hero { grid-template-columns: 1fr !important; }
@@ -694,7 +996,10 @@ function MantraDetail({ m }: { m: Mantra }) {
             </div>
 
             <aside style={{ display: 'grid', gap: 20 }}>
-              <section style={{ ...box, padding: 14 }} aria-label="Listen">
+              {/* Sacred Soundscape: Clean Audio Chanting Player */}
+              <MantraSoundscapePlayer palette={palette} m={m} />
+
+              <section style={{ ...box, padding: 14 }} aria-label="Listen on YouTube">
                 <div style={{ position: 'relative', aspectRatio: '16 / 9', borderRadius: 16, overflow: 'hidden', background: '#000' }}>
                   {play ? (
                     <iframe title={`${m.name} — Soulful Mantra Studio`} src={`https://www.youtube.com/embed/${main.id}?autoplay=1&rel=0`}

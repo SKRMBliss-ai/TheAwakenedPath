@@ -66,7 +66,11 @@ export interface Mantra {
   occasions: string[];
   /** Our own recordings on YouTube. The first one is embedded on the page. */
   videos: { id: string; label: string }[];
+  /** Master single-chant audio in /audio/mantras/<slug>.mp3 */
+  audioUrl?: string;
 }
+
+export const getMantraAudioUrl = (slug: string) => `/audio/mantras/${slug}.mp3`;
 
 export const MANTRAS: Mantra[] = [
   {

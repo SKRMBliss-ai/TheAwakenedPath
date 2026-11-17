@@ -88,6 +88,13 @@ export class VoiceService {
         // If it's already an absolute URL or blob, leave it alone
         if (path.startsWith('http') || path.startsWith('blob:')) return path;
 
+        // Local static assets in /audio/ or /media/ or /scenes/
+        if (path.startsWith('/audio/') || path.startsWith('audio/') ||
+            path.startsWith('/media/') || path.startsWith('media/') ||
+            path.startsWith('/scenes/') || path.startsWith('scenes/')) {
+            return path.startsWith('/') ? path : '/' + path;
+        }
+
         const storagePath = this.getInternalStoragePath(path);
         
         // Use the Firebase Storage public download format (encoded)
@@ -784,6 +791,16 @@ export class VoiceService {
                 else this._savedTtsTime = time;
             }
         }
+    }
+
+    static setLoop(val: boolean) {
+        if (this.musicAudio) {
+            this.musicAudio.loop = val;
+        }
+    }
+
+    static get isLooping(): boolean {
+        return !!this.musicAudio?.loop;
     }
 }
 
