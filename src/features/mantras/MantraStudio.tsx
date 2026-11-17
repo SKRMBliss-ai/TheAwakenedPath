@@ -115,7 +115,7 @@ function MantraCard({ palette, m }: { palette: Palette; m: Mantra }) {
       style={{ display: 'flex', flexDirection: 'column', background: palette.CARD, border: `1px solid ${palette.BORDER}`,
         borderRadius: 22, overflow: 'hidden', textDecoration: 'none', color: palette.INK }}>
       <span style={{ position: 'relative', display: 'block', aspectRatio: '16 / 9', background: palette.BG2, overflow: 'hidden' }}>
-        <img src={thumb(m.videos[0].id)} alt="" loading="lazy" width={480} height={270}
+        <img src={m.videos && m.videos[0] ? thumb(m.videos[0].id) : (m.cover || '/marketing/mantras/emblem-sunburst.webp')} alt="" loading="lazy" width={480} height={270}
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         <button
           type="button"
@@ -919,17 +919,18 @@ function MantraDetail({ m }: { m: Mantra }) {
   const { palette, toggle } = useSiteTheme();
   const [play, setPlay] = useState(false);
   const url = `${MANTRA_BASE_URL}/${m.slug}`;
-  const main = m.videos[0];
+  const main = m.videos && m.videos.length > 0 ? m.videos[0] : null;
+  const coverImg = main ? thumb(main.id) : (m.cover || '/marketing/mantras/emblem-sunburst.webp');
   const others = MANTRAS.filter((o) => o.slug !== m.slug && (o.deity === m.deity || o.moments.some((x) => m.moments.includes(x)))).slice(0, 3);
 
   usePageSeo({
     title: `${m.name}: Lyrics, Meaning & How to Chant | Soulful Mantra Studio`,
     description: `${m.name} in Devanagari with transliteration, word meanings and when to chant it. ${m.blurb} Listen to our soft studio recording.`,
     url,
-    image: thumb(main.id),
+    image: coverImg,
     jsonLd: [
       {
-        '@context': 'https://schema.org', '@type': 'Article', headline: `${m.name}: lyrics, meaning and how to chant`, url, image: thumb(main.id),
+        '@context': 'https://schema.org', '@type': 'Article', headline: `${m.name}: lyrics, meaning and how to chant`, url, image: coverImg,
         inLanguage: ['en', 'sa'], about: m.deity,
         publisher: { '@type': 'Organization', name: 'Soulful Mantra Studio', url: 'https://www.skrmblissai.in/mantras' },
       },
@@ -999,35 +1000,37 @@ function MantraDetail({ m }: { m: Mantra }) {
               {/* Sacred Soundscape: Clean Audio Chanting Player */}
               <MantraSoundscapePlayer palette={palette} m={m} />
 
-              <section style={{ ...box, padding: 14 }} aria-label="Listen on YouTube">
-                <div style={{ position: 'relative', aspectRatio: '16 / 9', borderRadius: 16, overflow: 'hidden', background: '#000' }}>
-                  {play ? (
-                    <iframe title={`${m.name} — Soulful Mantra Studio`} src={`https://www.youtube.com/embed/${main.id}?autoplay=1&rel=0`}
-                      allow="accelerometer; autoplay; encrypted-media; picture-in-picture" allowFullScreen
-                      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }} />
-                  ) : (
-                    <button type="button" onClick={() => { setPlay(true); t('MANTRA_PLAY', m.slug); }} aria-label={`Play ${m.name}`}
-                      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', padding: 0, border: 0, cursor: 'pointer', background: 'none' }}>
-                      <img src={thumb(main.id)} alt="" width={480} height={360} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                      <span style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: 'rgba(0,0,0,0.22)' }}>
-                        <span style={{ display: 'grid', placeItems: 'center', width: 68, height: 68, borderRadius: '50%', background: 'rgba(255,255,255,0.94)', color: '#241E24' }}>
-                          <Play size={28} fill="currentColor" aria-hidden="true" style={{ marginLeft: 4 }} />
+              {main && (
+                <section style={{ ...box, padding: 14 }} aria-label="Listen on YouTube">
+                  <div style={{ position: 'relative', aspectRatio: '16 / 9', borderRadius: 16, overflow: 'hidden', background: '#000' }}>
+                    {play ? (
+                      <iframe title={`${m.name} — Soulful Mantra Studio`} src={`https://www.youtube.com/embed/${main.id}?autoplay=1&rel=0`}
+                        allow="accelerometer; autoplay; encrypted-media; picture-in-picture" allowFullScreen
+                        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }} />
+                    ) : (
+                      <button type="button" onClick={() => { setPlay(true); t('MANTRA_PLAY', m.slug); }} aria-label={`Play ${m.name}`}
+                        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', padding: 0, border: 0, cursor: 'pointer', background: 'none' }}>
+                        <img src={thumb(main.id)} alt="" width={480} height={360} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                        <span style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: 'rgba(0,0,0,0.22)' }}>
+                          <span style={{ display: 'grid', placeItems: 'center', width: 68, height: 68, borderRadius: '50%', background: 'rgba(255,255,255,0.94)', color: '#241E24' }}>
+                            <Play size={28} fill="currentColor" aria-hidden="true" style={{ marginLeft: 4 }} />
+                          </span>
                         </span>
-                      </span>
-                    </button>
-                  )}
-                </div>
-                <ul style={{ listStyle: 'none', margin: '12px 6px 4px', padding: 0, display: 'grid', gap: 2 }}>
-                  {m.videos.map((v) => (
-                    <li key={v.id}>
-                      <a href={`https://www.youtube.com/watch?v=${v.id}`} target="_blank" rel="noopener noreferrer" onClick={() => t('MANTRA_YOUTUBE', v.id)}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 36, fontSize: 14, fontWeight: 600, color: palette.PURPLE_STRONG, textDecoration: 'none' }}>
-                        <Youtube size={17} aria-hidden="true" /> {v.label} on YouTube
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </section>
+                      </button>
+                    )}
+                  </div>
+                  <ul style={{ listStyle: 'none', margin: '12px 6px 4px', padding: 0, display: 'grid', gap: 2 }}>
+                    {m.videos?.map((v) => (
+                      <li key={v.id}>
+                        <a href={`https://www.youtube.com/watch?v=${v.id}`} target="_blank" rel="noopener noreferrer" onClick={() => t('MANTRA_YOUTUBE', v.id)}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 36, fontSize: 14, fontWeight: 600, color: palette.PURPLE_STRONG, textDecoration: 'none' }}>
+                          <Youtube size={17} aria-hidden="true" /> {v.label} on YouTube
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
 
               <section style={{ ...box, borderColor: palette.PURPLE_STRONG }} aria-label="Sadhana Lifetime Pass">
                 <Art name="bowl" height={110} style={{ margin: '0 0 14px' }} />

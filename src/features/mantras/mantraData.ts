@@ -65,7 +65,9 @@ export interface Mantra {
   /** Occasions this chant is traditionally used for. */
   occasions: string[];
   /** Our own recordings on YouTube. The first one is embedded on the page. */
-  videos: { id: string; label: string }[];
+  videos?: { id: string; label: string }[];
+  /** Optional cover image path for cards/detail when no YouTube video is set */
+  cover?: string;
   /** Master single-chant audio in /Mantras/<slug>.mp3 */
   audioUrl?: string;
 }
@@ -288,6 +290,186 @@ export const MANTRAS: Mantra[] = [
     moments: ['morning', 'evening', 'festival'],
     occasions: ['Tulsi Vivah', 'Daily Tulsi puja'],
     videos: [{ id: 'ZdtFPeqSUyE', label: '1 hour chant' }],
+  },
+  {
+    slug: 'saraswati-mantra',
+    name: 'Saraswati Vandana & Mantra',
+    deity: 'Saraswati',
+    blurb: 'For wisdom, memory, clear speech, exams, study, and creative arts.',
+    devanagari: [
+      'ॐ ऐं सरस्वत्यै नमः ।',
+      'श्वेत पद्म पर विराजे माँ, ज्ञान की ज्योति जगाए माँ ।',
+      'वीणा की मधुर ध्वनि में, शांति बसे हर मन में ॥',
+    ],
+    transliteration: [
+      'Om Aiṁ Sarasvatyai Namaḥ',
+      'Śveta padma para virāje māṁ, jñāna kī jyoti jagāe māṁ',
+      'Vīṇā kī madhura dhvani meṁ, śānti base hara mana meṁ',
+    ],
+    meaning:
+      'Salutations to Mother Saraswati, the embodiment of wisdom. Seated upon a pure white lotus, she awakens the light of knowledge within us. In the sweet melodies of her veena, deep peace settles into every heart.',
+    words: [
+      ['aiṁ', 'the sacred bija seed syllable of wisdom and Saraswati'],
+      ['sarasvatyai namaḥ', 'reverence to Mother Saraswati'],
+      ['śveta padma', 'pure white lotus of purity and clarity'],
+      ['jñāna kī jyoti', 'the guiding flame of understanding and learning'],
+      ['vīṇā', 'the veena expressing harmony and creative expression'],
+      ['śānti', 'inner stillness and calm'],
+    ],
+    when: 'Every morning before study or creative work, during exam preparation, music/art practice, and on Vasant Panchami.',
+    moments: ['morning', 'allday', 'festival'],
+    occasions: ['Vasant Panchami', 'Exams & Studies', 'Daily Morning Puja', 'Creative practice'],
+    audioUrl: '/Mantras/saraswati-mantra.mp3',
+  },
+  {
+    slug: 'shiva-mantra',
+    name: 'Shiva Dhyan Mantra',
+    deity: 'Shiva',
+    blurb: 'The eternal five-syllable Panchakshari chant for silence, courage, and inner stillness.',
+    devanagari: ['ॐ नमः शिवाय ॥', 'ॐ नमः शिवाय ॥'],
+    transliteration: ['Om Namaḥ Śivāya', 'Om Namaḥ Śivāya'],
+    meaning:
+      'I bow to Lord Shiva, the eternal, silent witness of consciousness residing within the heart of every being.',
+    words: [
+      ['om', 'the cosmic vibration of pure existence'],
+      ['namaḥ', 'I bow, surrender of ego'],
+      ['śivāya', 'to Shiva, the auspicious and pure one'],
+    ],
+    when: 'At sunrise, sunset (sandhya), during evening meditation, on Mondays, Pradosham, and Maha Shivratri.',
+    moments: ['morning', 'evening', 'sleep', 'festival', 'allday'],
+    occasions: ['Maha Shivratri', 'Pradosha Vrat', 'Shravan Somwar', 'Daily Meditation'],
+    audioUrl: '/Mantras/shiva-mantra.mp3',
+  },
+  {
+    slug: 'uma-maheshwara-mantra',
+    name: 'Uma Maheshwara Mantra',
+    deity: 'Shiva & Parvati',
+    blurb: 'Chanted for marital harmony, compassionate family life, and unity of strength and grace.',
+    devanagari: ['ॐ उमामहेश्वराभ्यां नमः ॥', 'ॐ उमामहेश्वराभ्यां नमः ॥'],
+    transliteration: ['Om Umā-Maheśvarābhyāṁ Namaḥ', 'Om Umā-Maheśvarābhyāṁ Namaḥ'],
+    meaning:
+      'Salutations to the divine united couple — Mother Uma (Parvati) and Lord Maheshwara (Shiva) — embodying love, mutual reverence, and household harmony.',
+    words: [
+      ['umā', 'Mother Parvati, embodiment of Shakti, devotion, and compassion'],
+      ['maheśvara', 'the supreme Lord Shiva, transcendent stillness and protector'],
+      ['ābhyām', 'to both together as one inseparable union'],
+      ['namaḥ', 'reverent prostrations'],
+    ],
+    when: 'In the morning or evening for family harmony, on Karwa Chauth, Hartalika Teej, and Pradosham.',
+    moments: ['morning', 'evening', 'festival'],
+    occasions: ['Karwa Chauth', 'Hartalika Teej', 'Pradosha Vrat', 'Family Harmony'],
+    audioUrl: '/Mantras/uma-maheshwara-mantra.mp3',
+  },
+  {
+    slug: 'maha-sudarshana-mantra',
+    name: 'Maha Sudarshana Dhanvantari Mantra',
+    deity: 'Vishnu',
+    blurb: 'For spiritual protection, deep healing, relief from fear, and physical and mental recovery.',
+    devanagari: [
+      'ॐ नमो भगवते महासुदर्शनाय ।',
+      'वासुदेवाय धन्वन्तरये अमृतकलशहस्ताय ।',
+      'सर्वभयविनाशाय सर्वरोगनिवारणाय ।',
+      'त्रिलोकनाथाय श्रीमहाविष्णवे नमः ॥',
+    ],
+    transliteration: [
+      'Om Namo Bhagavate Mahāsudarśanāya',
+      'Vāsudevāya Dhanvantaraye amṛtakalaśahastāya',
+      'Sarvabhayavināśāya sarvaroganivāraṇāya',
+      'Trilokanāthāya Śrī-Mahāviṣṇave Namaḥ',
+    ],
+    meaning:
+      'Reverence to the Supreme Divine Lord holding the great Sudarshana wheel of protection, to Vasudeva-Dhanvantari carrying the vessel of nectar in his hands, who removes all fear and dispels all illness, Lord of the three realms, Sri Maha Vishnu.',
+    words: [
+      ['mahā-sudarśanāya', 'to the bearer of the great disc of light and protection'],
+      ['dhanvantaraye', 'to Dhanvantari, the celestial healer'],
+      ['amṛta-kalaśa-hastāya', 'holding the chalice of divine life-giving nectar'],
+      ['sarva-bhaya-vināśāya', 'destroyer of all inner and outer fear'],
+      ['sarva-roga-nivāraṇāya', 'healer and remover of all illness and imbalance'],
+      ['śrī-mahāviṣṇave namaḥ', 'prostrations to the all-pervading protector Vishnu'],
+    ],
+    when: 'In the morning during healing prayers, when feeling anxious or unwell, and on Ekadashi.',
+    moments: ['morning', 'sleep', 'allday'],
+    occasions: ['Dhanteras', 'Ekadashi', 'Healing & Recovery', 'Spiritual Protection'],
+    audioUrl: '/Mantras/maha-sudarshana-mantra.mp3',
+  },
+  {
+    slug: 'ganesha-aarti',
+    name: 'Ganesha Aarti (Jai Ganesh Deva)',
+    deity: 'Ganesha',
+    blurb: 'The joyful evening prayer to Ganapati, removing obstacles and welcoming light into the home.',
+    devanagari: [
+      'ॐ गं गणपतये नमः ।',
+      'जय गणेश देवा, जय गणेश देवा, मंगलकारी गणपति देवा ।',
+      'विघ्न विनाशक गणपति देवा, प्रथम पूज्य गणपति देवा ॥',
+      'मन में शांति, हृदय में श्रद्धा, जीवन में शुभ ज्योति जगाओ ॥',
+    ],
+    transliteration: [
+      'Om Gaṁ Gaṇapataye Namaḥ',
+      'Jaya Gaṇeśa devā, jaya Gaṇeśa devā, maṅgalakārī Gaṇapati devā',
+      'Vighna vināśaka Gaṇapati devā, prathama pūjya Gaṇapati devā',
+      'Mana meṁ śānti, hṛdaya meṁ śraddhā, jīvana meṁ śubha jyoti jagāo',
+    ],
+    meaning:
+      'Victory to Lord Ganesha, the bringer of auspiciousness, destroyer of obstacles, first to be honoured in every prayer. Pour your grace upon us, bring calm to the mind, faith in the heart, and awaken the auspicious light in our lives.',
+    words: [
+      ['maṅgalakārī', 'creator of good fortune and auspicious beginnings'],
+      ['vighna vināśaka', 'dispeller of hurdles, blocks and doubt'],
+      ['prathama pūjya', 'first to be worshipped before any undertaking'],
+      ['śubha jyoti', 'auspicious inner flame of wisdom and joy'],
+    ],
+    when: 'Sung during daily evening aarti, before starting any new venture, and on Ganesh Chaturthi.',
+    moments: ['morning', 'evening', 'festival'],
+    occasions: ['Ganesh Chaturthi', 'Diwali Puja', 'Housewarming (Griha Pravesh)', 'Evening Aarti'],
+    audioUrl: '/Mantras/ganesha-aarti.mp3',
+  },
+  {
+    slug: 'tulsi-aarti',
+    name: 'Tulsi Aarti (Jaya Tulasi Mata)',
+    deity: 'Tulsi Mata',
+    blurb: 'Devotional evening aarti sung with the brass diya at the sacred holy basil plant.',
+    devanagari: [
+      'जय तुलसी माता, मैया जय तुलसी माता ।',
+      'सब जग की सुखदाता, सबकी वरमाता ॥',
+      'महाप्रसाद जननी सर्व सौभाग्यवर्धिनी ।',
+      'आधि व्याधि हरा नित्यं तुलसी त्वं नमोऽस्तुते ॥',
+    ],
+    transliteration: [
+      'Jaya Tulasī mātā, maiyā jaya Tulasī mātā',
+      'Saba jaga kī sukhadātā, sabakī varamātā',
+      'Mahāprasāda jananī sarva saubhāgyavardhinī',
+      'Ādhi vyādhi harā nityaṁ Tulasī tvaṁ namo’stute',
+    ],
+    meaning:
+      'Victory to Mother Tulsi, who bestows peace on all the world. Mother of the great blessing, enhancer of all fortune, reliever of sorrow and sickness: Mother Tulsi, we bow to you.',
+    words: [
+      ['sukhadātā', 'giver of peace, well-being and contentment'],
+      ['varamātā', 'mother who grants auspicious boons'],
+      ['mahāprasāda jananī', 'giver of divine grace and healing sanctity'],
+      ['saubhāgyavardhinī', 'she who multiplies blessing and family prosperity'],
+    ],
+    when: 'At twilight when lighting the diya in front of the Tulsi plant, and throughout the holy month of Kartik.',
+    moments: ['evening', 'festival'],
+    occasions: ['Tulsi Vivah', 'Kartik Maas', 'Devutthana Ekadashi', 'Evening Diya'],
+    audioUrl: '/Mantras/tulsi-aarti.mp3',
+  },
+  {
+    slug: 'shailaputri-mantra',
+    name: 'Maa Shailaputri Navratri Mantra',
+    deity: 'Durga',
+    blurb: 'The first form of Navadurga, daughter of the Himalayas, for grounding and unshakeable inner strength.',
+    devanagari: ['ॐ देवी शैलपुत्र्यै नमः ॥', 'ॐ देवी शैलपुत्र्यै नमः ॥'],
+    transliteration: ['Om Devī Śailaputryai Namaḥ', 'Om Devī Śailaputryai Namaḥ'],
+    meaning:
+      'Salutations to Goddess Shailaputri, the daughter of the mountain, who sits upon the bull holding the trident and lotus, blessing the seeker with rooted strength and firm purpose.',
+    words: [
+      ['śaila', 'the mountain / rock, steadfast and immovable'],
+      ['putrī', 'daughter — born of the earth and heights of contemplation'],
+      ['devyai namaḥ', 'reverence to the Goddess'],
+    ],
+    when: 'Day 1 of Chaitra and Sharadiya Navratri, or whenever you need steady grounding, calm determination, and stability.',
+    moments: ['morning', 'evening', 'festival'],
+    occasions: ['Navratri Day 1', 'Ghatasthapana', 'Cultivating Inner Stability', 'Durga Puja'],
+    audioUrl: '/Mantras/shailaputri-mantra.mp3',
   },
 ];
 
