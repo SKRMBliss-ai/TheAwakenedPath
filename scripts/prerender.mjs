@@ -28,6 +28,7 @@ const ROUTES = [
   '/feelingsandemotioncourse',
   '/tiny-kids-transformations',
   '/tiny-kids-transformations/register',
+  '/pricing',
   '/mantras',
   '/mantras/lifetime-pass',
   '/mantras/karagre-vasate-lakshmi',

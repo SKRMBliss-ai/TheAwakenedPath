@@ -13,9 +13,11 @@ import { Play, Pause, SkipBack, SkipForward, Repeat, Repeat1, Lock, ListMusic, L
 import { cn } from '../../lib/utils';
 import { VoiceService, useVoiceStatus } from '../../services/voiceService';
 import { useAuth } from '../auth/AuthContext';
-import { useRazorpay } from '../../hooks/useRazorpay';
 import { track as trackEvent } from '../../lib/analytics';
-import { CURRENCY, UPGRADE, owns, priceOf, product, wasOf } from './catalog';
+import { pricingHref, UPGRADE, owns, priceOf, product, wasOf } from './catalog';
+
+/** Tracks anyone can play before buying (the first ones in the library). */
+export const FREE_TRACKS = 3;
 
 export interface LibraryTrack {
   id: string;
@@ -36,7 +38,9 @@ export interface Playlist {
   trackIds: string[];
 }
 
-export function SoundLibrary({ kind, title, kicker, description, cover, tracks, playlists }: {
+export function SoundLibrary({ kind, title, kicker, description, cover, tracks, playlists, previewAsGuest = false }: {
+  /** DEV preview only: show the signed-out view. */
+  previewAsGuest?: boolean;
   kind: 'mantras' | 'sacred_sounds';
   title: string;
   kicker: string;
@@ -46,7 +50,11 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
   playlists: Playlist[];
 }) {
   const { user, profile, isPremiumUser } = useAuth();
-  const unlocked = owns(profile, kind, isPremiumUser);
+  const unlocked = !previewAsGuest && owns(profile, kind, isPremiumUser);
+  // Without the pass, only the first FREE_TRACKS tracks play; the rest open /pricing.
+  const freeIds = useMemo(() => new Set(tracks.slice(0, FREE_TRACKS).map((t) => t.id)), [tracks]);
+  const isLocked = (id: string) => !unlocked && !freeIds.has(id);
+  const goPricing = () => { trackEvent('LIBRARY_LOCKED_CLICK', kind); window.location.assign(pricingHref(UPGRADE[kind].single)); };
   const { status, category, trackId } = useVoiceStatus();
 
   const allList: Playlist = useMemo(() => ({ id: 'all', name: 'All', blurb: description, trackIds: tracks.map((t) => t.id) }), [tracks, description]);
@@ -61,7 +69,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
   const [progress, setProgress] = useState({ currentTime: 0, duration: 0 });
   const [showUnlock, setShowUnlock] = useState(false);
   const queueRef = useRef<string[] | null>(null);
-  queueRef.current = queue;
+  useEffect(() => { queueRef.current = queue; }, [queue]);
 
   const current = tracks.find((t) => t.id === trackId) || null;
   const isMine = !!current && category === 'music';
@@ -97,6 +105,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
   };
 
   const onRow = (t: LibraryTrack) => {
+    if (isLocked(t.id)) { goPricing(); return; }
     if (trackId === t.id && isMine) {
       if (playing) VoiceService.pause(); else VoiceService.resume('music');
       return;
@@ -106,14 +115,14 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
   };
 
   const playAll = () => {
-    if (!unlocked) { setShowUnlock(true); return; }
+    if (!unlocked) { goPricing(); return; }
     const q = rows.map((r) => r.id);
     setQueue(q);
     if (rows[0]) void playTrack(rows[0], q);
   };
 
   const toggleLoop = () => {
-    if (!unlocked) { setShowUnlock(true); return; }
+    if (!unlocked) { goPricing(); return; }
     const next = !loop;
     setLoop(next);
     if (!queue) VoiceService.setLoop(next);
@@ -122,7 +131,8 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
   const step = (dir: 1 | -1) => {
     if (!current) return;
     const order = queue ?? rows.map((r) => r.id);
-    const t = tracks.find((x) => x.id === order[order.indexOf(current.id) + dir]);
+    const playable = order.filter((id) => !isLocked(id));
+    const t = tracks.find((x) => x.id === playable[playable.indexOf(current.id) + dir]);
     if (t) void playTrack(t, queue);
   };
 
@@ -145,7 +155,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
             {unlocked ? (
               <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--accent-primary)]"><Check size={14} /> Unlocked: loop and playlists</span>
             ) : (
-              <button onClick={() => setShowUnlock(true)} className="h-11 px-5 rounded-full border border-[var(--border-subtle)] text-sm font-bold text-[var(--text-primary)] hover:bg-[var(--bg-surface)]">
+              <button onClick={goPricing} className="h-11 px-5 rounded-full border border-[var(--border-subtle)] text-sm font-bold text-[var(--text-primary)] hover:bg-[var(--bg-surface)]">
                 Unlock · {priceOf(up.single)}
               </button>
             )}
@@ -154,7 +164,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
       </header>
 
       {/* Playlists */}
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-4 -mx-1 px-1" role="tablist" aria-label="Playlists">
+      <div className="flex gap-2 overflow-x-auto pb-2 mb-4 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist" aria-label="Playlists">
         {lists.map((l) => (
           <button key={l.id} role="tab" aria-selected={l.id === listId} onClick={() => setListId(l.id)}
             className={cn('flex-shrink-0 h-9 px-4 rounded-full text-[13px] font-bold whitespace-nowrap border transition-colors',
@@ -170,12 +180,15 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
       <ol className="divide-y divide-[var(--border-subtle)]/50 rounded-2xl border border-[var(--border-subtle)] overflow-hidden">
         {rows.map((t, i) => {
           const active = isMine && trackId === t.id;
+          const locked = isLocked(t.id);
           return (
             <li key={t.id}>
               <button onClick={() => onRow(t)} className={cn('w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
-                active ? 'bg-[var(--bg-surface)]' : 'hover:bg-[var(--bg-surface)]/60')}>
+                active ? 'bg-[var(--bg-surface)]' : 'hover:bg-[var(--bg-surface)]/60', locked && 'opacity-60')}
+                aria-label={locked ? `${t.title}, locked. Unlock on the pricing page` : undefined}>
                 <span className="w-6 text-center text-xs text-[var(--text-muted)] flex-shrink-0">
                   {loadingId === t.id ? <Loader2 size={14} className="animate-spin mx-auto" />
+                    : locked ? <Lock size={13} className="mx-auto" />
                     : active && playing ? <Pause size={14} className="mx-auto text-[var(--accent-primary)]" fill="currentColor" /> : i + 1}
                 </span>
                 <img src={t.cover} alt="" loading="lazy" className="w-12 h-12 rounded-lg object-cover flex-shrink-0 bg-[var(--bg-surface)]"
@@ -184,6 +197,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
                   <span className={cn('block truncate text-[15px] font-semibold', active ? 'text-[var(--accent-primary)]' : 'text-[var(--text-primary)]')}>{t.title}</span>
                   <span className="block truncate text-xs text-[var(--text-muted)]">{t.subtitle}</span>
                 </span>
+                {!unlocked && !locked && <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[var(--accent-primary)]/15 text-[var(--accent-primary)] flex-shrink-0">Free</span>}
                 {t.duration && <span className="text-xs text-[var(--text-muted)] flex-shrink-0 hidden sm:block">{t.duration}</span>}
               </button>
             </li>
@@ -192,7 +206,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
       </ol>
       {!unlocked && (
         <p className="text-xs text-[var(--text-muted)] mt-3">
-          Free: every track plays once. <button onClick={() => setShowUnlock(true)} className="underline font-semibold text-[var(--text-secondary)]">Unlock</button> to loop any track and play whole playlists back to back.
+          The first {FREE_TRACKS} tracks are free to listen to. <button onClick={goPricing} className="underline font-semibold text-[var(--text-secondary)]">Unlock</button> every track, loop any of them, and play whole playlists back to back.
         </p>
       )}
 
@@ -227,20 +241,16 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
   );
 }
 
-function UnlockSheet({ kind, onClose, signedIn }: { kind: 'mantras' | 'sacred_sounds'; onClose: () => void; signedIn: boolean }) {
-  const { user, profile } = useAuth();
-  const { checkOut, isProcessing } = useRazorpay();
-  const [done, setDone] = useState(false);
+function UnlockSheet({ kind, onClose }: { kind: 'mantras' | 'sacred_sounds'; onClose: () => void; signedIn?: boolean }) {
+  const isProcessing = false;
+  const done = false;
   const up = UPGRADE[kind];
   const options = [up.single, up.bundle];
 
+  // All purchases go through the one /pricing page.
   const buy = (id: string) => {
-    if (!user || !signedIn) return;
     trackEvent('LIBRARY_BUY_CLICK', `${kind}:${id}`);
-    checkOut(user.uid, user.email || '', (profile as { displayName?: string } | null)?.displayName || user.displayName || '', id, CURRENCY, () => {
-      trackEvent('LIBRARY_BOUGHT', `${kind}:${id}`);
-      setDone(true);
-    });
+    window.location.assign(`/pricing?select=${id}`);
   };
 
   return (
@@ -263,7 +273,7 @@ function UnlockSheet({ kind, onClose, signedIn }: { kind: 'mantras' | 'sacred_so
                 const p = product(id);
                 const was = wasOf(id);
                 return (
-                  <button key={id} disabled={!signedIn || isProcessing} onClick={() => buy(id)}
+                  <button key={id} disabled={isProcessing} onClick={() => buy(id)}
                     className={cn('w-full text-left rounded-2xl border p-4 transition-colors disabled:opacity-60',
                       i === 1 ? 'border-[var(--accent-primary)] bg-[var(--bg-surface)]' : 'border-[var(--border-subtle)] hover:bg-[var(--bg-surface)]')}>
                     <span className="flex items-baseline justify-between gap-3">
@@ -276,7 +286,7 @@ function UnlockSheet({ kind, onClose, signedIn }: { kind: 'mantras' | 'sacred_so
               })}
             </div>
             <p className="text-xs text-[var(--text-muted)] mt-4 leading-relaxed">
-              {signedIn ? 'UPI, cards and wallets by Razorpay. Full refund within 7 days.' : 'Sign in first so the unlock is saved to your account.'}
+              {'See every plan on one page. Full refund within 7 days.'}
               {' '}Also included in Mind Gym membership and All Access.
             </p>
             {isProcessing && <p className="text-xs text-[var(--text-secondary)] mt-2 flex items-center gap-2"><Loader2 size={13} className="animate-spin" /> Opening secure payment…</p>}

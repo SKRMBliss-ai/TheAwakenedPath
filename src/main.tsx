@@ -179,6 +179,18 @@ const isPoliciesRoute = (() => {
   return p === '/policies' || p === '/policies/index.html';
 })();
 
+// The one page where everything is bought. Old checkout URLs forward here.
+const isPricingRoute = (() => {
+  if (typeof window === 'undefined') return false;
+  const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
+  const forward: Record<string, string> = {
+    '/mantras/lifetime-pass/checkout': 'mantra_lifetime_pass',
+    '/feelingsandemotioncourse/checkout': 'emotion_feelings_course',
+  };
+  if (forward[p]) { window.location.replace(`/pricing?select=${forward[p]}`); return true; }
+  return p === '/pricing' || p === '/pricing/index.html';
+})();
+
 // Soulful Mantra Studio: /mantras (library) and /mantras/<slug> (one mantra).
 // An unknown slug is left unmatched so it falls through to the 404 below.
 const mantraRoute = (() => {
@@ -294,7 +306,11 @@ const isLibraryPreviewRoute = import.meta.env.DEV
 
 if (isLibraryPreviewRoute) {
   const Libs = lazy(() => import('./features/catalog/Libraries').then((m) => ({
-    default: () => (new URLSearchParams(window.location.search).get('lib') === 'sounds' ? <m.SacredSoundsLibrary /> : <m.MantraLibrary />),
+    default: () => {
+      const q = new URLSearchParams(window.location.search);
+      const guest = q.get('guest') === '1';
+      return q.get('lib') === 'sounds' ? <m.SacredSoundsLibrary previewAsGuest={guest} /> : <m.MantraLibrary previewAsGuest={guest} />;
+    },
   })));
   root.render(
     <AuthProvider><ThemeProvider><Suspense fallback={null}><div style={{ minHeight: '100vh', background: 'var(--bg-color)' }}><Libs /></div></Suspense></ThemeProvider></AuthProvider>,
@@ -360,6 +376,16 @@ if (isLibraryPreviewRoute) {
   root.render(
     <ErrorBoundary featureName="KidsMindGymSales">
       <KidsMindGymSales />
+      <SiteWidgets />
+    </ErrorBoundary>,
+  );
+} else if (isPricingRoute) {
+  const PricingPage = lazy(() => import('./features/catalog/PricingPage'));
+  root.render(
+    <ErrorBoundary featureName="PricingPage">
+      <Suspense fallback={null}>
+        <PricingPage />
+      </Suspense>
       <SiteWidgets />
     </ErrorBoundary>,
   );
