@@ -18,7 +18,7 @@ import { usePaypal } from '../../hooks/usePaypal';
 import { VoiceService, useVoiceStatus } from '../../services/voiceService';
 import {
   MANTRAS, MOMENTS, DEITIES, MANTRA_FAQ, PASS_INCLUDES, MANTRA_BASE_URL, MANTRA_SUBSCRIBE_URL,
-  MANTRA_WHATSAPP, MANTRA_PASS_ID,MANTRA_PASS_OPEN, MANTRA_PASS_REFUND_DAYS, MANTRA_PRICE_RISE, MANTRA_CURRENCY,
+  MANTRA_WHATSAPP, MANTRA_WHATSAPP_GROUP, MANTRA_PASS_ID, MANTRA_PASS_OPEN, MANTRA_PASS_REFUND_DAYS, MANTRA_PRICE_RISE, MANTRA_CURRENCY,
   passPrice, passRegularPrice, findMantra, thumb, waLink, getMantraAudioUrl, type Mantra, type Moment,
 } from './mantraData';
 
@@ -633,6 +633,7 @@ function MantraFooter({ palette }: { palette: Palette }) {
       brand={MANTRA_BRAND}
       youtubeUrl={MANTRA_SUBSCRIBE_URL}
       socialLabels={['YouTube', 'WhatsApp']}
+      whatsappUrl={MANTRA_WHATSAPP_GROUP}
       description="Soft, unhurried mantra recordings with the Sanskrit text and its meaning in plain words. A sister studio of Soulful Mind Studio."
       cols={[
         {
@@ -643,6 +644,7 @@ function MantraFooter({ palette }: { palette: Palette }) {
             { label: 'How to begin', href: `${PAGE}#begin` },
             { label: 'Gita (coming soon)', href: `${PAGE}#gita` },
             { label: 'YouTube channel', href: MANTRA_SUBSCRIBE_URL },
+            { label: 'Join our WhatsApp group', href: MANTRA_WHATSAPP_GROUP },
           ],
         },
         {

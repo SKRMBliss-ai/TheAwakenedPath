@@ -429,7 +429,8 @@ const FOOTER_COLS: { title: string; items: NavLink[] }[] = [
 ];
 
 /** Site-wide footer: brand block, three link columns, socials, legal line. */
-export function SiteFooter({ palette, brand, description, cols, youtubeUrl, socialLabels }: {
+export function SiteFooter({ palette, brand, description, cols, youtubeUrl, whatsappUrl, socialLabels }: {
+  whatsappUrl?: string;
   /** Show only these social icons (by label). Omit for all. */
   socialLabels?: string[];
   palette: Palette;
@@ -442,7 +443,8 @@ export function SiteFooter({ palette, brand, description, cols, youtubeUrl, soci
   const footerCols = cols ?? FOOTER_COLS;
   const socials = SOCIALS
     .filter((s) => !socialLabels || socialLabels.includes(s.label))
-    .map((s) => (youtubeUrl && s.label === 'YouTube' ? { ...s, url: youtubeUrl } : s));
+    .map((s) => (youtubeUrl && s.label === 'YouTube' ? { ...s, url: youtubeUrl } : s))
+    .map((s) => (whatsappUrl && s.label === 'WhatsApp' ? { ...s, url: whatsappUrl } : s));
   return (
     <footer style={{
       background: palette.isDark ? '#100D0B' : palette.BG2,

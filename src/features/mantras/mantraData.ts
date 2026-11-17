@@ -19,6 +19,8 @@ export const MANTRA_BASE_URL = 'https://www.skrmblissai.in/mantras';
 export const MANTRA_CHANNEL_URL = 'https://www.youtube.com/@SoulfulMantraStudio';
 export const MANTRA_SUBSCRIBE_URL = `${MANTRA_CHANNEL_URL}?sub_confirmation=1`;
 export const MANTRA_WHATSAPP = 'https://wa.me/918217581238';
+/** Soulful Mantra Studio WhatsApp group (community, new-mantra alerts). */
+export const MANTRA_WHATSAPP_GROUP = 'https://chat.whatsapp.com/Cqh9hajKSS3DeE4AdXcvfj';
 
 export const waLink = (text: string) => `${MANTRA_WHATSAPP}?text=${encodeURIComponent(text)}`;
 
