@@ -1570,7 +1570,6 @@ export default function UntetheredApp() {
                   // The Daily Practice ribbon is the one designed-for daily action;
                   // Insights / Questions / Practices / Path / Progress / Everyone /
                   // Backup were retired from the rail to keep the path simple.
-                  { id: 'mybest', icon: Trophy, label: 'Kids · My Best', locked: false },
                   { id: 'chapters', icon: BookOpen, label: 'Journal', locked: !isAccessValid },
                   { id: 'situations', icon: Flame, label: 'Practice Room', locked: !isAccessValid },
                   { id: 'breathe', icon: Wind, label: 'Breathe', locked: false },
