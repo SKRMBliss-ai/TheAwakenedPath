@@ -925,14 +925,12 @@ export default function SoulfulHome() {
                   {
                     type: 'apps',
                     tag: 'Sacred Chants & Sadhana',
-                    title: 'Soulful Mantra Studio',
-                    desc: 'Ten sacred mantras with traditional Devanagari text, English transliterations, word-by-word meanings, and full YouTube recordings for daily chanting and sadhana.',
+                    title: 'Soulful Mind Studio',
+                    desc: 'Sacred mantras with traditional Devanagari text, English transliterations, word-by-word meanings, and ad-free looping chant audio for daily sadhana.',
                     href: '/mantras',
                     action: 'Explore Mantras →',
-                    video: '/marketing/mantras/soulful-mantra-studio.mp4',
-                    img: isDark
-                      ? '/marketing/mantras/logo-dark.webp'
-                      : '/marketing/mantras/logo-light.webp',
+                    video: '/marketing/mantras/soulful-mind-studio.mp4',
+                    img: '/marketing/mantras/soulful-mind-studio-logo.webp',
                   },
                   {
                     type: 'apps',

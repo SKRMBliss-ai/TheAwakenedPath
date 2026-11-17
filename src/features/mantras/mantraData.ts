@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Soulful Mantra Studio — the mantra library and the Sadhana Lifetime Pass.
+// Soulful Mind Studio — the mantra library and the Sadhana Lifetime Pass.
 //
 // ONE place for the catalogue and the price. Every entry here is a chant that
 // is published on our own YouTube channel (@SoulfulMantraStudio); do not list a

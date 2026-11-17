@@ -166,7 +166,7 @@ export function SiteLogo({ size = 40, showText = true, palette, brand }: {
     <>
       <img
         src={brand ? (palette.isDark ? brand.logoDark : brand.logoLight) : SI_LOGO_SRC}
-        alt={brand ? brand.name : 'Soulful Intelligence Studio'}
+        alt={brand ? brand.name : 'Soulful Mind Studio'}
         width={size}
         height={size}
         loading="eager"
@@ -180,13 +180,13 @@ export function SiteLogo({ size = 40, showText = true, palette, brand }: {
       {showText && (
         <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
           <span style={{ fontFamily: SERIF, fontSize: 20, fontWeight: 600, color: palette.INK }}>
-            {brand ? brand.name : 'Soulful Intelligence'}
+            {brand ? brand.name : 'Soulful Mind Studio'}
           </span>
           <span style={{
             fontSize: 8.5, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase',
             color: palette.BROWN, marginTop: 3,
           }}>
-            {brand ? brand.tagline : 'Where soul meets intelligence'}
+            {brand ? brand.tagline : 'Presence · Awareness · Mindfulness'}
           </span>
         </span>
       )}

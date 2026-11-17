@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Soulful Mantra Studio — /mantras (library hub) and /mantras/<slug> (one mantra).
+// Soulful Mind Studio — /mantras (library hub) and /mantras/<slug> (one mantra).
 //
 // The funnel: free library (text, meaning, our YouTube recording) → one paid
 // product, the Sadhana Lifetime Pass (ad-free loop play in playlists + PDFs + sadhana plans).
@@ -25,16 +25,16 @@ import {
 const DEVA = "'Noto Serif Devanagari', 'Tiro Devanagari Sanskrit', 'Nirmala UI', 'Mangal', serif";
 const PAGE = '/mantras';
 const MANTRA_BRAND = {
-  name: 'Soulful Mantra Studio',
-  tagline: 'Where sacred sound meets stillness',
-  logoLight: '/marketing/mantras/logo-light.webp',
-  logoDark: '/marketing/mantras/logo-dark.webp',
+  name: 'Soulful Mind Studio',
+  tagline: 'Presence · Awareness · Sacred Sound',
+  logoLight: '/marketing/mantras/soulful-mind-studio-logo.webp',
+  logoDark: '/marketing/mantras/soulful-mind-studio-logo.webp',
   href: PAGE,
 };
 const PASS_PATH = `${PAGE}/lifetime-pass`;
 const ORDER_PATH = `${PASS_PATH}/checkout`;
 const GOLD_BAR = 'linear-gradient(135deg, #E9C98A 0%, #D8AE5E 50%, #EBD29C 100%)';
-const BRAND_VIDEO = '/marketing/mantras/soulful-mantra-studio.mp4';
+const BRAND_VIDEO = '/marketing/mantras/soulful-mind-studio.mp4';
 const t = (action: string, details = '') => track(action, details, PAGE);
 
 function Kicker({ palette, children }: { palette: Palette; children: React.ReactNode }) {
@@ -470,7 +470,7 @@ function PassCheckout({ palette, layout = 'summary' }: { palette: Palette; layou
           <div style={{ marginBottom: 22, paddingBottom: 22, borderBottom: `1px solid ${palette.BORDER}` }}>
             <Art name="bowl" height={120} style={{ margin: '0 0 14px' }} />
             <h1 style={{ margin: '0 0 4px', fontFamily: SERIF, fontSize: 'clamp(30px, 4vw, 40px)', fontWeight: 500, lineHeight: 1.1 }}>Sadhana Lifetime Pass</h1>
-            <p style={{ margin: '0 0 12px', fontSize: 13.5, color: palette.INK2 }}>By Soulful Mantra Studio</p>
+            <p style={{ margin: '0 0 12px', fontSize: 13.5, color: palette.INK2 }}>By Soulful Mind Studio</p>
             <p style={{ margin: '0 0 10px', fontSize: 15.5, lineHeight: 1.65, color: palette.INK2 }}>
               Our whole mantra library in one calm place, sorted by deity, by time of day and by festival.
               Pick what today asks for (a morning prayer, the evening lamp, a festival puja, rest) and let it play on a loop, without ads.
@@ -622,7 +622,7 @@ function PageStyles({ palette }: { palette: Palette }) {
 
 const MIND_STUDIO_URL = 'https://www.skrmblissai.in';
 
-/** Footer for every mantra page: Soulful Mantra Studio's own, with a way across
+/** Footer for every mantra page: Soulful Mind Studio's own, with a way across
  *  to the sister vertical, Soulful Mind Studio (the main skrmblissai.in site). */
 function MantraFooter({ palette }: { palette: Palette }) {
   return (
@@ -693,15 +693,15 @@ function MantraHub() {
   const [moment, setMoment] = useState<Moment | null>(null);
 
   usePageSeo({
-    title: 'Mantra Library: Lyrics, Meaning & Chants | Soulful Mantra Studio',
+    title: 'Mantra Library: Lyrics, Meaning & Chants | Soulful Mind Studio',
     description:
       `Read and chant Sanskrit mantras with Devanagari text, transliteration, plain-English meaning and a soft studio recording. Ganesha, Lakshmi, Kubera, Surya, Dhanvantari and Tulsi mantras for morning, evening and festival puja.`,
     url: MANTRA_BASE_URL,
     image: thumb(MANTRAS[0].videos[0].id),
     jsonLd: [
       {
-        '@context': 'https://schema.org', '@type': 'CollectionPage', name: 'Soulful Mantra Studio: Mantra Library', url: MANTRA_BASE_URL,
-        publisher: { '@type': 'Organization', name: 'Soulful Mantra Studio', url: 'https://www.skrmblissai.in/mantras' },
+        '@context': 'https://schema.org', '@type': 'CollectionPage', name: 'Soulful Mind Studio: Mantra Library', url: MANTRA_BASE_URL,
+        publisher: { '@type': 'Organization', name: 'Soulful Mind Studio', url: 'https://www.skrmblissai.in/mantras' },
         hasPart: MANTRAS.map((m) => ({ '@type': 'CreativeWork', name: m.name, url: `${MANTRA_BASE_URL}/${m.slug}` })),
       },
       {
@@ -731,15 +731,11 @@ function MantraHub() {
 
       {/* Hero */}
       {/* Full-width brand film on top. Silent; muted + playsInline so phones autoplay it. */}
-      {/* Whole 16:9 frame, nothing cropped. */}
+      {/* Whole 16:9 frame, watermark-free and crisp. */}
       <div style={{ position: 'relative', aspectRatio: '16 / 9', overflow: 'hidden', background: '#0B0907', borderBottom: `1px solid ${palette.BORDER}` }}>
         <video src={BRAND_VIDEO} autoPlay muted loop playsInline preload="auto"
-          aria-label="Soulful Mantra Studio: where sacred sound meets stillness"
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill', display: 'block' }} />
-        {/* Soft blur over the generator's sparkle mark (about 88–93% across, 80–87% down). */}
-        <div aria-hidden="true" style={{ position: 'absolute', left: '85.5%', top: '76%', width: '10%', height: '15%', pointerEvents: 'none',
-          backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
-          maskImage: 'radial-gradient(closest-side, #000 55%, transparent 100%)', WebkitMaskImage: 'radial-gradient(closest-side, #000 55%, transparent 100%)' }} />
+          aria-label="Soulful Mind Studio: Presence, awareness and sacred sound"
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
       </div>
 
       <header style={{ ...sec, paddingTop: 'clamp(32px, 5vw, 56px)', textAlign: 'center' }}>
@@ -747,7 +743,7 @@ function MantraHub() {
         <div>
           <span style={{ display: 'inline-block', padding: '7px 14px', borderRadius: 999, border: `1px solid ${palette.BORDER}`,
             fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: palette.BROWN, marginBottom: 18 }}>
-            Soulful Mantra Studio
+            Soulful Mind Studio
           </span>
           <h1 style={{ fontFamily: SERIF, fontSize: 'clamp(38px, 6vw, 64px)', fontWeight: 400, lineHeight: 1.08, letterSpacing: '-0.02em', margin: '0 0 16px' }}>
             Know what you chant. <span style={{ color: palette.BROWN }}>Chant it every day.</span>
@@ -799,7 +795,7 @@ function MantraHub() {
               <p style={{ margin: '0 0 14px', fontSize: 15, lineHeight: 1.6, color: palette.INK2 }}>
                 We have not recorded a mantra for this combination yet. Tell us which one you would like and we will add it to the list.
               </p>
-              <Btn palette={palette} href={waLink('Hi Soulful Mantra Studio, please record this mantra: ')} label="Request a mantra" event="MANTRA_REQUEST_EMPTY" external />
+              <Btn palette={palette} href={waLink('Hi Soulful Mind Studio, please record this mantra: ')} label="Request a mantra" event="MANTRA_REQUEST_EMPTY" external />
             </div>
           )}
         </div>
@@ -819,7 +815,7 @@ function MantraHub() {
               Long, soft recordings for morning, the evening lamp, festival puja and sleep. Subscribe and the next mantra reaches you the day it is released.
             </p>
             <a href={MANTRA_SUBSCRIBE_URL} target="_blank" rel="noopener noreferrer" className="sms-btn" onClick={() => t('MANTRA_SUBSCRIBE_BADGE')}
-              aria-label="Subscribe to Soulful Mantra Studio on YouTube" style={{ display: 'inline-block' }}>
+              aria-label="Subscribe to Soulful Mind Studio on YouTube" style={{ display: 'inline-block' }}>
               <img src={ART.subscribe.src} alt="" width={ART.subscribe.w} height={ART.subscribe.h} loading="lazy" decoding="async"
                 style={{ display: 'block', width: 'min(100%, 340px)', height: 'auto' }} />
             </a>
@@ -872,7 +868,7 @@ function MantraHub() {
             We are preparing the Gita the same way as our mantras: the verse sung softly, the Sanskrit, and the meaning in plain words.
             It is not ready yet. Leave us a message and we will tell you the day it opens.
           </p>
-          <Btn palette={palette} href={waLink('Hi Soulful Mantra Studio, please tell me when the Gita section opens.')}
+          <Btn palette={palette} href={waLink('Hi Soulful Mind Studio, please tell me when the Gita section opens.')}
             label={<><Bell size={17} aria-hidden="true" /> Notify me on WhatsApp</>} event="MANTRA_GITA_NOTIFY" external />
         </div>
       </section>
@@ -888,7 +884,7 @@ function MantraHub() {
               Tell us the mantra your family chants, or the one you have always wanted to understand. We read every message ourselves.
             </p>
           </div>
-          <Btn palette={palette} href={waLink('Hi Soulful Mantra Studio, please record this mantra: ')}
+          <Btn palette={palette} href={waLink('Hi Soulful Mind Studio, please record this mantra: ')}
             label={<><MessageCircle size={17} aria-hidden="true" /> Request a mantra</>} event="MANTRA_REQUEST" external />
         </div>
       </section>
@@ -924,7 +920,7 @@ function MantraDetail({ m }: { m: Mantra }) {
   const others = MANTRAS.filter((o) => o.slug !== m.slug && (o.deity === m.deity || o.moments.some((x) => m.moments.includes(x)))).slice(0, 3);
 
   usePageSeo({
-    title: `${m.name}: Lyrics, Meaning & How to Chant | Soulful Mantra Studio`,
+    title: `${m.name}: Lyrics, Meaning & How to Chant | Soulful Mind Studio`,
     description: `${m.name} in Devanagari with transliteration, word meanings and when to chant it. ${m.blurb} Listen to our soft studio recording.`,
     url,
     image: coverImg,
@@ -932,7 +928,7 @@ function MantraDetail({ m }: { m: Mantra }) {
       {
         '@context': 'https://schema.org', '@type': 'Article', headline: `${m.name}: lyrics, meaning and how to chant`, url, image: coverImg,
         inLanguage: ['en', 'sa'], about: m.deity,
-        publisher: { '@type': 'Organization', name: 'Soulful Mantra Studio', url: 'https://www.skrmblissai.in/mantras' },
+        publisher: { '@type': 'Organization', name: 'Soulful Mind Studio', url: 'https://www.skrmblissai.in/mantras' },
       },
       {
         '@context': 'https://schema.org', '@type': 'BreadcrumbList',
@@ -1004,7 +1000,7 @@ function MantraDetail({ m }: { m: Mantra }) {
                 <section style={{ ...box, padding: 14 }} aria-label="Listen on YouTube">
                   <div style={{ position: 'relative', aspectRatio: '16 / 9', borderRadius: 16, overflow: 'hidden', background: '#000' }}>
                     {play ? (
-                      <iframe title={`${m.name} — Soulful Mantra Studio`} src={`https://www.youtube.com/embed/${main.id}?autoplay=1&rel=0`}
+                      <iframe title={`${m.name} — Soulful Mind Studio`} src={`https://www.youtube.com/embed/${main.id}?autoplay=1&rel=0`}
                         allow="accelerometer; autoplay; encrypted-media; picture-in-picture" allowFullScreen
                         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }} />
                     ) : (
@@ -1052,7 +1048,7 @@ function MantraDetail({ m }: { m: Mantra }) {
           )}
 
           <p style={{ margin: '32px 0 0', fontSize: 12.5, lineHeight: 1.6, color: palette.INK2 }}>
-            The mantra text is traditional. The translation and notes are written by Soulful Mantra Studio. Mantra chanting is a devotional practice, not medical advice.
+            The mantra text is traditional. The translation and notes are written by Soulful Mind Studio. Mantra chanting is a devotional practice, not medical advice.
           </p>
         </div>
       </main>
@@ -1078,7 +1074,7 @@ function MantraPassSales() {
   const url = `${MANTRA_BASE_URL}/lifetime-pass`;
 
   usePageSeo({
-    title: 'Sadhana Lifetime Pass: Ad-Free Mantra Playlists, Pay Once | Soulful Mantra Studio',
+    title: 'Sadhana Lifetime Pass: Ad-Free Mantra Playlists, Pay Once | Soulful Mind Studio',
     description:
       'One payment for our whole mantra library: every chant on a loop without ads, playlists by deity, time of day and festival, lyrics and meaning PDFs, and 21 and 40 day sadhana plans. No subscription.',
     url,
@@ -1131,7 +1127,7 @@ function MantraPassSales() {
             </div>
             <figcaption style={{ textAlign: 'center', paddingTop: 14, color: '#241E24' }}>
               <span style={{ display: 'block', fontFamily: SERIF, fontSize: 'clamp(20px, 2.4vw, 26px)', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Sadhana Lifetime Pass</span>
-              <span style={{ display: 'block', fontSize: 11.5, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', opacity: 0.75, marginTop: 2 }}>Soulful Mantra Studio</span>
+              <span style={{ display: 'block', fontSize: 11.5, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', opacity: 0.75, marginTop: 2 }}>Soulful Mind Studio</span>
             </figcaption>
           </figure>
 
@@ -1322,7 +1318,7 @@ function MantraPassSales() {
 function MantraPassOrder() {
   const { palette, toggle } = useSiteTheme();
   usePageSeo({
-    title: 'Order: Sadhana Lifetime Pass | Soulful Mantra Studio',
+    title: 'Order: Sadhana Lifetime Pass | Soulful Mind Studio',
     description: 'Complete your order for the Sadhana Lifetime Pass. One payment, no subscription.',
     url: `${MANTRA_BASE_URL}/lifetime-pass/checkout`,
   });

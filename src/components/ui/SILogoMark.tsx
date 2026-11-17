@@ -17,7 +17,7 @@ const FALLBACK =
        <circle cx="50" cy="50" r="49" fill="#A98A67" opacity="0.14"/>
        <circle cx="50" cy="50" r="45" fill="none" stroke="#A98A67" stroke-width="2"/>
        <text x="50" y="64" text-anchor="middle" font-family="Georgia,serif"
-             font-size="42" font-weight="600" fill="#A98A67">SI</text>
+             font-size="42" font-weight="600" fill="#A98A67">SM</text>
      </svg>`,
   );
 
@@ -25,7 +25,7 @@ export default function SILogoMark({ size }: { size?: number }) {
   return (
     <img
       src={SI_LOGO_SRC}
-      alt="Soulful Intelligence Studio"
+      alt="Soulful Mind Studio"
       {...(size ? { width: size, height: size } : { width: '100%', height: '100%' })}
       loading="eager"
       decoding="async"
