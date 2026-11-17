@@ -19,6 +19,7 @@ import EditorialIntelligenceView from './features/content/EditorialIntelligenceV
 import SiteWidgets from './components/site/SiteWidgets'
 import NotFoundView from './components/site/NotFoundView'
 import { matchGymRoute } from './features/gym/lib/gymRouter'
+import { findMantra } from './features/mantras/mantraData'
 import { AuthProvider } from './features/auth/AuthContext'
 import { ThemeProvider } from './theme/ThemeSystem'
 import { VoiceService } from './services/voiceService'
@@ -178,6 +179,19 @@ const isPoliciesRoute = (() => {
   return p === '/policies' || p === '/policies/index.html';
 })();
 
+// Soulful Mantra Studio: /mantras (library) and /mantras/<slug> (one mantra).
+// An unknown slug is left unmatched so it falls through to the 404 below.
+const mantraRoute = (() => {
+  if (typeof window === 'undefined') return null;
+  const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
+  type R = { slug?: string; view?: 'pass' | 'order' };
+  if (p === '/mantras' || p === '/mantras/index.html') return {} as R;
+  if (p === '/mantras/lifetime-pass' || p === '/mantras/lifetime-pass/index.html') return { view: 'pass' } as R;
+  if (p === '/mantras/lifetime-pass/checkout') return { view: 'order' } as R;
+  const m = p.match(/^\/mantras\/([a-z0-9-]+)(?:\/index\.html)?$/);
+  return m && findMantra(m[1]) ? ({ slug: m[1] } as R) : null;
+})();
+
 // Master Knowledge Platform route matching (/knowledge, /learn, /editorial, /glossary/:term, /videos/:id, /guides/:slug)
 const knowledgeInfo = (() => {
   if (typeof window === 'undefined') return { type: 'none', slug: null };
@@ -334,6 +348,16 @@ if (isAdminRoute) {
   root.render(
     <ErrorBoundary featureName="KidsMindGymSales">
       <KidsMindGymSales />
+      <SiteWidgets />
+    </ErrorBoundary>,
+  );
+} else if (mantraRoute) {
+  const MantraStudio = lazy(() => import('./features/mantras/MantraStudio'));
+  root.render(
+    <ErrorBoundary featureName="MantraStudio">
+      <Suspense fallback={null}>
+        <MantraStudio slug={mantraRoute.slug} view={mantraRoute.view} />
+      </Suspense>
       <SiteWidgets />
     </ErrorBoundary>,
   );

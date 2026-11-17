@@ -181,7 +181,10 @@ const COURSE_PRICES = {
     // Kids live Zoom class passes (one-time payments, no auto-renewal).
     // Keep in sync with src/features/landing/kidsPricing.ts.
     "kids_zoom_monthly": 19,
-    "kids_zoom_yearly": 171
+    "kids_zoom_yearly": 171,
+    // Soulful Mantra Studio — Sadhana Lifetime Pass (founding price).
+    // Keep in sync with src/features/mantras/mantraData.ts.
+    "mantra_lifetime_pass": 4.99
 };
 
 // COURSE_PRICES mixes real courses with individually-purchasable soundscape
@@ -189,7 +192,11 @@ const COURSE_PRICES = {
 // `purchasedCourses`. List the courses explicitly rather than excluding them
 // one by one, so a new course added above cannot silently leak into the
 // track library (which is how emotion_feelings_course ended up there).
-const COURSE_IDS = new Set(['emotion_feelings_course', 'wisdom_untethered', 'all_access', 'kids_zoom_monthly', 'kids_zoom_yearly']);
+const COURSE_IDS = new Set(['emotion_feelings_course', 'wisdom_untethered', 'all_access', 'kids_zoom_monthly', 'kids_zoom_yearly', 'mantra_lifetime_pass']);
+const isMantraPass = (id) => id === 'mantra_lifetime_pass';
+// Where pass buyers open the ad-free loop player, playlists and PDFs.
+// Empty = the buyer email promises the link within 24 hours and the team sends it by hand.
+const MANTRA_PASS_DOWNLOAD_URL = '';
 const isKidsZoomPass = (id) => id === 'kids_zoom_monthly' || id === 'kids_zoom_yearly';
 const isFamilyPack = (id) => id === 'family_monthly' || id === 'family_yearly';
 const isSoundscapeTrack = (id) => !!COURSE_PRICES[id] && !COURSE_IDS.has(id);
@@ -212,7 +219,8 @@ const COURSE_PRICES_INR = {
     "track_2": 899,
     "you-are-space": 899,
     "kids_zoom_monthly": 1499,
-    "kids_zoom_yearly": 13491
+    "kids_zoom_yearly": 13491,
+    "mantra_lifetime_pass": 299
 };
 
 // Multi-currency pricing. INR/USD tables above cover every course; the extra
@@ -1111,9 +1119,17 @@ async function grantPurchase({
             console.error("Failed to send kids Zoom booking emails:", emailErr);
         }
     }
+    if (isMantraPass(courseId)) {
+        // Downloads, not app access: confirm to the buyer and tell the team.
+        try {
+            await sendMantraPassEmails({ toEmail: userEmail, phone: String(guestPhone || '').trim(), amount, currency, paymentId, provider });
+        } catch (emailErr) {
+            console.error("Failed to send mantra pass emails:", emailErr);
+        }
+    }
     // Kids passes are not app access, so no access email. The family package
     // DOES unlock the adult app, so it also gets the normal sign-in email.
-    if (!isKidsZoomPass(courseId) && userEmail) {
+    if (!isKidsZoomPass(courseId) && !isMantraPass(courseId) && userEmail) {
         try {
             if (isGuest) {
                 await sendGuestAccessEmail(userEmail);
@@ -2713,6 +2729,44 @@ async function sendKidsZoomBookingEmails({ toEmail, phone, courseId, amount, cur
             <p>${guarantee} For a refund, reply to this email or message us on WhatsApp at +91 82175 81238.</p>
             <p>${billing}</p>
             <p>With warmth,<br/>Sim Katyal &amp; the Soulful Intelligence team</p>
+        </div>`,
+    });
+}
+
+// Sadhana Lifetime Pass (Soulful Mantra Studio): one email to the team so the
+// download link gets sent, one to the buyer confirming what happens next.
+async function sendMantraPassEmails({ toEmail, phone, amount, currency, paymentId, provider }) {
+    const transporter = getTransporter();
+    const paid = amount != null ? `${currency || ''} ${amount}` : 'see payment dashboard';
+    const hasLink = !!MANTRA_PASS_DOWNLOAD_URL;
+    await transporter.sendMail({
+        from: '"SKRM Bliss AI" <skrmblissai@gmail.com>',
+        to: ADMIN_EMAILS.join(', '),
+        subject: 'New Sadhana Lifetime Pass buyer — Soulful Mantra Studio',
+        html: `<div style="font-family:sans-serif;padding:20px;">
+            <h2 style="color:#4A3260;">New Sadhana Lifetime Pass</h2>
+            <p><strong>Email:</strong> ${toEmail || 'N/A'}</p>
+            <p><strong>Phone:</strong> ${phone || 'N/A'}</p>
+            <p><strong>Paid:</strong> ${paid} via ${provider || ''} (${paymentId || ''})</p>
+            <p>${hasLink
+                ? 'The access link was included in the buyer email. No action needed unless they write in.'
+                : '<strong>Action needed:</strong> send this buyer the access link (ad-free loop playlists, PDFs and sadhana plans) within 24 hours.'}</p>
+        </div>`,
+    });
+    if (!toEmail) return;
+    await transporter.sendMail({
+        from: '"Soulful Mantra Studio" <connect@skrmblissai.in>',
+        to: toEmail,
+        subject: 'Your Sadhana Lifetime Pass',
+        html: `<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:24px;color:#3A342C;line-height:1.6;">
+            <h2 style="color:#4A3260;">Thank you — your Lifetime Pass is confirmed</h2>
+            ${hasLink
+                ? `<p>Your mantras are here: <a href="${MANTRA_PASS_DOWNLOAD_URL}">${MANTRA_PASS_DOWNLOAD_URL}</a>. Keep this email; new mantras are added to the same place.</p>`
+                : '<p>We are preparing your access link (every mantra on a loop without ads, in playlists by deity, time of day and festival, plus the lyrics and meaning PDFs and the 21 and 40 day sadhana plans). It will reach this email address within 24 hours, usually the same day.</p>'}
+            <p>Every mantra we record in future is included in your pass at no extra cost. To request a mantra, or if anything is missing, reply to this email or message us on WhatsApp at +91 82175 81238.</p>
+            <p>Full refund within 7 days if the pass is not right for you. Just reply to this email.</p>
+            <p>The free library, with text and meaning for every mantra, is always at <a href="https://www.skrmblissai.in/mantras">skrmblissai.in/mantras</a>.</p>
+            <p>With warmth,<br/>Soulful Mantra Studio</p>
         </div>`,
     });
 }

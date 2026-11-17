@@ -240,6 +240,25 @@ export default function Policies() {
             </p>
           </div>
 
+          <div
+            id="refund-mantra-pass"
+            style={{
+              background: pageBg,
+              border: `1px solid ${borderC}`,
+              borderRadius: 14,
+              padding: '18px 20px',
+              marginBottom: 20,
+            }}
+          >
+            <p style={{ fontSize: 16, fontWeight: 700, margin: '0 0 6px', color: ink }}>
+              Sadhana Lifetime Pass (Soulful Mantra Studio): full refund within 7 days
+            </p>
+            <p style={{ fontSize: 14.5, lineHeight: 1.6, color: inkSub, margin: 0 }}>
+              If the Sadhana Lifetime Pass is not right for you, tell us within 7 days of your payment and we will refund you in full,
+              with no questions asked. After 7 days the pass is not refundable. Access to the pass ends when a refund is made.
+            </p>
+          </div>
+
           <h3 style={{ fontSize: 16, fontWeight: 700, marginTop: 24, marginBottom: 10, color: ink }}>
             How to Request Your Refund
           </h3>

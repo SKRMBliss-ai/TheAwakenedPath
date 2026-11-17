@@ -149,14 +149,24 @@ function NavDropdown({ link, palette }: { link: NavLink; palette: Palette }) {
 }
 
 /** The brand mark. `stacked` shows the wordmark beneath, for footers. */
-export function SiteLogo({ size = 40, showText = true, palette }: {
-  size?: number; showText?: boolean; palette: Palette;
+/** A sub-brand that replaces the Soulful Intelligence mark in the header
+ *  (e.g. Soulful Mantra Studio on /mantras). One logo per colour mode. */
+export interface SiteBrand {
+  name: string;
+  tagline: string;
+  logoLight: string;
+  logoDark: string;
+  href: string;
+}
+
+export function SiteLogo({ size = 40, showText = true, palette, brand }: {
+  size?: number; showText?: boolean; palette: Palette; brand?: SiteBrand;
 }) {
   return (
     <>
       <img
-        src={SI_LOGO_SRC}
-        alt="Soulful Intelligence Studio"
+        src={brand ? (palette.isDark ? brand.logoDark : brand.logoLight) : SI_LOGO_SRC}
+        alt={brand ? brand.name : 'Soulful Intelligence Studio'}
         width={size}
         height={size}
         loading="eager"
@@ -170,13 +180,13 @@ export function SiteLogo({ size = 40, showText = true, palette }: {
       {showText && (
         <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
           <span style={{ fontFamily: SERIF, fontSize: 20, fontWeight: 600, color: palette.INK }}>
-            Soulful Intelligence
+            {brand ? brand.name : 'Soulful Intelligence'}
           </span>
           <span style={{
             fontSize: 8.5, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase',
             color: palette.BROWN, marginTop: 3,
           }}>
-            Where soul meets intelligence
+            {brand ? brand.tagline : 'Where soul meets intelligence'}
           </span>
         </span>
       )}
@@ -210,7 +220,8 @@ function ThemeToggle({ palette, onToggle }: { palette: Palette; onToggle: () => 
  * Sticky site header. `cta` is the one filled button on the right; pass null on
  * pages that already have a stronger call to action in view.
  */
-export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, showThemeToggle = true }: {
+export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, showThemeToggle = true, brand }: {
+  brand?: SiteBrand;
   palette: Palette;
   onToggleTheme: () => void;
   links: NavLink[];
@@ -231,8 +242,8 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
         maxWidth: 1120, margin: '0 auto', padding: '12px 20px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
       }}>
-        <a href="/" onClick={onLogoClick} style={{ display: 'flex', alignItems: 'center', gap: 16, textDecoration: 'none', flexShrink: 0 }}>
-          <SiteLogo palette={palette} size={64} />
+        <a href={brand ? brand.href : '/'} onClick={onLogoClick} style={{ display: 'flex', alignItems: 'center', gap: 16, textDecoration: 'none', flexShrink: 0 }}>
+          <SiteLogo palette={palette} size={64} brand={brand} />
         </a>
 
         <nav className="si-nav-row" style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
@@ -417,7 +428,20 @@ const FOOTER_COLS: { title: string; items: NavLink[] }[] = [
 ];
 
 /** Site-wide footer: brand block, three link columns, socials, legal line. */
-export function SiteFooter({ palette }: { palette: Palette }) {
+export function SiteFooter({ palette, brand, description, cols, youtubeUrl, socialLabels }: {
+  /** Show only these social icons (by label). Omit for all. */
+  socialLabels?: string[];
+  palette: Palette;
+  /** Sub-brand footer (e.g. Soulful Mantra Studio): its logo, blurb, link columns and channel. */
+  brand?: SiteBrand;
+  description?: string;
+  cols?: { title: string; items: NavLink[] }[];
+  youtubeUrl?: string;
+}) {
+  const footerCols = cols ?? FOOTER_COLS;
+  const socials = SOCIALS
+    .filter((s) => !socialLabels || socialLabels.includes(s.label))
+    .map((s) => (youtubeUrl && s.label === 'YouTube' ? { ...s, url: youtubeUrl } : s));
   return (
     <footer style={{
       background: palette.isDark ? '#100D0B' : palette.BG2,
@@ -427,15 +451,14 @@ export function SiteFooter({ palette }: { palette: Palette }) {
       <div className="si-foot-pad" style={{ maxWidth: 1120, margin: '0 auto', padding: '52px 20px 28px' }}>
         <div className="si-foot-top" style={{ display: 'flex', flexWrap: 'wrap', gap: 40, justifyContent: 'space-between' }}>
           <div className="si-foot-brand" style={{ maxWidth: 300, minWidth: 240 }}>
-            <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', marginBottom: 14 }}>
-              <SiteLogo palette={palette} size={44} />
+            <a href={brand ? brand.href : '/'} style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', marginBottom: 14 }}>
+              <SiteLogo palette={palette} size={brand ? 56 : 44} brand={brand} />
             </a>
             <p className="si-foot-desc" style={{ fontSize: 13.5, lineHeight: 1.7, margin: '0 0 16px', color: palette.INK2 }}>
-              A studio for a quieter mind and braver ideas — practices, a course,
-              free tools, and digital work made with care.
+              {description ?? 'A studio for a quieter mind and braver ideas — practices, a course, free tools, and digital work made with care.'}
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
-              {SOCIALS.map((s) => (
+              {socials.map((s) => (
                 <a
                   key={s.label}
                   href={s.url}
@@ -460,7 +483,7 @@ export function SiteFooter({ palette }: { palette: Palette }) {
               the mobile footer scroll on for so long. Desktop keeps the
               original flex-wrap layout untouched. */}
           <div className="si-foot-cols">
-            {FOOTER_COLS.map((col) => (
+            {footerCols.map((col) => (
               <div key={col.title} style={{ minWidth: 150 }}>
                 <h3 className="si-foot-heading" style={{
                   fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase',
