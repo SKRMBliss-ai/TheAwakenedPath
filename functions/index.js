@@ -214,7 +214,11 @@ const COURSE_PRICES = {
     "kids_zoom_yearly": 171,
     // Soulful Mantra Studio — Sadhana Lifetime Pass (founding price).
     // Keep in sync with src/features/mantras/mantraData.ts.
-    "mantra_lifetime_pass": 4.99
+    "mantra_lifetime_pass": 4.99,
+    // Sacred Sounds (meditation music) pass, and both libraries together.
+    // Keep in sync with src/features/catalog/catalog.ts.
+    "sacred_sounds_pass": 4.99,
+    "sound_bundle": 7.99
 };
 
 // COURSE_PRICES mixes real courses with individually-purchasable soundscape
@@ -222,8 +226,8 @@ const COURSE_PRICES = {
 // `purchasedCourses`. List the courses explicitly rather than excluding them
 // one by one, so a new course added above cannot silently leak into the
 // track library (which is how emotion_feelings_course ended up there).
-const COURSE_IDS = new Set(['emotion_feelings_course', 'wisdom_untethered', 'all_access', 'kids_zoom_monthly', 'kids_zoom_yearly', 'mantra_lifetime_pass']);
-const isMantraPass = (id) => id === 'mantra_lifetime_pass';
+const COURSE_IDS = new Set(['emotion_feelings_course', 'wisdom_untethered', 'all_access', 'kids_zoom_monthly', 'kids_zoom_yearly', 'mantra_lifetime_pass', 'sacred_sounds_pass', 'sound_bundle']);
+const isMantraPass = (id) => id === 'mantra_lifetime_pass' || id === 'sacred_sounds_pass' || id === 'sound_bundle';
 // Where pass buyers open the ad-free loop player, playlists and PDFs.
 // Empty = the buyer email promises the link within 24 hours and the team sends it by hand.
 const MANTRA_PASS_DOWNLOAD_URL = '';
@@ -250,7 +254,9 @@ const COURSE_PRICES_INR = {
     "you-are-space": 899,
     "kids_zoom_monthly": 1499,
     "kids_zoom_yearly": 13491,
-    "mantra_lifetime_pass": 299
+    "mantra_lifetime_pass": 299,
+    "sacred_sounds_pass": 299,
+    "sound_bundle": 499
 };
 
 // Multi-currency pricing. INR/USD tables above cover every course; the extra

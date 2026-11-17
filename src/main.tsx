@@ -287,7 +287,19 @@ const isPracticePreviewRoute = import.meta.env.DEV
   && typeof window !== 'undefined'
   && window.location.pathname.replace(/\/+$/, '').toLowerCase() === '/__practice-preview';
 
-if (isAdminRoute) {
+// DEV-ONLY: the two sound libraries without signing in (tree-shaken from builds).
+const isLibraryPreviewRoute = import.meta.env.DEV
+  && typeof window !== 'undefined'
+  && window.location.pathname.replace(/\/+$/, '').toLowerCase() === '/__library-preview';
+
+if (isLibraryPreviewRoute) {
+  const Libs = lazy(() => import('./features/catalog/Libraries').then((m) => ({
+    default: () => (new URLSearchParams(window.location.search).get('lib') === 'sounds' ? <m.SacredSoundsLibrary /> : <m.MantraLibrary />),
+  })));
+  root.render(
+    <AuthProvider><ThemeProvider><Suspense fallback={null}><div style={{ minHeight: '100vh', background: 'var(--bg-color)' }}><Libs /></div></Suspense></ThemeProvider></AuthProvider>,
+  );
+} else if (isAdminRoute) {
   root.render(
     <ErrorBoundary featureName="CacheAdmin">
       <ThemeProvider>
