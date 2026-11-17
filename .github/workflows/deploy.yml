@@ -8,6 +8,14 @@ on:
   # whenever a run failed on something fixed outside the repo (an IAM role, a
   # secret, a DNS record) and the code itself is unchanged.
   workflow_dispatch:
+    inputs:
+      functions:
+        description: >-
+          Cloud Functions to deploy: "changed" (default — only what this commit
+          changed), "all", "none", or a comma-separated list such as
+          "witnessPresence,siteChat".
+        required: false
+        default: changed
 
 jobs:
   deploy:
@@ -18,6 +26,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          # The functions diff below compares against the commit before the push.
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -48,6 +59,43 @@ jobs:
           projectId: awakened-path-2026
           channelId: live
 
+      # Deploying EVERY function on every push made Cloud Run start a new copy
+      # of ~47 services at once, which overran the project's regional CPU quota
+      # and left dozens of functions un-updated while the job went red. So work
+      # out what actually needs deploying (scripts/changed-functions.mjs):
+      #   - nothing under functions/ changed  -> no functions are deployed;
+      #   - only some functions' own code changed -> only those are deployed;
+      #   - something shared changed (a helper, a price table, dependencies,
+      #     another file) -> all of them, because we cannot see which ones use it.
+      # Run it by hand with the `functions` input: changed | all | none | a list.
+      - name: Work out which Cloud Functions to deploy
+        id: fn
+        env:
+          REQUESTED: ${{ inputs.functions }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          requested="${REQUESTED:-changed}"
+          case "$requested" in
+            none)
+              names="" ;;
+            all)
+              names=$(node scripts/changed-functions.mjs --all | jq -r '.names | join(",")') ;;
+            changed)
+              base="$BEFORE"
+              if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+                base="HEAD~1"
+              fi
+              names=$(node scripts/changed-functions.mjs "$base" | jq -r '.names | join(",")') ;;
+            *)
+              if ! printf '%s' "$requested" | grep -Eq '^[A-Za-z0-9_]+(,[A-Za-z0-9_]+)*$'; then
+                echo "::error::Invalid function list: $requested"
+                exit 1
+              fi
+              names="$requested" ;;
+          esac
+          echo "Functions to deploy: ${names:-none}"
+          echo "names=$names" >> "$GITHUB_OUTPUT"
+
       # `npm ci` above installs the FRONTEND's dependencies only. functions/ is a
       # separate npm package with its own lockfile, and the firebase CLI loads
       # functions/index.js in-process to discover which functions to deploy — so
@@ -55,20 +103,27 @@ jobs:
       # firebase-functions ("Couldn't find firebase-functions package in your
       # source code"), before deploying anything.
       - name: Install Cloud Functions dependencies
+        if: steps.fn.outputs.names != ''
         run: npm ci --prefix functions
 
       # The hosting action above deploys hosting ONLY, so changes to
       # functions/index.js (Razorpay order creation and payment verification
       # among them) never shipped from CI and had to be pushed by hand. This
-      # deploys them too. The service account JSON is written to a file rather
-      # than passed inline because the firebase CLI reads credentials via
+      # deploys them too, a few at a time (scripts/deploy-functions.sh retries a
+      # batch that hits the quota). The service account JSON is written to a file
+      # rather than passed inline because the firebase CLI reads credentials via
       # GOOGLE_APPLICATION_CREDENTIALS, which takes a path.
+      #
+      # Note: deploying by name never DELETES a function. If one is removed from
+      # the code, delete it by hand: firebase functions:delete <name> --project awakened-path-2026
       - name: Deploy Cloud Functions
+        if: steps.fn.outputs.names != ''
+        timeout-minutes: 120
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AWAKENED_PATH_2026 }}
+          NAMES: ${{ steps.fn.outputs.names }}
         run: |
+          trap 'rm -f "$RUNNER_TEMP/sa.json"' EXIT
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
-          npx --yes firebase-tools@latest deploy --only functions \
-            --project awakened-path-2026 --non-interactive --force
-          rm -f "$RUNNER_TEMP/sa.json"
+          bash scripts/deploy-functions.sh "$NAMES"
