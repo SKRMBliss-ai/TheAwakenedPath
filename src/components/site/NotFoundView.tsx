@@ -14,27 +14,13 @@ import { useEffect } from 'react';
 // look identical.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const LINKS: any[] = [
-  { label: 'About Mind Gym', href: '/aboutmindgym' },
-  { label: 'Articles', href: '/guides' },
-  {
-    label: 'Courses',
-    href: '',
-    subItems: [
-      {
-        label: 'For All',
-        sub: 'Feelings & Emotions · Power of Now · Wisdom Untethered',
-        href: '/feelingsandemotioncourse',
-      },
-      {
-        label: 'For Kids',
-        sub: 'Kids Mind Gym · live Zoom class included',
-        badge: 'NEW',
-        href: '/tiny-kids-transformations',
-      },
-    ],
-  },
-  { label: 'Emotional health check', href: '/knowyouremotionalhealth' },
+  { label: 'Adult Mind Gym', href: '/mindgym' },
+  { label: 'Kids Mind Gym', href: '/tiny-kids-transformations' },
+  { label: 'Courses', href: '/feelingsandemotioncourse' },
+  { label: 'Mantras & Music', href: '/mantras' },
+  { label: 'Pricing', href: '/pricing' },
 ];
 
 export default function NotFoundView() {
