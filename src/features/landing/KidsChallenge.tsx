@@ -254,6 +254,12 @@ export default function KidsChallenge() {
                 href: '/feelingsandemotioncourse',
               },
               {
+                label: 'Mantra Studio',
+                sub: 'Sacred Chants & Sadhana',
+                badge: 'NEW',
+                href: '/mantras',
+              },
+              {
                 label: 'Power of Now',
                 sub: 'Coming Soon',
                 href: '#',

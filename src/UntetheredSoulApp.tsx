@@ -1579,6 +1579,18 @@ export default function UntetheredApp() {
                   </span>
                   <span className="text-[8px] font-black uppercase tracking-widest text-teal-400 flex-shrink-0">New</span>
                 </a>
+
+                {/* Soulful Mantra Studio — sacred chants and sadhana */}
+                <a
+                  href="/mantras"
+                  className="w-full flex items-center gap-2 px-3 py-[min(6px,0.8vh)] rounded-xl transition-all hover:bg-[var(--bg-surface)]/40 text-[var(--accent-primary)] hover:brightness-110 group"
+                >
+                  <Sparkles size={14} className="flex-shrink-0 group-hover:scale-110 transition-transform" />
+                  <span className="text-[12px] tracking-[0.12em] font-sans font-medium flex-1 text-left whitespace-nowrap">
+                    Mantra Studio
+                  </span>
+                  <span className="text-[8px] font-black uppercase tracking-widest text-[var(--accent-primary)] flex-shrink-0">New</span>
+                </a>
               </div>
             )}
           </div>
@@ -1793,6 +1805,19 @@ export default function UntetheredApp() {
                   </div>
                 );
               })}
+
+              {/* Soulful Mantra Studio — sacred chants and sadhana */}
+              <a
+                href="/mantras"
+                className="w-full flex items-center gap-2 px-3 py-[min(6px,0.8vh)] rounded-xl transition-all hover:bg-[var(--bg-surface)]/40 text-[var(--text-secondary)] hover:text-[var(--text-primary)] group"
+              >
+                <span className="text-[12px] tracking-[0.12em] font-sans font-medium flex-1 text-left whitespace-nowrap">
+                  Mantra Studio
+                </span>
+                <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] flex-shrink-0">
+                  New
+                </span>
+              </a>
             </div>
             )}
           </div>

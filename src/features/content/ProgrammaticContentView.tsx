@@ -94,6 +94,7 @@ export default function ProgrammaticContentView({ slug }: Props) {
         links={[
           { label: 'Home', href: '/' },
           { label: 'All Guides', href: '/guides' },
+          { label: 'Mantra Studio', href: '/mantras' },
           { label: 'MindGym App', href: '/mindgym' },
           { label: 'Feelings Course', href: '/feelingsandemotioncourse' },
         ]}

@@ -558,6 +558,7 @@ export default function KidsMindGymSales() {
         onToggleTheme={toggleTheme}
         links={[
           { label: 'Home', href: '/' },
+          { label: 'Mantra Studio', href: '/mantras', secondary: true },
           { label: 'What kids get', href: '#inside' },
           { label: 'Membership', href: '#zoom', secondary: true },
           { label: 'Questions', href: '#faq', secondary: true },

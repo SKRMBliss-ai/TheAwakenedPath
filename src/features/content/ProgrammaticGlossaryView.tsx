@@ -67,6 +67,7 @@ export default function ProgrammaticGlossaryView({ termSlug }: Props) {
         links={[
           { label: 'Home', href: '/' },
           { label: 'Knowledge Hub', href: '/knowledge' },
+          { label: 'Mantra Studio', href: '/mantras' },
           { label: 'MindGym App', href: '/mindgym' },
           { label: 'Feelings Course', href: '/feelingsandemotioncourse' },
         ]}

@@ -59,6 +59,12 @@ export default function Policies() {
                 href: '/feelingsandemotioncourse',
               },
               {
+                label: 'Mantra Studio',
+                sub: 'Sacred Chants & Sadhana',
+                badge: 'NEW',
+                href: '/mantras',
+              },
+              {
                 label: 'Power of Now',
                 sub: 'Coming Soon',
                 href: '#',
@@ -76,6 +82,7 @@ export default function Policies() {
               },
             ],
           },
+          { label: 'Mantras', href: '/mantras' },
         ]}
         cta={{ label: 'Back to course', href: '/feelingsandemotioncourse' }}
       />

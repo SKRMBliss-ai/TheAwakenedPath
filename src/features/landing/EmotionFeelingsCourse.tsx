@@ -1027,6 +1027,7 @@ export default function EmotionFeelingsCourse() {
           onToggleTheme={toggleTheme}
           links={[
             { label: 'Home', href: '/' },
+            { label: 'Mantra Studio', href: '/mantras', secondary: true },
             { label: 'Overview', href: '#overview' },
             { label: 'Course Journey', href: '#journey' },
             { label: 'What’s Included', href: '#whats-included' },

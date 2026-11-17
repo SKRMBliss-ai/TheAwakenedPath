@@ -188,6 +188,12 @@ export default function AboutUs() {
                   href: '/feelingsandemotioncourse',
                 },
                 {
+                  label: 'Mantra Studio',
+                  sub: 'Sacred Chants & Sadhana',
+                  badge: 'NEW',
+                  href: '/mantras',
+                },
+                {
                   label: 'Power of Now',
                   sub: 'Coming Soon',
                   href: '#',
@@ -205,6 +211,7 @@ export default function AboutUs() {
                 },
               ],
             },
+            { label: 'Mantras', href: '/mantras' },
             { label: 'Their worlds', href: TWINSOULS_URL, secondary: true },
           ]}
           cta={{ label: 'Enter Mind Gym →', href: '/mindgym' }}

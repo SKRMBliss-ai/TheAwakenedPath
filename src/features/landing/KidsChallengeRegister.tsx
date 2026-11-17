@@ -105,7 +105,7 @@ export default function KidsChallengeRegister() {
       <SiteHeader
         palette={palette}
         onToggleTheme={toggleTheme}
-        links={[{ label: 'Challenge details', href: KIDS_PATH }, { label: 'Home', href: '/' }]}
+        links={[{ label: 'Challenge details', href: KIDS_PATH }, { label: 'Mantra Studio', href: '/mantras' }, { label: 'Home', href: '/' }]}
         cta={{ label: '← Back to challenge', href: KIDS_PATH }}
       />
 

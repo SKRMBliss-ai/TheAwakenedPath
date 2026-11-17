@@ -56,6 +56,7 @@ export default function ContentHub() {
         links={[
           { label: 'Home', href: '/' },
           { label: 'MindGym App', href: '/mindgym' },
+          { label: 'Mantra Studio', href: '/mantras' },
           { label: 'Feelings Course', href: '/feelingsandemotioncourse' },
           { label: 'Quiz', href: '/knowyouremotionalhealth' },
         ]}
