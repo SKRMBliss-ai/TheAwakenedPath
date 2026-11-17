@@ -13,10 +13,14 @@ import { DOORS, priceOf, product, type Door } from '../../catalog/catalog';
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS = "'Outfit', system-ui, -apple-system, sans-serif";
 
-const ART: Record<Door['id'], { img: string; contain?: boolean }> = {
-  me: { img: '/mind-gym-product.png' },
-  child: { img: '/marketing/kids/hero-sim-diary.webp' },
-  mantras: { img: '/marketing/mantras/bowl-lotus.webp', contain: true },
+// All three are transparent cutouts shown on the same warm background, sitting
+// on the bottom edge at the same height, so the cards read as one set.
+const ART: Record<Door['id'], { img: string; alt: string; object?: boolean; fade?: boolean }> = {
+  // This photo has its own dark-purple background (not a cutout); its left and
+  // right edges are faded into the card background, which uses the same colour.
+  me: { img: '/marketing/mind-gym-guide-namaste.webp', alt: 'A guide with hands pressed together in namaste', fade: true },
+  child: { img: '/marketing/kids/hero-sim-diary.webp', alt: 'Sim Katyal with her son and the daily diary chart' },
+  mantras: { img: '/marketing/mantras/bowl-lotus.webp', alt: 'A golden singing bowl resting on a lotus', object: true },
 };
 
 const PER = { once: ' once', month: '/month', year: '/year' } as const;
@@ -48,9 +52,10 @@ export default function PathChooser({ palette }: { palette: Palette }) {
             const art = ART[d.id];
             return (
               <article key={d.id} className="pc-card" style={{ background: palette.CARD, border: `1px solid ${palette.BORDER}`, color: palette.INK }}>
-                <a href={d.learnHref} onClick={() => track('HOME_DOOR_CLICK', d.id)} className="pc-img" aria-hidden="true" tabIndex={-1}
-                  style={{ background: isDark ? '#1B1714' : '#F1ECE2' }}>
-                  <img src={art.img} alt="" loading="lazy" decoding="async" style={art.contain ? { objectFit: 'contain', padding: '6%' } : undefined} />
+                <a href={d.learnHref} onClick={() => track('HOME_DOOR_CLICK', d.id)} className="pc-img" tabIndex={-1} aria-label={d.title}
+                  style={{ background: 'radial-gradient(ellipse at 50% 100%, rgba(233,201,138,0.22), transparent 70%), #1C1425' }}>
+                  <img src={art.img} alt={art.alt} loading="lazy" decoding="async"
+                    className={[art.object ? 'pc-obj' : '', art.fade ? 'pc-fade' : ''].join(' ').trim() || undefined} />
                 </a>
                 <div className="pc-body">
                   <span style={{ alignSelf: 'flex-start', fontFamily: SANS, fontSize: 12, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase',
@@ -66,10 +71,15 @@ export default function PathChooser({ palette }: { palette: Palette }) {
                   </ul>
                   <div style={{ marginTop: 'auto', paddingTop: 10 }}>
                     <p style={{ fontFamily: SANS, fontSize: 18, fontWeight: 700, margin: '0 0 12px' }}>{fromPrice(d)}</p>
-                    <a href={d.learnHref} onClick={() => track('HOME_DOOR_CLICK', d.id)} className="pc-cta"
+                    <a href={d.start.href} onClick={() => track('HOME_DOOR_START', d.id)} className="pc-cta"
                       style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 48, borderRadius: 999,
                         background: palette.PURPLE_STRONG, color: palette.ON_ACCENT, fontFamily: SANS, fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
-                      Explore {d.title} <ArrowRight size={16} aria-hidden="true" />
+                      {d.start.label} <ArrowRight size={16} aria-hidden="true" />
+                    </a>
+                    <a href={`/pricing#${d.id}`} onClick={() => track('HOME_DOOR_PLANS', d.id)}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 44, marginTop: 4, fontFamily: SANS, fontSize: 14,
+                        fontWeight: 700, color: palette.PURPLE_STRONG, textDecoration: 'none' }}>
+                      See plans and prices
                     </a>
                   </div>
                 </div>
@@ -90,8 +100,14 @@ export default function PathChooser({ palette }: { palette: Palette }) {
           transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease; }
         .pc-card:hover, .pc-card:focus-within { transform: translateY(-4px); border-color: ${palette.PURPLE_STRONG} !important;
           box-shadow: ${isDark ? '0 20px 50px rgba(0,0,0,.55)' : '0 20px 50px rgba(60,40,30,.14)'}; }
-        .pc-img { display: grid; place-items: center; aspect-ratio: 4 / 3; overflow: hidden; }
-        .pc-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .6s ease; }
+        .pc-img { display: flex; align-items: flex-end; justify-content: center; aspect-ratio: 4 / 3; overflow: hidden; }
+        .pc-img img { height: 100%; width: auto; max-width: 100%; object-fit: contain; object-position: 50% 100%; display: block;
+          transform-origin: 50% 100%; transition: transform .6s ease; }
+        /* The bowl is an object, not a person cut off at the chest, so it gets
+           breathing room and a soft shadow to sit on the same ground line. */
+        .pc-img img.pc-fade { -webkit-mask-image: linear-gradient(to right, transparent 0, #000 9%, #000 91%, transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0, #000 9%, #000 91%, transparent 100%); }
+        .pc-img img.pc-obj { height: 86%; margin-bottom: 7%; filter: drop-shadow(0 14px 18px rgba(60,40,20,.28)); }
         .pc-card:hover .pc-img img { transform: scale(1.04); }
         .pc-body { display: flex; flex-direction: column; gap: 12px; padding: 22px 22px 24px; flex: 1; }
         @media (max-width: 900px) { .pc-grid { grid-template-columns: 1fr; } .pc-img { aspect-ratio: 16 / 9; } }
