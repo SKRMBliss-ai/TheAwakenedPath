@@ -56,7 +56,8 @@ const BreathPractice = lazy(() => import('./features/breath/components/BreathPra
 const MasterPranayamApp = lazy(() => import('./components/domain/pranayam/MasterPranayamApp').then(m => ({ default: m.MasterPranayamApp })));
 const StatsDashboard = lazy(() => import('./features/stats/StatsDashboard'));
 const SituationalPractices = lazy(() => import('./features/practices/SituationalPractices').then(m => ({ default: m.SituationalPractices })));
-const MusicHub = lazy(() => import('./features/music/MusicHub').then(m => ({ default: m.MusicHub })));
+const SacredSoundsLibrary = lazy(() => import('./features/catalog/Libraries').then(m => ({ default: m.SacredSoundsLibrary })));
+const MantraLibrary = lazy(() => import('./features/catalog/Libraries').then(m => ({ default: m.MantraLibrary })));
 const VideosHub = lazy(() => import('./features/videos/VideosHub').then(m => ({ default: m.VideosHub })));
 const EngagementReport = lazy(() => import('./features/admin/EngagementReport'));
 const MembersView = lazy(() => import('./features/community/MembersView').then(m => ({ default: m.MembersView })));
@@ -552,7 +553,7 @@ const PremiumPaywall = ({ user, checkOut, isProcessing, onSuccess }: any) => {
  * ritual and the reason to come back, so the paywall sits behind it.
  */
 const FREE_TABS = [
-  'start', 'home', 'profile', 'paywall', 'music', 'breathe', 'wisdom_untethered',
+  'start', 'home', 'profile', 'paywall', 'music', 'mantras', 'breathe', 'wisdom_untethered',
   'intelligence', 'learn', 'chapters', 'situations', 'meditation',
   'members', 'calendar', 'today', 'mybest',
 ];
@@ -834,7 +835,7 @@ export default function UntetheredApp() {
   // Each opens automatically when one of its own tabs is already active, so a
   // deep link or a restored session never lands the user in a collapsed group.
   const [practiceOpen, setPracticeOpen] = useState(
-    () => ['insights', 'questions', 'virtues', 'practices', 'stats', 'circle', 'backup', 'chapters', 'situations', 'breathe', 'music'].includes(activeTab));
+    () => ['insights', 'questions', 'virtues', 'practices', 'stats', 'circle', 'backup', 'chapters', 'situations'].includes(activeTab));
   const [learnOpen, setLearnOpen] = useState(
     () => ['intelligence', 'wisdom_untethered', 'emotion-course', 'videos'].includes(activeTab));
   const [communityOpen, setCommunityOpen] = useState(
@@ -1549,7 +1550,7 @@ export default function UntetheredApp() {
                 strokeWidth={1.5}
                 className={cn(
                   "transition-colors flex-shrink-0",
-                  ['insights', 'questions', 'virtues', 'practices', 'stats', 'circle', 'backup', 'chapters', 'situations', 'breathe', 'music'].includes(activeTab)
+                  ['insights', 'questions', 'virtues', 'practices', 'stats', 'circle', 'backup', 'chapters', 'situations'].includes(activeTab)
                     ? "text-[var(--accent-primary)]"
                     : "text-[var(--text-muted)]"
                 )}
@@ -1572,8 +1573,6 @@ export default function UntetheredApp() {
                   // Backup were retired from the rail to keep the path simple.
                   { id: 'chapters', icon: BookOpen, label: 'Journal', locked: !isAccessValid },
                   { id: 'situations', icon: Flame, label: 'Practice Room', locked: !isAccessValid },
-                  { id: 'breathe', icon: Wind, label: 'Breathe', locked: false },
-                  { id: 'music', icon: Headphones, label: 'Sacred Sounds', locked: false },
                 ].map(item => {
                   const isActive = activeTab === item.id;
                   const Icon = item.icon;
@@ -1606,33 +1605,39 @@ export default function UntetheredApp() {
                   );
                 })}
 
-                {/* Habit Tracker lives on its own site, so it stays an external link */}
-                <a
-                  href="https://www.skrmblissai.in/habitquest2026"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full flex items-center gap-2 px-3 py-[min(6px,0.8vh)] rounded-xl transition-all hover:bg-[var(--bg-surface)]/40 text-teal-400 hover:text-teal-300 group"
-                >
-                  <CheckSquare size={14} className="flex-shrink-0 group-hover:scale-110 transition-transform" />
-                  <span className="text-[12px] tracking-[0.12em] font-sans font-medium flex-1 text-left whitespace-nowrap">
-                    Habit Tracker
-                  </span>
-                  <span className="text-[8px] font-black uppercase tracking-widest text-teal-400 flex-shrink-0">New</span>
-                </a>
-
-                {/* Soulful Mantra Studio — sacred chants and sadhana */}
-                <a
-                  href="/mantras"
-                  className="w-full flex items-center gap-2 px-3 py-[min(6px,0.8vh)] rounded-xl transition-all hover:bg-[var(--bg-surface)]/40 text-[var(--accent-primary)] hover:brightness-110 group"
-                >
-                  <Sparkles size={14} className="flex-shrink-0 group-hover:scale-110 transition-transform" />
-                  <span className="text-[12px] tracking-[0.12em] font-sans font-medium flex-1 text-left whitespace-nowrap">
-                    Mantra Studio
-                  </span>
-                  <span className="text-[8px] font-black uppercase tracking-widest text-[var(--accent-primary)] flex-shrink-0">New</span>
-                </a>
               </div>
             )}
+          </div>
+
+          {/* ── Listen group — the two sound libraries (Soulful Mantra Studio) ── */}
+          <div className="pt-1 pb-0.5">
+            <div className="w-full flex items-center gap-3 px-4 py-[0.5vh]">
+              <Headphones size={14} strokeWidth={1.5}
+                className={cn("flex-shrink-0", ['music', 'mantras'].includes(activeTab) ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]")} />
+              <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)] flex-1 text-left">Listen</span>
+            </div>
+            <div className="space-y-0.5 ml-2 pl-5 border-l border-[var(--border-subtle)]/40 mt-0.5">
+              {[
+                { id: 'music', icon: Headphones, label: 'Sacred Sounds' },
+                { id: 'mantras', icon: Sparkles, label: 'Mantras' },
+              ].map(item => {
+                const isActive = activeTab === item.id;
+                const Icon = item.icon;
+                return (
+                  <button key={item.id} onClick={() => onNavigate(item.id)}
+                    className={cn("w-full flex items-center gap-2 px-3 py-[min(6px,0.8vh)] rounded-xl transition-all duration-300 group relative text-left",
+                      isActive ? "bg-[var(--bg-surface)]" : "hover:bg-[var(--bg-surface)]/40")}>
+                    {isActive && <div className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-[var(--accent-primary)]" />}
+                    <Icon size={14} strokeWidth={isActive ? 2.5 : 1.5} className={cn("flex-shrink-0", isActive ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]")} />
+                    <span className={cn("text-[12px] tracking-[0.12em] font-sans transition-colors flex-1 whitespace-nowrap",
+                      isActive ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] font-medium group-hover:text-[var(--text-primary)]")}>
+                      {item.label}
+                    </span>
+                    {isActive && <div className="w-1 h-1 rounded-full bg-[var(--accent-primary)] flex-shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* ── Courses group — guided courses and teaching ── */}
@@ -1846,18 +1851,6 @@ export default function UntetheredApp() {
                 );
               })}
 
-              {/* Soulful Mantra Studio — sacred chants and sadhana */}
-              <a
-                href="/mantras"
-                className="w-full flex items-center gap-2 px-3 py-[min(6px,0.8vh)] rounded-xl transition-all hover:bg-[var(--bg-surface)]/40 text-[var(--text-secondary)] hover:text-[var(--text-primary)] group"
-              >
-                <span className="text-[12px] tracking-[0.12em] font-sans font-medium flex-1 text-left whitespace-nowrap">
-                  Mantra Studio
-                </span>
-                <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] flex-shrink-0">
-                  New
-                </span>
-              </a>
             </div>
             )}
           </div>
@@ -1957,6 +1950,29 @@ export default function UntetheredApp() {
                 })}
               </div>
             )}
+          </div>
+
+          {/* ── Extra tools ── */}
+          <div className="pt-1 pb-0.5">
+            <div className="w-full flex items-center gap-3 px-4 py-[0.5vh]">
+              <Wind size={14} strokeWidth={1.5} className={cn("flex-shrink-0", activeTab === 'breathe' ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]")} />
+              <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)] flex-1 text-left">Extra tools</span>
+            </div>
+            <div className="space-y-0.5 ml-2 pl-5 border-l border-[var(--border-subtle)]/40 mt-0.5">
+              <button onClick={() => onNavigate('breathe')}
+                className={cn("w-full flex items-center gap-2 px-3 py-[min(6px,0.8vh)] rounded-xl transition-all duration-300 group relative text-left",
+                  activeTab === 'breathe' ? "bg-[var(--bg-surface)]" : "hover:bg-[var(--bg-surface)]/40")}>
+                <Wind size={14} strokeWidth={activeTab === 'breathe' ? 2.5 : 1.5} className={cn("flex-shrink-0", activeTab === 'breathe' ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]")} />
+                <span className={cn("text-[12px] tracking-[0.12em] font-sans flex-1 whitespace-nowrap",
+                  activeTab === 'breathe' ? "text-[var(--text-primary)] font-bold" : "text-[var(--text-secondary)] font-medium group-hover:text-[var(--text-primary)]")}>Breathe</span>
+              </button>
+              {/* Habit Tracker lives on its own site, so it stays an external link */}
+              <a href="https://www.skrmblissai.in/habitquest2026" target="_blank" rel="noopener noreferrer"
+                className="w-full flex items-center gap-2 px-3 py-[min(6px,0.8vh)] rounded-xl transition-all hover:bg-[var(--bg-surface)]/40 group">
+                <CheckSquare size={14} strokeWidth={1.5} className="flex-shrink-0 text-[var(--text-muted)]" />
+                <span className="text-[12px] tracking-[0.12em] font-sans font-medium flex-1 text-left whitespace-nowrap text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]">Habit Tracker</span>
+              </a>
+            </div>
           </div>
 
           {/* ── Insights & Studio ── */}
@@ -2442,7 +2458,15 @@ export default function UntetheredApp() {
             {activeTab === 'music' && (
               <motion.div key="music" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }}>
                 <Suspense fallback={<TabFallback />}>
-                  <MusicHub />
+                  <SacredSoundsLibrary />
+                </Suspense>
+              </motion.div>
+            )}
+
+            {activeTab === 'mantras' && (
+              <motion.div key="mantras" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }}>
+                <Suspense fallback={<TabFallback />}>
+                  <MantraLibrary />
                 </Suspense>
               </motion.div>
             )}
