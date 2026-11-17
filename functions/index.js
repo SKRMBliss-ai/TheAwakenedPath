@@ -301,8 +301,9 @@ const PWYW_PRODUCTS = {
     membership_monthly: {
         grantType: "membership",
         days: 30,
-        suggested: { USD: 3, INR: 240, EUR: 3, GBP: 3, CAD: 4, AUD: 4, AED: 12, SGD: 4 },
-        min: { USD: 2, INR: 99, EUR: 2, GBP: 2, CAD: 3, AUD: 3, AED: 8, SGD: 3 },
+        // Fixed price: min == suggested, so a client can pay more but never less.
+        suggested: { USD: 6.99, INR: 499, EUR: 6.99, GBP: 5.99, CAD: 9.99, AUD: 10.99, AED: 25, SGD: 8.99 },
+        min: { USD: 6.99, INR: 499, EUR: 6.99, GBP: 5.99, CAD: 9.99, AUD: 10.99, AED: 25, SGD: 8.99 },
     },
     // Family package: kids membership + adult Mind Gym app. Fixed price (min == suggested,
     // so a client can pay more but never less). Keep in sync with
@@ -322,8 +323,9 @@ const PWYW_PRODUCTS = {
     membership_yearly: {
         grantType: "membership",
         days: 365,
-        suggested: { USD: 30, INR: 2400, EUR: 30, GBP: 25, CAD: 40, AUD: 45, AED: 110, SGD: 40 },
-        min: { USD: 12, INR: 999, EUR: 12, GBP: 10, CAD: 16, AUD: 18, AED: 44, SGD: 16 },
+        // Fixed price: min == suggested, so a client can pay more but never less.
+        suggested: { USD: 49.99, INR: 4999, EUR: 49.99, GBP: 39.99, CAD: 69.99, AUD: 79.99, AED: 179, SGD: 69.99 },
+        min: { USD: 49.99, INR: 4999, EUR: 49.99, GBP: 39.99, CAD: 69.99, AUD: 79.99, AED: 179, SGD: 69.99 },
     },
 };
 

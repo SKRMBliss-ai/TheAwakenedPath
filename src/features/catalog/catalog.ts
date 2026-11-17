@@ -42,12 +42,12 @@ export const PRODUCTS: Product[] = [
   // ── For me ───────────────────────────────────────────────────────────────
   {
     id: 'membership_monthly', name: 'Adult Mind Gym', unlocks: ADULT_ALL,
-    price: { INR: 240, USD: 3 }, billing: 'month',
+    price: { INR: 499, USD: 6.99 }, billing: 'month',
     pitch: 'Everything for adults: practice, journal, every course, mantras and meditation music.',
   },
   {
     id: 'membership_yearly', name: 'Adult Mind Gym', unlocks: ADULT_ALL,
-    price: { INR: 2400, USD: 30 }, billing: 'year',
+    price: { INR: 4999, USD: 49.99 }, billing: 'year',
     pitch: 'Everything for adults, for a full year.',
   },
   // ── For my child ─────────────────────────────────────────────────────────
@@ -130,6 +130,8 @@ export interface Door {
   plans: string[];
   /** Page that explains it. */
   learnHref: string;
+  /** The easiest first step at this door (a free taste where one exists). */
+  start: { label: string; href: string };
   /** Optional small extra offered under the plans. */
   extra?: { label: string; id: string };
 }
@@ -141,6 +143,7 @@ export const DOORS: Door[] = [
     includes: ['Daily practice, journal and Breathe', 'Every course, including Feelings & Emotions', 'All mantras and meditation music'],
     plans: ['membership_monthly', 'membership_yearly'],
     learnHref: '/aboutmindgym',
+    start: { label: 'Start free', href: '/mindgym' },
     extra: { label: 'Only want the Feelings & Emotions course?', id: 'emotion_feelings_course' },
   },
   {
@@ -149,6 +152,7 @@ export const DOORS: Door[] = [
     includes: ['The kids app: feelings, stories and games', 'A live Zoom class with Sim', 'Printables and WhatsApp support for you'],
     plans: ['kids_zoom_monthly', 'kids_zoom_yearly', 'family_monthly'],
     learnHref: '/tiny-kids-transformations',
+    start: { label: 'See how it works', href: '/tiny-kids-transformations' },
   },
   {
     id: 'mantras', who: 'For prayer & calm', title: 'Mantras & Music',
@@ -156,6 +160,7 @@ export const DOORS: Door[] = [
     includes: ['Every mantra and all meditation music', 'Play any track on a loop, no ads', 'New mantras added free'],
     plans: ['mantra_lifetime_pass'],
     learnHref: '/mantras',
+    start: { label: 'Listen free', href: '/mantras#library' },
   },
 ];
 

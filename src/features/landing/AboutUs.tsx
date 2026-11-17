@@ -26,6 +26,11 @@ const GOLD = '#C4913A';
 const PLUM = '#4A3260';
 
 const TWINSOULS_URL = '/twinsouls/';
+/** Each founder's coin opens her own profile directly, not the shared /twinsouls page. */
+const FOUNDER_URL: Record<'shruti' | 'sim', string> = {
+  shruti: '/twinsouls/shrutikhungar',
+  sim: '/twinsouls/simkatyal',
+};
 
 interface Founder {
   key: 'shruti' | 'sim';
@@ -383,7 +388,7 @@ export default function AboutUs() {
                     </ul>
 
                     <a
-                      href={TWINSOULS_URL}
+                      href={FOUNDER_URL[f.key]}
                       className="au-world-link"
                       style={{
                         marginTop: 26, display: 'inline-flex', alignItems: 'center', gap: 8,

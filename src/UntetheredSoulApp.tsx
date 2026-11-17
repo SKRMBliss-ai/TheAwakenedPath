@@ -313,7 +313,7 @@ const PremiumPaywall = ({ user, checkOut, isProcessing, onSuccess }: any) => {
     AED: { monthly: 8, yearly: 44 }, SGD: { monthly: 3, yearly: 16 },
   };
   const MEMBERSHIP_SUGGESTED: Record<string, { monthly: number; yearly: number }> = {
-    INR: { monthly: 240, yearly: 2400 }, USD: { monthly: 3, yearly: 30 }, EUR: { monthly: 3, yearly: 30 },
+    INR: { monthly: 499, yearly: 4999 }, USD: { monthly: 6.99, yearly: 49.99 }, EUR: { monthly: 3, yearly: 30 },
     GBP: { monthly: 3, yearly: 25 }, CAD: { monthly: 4, yearly: 40 }, AUD: { monthly: 4, yearly: 45 },
     AED: { monthly: 12, yearly: 110 }, SGD: { monthly: 4, yearly: 40 },
   };
