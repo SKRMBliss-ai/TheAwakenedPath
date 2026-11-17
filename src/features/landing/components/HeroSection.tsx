@@ -7,11 +7,12 @@
  * - Centre: eyebrow + serif headline + sub + CTAs + attribution + trust row
  * - Below 1024px there is no room for two full figures, so they give way to
  *   an overlapping-avatar credit line that carries the same signal compactly.
- * - Bottom right: Watch 1 min intro floating badge
+ * - One action only: "Find what's right for you", which scrolls to the three doors.
+ *   (The brand film button and floating badge were removed: a film is not why
+ *   anyone visits, and a second button competed with the one that matters.)
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useReducedMotion } from 'framer-motion';
-import { Play, X } from 'lucide-react';
 import type { Palette } from '../../../lib/siteTheme';
 import HeroMark from '../../../components/site/HeroMark';
 
@@ -31,11 +32,11 @@ const FOUNDERS = [
 
 interface Props {
   palette: Palette;
+  /** The hero's one action: take the visitor to the three doors. */
   onStartPractice: () => void;
-  onExploreMindGym: () => void;
 }
 
-export default function HeroSection({ palette, onStartPractice, onExploreMindGym }: Props) {
+export default function HeroSection({ palette, onStartPractice }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const shouldReduceMotion = useReducedMotion();
   const isDark = palette.isDark;
@@ -43,8 +44,6 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
   const ink       = isDark ? '#EDE9E3' : '#2A2118';
   const inkSoft   = isDark ? 'rgba(237,233,227,0.68)' : '#6B5744';
   const goldBtn   = '#4A3260';   // SI purple for primary CTA
-  const outlineC  = isDark ? 'rgba(237,233,227,0.22)' : 'rgba(60,40,20,0.22)';
-  const [showBrandFilm, setShowBrandFilm] = useState(false);
 
   useEffect(() => {
     if (shouldReduceMotion) return;
@@ -285,8 +284,8 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
               maxWidth: 460,
             }}
           >
-            Mind Gym is your daily space for emotional clarity,
-            inner peace and personal transformation.
+            Adult Mind Gym for you, Kids Mind Gym for your child,
+            and mantras and meditation music for prayer and calm.
           </p>
 
           {/* CTAs */}
@@ -308,61 +307,8 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
                 whiteSpace: 'nowrap',
                 boxShadow: '0 8px 30px rgba(74,50,96,0.3)',
               }}
-              aria-label="Start Free Practice"
             >
-              Start Free Practice
-            </button>
-            <button
-              onClick={onExploreMindGym}
-              style={{
-                padding: '15px 32px',
-                borderRadius: 999,
-                cursor: 'pointer',
-                background: 'rgba(255,255,255,0.4)',
-                backdropFilter: 'blur(8px)',
-                color: ink,
-                border: `1.5px solid ${outlineC}`,
-                fontFamily: SANS,
-                fontSize: 14,
-                fontWeight: 800,
-                letterSpacing: '0.01em',
-                whiteSpace: 'nowrap',
-                transition: 'border-color 0.3s, background 0.3s',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#C4913A'; e.currentTarget.style.background = 'rgba(196,145,58,0.12)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = outlineC; e.currentTarget.style.background = 'rgba(255,255,255,0.4)'; }}
-              aria-label="Explore Mind Gym"
-            >
-              Explore Mind Gym
-            </button>
-            <button
-              onClick={() => setShowBrandFilm(true)}
-              style={{
-                padding: '15px 24px',
-                borderRadius: 999,
-                cursor: 'pointer',
-                background: isDark ? 'rgba(196,145,58,0.14)' : 'rgba(196,145,58,0.1)',
-                backdropFilter: 'blur(8px)',
-                color: isDark ? '#E9C98A' : '#7A5F44',
-                border: `1.5px solid ${isDark ? 'rgba(196,145,58,0.45)' : 'rgba(196,145,58,0.35)'}`,
-                fontFamily: SANS,
-                fontSize: 14,
-                fontWeight: 800,
-                letterSpacing: '0.01em',
-                whiteSpace: 'nowrap',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                transition: 'border-color 0.3s, background 0.3s, transform 0.2s',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#C4913A'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = isDark ? 'rgba(196,145,58,0.45)' : 'rgba(196,145,58,0.35)'; e.currentTarget.style.transform = 'none'; }}
-              aria-label="Watch Soulful Mind Studio Film"
-            >
-              <span style={{ display: 'grid', placeItems: 'center', width: 22, height: 22, borderRadius: '50%', background: '#C4913A', color: '#1B1424' }}>
-                <Play size={12} fill="currentColor" style={{ marginLeft: 2 }} />
-              </span>
-              Watch Film
+              Find what’s right for you ↓
             </button>
           </div>
 
@@ -402,119 +348,6 @@ export default function HeroSection({ palette, onStartPractice, onExploreMindGym
 
         </div>
       </div>
-
-      {/* Floating Watch Film Badge (Bottom Right) */}
-      <button
-        onClick={() => setShowBrandFilm(true)}
-        style={{
-          position: 'absolute',
-          bottom: 32,
-          right: 32,
-          zIndex: 10,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          background: isDark ? 'rgba(20,16,24,0.88)' : 'rgba(249,245,239,0.92)',
-          backdropFilter: 'blur(16px)',
-          border: `1px solid ${isDark ? 'rgba(255,255,255,0.15)' : 'rgba(60,40,20,0.15)'}`,
-          borderRadius: 999,
-          padding: '8px 18px 8px 10px',
-          cursor: 'pointer',
-          boxShadow: '0 12px 40px rgba(0,0,0,0.25)',
-          transition: 'transform 0.3s ease, border-color 0.3s ease',
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px) scale(1.03)'; }}
-        onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; }}
-        aria-label="Watch Soulful Mind Studio Film"
-      >
-        <span
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #E9C98A 0%, #D8AE5E 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            boxShadow: '0 4px 14px rgba(216,174,94,0.4)',
-          }}
-        >
-          <Play size={16} fill="#1E1426" color="#1E1426" style={{ marginLeft: 2 }} />
-        </span>
-        <span style={{ display: 'flex', flexDirection: 'column', gap: 1, textAlign: 'left' }}>
-          <span style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: isDark ? '#C4913A' : '#7A5F44' }}>
-            Watch Studio Film
-          </span>
-          <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: ink }}>
-            Soulful Mind Studio
-          </span>
-        </span>
-      </button>
-
-      {/* Brand Film Modal */}
-      {showBrandFilm && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Soulful Mind Studio Film"
-          onClick={() => setShowBrandFilm(false)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 9999,
-            background: 'rgba(0,0,0,0.85)',
-            backdropFilter: 'blur(12px)',
-            display: 'grid',
-            placeItems: 'center',
-            padding: 24,
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              position: 'relative',
-              width: '100%',
-              maxWidth: 900,
-              background: '#0B090E',
-              borderRadius: 24,
-              overflow: 'hidden',
-              boxShadow: '0 24px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(201,174,142,0.3)',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-              <span style={{ fontFamily: SERIF, fontSize: 18, color: '#EDE9E3', fontWeight: 600 }}>
-                Soulful Mind Studio
-              </span>
-              <button
-                onClick={() => setShowBrandFilm(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#EDE9E3',
-                  cursor: 'pointer',
-                  padding: 4,
-                  display: 'grid',
-                  placeItems: 'center',
-                }}
-                aria-label="Close video"
-              >
-                <X size={22} />
-              </button>
-            </div>
-            <div style={{ position: 'relative', aspectRatio: '16 / 9', background: '#000' }}>
-              <video
-                src="/marketing/mantras/soulful-mind-studio.mp4"
-                controls
-                autoPlay
-                playsInline
-                style={{ width: '100%', height: '100%', display: 'block', objectFit: 'contain' }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
 
     </section>
   );
