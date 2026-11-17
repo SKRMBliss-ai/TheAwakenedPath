@@ -402,6 +402,7 @@ const FOOTER_COLS: { title: string; items: NavLink[] }[] = [
     items: [
       { label: 'Mind Gym', href: '/mindgym' },
       { label: 'Feelings & Emotions course', href: '/feelingsandemotioncourse' },
+      { label: 'Mantra Studio', href: '/mantras' },
       { label: 'Emotional health check', href: '/knowyouremotionalhealth' },
       { label: 'About Mind Gym', href: '/aboutmindgym' },
     ],

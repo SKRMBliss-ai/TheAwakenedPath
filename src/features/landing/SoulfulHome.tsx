@@ -238,6 +238,13 @@ export default function SoulfulHome() {
                       onClick: () => track('HOME_COURSE_FEELINGS_CLICK'),
                     },
                     {
+                      label: 'Mantra Studio',
+                      sub: 'Sacred Chants & Sadhana',
+                      badge: 'NEW',
+                      href: '/mantras',
+                      onClick: () => track('HOME_MANTRAS_CLICK'),
+                    },
+                    {
                       label: 'Power of Now',
                       sub: 'Coming Soon',
                       href: '#',
@@ -256,6 +263,7 @@ export default function SoulfulHome() {
                     },
                   ],
                 },
+                { label: 'Mantras', href: '/mantras', onClick: () => track('HOME_MANTRAS_CLICK') },
                 { label: 'Free Guides', href: '#tools', secondary: true, onClick: () => chooseAudience('you') },
                 { label: 'Videos', href: '#videos', secondary: true, onClick: () => chooseAudience('you') },
                 { label: 'About Us', href: '/about-us', onClick: () => track('HOME_ABOUT_US') },
@@ -913,6 +921,18 @@ export default function SoulfulHome() {
                     href: '/kids-adventure',
                     action: 'Open app →',
                     img: '/kids-adventure/journey-map.webp',
+                  },
+                  {
+                    type: 'apps',
+                    tag: 'Sacred Chants & Sadhana',
+                    title: 'Soulful Mantra Studio',
+                    desc: 'Ten sacred mantras with traditional Devanagari text, English transliterations, word-by-word meanings, and full YouTube recordings for daily chanting and sadhana.',
+                    href: '/mantras',
+                    action: 'Explore Mantras →',
+                    video: '/marketing/mantras/soulful-mantra-studio.mp4',
+                    img: isDark
+                      ? '/marketing/mantras/logo-dark.webp'
+                      : '/marketing/mantras/logo-light.webp',
                   },
                   {
                     type: 'apps',
