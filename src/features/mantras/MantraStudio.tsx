@@ -51,6 +51,8 @@ const ART = {
   namaste: { src: '/marketing/mantras/namaste.webp', w: 420, h: 581 },
   lockup: { src: '/marketing/mantras/lockup.webp', w: 720, h: 502 },
   subscribe: { src: '/marketing/mantras/subscribe-badge.webp', w: 760, h: 293 },
+  subscribeLight: { src: '/marketing/mantras/subscribe-badge-light.webp', w: 760, h: 293 },
+  subscribeDark: { src: '/marketing/mantras/subscribe-badge-dark.webp', w: 760, h: 293 },
 };
 type ArtKey = keyof typeof ART;
 
@@ -697,7 +699,7 @@ function MantraHub() {
     description:
       `Read and chant Sanskrit mantras with Devanagari text, transliteration, plain-English meaning and a soft studio recording. Ganesha, Lakshmi, Kubera, Surya, Dhanvantari and Tulsi mantras for morning, evening and festival puja.`,
     url: MANTRA_BASE_URL,
-    image: thumb(MANTRAS[0].videos[0].id),
+    image: MANTRAS[0]?.videos?.[0] ? thumb(MANTRAS[0].videos[0].id) : '/marketing/mantras/soulful-mind-studio-logo.webp',
     jsonLd: [
       {
         '@context': 'https://schema.org', '@type': 'CollectionPage', name: 'Soulful Mind Studio: Mantra Library', url: MANTRA_BASE_URL,
@@ -815,8 +817,8 @@ function MantraHub() {
               Long, soft recordings for morning, the evening lamp, festival puja and sleep. Subscribe and the next mantra reaches you the day it is released.
             </p>
             <a href={MANTRA_SUBSCRIBE_URL} target="_blank" rel="noopener noreferrer" className="sms-btn" onClick={() => t('MANTRA_SUBSCRIBE_BADGE')}
-              aria-label="Subscribe to Soulful Mind Studio on YouTube" style={{ display: 'inline-block' }}>
-              <img src={ART.subscribe.src} alt="" width={ART.subscribe.w} height={ART.subscribe.h} loading="lazy" decoding="async"
+              aria-label="Subscribe to Soulful Mantra Studio on YouTube" style={{ display: 'inline-block' }}>
+              <img src={palette.isDark ? ART.subscribeDark.src : ART.subscribeLight.src} alt="Subscribe to Soulful Mantra Studio on YouTube" width={ART.subscribe.w} height={ART.subscribe.h} loading="lazy" decoding="async"
                 style={{ display: 'block', width: 'min(100%, 340px)', height: 'auto' }} />
             </a>
           </div>
@@ -1120,8 +1122,8 @@ function MantraPassSales() {
           <figure style={{ margin: 0, padding: 'clamp(14px, 2.2vw, 22px)', borderRadius: 30, background: GOLD_BAR,
             boxShadow: palette.isDark ? '0 30px 70px rgba(0,0,0,.55)' : '0 30px 70px rgba(122,95,68,.28)' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, borderRadius: 16, overflow: 'hidden' }}>
-              {MANTRAS.slice(0, 9).map((m) => (
-                <img key={m.slug} src={`https://i.ytimg.com/vi/${m.videos[0].id}/mqdefault.jpg`} alt="" width={320} height={180}
+              {MANTRAS.filter((m) => m.videos && m.videos.length > 0).slice(0, 9).map((m) => (
+                <img key={m.slug} src={`https://i.ytimg.com/vi/${m.videos![0].id}/mqdefault.jpg`} alt="" width={320} height={180}
                   style={{ width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', display: 'block' }} />
               ))}
             </div>
@@ -1171,7 +1173,7 @@ function MantraPassSales() {
               const m = findMantra(f.slug) || MANTRAS[0];
               return (
                 <div key={f.h} className="sms-card" style={{ ...box, padding: 16, display: 'flex', flexDirection: 'column' }}>
-                  <img src={thumb(m.videos[0].id)} alt="" loading="lazy" width={480} height={360}
+                  <img src={m.videos && m.videos[0] ? thumb(m.videos[0].id) : (m.cover || '/marketing/mantras/emblem-sunburst.webp')} alt="" loading="lazy" width={480} height={360}
                     style={{ width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: 16, display: 'block', marginBottom: 14 }} />
                   <h3 style={{ margin: '0 6px 6px', fontFamily: SERIF, fontSize: 25, fontWeight: 500, lineHeight: 1.2 }}>{f.h}</h3>
                   <p style={{ margin: '0 6px 6px', fontSize: 14.5, lineHeight: 1.65, color: palette.INK2 }}>{f.b}</p>
