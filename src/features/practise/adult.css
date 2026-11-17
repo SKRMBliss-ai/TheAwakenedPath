@@ -1,0 +1,192 @@
+/*
+ * Adult Mind Gym — scene + the site-wide hover-blur rule.
+ *
+ * Rule: on web (hover-capable) the background is sharp by default and fades to
+ * a soft blur + light tint while a foreground element (card, button, field) is
+ * hovered or keyboard-focused; on phones (no hover) it carries a constant
+ * light blur so the foreground always reads clearly.
+ *
+ * backdrop-filter can't blur an element's own background, so the scene and the
+ * veil are separate layers (rendered by <AdultBackdrop/> through PractiseShell's
+ * `backdrop` prop). Everything is scoped under .ag-stage.
+ */
+
+.ag-stage:not(.ag-embed),
+.ag-stage:not(.ag-embed) > div {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Embedded in another app's shell (/mindgym "Start here"): a contained cream
+   room rather than a full page. */
+.ag-embed {
+  max-width: 56rem;
+  margin: 0 auto;
+  border-radius: 28px;
+  overflow: hidden;
+  border: 1px solid var(--p-line);
+  box-shadow: 0 10px 40px -18px rgba(20, 14, 10, 0.45);
+}
+.ag-embed > div {
+  min-height: 70vh;
+}
+
+/* Inside the app the room needs no frame: it sits straight on the page like
+   the other tabs, on both of the app's themes. */
+body.light-mode .ag-embed,
+body.dark-mode .ag-embed {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+body.light-mode .ag-embed > div,
+body.dark-mode .ag-embed > div {
+  min-height: 0;
+  overflow: visible;
+  background: transparent !important;
+}
+body.light-mode .ag-embed > div > div,
+body.dark-mode .ag-embed > div > div {
+  padding-top: 0;
+}
+body.light-mode .ag-embed .ag-backdrop,
+body.dark-mode .ag-embed .ag-backdrop {
+  display: none;
+}
+
+/* Dark theme: the same sage palette on a dark ground. The tokens are set
+   inline by PractiseShell, hence !important. --p-accent is lightened so it
+   reads as text and icons; --p-accent-fill keeps the deeper green for
+   surfaces that carry white text. */
+body.dark-mode .ag-embed {
+  --p-bg: transparent !important;
+  --p-bg2: transparent !important;
+  --p-surface: #211f1d !important;
+  --p-ink: #f3eee7 !important;
+  --p-muted: #a8a097 !important;
+  --p-accent: #7fd0a8 !important;
+  --p-accent-fill: #2e7d5b;
+  --p-accent-soft: rgba(127, 208, 168, 0.14) !important;
+  --p-line: rgba(255, 255, 255, 0.13) !important;
+  --p-cta-1: #2e7d5b !important;
+  --p-cta-2: #256848 !important;
+}
+body.dark-mode .ag-embed .p-card {
+  border: 1px solid var(--p-line);
+}
+body.dark-mode .ag-embed button.hover\:bg-black\/5:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+body.dark-mode .ag-embed ::placeholder {
+  color: #7d766e;
+}
+
+.ag-backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* The scene: quiet sage / lavender / sand shapes with crisp edges and fine
+   rings, so there is something for the veil to soften. */
+.ag-scene {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 8% 6%, #dcebe1 0 118px, transparent 119px),
+    radial-gradient(circle at 96% 20%, #e7e0f6 0 150px, transparent 151px),
+    radial-gradient(circle at 88% 78%, #f3e3cf 0 130px, transparent 131px),
+    radial-gradient(circle at 4% 92%, #e3eee6 0 170px, transparent 171px),
+    repeating-radial-gradient(circle at 96% 20%, transparent 0 34px, rgba(46, 125, 91, 0.1) 34px 35px),
+    repeating-radial-gradient(circle at 4% 92%, transparent 0 46px, rgba(124, 92, 191, 0.09) 46px 47px);
+}
+
+.ag-veil {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  -webkit-backdrop-filter: blur(7px);
+  backdrop-filter: blur(7px);
+  background: rgba(42, 37, 33, 0.045);
+}
+
+/* Web: blur only while something in the foreground is hovered / focused. */
+@media (hover: hover) {
+  .ag-stage:has(
+      .p-card:hover,
+      .p-card:focus-within,
+      button:hover,
+      button:focus-visible,
+      textarea:hover,
+      textarea:focus,
+      input:hover,
+      input:focus
+    )
+    .ag-veil {
+    opacity: 1;
+  }
+}
+
+/* Phone: a constant, lighter blur. */
+@media (hover: none) {
+  .ag-veil {
+    opacity: 1;
+    -webkit-backdrop-filter: blur(2.5px);
+    backdrop-filter: blur(2.5px);
+    background: rgba(42, 37, 33, 0.02);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ag-veil {
+    transition: none;
+  }
+}
+
+/* Keyboard focus is always visible on the cream ground. */
+.ag-stage .p-card:focus-visible,
+.ag-stage button:focus-visible,
+.ag-stage a:focus-visible {
+  outline: 2px solid var(--p-accent);
+  outline-offset: 2px;
+}
+.ag-stage textarea:focus,
+.ag-stage input:focus {
+  border-color: var(--p-accent) !important;
+  box-shadow: 0 0 0 3px var(--p-accent-soft);
+}
+
+/* Listening pulse on the dictation button. */
+@keyframes ag-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(192, 57, 43, 0);
+  }
+}
+.ag-listening {
+  animation: ag-pulse 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ag-listening {
+    animation: none;
+  }
+}
+
+/* The site's global h1/h2 rule (48px display serif) is sized for landing
+   pages; keep the display face but bring it down to app scale. */
+.ag-stage h1 {
+  font-size: clamp(26px, 6.6vw, 34px);
+  line-height: 1.12;
+  font-weight: 600;
+}
+.ag-stage h2 {
+  font-size: clamp(22px, 5.6vw, 28px);
+  line-height: 1.18;
+  font-weight: 600;
+}

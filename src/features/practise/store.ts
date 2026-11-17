@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { PracticeRoom, Reflection, SavedPractice, StrengthId } from './types';
+import type { CheckIn, PracticeRoom, Reflection, ResponseEntry, SavedPractice, StrengthId } from './types';
 import { getLocalDayString } from '../../lib/utils';
 
 /**
@@ -26,15 +26,40 @@ interface PractiseState {
   saved: SavedPractice[];
   /** Reflections, newest first. */
   reflections: Reflection[];
+  /** Planned responses the person wrote, newest first. */
+  responses: ResponseEntry[];
+  /** Daily check-ins, newest first (one per day). */
+  checkins: CheckIn[];
 
+  addResponse: (r: ResponseEntry) => void;
+  setCheckin: (c: CheckIn) => void;
   setGym: (g: 'adult' | 'kids') => void;
   /** Record a completed session: bumps count/streak/minutes and the strengths trained. */
   completeSession: (room: PracticeRoom, minutes?: number) => void;
   addReflection: (r: Reflection) => void;
   savePractice: (room: PracticeRoom) => void;
   removePractice: (roomId: string) => void;
+  /** Start (or restart) a 10-day plan on a saved practice. */
   makeChallenge: (roomId: string) => void;
-  advanceChallenge: (roomId: string) => void;
+  /** Stop the 10-day plan; the practice itself stays saved. */
+  endChallenge: (roomId: string) => void;
+}
+
+export const CHALLENGE_DAYS = 10;
+
+/**
+ * Where a saved practice's 10-day plan stands. A day counts once per calendar
+ * day the practice is completed; missed days don't reset anything — the plan
+ * is ten days of practice, not ten days in a row.
+ */
+export function challengeInfo(sp: SavedPractice, today: string = getLocalDayString()) {
+  if (!sp.challengeDay) return null;
+  const done = Math.min(CHALLENGE_DAYS, sp.challengeDone ?? 0);
+  const doneToday = sp.challengeLastDay === today;
+  const complete = done >= CHALLENGE_DAYS;
+  /** The day the person is on: today's if already done, else the next one. */
+  const day = complete || doneToday ? Math.max(1, done) : done + 1;
+  return { done, doneToday, complete, day };
 }
 
 const ZERO_STRENGTHS: Record<StrengthId, number> = {
@@ -63,6 +88,12 @@ export const usePractiseStore = create<PractiseState>()(
       strengths: { ...ZERO_STRENGTHS },
       saved: [],
       reflections: [],
+      responses: [],
+      checkins: [],
+
+      addResponse: (r) => set((s) => ({ responses: [r, ...s.responses].slice(0, 200) })),
+      setCheckin: (c) =>
+        set((s) => ({ checkins: [c, ...s.checkins.filter((x) => x.date !== c.date)].slice(0, 120) })),
 
       setGym: (g) => set({ lastGym: g }),
 
@@ -84,9 +115,18 @@ export const usePractiseStore = create<PractiseState>()(
             streak,
             lastPractisedDay: today,
             strengths: bump(s.strengths, room.strengths),
-            saved: s.saved.map((sp) =>
-              sp.room.id === room.id ? { ...sp, lastPractisedAt: Date.now() } : sp,
-            ),
+            saved: s.saved.map((sp) => {
+              if (sp.room.id !== room.id) return sp;
+              const next: SavedPractice = { ...sp, lastPractisedAt: Date.now() };
+              // 10-day plan: the first completion on a new day ticks one day off.
+              const info = challengeInfo(sp, today);
+              if (info && !info.complete && !info.doneToday) {
+                next.challengeDone = info.done + 1;
+                next.challengeLastDay = today;
+                next.challengeDay = info.done + 1;
+              }
+              return next;
+            }),
           };
         }),
 
@@ -106,15 +146,17 @@ export const usePractiseStore = create<PractiseState>()(
       makeChallenge: (roomId) =>
         set((s) => ({
           saved: s.saved.map((sp) =>
-            sp.room.id === roomId ? { ...sp, challengeDay: sp.challengeDay ?? 1 } : sp,
+            sp.room.id === roomId
+              ? { ...sp, challengeDay: 1, challengeDone: 0, challengeLastDay: undefined }
+              : sp,
           ),
         })),
 
-      advanceChallenge: (roomId) =>
+      endChallenge: (roomId) =>
         set((s) => ({
           saved: s.saved.map((sp) =>
-            sp.room.id === roomId && sp.challengeDay
-              ? { ...sp, challengeDay: Math.min(10, sp.challengeDay + 1) }
+            sp.room.id === roomId
+              ? { ...sp, challengeDay: undefined, challengeDone: undefined, challengeLastDay: undefined }
               : sp,
           ),
         })),
@@ -128,6 +170,8 @@ export const usePractiseStore = create<PractiseState>()(
           ...current,
           ...p,
           strengths: { ...ZERO_STRENGTHS, ...(p.strengths ?? {}) },
+          responses: p.responses ?? [],
+          checkins: p.checkins ?? [],
         };
       },
     },

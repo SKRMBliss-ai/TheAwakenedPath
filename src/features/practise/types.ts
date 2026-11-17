@@ -33,6 +33,7 @@ export type StepKind =
   | 'observe'   // notice a thought without believing/acting on it
   | 'space'     // create space — a guided breath
   | 'choices'   // explore the choices available in the moment
+  | 'respond'   // write how you'd respond next time (adult gym; coached)
   | 'reflect';  // what did you discover? + one small real-life intention
 
 export interface SessionStep {
@@ -73,8 +74,10 @@ export interface PracticeRoom {
   title: string;
   /** One line: what we're practising. */
   whatPractising: string;
-  /** Emoji glyph for cards. */
+  /** Emoji glyph for cards (Kids gym; the Adult gym draws `icon` instead). */
   glyph: string;
+  /** Line icon for the Adult gym's cards — see RoomIcon in ui.tsx. */
+  icon?: RoomIconId;
   /** The pattern (present for bespoke/situation rooms; optional for library). */
   pattern?: Pattern;
   /** The ordered exercises. */
@@ -84,6 +87,11 @@ export interface PracticeRoom {
   /** True for user-created situation rooms (vs. built-in library rooms). */
   bespoke?: boolean;
 }
+
+/** Line icons a room can ask for (mapped to lucide icons in ui.tsx). */
+export type RoomIconId =
+  | 'wind' | 'eye' | 'compass' | 'leaf' | 'heart' | 'brain' | 'body'
+  | 'tag' | 'cloud' | 'ear' | 'feather' | 'shield' | 'moon';
 
 /** What a finished session leaves behind. */
 export interface Reflection {
@@ -105,6 +113,33 @@ export interface SavedPractice {
   room: PracticeRoom;
   savedAt: number;
   lastPractisedAt?: number;
-  /** If escalated into a 10-day challenge, the current day (1–10). */
+  /** Set (>= 1) while this practice is a 10-day plan. */
   challengeDay?: number;
+  /** Days of the 10-day plan completed so far (0–10). */
+  challengeDone?: number;
+  /** Local day ('YYYY-MM-DD') the plan was last practised — one day counts once. */
+  challengeLastDay?: string;
+}
+
+/** A planned response the person wrote, kept so progress can be shown. */
+export interface ResponseEntry {
+  id: string;
+  roomId: string;
+  roomTitle: string;
+  /** Local day, 'YYYY-MM-DD'. */
+  date: string;
+  /** What the person wrote — their own words. */
+  text: string;
+  /** Markers present in `text` (see coach.ts). */
+  markers: string[];
+  /** The coach's suggested wording, if they asked for one. */
+  suggestion?: string;
+  /** True if they chose to use the suggestion. */
+  usedSuggestion?: boolean;
+}
+
+/** A once-a-day "how are you" check-in. */
+export interface CheckIn {
+  date: string;
+  mood: 'calm' | 'okay' | 'stretched' | 'heavy';
 }
