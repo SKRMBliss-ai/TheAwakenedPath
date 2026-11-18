@@ -10,7 +10,7 @@ import { useTheme } from '../../theme/ThemeSystem';
 
 const MANTRA_FALLBACK_COVER = '/marketing/mantras/bowl-lotus.webp';
 
-export function MantraLibrary({ previewAsGuest = false }: { previewAsGuest?: boolean } = {}) {
+export function MantraLibrary({ previewAsGuest = false, previewAsOwner = false }: { previewAsGuest?: boolean; previewAsOwner?: boolean } = {}) {
   const tracks: LibraryTrack[] = useMemo(() => MANTRAS.map((m) => ({
     id: `mantra:${m.slug}`,
     title: m.name,
@@ -31,7 +31,7 @@ export function MantraLibrary({ previewAsGuest = false }: { previewAsGuest?: boo
   ], []);
 
   return (
-    <SoundLibrary previewAsGuest={previewAsGuest} kind="mantras" kicker="Soulful Mantra Studio" title="Mantras"
+    <SoundLibrary previewAsGuest={previewAsGuest} previewAsOwner={previewAsOwner} kind="mantras" kicker="Soulful Mantra Studio" title="Mantras"
       description="Sacred chants by time of day, by deity and for every festival. Tap a chant to listen."
       cover="/marketing/mantras/emblem-sunburst.webp" tracks={tracks} playlists={playlists} />
   );

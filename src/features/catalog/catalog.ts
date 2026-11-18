@@ -75,7 +75,7 @@ export const PRODUCTS: Product[] = [
   {
     id: 'mantra_lifetime_pass', name: 'Mantra Pass', unlocks: ['mantras', 'sacred_sounds'],
     price: { INR: 999, USD: 14.99 }, billing: 'once',
-    pitch: 'Every mantra and all meditation music, on a loop, with no ads. Pay once, keep it.',
+    pitch: 'Every mantra and all meditation music, with a mala counter, sankalp tracker and puja sequences. Pay once, keep it.',
   },
   // ── Bought by id only (not a main choice) ────────────────────────────────
   {
@@ -157,7 +157,7 @@ export const DOORS: Door[] = [
   {
     id: 'mantras', who: 'For prayer & calm', title: 'Mantras & Music',
     line: 'Sacred chants with their meaning, and meditation music for calm and sleep.',
-    includes: ['Every mantra and all meditation music', 'Play any track on a loop, no ads', 'New mantras added free'],
+    includes: ['Every mantra and all meditation music', 'Mala counter, sankalp tracker, puja sequences', 'Loop and playlists, sleep timer', 'New mantras added free'],
     plans: ['mantra_lifetime_pass'],
     learnHref: '/mantras',
     start: { label: 'Listen free', href: '/mantras#library' },

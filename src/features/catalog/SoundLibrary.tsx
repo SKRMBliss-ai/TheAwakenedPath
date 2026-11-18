@@ -3,7 +3,9 @@
 // (meditation music) and Mantras inside the Mind Gym app.
 //
 // Free:   any track plays once through.
-// Owned:  loop a track forever, or play a whole playlist back to back.
+// Owned:  loop a track forever, or play a whole playlist back to back. In the
+//         Mantras library owners also get the practice tools: mala counter,
+//         sankalp tracker, puja sequences, sleep timer and lock-screen controls.
 // Ownership comes from catalog.owns(); buying happens in place (Razorpay, the
 // signed-in account), so the unlock shows up without leaving the app.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -15,6 +17,10 @@ import { VoiceService, useVoiceStatus } from '../../services/voiceService';
 import { useAuth } from '../auth/AuthContext';
 import { track as trackEvent } from '../../lib/analytics';
 import { pricingHref, UPGRADE, owns, priceOf, product, wasOf } from './catalog';
+import { useSadhana, sankalpProgress, repsOn, dateKey } from '../mantras/sadhana/sadhanaStore';
+import { PUJA_SEQUENCES, resolveSequence, PUJA_REPEATS } from '../mantras/sadhana/pujaSequences';
+import { MalaDeck, SankalpTab, PujaTab, SleepTimerButton, PracticeTeaser } from '../mantras/sadhana/PracticeTools';
+import { useMediaSession, softBell } from '../mantras/sadhana/practiceAudio';
 
 /** Tracks anyone can play before buying (the first ones in the library). */
 export const FREE_TRACKS = 3;
@@ -38,7 +44,9 @@ export interface Playlist {
   trackIds: string[];
 }
 
-export function SoundLibrary({ kind, title, kicker, description, cover, tracks, playlists, previewAsGuest = false }: {
+export function SoundLibrary({ kind, title, kicker, description, cover, tracks, playlists, previewAsGuest = false, previewAsOwner = false }: {
+  /** DEV preview only: show the owner view. */
+  previewAsOwner?: boolean;
   /** DEV preview only: show the signed-out view. */
   previewAsGuest?: boolean;
   kind: 'mantras' | 'sacred_sounds';
@@ -50,7 +58,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
   playlists: Playlist[];
 }) {
   const { user, profile, isPremiumUser } = useAuth();
-  const unlocked = !previewAsGuest && owns(profile, kind, isPremiumUser);
+  const unlocked = previewAsOwner || (!previewAsGuest && owns(profile, kind, isPremiumUser));
   // Without the pass, only the first FREE_TRACKS tracks play; the rest open /pricing.
   const freeIds = useMemo(() => new Set(tracks.slice(0, FREE_TRACKS).map((t) => t.id)), [tracks]);
   const isLocked = (id: string) => !unlocked && !freeIds.has(id);
@@ -64,16 +72,31 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
   const rows = list.trackIds.map((id) => tracks.find((t) => t.id === id)!).filter(Boolean);
 
   const [loop, setLoop] = useState(false);
-  const [queue, setQueue] = useState<string[] | null>(null); // playlist being played through
+  const [queue, setQueue] = useState<string[] | null>(null); // playlist or puja being played through
+  const [queueRepeat, setQueueRepeat] = useState(1);
+  const [pujaName, setPujaName] = useState<string | null>(null);
+  const [round, setRound] = useState(0);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [progress, setProgress] = useState({ currentTime: 0, duration: 0 });
   const [showUnlock, setShowUnlock] = useState(false);
-  const queueRef = useRef<string[] | null>(null);
-  useEffect(() => { queueRef.current = queue; }, [queue]);
+  const [tab, setTab] = useState<'library' | 'puja' | 'sankalp'>('library');
+  const [pujaRepeats, setPujaRepeats] = useState<number>(PUJA_REPEATS[1]);
+
+  const isMantras = kind === 'mantras';
+  const tools = isMantras && unlocked; // practice tools are for owners
+  const sadhana = useSadhana(user?.uid ?? '');
+
+  // Latest values for callbacks fired by the audio engine, which outlive a render.
+  const live = useRef({ queue, queueRepeat, loop, sadhana, pujaName, tracks, unlocked, tools });
+  useEffect(() => { live.current = { queue, queueRepeat, loop, sadhana, pujaName, tracks, unlocked, tools }; });
+  const playRef = useRef<(t: LibraryTrack, q: string[] | null, repeat?: number) => Promise<void>>(async () => {});
 
   const current = tracks.find((t) => t.id === trackId) || null;
   const isMine = !!current && category === 'music';
   const playing = isMine && status === 'playing';
+  const slugOf = (id: string | null | undefined) => (id && id.startsWith('mantra:') ? id.slice(7) : null);
+  const counterSlug = slugOf(current?.id) ?? sadhana.state.lastSlug ?? slugOf(tracks[0]?.id);
+  const counterTrack = counterSlug ? tracks.find((t) => t.id === `mantra:${counterSlug}`) ?? null : null;
 
   useEffect(() => {
     if (!isMine) return;
@@ -81,19 +104,36 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
     return () => clearInterval(i);
   }, [isMine]);
 
-  const playTrack = async (t: LibraryTrack, q: string[] | null = queueRef.current) => {
+  /** Count one repetition of a mantra and ring the bell when a mala completes. */
+  const countOne = (slug: string) => {
+    const sd = live.current.sadhana;
+    const total = repsOn(sd.state, dateKey(), slug) + 1;
+    sd.addReps(slug, 1);
+    if (total % sd.state.malaTarget === 0) softBell();
+  };
+
+  const playTrack = async (t: LibraryTrack, q: string[] | null = live.current.queue, repeatOverride?: number) => {
     setLoadingId(t.id);
+    setRound(0);
     try {
       const url = t.resolve ? await t.resolve() : t.path;
-      const shouldLoop = unlocked && loop && !q;
+      const L = live.current;
+      // Owners can loop or repeat; everyone else hears the track once.
+      const repeat = !L.unlocked ? 1 : repeatOverride ?? (q ? L.queueRepeat : L.loop ? Infinity : 1);
+      const slug = slugOf(t.id);
       await VoiceService.playAudioURL(url, {
-        trackId: t.id, category: 'music', loop: shouldLoop,
-        onEnd: () => {
-          const qq = queueRef.current;
+        trackId: t.id, category: 'music', repeat,
+        onRound: (n) => {
+          setRound(n);
+          if (live.current.tools && slug) countOne(slug);
+        },
+        onFinish: () => {
+          const { queue: qq, loop: lp, pujaName: pj } = live.current;
           if (!qq) return;
-          const next = qq[qq.indexOf(t.id) + 1] ?? (loop ? qq[0] : undefined);
-          const nt = next && tracks.find((x) => x.id === next);
-          if (nt) void playTrack(nt, qq); else setQueue(null);
+          const next = qq[qq.indexOf(t.id) + 1] ?? (lp && !pj ? qq[0] : undefined);
+          const nt = next ? live.current.tracks.find((x) => x.id === next) : undefined;
+          if (nt) void playRef.current(nt, qq);
+          else { setQueue(null); setPujaName(null); }
         },
       });
       trackEvent('LIBRARY_PLAY', `${kind}:${t.id}`);
@@ -103,6 +143,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
       setLoadingId(null);
     }
   };
+  useEffect(() => { playRef.current = playTrack; });
 
   const onRow = (t: LibraryTrack) => {
     if (isLocked(t.id)) { goPricing(); return; }
@@ -110,14 +151,16 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
       if (playing) VoiceService.pause(); else VoiceService.resume('music');
       return;
     }
-    setQueue(null);
+    setQueue(null); setPujaName(null);
+    live.current.queue = null;
     void playTrack(t, null);
   };
 
   const playAll = () => {
     if (!unlocked) { goPricing(); return; }
     const q = rows.map((r) => r.id);
-    setQueue(q);
+    setQueue(q); setQueueRepeat(1); setPujaName(null);
+    live.current = { ...live.current, queue: q, queueRepeat: 1, pujaName: null };
     if (rows[0]) void playTrack(rows[0], q);
   };
 
@@ -125,7 +168,8 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
     if (!unlocked) { goPricing(); return; }
     const next = !loop;
     setLoop(next);
-    if (!queue) VoiceService.setLoop(next);
+    live.current.loop = next;
+    if (!queue && isMine) VoiceService.setRepeat(next ? Infinity : 1);
   };
 
   const step = (dir: 1 | -1) => {
@@ -135,6 +179,47 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
     const t = tracks.find((x) => x.id === playable[playable.indexOf(current.id) + dir]);
     if (t) void playTrack(t, queue);
   };
+
+  // Puja sequences: resolved against the tracks that really exist.
+  const available = useMemo(() => new Set(tracks.map((t) => slugOf(t.id)).filter(Boolean) as string[]), [tracks]);
+  const pujas = useMemo(() => PUJA_SEQUENCES.map((seq) => ({
+    seq,
+    steps: resolveSequence(seq, available).map((slug) => ({ slug, title: tracks.find((t) => t.id === `mantra:${slug}`)?.title ?? slug })),
+  })).filter((p) => p.steps.length > 0), [available, tracks]);
+
+  const beginPuja = (id: string) => {
+    const p = pujas.find((x) => x.seq.id === id);
+    if (!p) return;
+    const q = p.steps.map((st) => `mantra:${st.slug}`);
+    setQueue(q); setQueueRepeat(pujaRepeats); setPujaName(p.seq.name);
+    live.current = { ...live.current, queue: q, queueRepeat: pujaRepeats, pujaName: p.seq.name };
+    const first = tracks.find((t) => t.id === q[0]);
+    if (first) void playTrack(first, q);
+  };
+
+  const chantNow = (slug: string, count: number) => {
+    const t = tracks.find((x) => x.id === `mantra:${slug}`);
+    if (!t) return;
+    setQueue(null); setPujaName(null);
+    live.current.queue = null;
+    void playTrack(t, null, Math.max(1, count));
+  };
+
+  useMediaSession({
+    enabled: tools && isMine,
+    title: current?.title ?? null,
+    artwork: current?.cover ?? null,
+    playing,
+    onPlay: () => VoiceService.resume('music'),
+    onPause: () => VoiceService.pause(),
+    onNext: () => step(1),
+    onPrev: () => step(-1),
+  });
+
+  const sankalpInfo = useMemo(() => sankalpProgress(sadhana.state), [sadhana.state]);
+  const mantraOptions = useMemo(() => tracks.map((t) => ({ slug: slugOf(t.id) ?? t.id, title: t.title })), [tracks]);
+  const titleOf = (slug: string) => tracks.find((t) => t.id === `mantra:${slug}`)?.title ?? slug;
+  const pujaActive = pujaName && queue && current ? { name: pujaName, step: queue.indexOf(current.id) + 1, steps: queue.length, round, total: queueRepeat } : null;
 
   const pct = progress.duration ? Math.min(100, (progress.currentTime / progress.duration) * 100) : 0;
   const up = UPGRADE[kind];
@@ -153,7 +238,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
               {unlocked ? <Play size={16} fill="currentColor" /> : <Lock size={15} />} Play {list.id === 'all' ? 'all' : list.name}
             </button>
             {unlocked ? (
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--accent-primary)]"><Check size={14} /> Unlocked: loop and playlists</span>
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--accent-primary)]"><Check size={14} /> {isMantras ? 'Unlocked: loop, playlists and practice tools' : 'Unlocked: loop and playlists'}</span>
             ) : (
               <button onClick={goPricing} className="h-11 px-5 rounded-full border border-[var(--border-subtle)] text-sm font-bold text-[var(--text-primary)] hover:bg-[var(--bg-surface)]">
                 Unlock · {priceOf(up.single)}
@@ -163,6 +248,28 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
         </div>
       </header>
 
+      {tools && (
+        <div className="flex gap-2 mb-5" role="tablist" aria-label="Mantras sections">
+          {([['library', 'Library'], ['puja', 'Puja sequences'], ['sankalp', 'My sadhana']] as const).map(([id, label]) => (
+            <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)}
+              className={cn('h-9 px-4 rounded-full text-[13px] font-bold border transition-colors',
+                tab === id ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent' : 'bg-transparent text-[var(--text-secondary)] border-[var(--border-subtle)]')}>{label}</button>
+          ))}
+        </div>
+      )}
+      {isMantras && !unlocked && <PracticeTeaser onUnlock={goPricing} price={priceOf(up.single)} />}
+      {tools && tab === 'puja' && <PujaTab sequences={pujas} repeats={pujaRepeats} onRepeats={setPujaRepeats} onBegin={beginPuja} active={pujaActive} />}
+      {tools && tab === 'sankalp' && (
+        <SankalpTab state={sadhana.state} progress={sankalpInfo} mantraOptions={mantraOptions} titleOf={titleOf}
+          onStart={(slug, days, daily) => sadhana.start(slug, days, daily)} onEnd={sadhana.end} onChant={chantNow} />
+      )}
+      {tools && tab === 'library' && (
+        <MalaDeck title={counterTrack?.title ?? null} todayReps={counterSlug ? repsOn(sadhana.state, dateKey(), counterSlug) : 0}
+          malaTarget={sadhana.state.malaTarget} playing={playing} hasTrack={!!counterSlug}
+          onTarget={sadhana.setMalaTarget} onTap={() => counterSlug && countOne(counterSlug)} onClear={() => counterSlug && sadhana.clearToday(counterSlug)} />
+      )}
+
+      {(!tools || tab === 'library') && (<>
       {/* Playlists */}
       <div className="flex gap-2 overflow-x-auto pb-2 mb-4 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist" aria-label="Playlists">
         {lists.map((l) => (
@@ -204,6 +311,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
           );
         })}
       </ol>
+      </>)}
       {!unlocked && (
         <p className="text-xs text-[var(--text-muted)] mt-3">
           The first {FREE_TRACKS} tracks are free to listen to. <button onClick={goPricing} className="underline font-semibold text-[var(--text-secondary)]">Unlock</button> every track, loop any of them, and play whole playlists back to back.
@@ -218,7 +326,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
             <img src={current.cover} alt="" className="w-11 h-11 rounded-lg object-cover flex-shrink-0" />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-semibold text-[var(--text-primary)]">{current.title}</span>
-              <span className="block truncate text-[11px] text-[var(--text-muted)]">{queue ? `Playing ${list.name} playlist` : current.subtitle}</span>
+              <span className="block truncate text-[11px] text-[var(--text-muted)]">{pujaName ? `${pujaName} · ${queue ? queue.indexOf(current.id) + 1 : 1} of ${queue?.length ?? 1}` : queue ? `Playing ${list.name} playlist` : current.subtitle}</span>
             </span>
             <button aria-label="Previous" onClick={() => step(-1)} className="p-2 text-[var(--text-secondary)]"><SkipBack size={18} /></button>
             <button aria-label={playing ? 'Pause' : 'Play'} onClick={() => (playing ? VoiceService.pause() : VoiceService.resume('music'))}
@@ -226,6 +334,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
               {playing ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" className="ml-0.5" />}
             </button>
             <button aria-label="Next" onClick={() => step(1)} className="p-2 text-[var(--text-secondary)]"><SkipForward size={18} /></button>
+            {tools && <SleepTimerButton />}
             <button aria-label={loop ? 'Loop on' : 'Loop off'} onClick={toggleLoop}
               className={cn('p-2 relative', loop && unlocked ? 'text-[var(--accent-primary)]' : 'text-[var(--text-muted)]')}>
               {queue ? <Repeat size={18} /> : <Repeat1 size={18} />}

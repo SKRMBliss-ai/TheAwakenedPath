@@ -478,8 +478,10 @@ export const thumb = (videoId: string) => `https://i.ytimg.com/vi/${videoId}/hqd
 export const PASS_INCLUDES = [
   'Every mantra and all meditation music, without ads, playing on a loop for as long as you like',
   'Neatly organised playlists: by deity, by time of day (morning, evening lamp, sleep), by festival and by mood',
-  'A lyrics and meaning PDF for every mantra: Devanagari, transliteration and plain English',
-  'A 21-day and a 40-day sadhana plan you can print',
+  'A mala counter that counts every repetition as the chant plays, with a soft bell at each mala',
+  'A 21 or 40 day sankalp tracker with a daily target and your streak',
+  'Puja sequences for Diwali, Dhanteras, Chhath and more, played in order from one press',
+  'A sleep timer and lock-screen controls',
   'Every mantra we record in future, added to your pass free',
   'Request a mantra: tell us on WhatsApp what you would like recorded next',
 ];
@@ -487,11 +489,11 @@ export const PASS_INCLUDES = [
 export const MANTRA_FAQ: { q: string; a: string }[] = [
   {
     q: 'Is the mantra library free?',
-    a: 'Yes. Every mantra page, with the Sanskrit text, transliteration, meaning and our YouTube recording, is free to read and listen to. The Mantra Pass is for people who want to play the mantras on a loop without ads, in organised playlists, with the PDFs and the sadhana plans.',
+    a: 'Yes. Every mantra page, with the Sanskrit text, transliteration, meaning and our YouTube recording, is free to read and listen to. The Mantra Pass is for people who want to practise with the mantras: a mala counter, a sankalp tracker, puja sequences, a sleep timer, and loop and playlists.',
   },
   {
     q: 'What exactly do I get with the Mantra Pass?',
-    a: `Every mantra in the library, without ads and playing on a loop, organised into playlists by deity, time of day and festival. Also a lyrics and meaning PDF for each mantra, a printable 21-day and 40-day sadhana plan, and every future mantra at no extra cost. You pay once. There is no subscription.`,
+    a: `Every mantra in the library, on a loop or in playlists by deity, time of day and festival. Also a mala counter, a 21 or 40 day sankalp tracker, puja sequences for the festivals, a sleep timer and lock-screen controls, and every future mantra at no extra cost. Your counts are saved on the device you use. You pay once. There is no subscription.`,
   },
   {
     q: 'How do I get access after paying?',
