@@ -178,11 +178,11 @@ export function SiteLogo({ size = 40, showText = true, palette, brand }: {
         }}
       />
       {showText && (
-        <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-          <span style={{ fontFamily: SERIF, fontSize: 20, fontWeight: 600, color: palette.INK }}>
+        <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1, minWidth: 0 }}>
+          <span className="si-brand-name" style={{ fontFamily: SERIF, fontSize: 20, fontWeight: 600, color: palette.INK }}>
             {brand ? brand.name : 'Soulful Mind Studio'}
           </span>
-          <span style={{
+          <span className="si-brand-tag" style={{
             fontSize: 8.5, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase',
             color: palette.BROWN, marginTop: 3,
           }}>
@@ -242,7 +242,7 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
         maxWidth: 1120, margin: '0 auto', padding: '12px 20px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
       }}>
-        <a href={brand ? brand.href : '/'} onClick={onLogoClick} style={{ display: 'flex', alignItems: 'center', gap: 16, textDecoration: 'none', flexShrink: 0 }}>
+        <a href={brand ? brand.href : '/'} onClick={onLogoClick} className="si-brand" style={{ display: 'flex', alignItems: 'center', gap: 16, textDecoration: 'none', flexShrink: 0, minWidth: 0 }}>
           <SiteLogo palette={palette} size={64} brand={brand} />
         </a>
 
@@ -364,6 +364,16 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
 
       <style>{`
         .si-nav:hover { color: ${palette.PURPLE_STRONG} !important; }
+        .si-nav-row { flex-shrink: 0; }
+        @media (max-width: 520px) {
+          /* On a phone the logo, name and tagline filled the row and pushed the theme
+             and menu buttons off the screen: a smaller logo, no tagline, and the name
+             allowed to shrink keep both buttons visible. */
+          .si-brand { gap: 10px !important; flex-shrink: 1 !important; }
+          .si-brand img { width: 44px !important; height: 44px !important; }
+          .si-brand-name { font-size: 17px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+          .si-brand-tag { display: none !important; }
+        }
         @media (max-width: 860px) {
           .si-hide-sm { display: none !important; }
           .si-nav-row { gap: 12px; }
