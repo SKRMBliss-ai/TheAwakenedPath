@@ -72,7 +72,7 @@ export interface Mantra {
 
 export const getMantraAudioUrl = (slug: string) => `/Mantras/${slug}.mp3`;
 
-export const MANTRAS: Mantra[] = [
+const BASE_MANTRAS: Mantra[] = [
   {
     slug: 'karagre-vasate-lakshmi',
     name: 'Karagre Vasate Lakshmi',
@@ -655,6 +655,30 @@ export const MANTRAS: Mantra[] = [
     occasions: ['Thursday', 'Guru Purnima', 'Daily chant'],
     audioUrl: '/Mantras/jai-ram-shiv-ram-guru-ram-1.mp3',
   },
+];
+
+/** A second recording of a mantra we already have, in a different melody. Same text and meaning. */
+const variant = (of: string, over: Partial<Mantra> & { slug: string; name: string; blurb: string }): Mantra => {
+  const base = BASE_MANTRAS.find((m) => m.slug === of);
+  if (!base) throw new Error(`variant of unknown mantra: ${of}`);
+  // The YouTube video belongs to the original recording, so it is not carried over.
+  return { ...base, videos: undefined, ...over };
+};
+
+export const MANTRAS: Mantra[] = [
+  ...BASE_MANTRAS,
+  variant('mahalakshmi-mantra', {
+    slug: 'mahalakshmi-mantra-v2', name: 'Mahalakshmi Mantra (second melody)',
+    blurb: 'A longer, slower melody of the Mahalakshmi seed mantra.', audioUrl: '/Mantras/mahalakshmi-mantra-take2.mp3',
+  }),
+  variant('uma-maheshwara-mantra', {
+    slug: 'uma-maheshwara-mantra-v2', name: 'Uma Maheshwara Mantra (second melody)',
+    blurb: 'A second, longer melody for family harmony and the unity of strength and grace.', audioUrl: '/Mantras/uma-maheshwara-mantra-take2.mp3',
+  }),
+  variant('kubera-mantra', {
+    slug: 'kubera-mantra-female', name: 'Kubera Mantra (female voice)',
+    blurb: 'The Kubera mantra for prosperity, sung in a female voice.', audioUrl: '/Mantras/kubera-mantra-female.mp3',
+  }),
 ];
 
 export const DEITIES = Array.from(new Set(MANTRAS.map((m) => m.deity)));

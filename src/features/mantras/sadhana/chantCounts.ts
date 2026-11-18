@@ -29,6 +29,9 @@ export const CHANTS_PER_RECORDING: Record<string, number> = {
   'durga-sarvamangala-mangalye': 1,
   'lokah-samastah-sukhino': 7,
   'jai-ram-shiv-ram-guru-ram': 6,
+  'mahalakshmi-mantra-v2': 3,
+  'uma-maheshwara-mantra-v2': 13,
+  'kubera-mantra-female': 1,
 };
 
 /** Chants in one playthrough of this recording (1 when not known). */
