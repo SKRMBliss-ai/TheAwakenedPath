@@ -8,7 +8,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getAuth } from 'firebase/auth';
-import { BookOpen, Repeat, ListMusic, FileText, Bell, MessageCircle, ShieldCheck, Sunrise, Play, Pause, Youtube } from 'lucide-react';
+import { BookOpen, Repeat, ListMusic, FileText, Bell, MessageCircle, ShieldCheck, Sunrise, Play, Pause, Youtube, ChevronRight, Search } from 'lucide-react';
 import { usePageSeo } from '../../lib/seo';
 import { track } from '../../lib/analytics';
 import { useSiteTheme, type Palette } from '../../lib/siteTheme';
@@ -88,6 +88,27 @@ function Btn({ palette, href, label, event, ghost = false, external = false }: {
         background: ghost ? 'transparent' : palette.PURPLE_STRONG, color: ghost ? palette.PURPLE_STRONG : palette.ON_ACCENT,
         border: `1.5px solid ${palette.PURPLE_STRONG}`,
       }}>{label}</a>
+  );
+}
+
+/** A compact row for the library list: small picture, name, first line of the text. */
+function MantraRow({ palette, m }: { palette: Palette; m: Mantra }) {
+  const img = m.videos && m.videos[0] ? thumb(m.videos[0].id) : (m.cover || '/marketing/mantras/emblem-sunburst.webp');
+  const hasVideo = !!(m.videos && m.videos[0]);
+  return (
+    <a href={`${PAGE}/${m.slug}`} className="sms-row" onClick={() => t('MANTRA_ROW_CLICK', m.slug)}
+      style={{ background: palette.CARD, border: `1px solid ${palette.BORDER}`, color: palette.INK }}>
+      <span style={{ flexShrink: 0, width: 60, height: 60, borderRadius: 14, overflow: 'hidden', background: palette.BG2, display: 'grid', placeItems: 'center' }}>
+        <img src={img} alt="" loading="lazy" width={60} height={60}
+          style={{ width: '100%', height: '100%', objectFit: hasVideo ? 'cover' : 'contain', padding: hasVideo ? 0 : 6, display: 'block' }} />
+      </span>
+      <span style={{ minWidth: 0, flex: 1 }}>
+        <span style={{ display: 'block', fontFamily: SERIF, fontSize: 18, lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</span>
+        <span style={{ display: 'block', fontSize: 13, color: palette.INK2, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.devanagari[0]}</span>
+        <span style={{ display: 'block', fontSize: 10.5, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: palette.BROWN, marginTop: 4 }}>{m.deity}</span>
+      </span>
+      <ChevronRight size={18} aria-hidden="true" style={{ flexShrink: 0, color: palette.INK2 }} />
+    </a>
   );
 }
 
@@ -405,6 +426,12 @@ function PageStyles({ palette }: { palette: Palette }) {
         box-shadow: ${palette.isDark ? '0 14px 34px rgba(0,0,0,.5)' : '0 14px 34px rgba(60,40,30,.12)'}; }
       .sms-btn { transition: transform .2s ease, opacity .2s ease; }
       .sms-btn:hover { transform: translateY(-1px); opacity: .92; }
+      .sms-rows { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 10px; }
+      .sms-row { display: flex; align-items: center; gap: 14px; padding: 10px 14px 10px 10px; border-radius: 18px; text-decoration: none;
+        transition: border-color .2s ease, background .2s ease, transform .2s ease; }
+      .sms-row:hover, .sms-row:focus-visible { border-color: ${palette.PURPLE_STRONG} !important; transform: translateY(-1px); }
+      .sms-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+      .sms-scroll::-webkit-scrollbar { display: none; }
       .sms-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
       .sms-chip { min-height: 40px; padding: 0 16px; border-radius: 999px; cursor: pointer; font-family: ${SANS}; font-size: 13.5px; font-weight: 700; white-space: nowrap; }
       .sms-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
@@ -584,21 +611,22 @@ function MantraHub() {
           <SectionTitle palette={palette} art="emblem" artHeight={96} kicker="Mantra Library" title="Find a mantra for this moment"
             sub="Search, or pick a time of day or a deity. Every page has the text and the meaning." />
 
-          <div style={{ maxWidth: 520, margin: '0 auto 18px' }}>
+          <div style={{ position: 'relative', maxWidth: 560, margin: '0 auto 18px' }}>
+            <Search size={18} aria-hidden="true" style={{ position: 'absolute', left: 18, top: 15, color: palette.INK2 }} />
             <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Search mantras"
               placeholder="Search by name, deity or festival, e.g. Navratri, Ganesha"
-              style={{ width: '100%', height: 48, borderRadius: 999, padding: '0 20px', fontFamily: SANS, fontSize: 15,
+              style={{ width: '100%', height: 48, borderRadius: 999, padding: '0 20px 0 46px', fontFamily: SANS, fontSize: 15,
                 background: palette.CARD, color: palette.INK, border: `1px solid ${palette.BORDER}`, outline: 'none' }} />
           </div>
 
-          <div role="group" aria-label="Filter by moment" className="sms-chips" style={{ marginBottom: 10 }}>
+          <div role="group" aria-label="Filter by moment" className="sms-scroll" style={{ marginBottom: 8 }}>
             <button type="button" className="sms-chip" aria-pressed={!moment} style={chip(!moment)} onClick={() => setMoment(null)}>Any time</button>
             {MOMENTS.map((mo) => (
               <button key={mo.id} type="button" className="sms-chip" title={mo.blurb} aria-pressed={moment === mo.id} style={chip(moment === mo.id)}
                 onClick={() => { setMoment(moment === mo.id ? null : mo.id); t('MANTRA_FILTER_MOMENT', mo.id); }}>{mo.label}</button>
             ))}
           </div>
-          <div role="group" aria-label="Filter by deity" className="sms-chips" style={{ marginBottom: 28 }}>
+          <div role="group" aria-label="Filter by deity" className="sms-scroll" style={{ marginBottom: 26 }}>
             <button type="button" className="sms-chip" aria-pressed={!deity} style={chip(!deity)} onClick={() => setDeity(null)}>All deities</button>
             {DEITIES.map((d) => (
               <button key={d} type="button" className="sms-chip" aria-pressed={deity === d} style={chip(deity === d)}
@@ -607,15 +635,18 @@ function MantraHub() {
           </div>
 
           {shown.length > 0 && grouped ? (
-            <div style={{ display: 'grid', gap: 40 }}>
+            <div style={{ display: 'grid', gap: 30 }}>
               {DEITIES.map((d) => {
                 const list = shown.filter((m) => m.deity === d);
                 return list.length ? (
                   <div key={d} aria-label={`${d} mantras`}>
-                    <h3 style={{ fontFamily: SERIF, fontSize: 26, fontWeight: 400, margin: '0 0 14px', color: palette.INK }}>
-                      {d} <span style={{ fontFamily: SANS, fontSize: 13, color: palette.INK2, marginLeft: 6 }}>{list.length}</span>
-                    </h3>
-                    <div className="sms-grid">{list.map((m) => <MantraCard key={m.slug} palette={palette} m={m} />)}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '0 0 12px' }}>
+                      <h3 style={{ fontFamily: SANS, fontSize: 12, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: palette.BROWN, margin: 0 }}>
+                        {d} <span style={{ opacity: 0.6, marginLeft: 4 }}>{list.length}</span>
+                      </h3>
+                      <span style={{ flex: 1, height: 1, background: palette.BORDER }} />
+                    </div>
+                    <div className="sms-rows">{list.map((m) => <MantraRow key={m.slug} palette={palette} m={m} />)}</div>
                   </div>
                 ) : null;
               })}
@@ -623,7 +654,7 @@ function MantraHub() {
           ) : shown.length > 0 ? (
             <>
               <p style={{ margin: '0 0 16px', fontSize: 14, color: palette.INK2 }} role="status">{shown.length} mantra{shown.length === 1 ? '' : 's'}</p>
-              <div className="sms-grid">{shown.map((m) => <MantraCard key={m.slug} palette={palette} m={m} />)}</div>
+              <div className="sms-rows">{shown.map((m) => <MantraRow key={m.slug} palette={palette} m={m} />)}</div>
             </>
           ) : (
             <div style={{ ...box, padding: '28px 24px', textAlign: 'center', maxWidth: 560, margin: '0 auto' }}>
