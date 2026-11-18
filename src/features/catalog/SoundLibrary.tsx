@@ -343,6 +343,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
             <button aria-label="Next" onClick={() => step(1)} className="p-2 text-[var(--text-secondary)]"><SkipForward size={18} /></button>
             {tools && <SleepTimerButton />}
             <button aria-label={loop ? 'Loop on' : 'Loop off'} aria-pressed={loop && unlocked} onClick={toggleLoop}
+              title={!unlocked ? 'Unlock to loop this track' : loop ? 'Loop is on. Click to turn off' : 'Turn on loop mode'}
               className={cn('relative w-10 h-10 grid place-items-center rounded-full border transition-colors',
                 loop && unlocked ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent' : 'text-[var(--text-muted)] border-[var(--border-subtle)]')}>
               {queue ? <Repeat size={18} /> : <Repeat1 size={18} />}
