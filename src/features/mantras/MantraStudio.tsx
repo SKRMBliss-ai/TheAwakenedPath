@@ -365,7 +365,10 @@ function SingleMantraBuy({ palette, m }: { palette: Palette; m: Mantra }) {
           cursor: 'pointer', textAlign: 'left', color: palette.INK, fontFamily: SANS }}>
         <span>
           <span style={{ display: 'block', fontSize: 10.5, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: palette.BROWN, marginBottom: 3 }}>Own this mantra</span>
-          <span style={{ display: 'block', fontFamily: SERIF, fontSize: 21, fontWeight: 500 }}>Download the mp3 · {singlePrice()}</span>
+          <span style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+            <span style={{ fontFamily: SERIF, fontSize: 21, fontWeight: 500 }}>Download the mp3</span>
+            <span style={{ fontFamily: SANS, fontSize: 17, fontWeight: 700, fontVariantNumeric: 'lining-nums tabular-nums', color: palette.PURPLE_STRONG }}>{singlePrice()}</span>
+          </span>
         </span>
         <ChevronRight size={20} aria-hidden="true" style={{ flexShrink: 0, color: palette.INK2, transform: panel || done ? 'rotate(90deg)' : 'none', transition: 'transform .25s ease' }} />
       </button>
