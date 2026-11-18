@@ -217,7 +217,14 @@ export default function PricingPage() {
         links={siteNav()}
         cta={null} />
 
-      <header style={{ ...sec, paddingTop: 'clamp(36px, 5vw, 64px)', textAlign: 'center' }}>
+      <nav aria-label="Back" style={{ ...wrap, padding: '10px clamp(16px, 4vw, 40px) 0' }}>
+        <a href="/" onClick={(e) => { if (document.referrer.startsWith(window.location.origin) && window.history.length > 1) { e.preventDefault(); window.history.back(); } }}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, color: palette.PURPLE_STRONG, fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
+          <span aria-hidden="true">←</span> Back
+        </a>
+      </nav>
+
+      <header style={{ ...sec, paddingTop: 'clamp(16px, 3vw, 32px)', textAlign: 'center' }}>
         <h1 style={{ fontFamily: SERIF, fontSize: 'clamp(36px, 5.4vw, 58px)', fontWeight: 400, lineHeight: 1.08, margin: '0 auto 12px', maxWidth: 760 }}>
           Who is this for?
         </h1>

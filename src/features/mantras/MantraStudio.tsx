@@ -491,7 +491,7 @@ function PassCheckout({ palette, layout = 'summary' }: { palette: Palette; layou
             <p style={{ margin: '0 0 12px', fontSize: 13.5, color: palette.INK2 }}>By Soulful Mantra Studio</p>
             <p style={{ margin: '0 0 10px', fontSize: 15.5, lineHeight: 1.65, color: palette.INK2 }}>
               Our whole mantra library in one calm place, sorted by deity, by time of day and by festival.
-              Pick what today asks for (a morning prayer, the evening lamp, a festival puja, rest) and let it play on a loop, without ads.
+              Pick what today asks for (a morning prayer, the evening lamp, a festival puja, rest) and let it play on a loop, while the mala counter keeps count for you.
             </p>
             <p style={{ margin: 0, fontSize: 15.5, lineHeight: 1.65, color: palette.INK2 }}>
               One payment. No renewals. Every mantra we record later is added for you.
@@ -593,7 +593,7 @@ function PassBand({ palette, href }: { palette: Palette; href: string }) {
         <div style={{ flex: '1 1 420px' }}>
           <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', color: palette.ON_BAND_ACCENT }}>Mantra Pass</span>
           <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(26px, 3.6vw, 38px)', fontWeight: 400, lineHeight: 1.15, margin: '8px 0' }}>
-            Every mantra on a loop, without ads.
+            Every mantra, and the tools to practise it.
           </h2>
           <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: palette.ON_BAND_SOFT }}>
             A mala counter, a sankalp tracker, puja sequences, a sleep timer, and loop and playlists for every mantra. {passPrice()} once, new mantras included.
@@ -1144,7 +1144,7 @@ function MantraDetail({ m }: { m: Mantra }) {
 
 // ── /mantras/lifetime-pass (sales page) ──────────────────────────────────────
 const PASS_MOMENTS: { icon: typeof Repeat; h: string; b: string }[] = [
-  { icon: Repeat, h: 'Chant without interruption', b: 'No ads before, during or after. One mantra repeats for as long as you sit.' },
+  { icon: Repeat, h: 'Chant without interruption', b: 'One mantra repeats for as long as you sit, and the sleep timer fades it out when you drift off.' },
   { icon: Sunrise, h: 'A steadier start to the morning', b: 'Open the Morning playlist and begin the day with one short prayer.' },
   { icon: Bell, h: 'An evening ritual by the lamp', b: 'Light the diya, press play, and let the chant close the day.' },
   { icon: Play, h: 'Soft loops for winding down', b: 'Slow, quiet recordings made to play in the background as you rest.' },
@@ -1157,7 +1157,7 @@ function MantraPassSales() {
   const url = `${MANTRA_BASE_URL}/lifetime-pass`;
 
   usePageSeo({
-    title: 'Mantra Pass: Ad-Free Mantra Playlists, Pay Once | Soulful Mantra Studio',
+    title: 'Mantra Pass: Mala Counter, Sankalp Tracker & Puja Sequences | Soulful Mantra Studio',
     description:
       'One payment for our whole mantra library with practice tools: a mala counter, a sankalp tracker, puja sequences, a sleep timer, and loop and playlists for every chant. No subscription.',
     url,
@@ -1191,7 +1191,7 @@ function MantraPassSales() {
         <div className="sms-ticker">
           {[0, 1].map((k) => (
             <span key={k} style={{ display: 'inline-flex' }}>
-              {['One payment, yours to keep', 'No ads, ever', 'Playlists by deity, time of day and festival', 'A new mantra every week',
+              {['One payment, yours to keep', 'Mala counter and sankalp tracker', 'Puja sequences for Diwali, Chhath and more', 'A new mantra every week',
                 `${MANTRA_PASS_REFUND_DAYS}-day full refund`].map((x) => (
                 <span key={x} style={{ padding: '9px 0', fontSize: 12.5, fontWeight: 800, letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
                   {x}<span style={{ margin: '0 22px', opacity: 0.55 }}>✦</span>
@@ -1229,8 +1229,8 @@ function MantraPassSales() {
               Our whole mantra library in one quiet place, for your morning, your evening lamp, your festivals and your rest.
             </p>
             <ul style={{ listStyle: 'none', margin: '0 0 22px', padding: 0, display: 'grid', gap: 10 }}>
-              {['No ads before, during or after a chant', 'One mantra on a loop for as long as you sit', 'Playlists by deity, time of day and festival',
-                'A mala counter, sankalp tracker and puja sequences'].map((line) => (
+              {['A mala counter that counts for you, with a soft bell', 'A 21 or 40 day sankalp with your streak', 'Puja sequences: Diwali, Dhanteras, Chhath and more',
+                'Any mantra on a loop, with a sleep timer'].map((line) => (
                 <li key={line} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 15.5, fontWeight: 600, color: palette.INK }}>
                   <span style={{ flexShrink: 0, display: 'grid', placeItems: 'center', width: 24, height: 24, borderRadius: '50%', background: GOLD_BAR, color: '#241E24', fontSize: 13, fontWeight: 900 }}>✓</span>
                   {line}

@@ -305,7 +305,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
           {([['library', 'Library'], ['puja', 'Puja sequences'], ['sankalp', 'My sadhana']] as const).map(([id, label]) => (
             <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)}
               className={cn('h-9 px-4 rounded-full text-[13px] font-bold border transition-colors',
-                tab === id ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent' : 'bg-transparent text-[var(--text-secondary)] border-[var(--border-subtle)]')}>{label}</button>
+                tab === id ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent' : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_55%,transparent)]')}>{label}</button>
           ))}
         </div>
       )}
@@ -328,7 +328,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
           <button key={l.id} role="tab" aria-selected={l.id === listId} onClick={() => setListId(l.id)}
             className={cn('flex-shrink-0 h-9 px-4 rounded-full text-[13px] font-bold whitespace-nowrap border transition-colors',
               l.id === listId ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent'
-                : 'bg-[var(--bg-surface)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:text-[var(--text-primary)]')}>
+                : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_55%,transparent)] hover:text-[var(--text-primary)]')}>
             {l.name} <span className="opacity-60 ml-1">{l.trackIds.length}</span>
           </button>
         ))}

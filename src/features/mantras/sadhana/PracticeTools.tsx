@@ -136,7 +136,7 @@ export function MalaDeck({ perPlay, title, todayReps, malaTarget, playing, hasTr
               <button key={n} type="button" aria-pressed={n === malaTarget} onClick={() => onTarget(n)}
                 className={cn('h-8 px-3 rounded-full text-xs font-bold border transition-colors',
                   n === malaTarget ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent'
-                    : 'bg-transparent text-[var(--text-secondary)] border-[var(--border-subtle)] hover:text-[var(--text-primary)]')}>{n}</button>
+                    : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_55%,transparent)] hover:text-[var(--text-primary)]')}>{n}</button>
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -194,7 +194,7 @@ export function SankalpTab({ state, progress, mantraOptions, titleOf, onStart, o
               {SANKALP_LENGTHS.map((n) => (
                 <button key={n} type="button" aria-pressed={n === days} onClick={() => setDays(n)}
                   className={cn('h-10 px-5 rounded-full text-sm font-bold border',
-                    n === days ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent' : 'border-[var(--border-subtle)] text-[var(--text-secondary)]')}>{n} days</button>
+                    n === days ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent' : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_55%,transparent)]')}>{n} days</button>
               ))}
             </div>
           </div>
@@ -204,7 +204,7 @@ export function SankalpTab({ state, progress, mantraOptions, titleOf, onStart, o
               {MALA_OPTIONS.map((n) => (
                 <button key={n} type="button" aria-pressed={n === daily} onClick={() => setDaily(n)}
                   className={cn('h-9 px-4 rounded-full text-sm font-bold border',
-                    n === daily ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent' : 'border-[var(--border-subtle)] text-[var(--text-secondary)]')}>{n}</button>
+                    n === daily ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent' : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_55%,transparent)]')}>{n}</button>
               ))}
             </div>
           </div>
@@ -296,7 +296,7 @@ export function PujaTab({ sequences, repeats, onRepeats, onBegin, active }: {
         {PUJA_REPEATS.map((n) => (
           <button key={n} type="button" aria-pressed={n === repeats} onClick={() => onRepeats(n)}
             className={cn('h-8 px-3 rounded-full text-xs font-bold border',
-              n === repeats ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent' : 'border-[var(--border-subtle)] text-[var(--text-secondary)]')}>{n}×</button>
+              n === repeats ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent' : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_55%,transparent)]')}>{n}×</button>
         ))}
       </div>
       {active && (
