@@ -765,6 +765,10 @@ export const MANTRAS: Mantra[] = [
 // Cover pictures (text-free, one deity each). Mantras not listed keep the studio emblem.
 const COVER_DIR = '/marketing/mantras/covers/';
 const COVERS: Record<string, string> = {
+  'karagre-vasate-lakshmi': 'karagre-palms-lakshmi',
+  'lokah-samastah-sukhino': 'lokah-earth-lotus',
+  'jai-ram-shiv-ram-guru-ram': 'rama-seated-bow',
+  'jai-ram-shiv-ram-guru-ram-v2': 'rama-standing-bow',
   'om-gan-ganapataye-namah': 'om-gan-ganapataye-namah',
   'ganesha-aarti': 'ganesha-aarti',
   'mahalakshmi-mantra': 'lakshmi-lotus-coins',
