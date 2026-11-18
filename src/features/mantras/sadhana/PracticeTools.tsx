@@ -11,7 +11,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useRef, useState } from 'react';
-import { Check, Lock, Moon, Play, Plus, RotateCcw } from 'lucide-react';
+import { Check, ChevronDown, Lock, Moon, Play, Plus, RotateCcw } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { VoiceService } from '../../../services/voiceService';
 import {
@@ -101,12 +101,42 @@ export function MalaDeck({ perPlay, title, todayReps, malaTarget, playing, hasTr
   onTap: () => void;
   onClear: () => void;
 }) {
+  // Collapsed to one slim strip by default, so the track list stays near the top of the page.
+  const [open, setOpen] = useState(false);
   const inMala = todayReps % malaTarget;
   const malas = Math.floor(todayReps / malaTarget);
   const pct = (inMala / malaTarget) * 100;
   const R = 52;
   const C = 2 * Math.PI * R;
 
+  if (!open) {
+    return (
+      <section aria-label="Mala counter" className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)]/60 mb-5">
+        <div className="flex items-center gap-3 p-3 sm:px-4">
+          <div className="relative w-11 h-11 flex-shrink-0" aria-hidden="true">
+            <svg viewBox="0 0 44 44" className="w-full h-full -rotate-90">
+              <circle cx="22" cy="22" r="18" fill="none" stroke="var(--border-subtle)" strokeWidth="4" />
+              <circle cx="22" cy="22" r="18" fill="none" stroke="var(--accent-primary)" strokeWidth="4" strokeLinecap="round"
+                strokeDasharray={2 * Math.PI * 18} strokeDashoffset={2 * Math.PI * 18 * (1 - inMala / malaTarget)} style={{ transition: 'stroke-dashoffset .4s ease' }} />
+            </svg>
+          </div>
+          <button type="button" onClick={() => setOpen(true)} aria-expanded={false} className="min-w-0 flex-1 text-left">
+            <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">Mala counter{playing && perPlay > 0 ? ' · counting' : ''}</span>
+            <span className="block truncate text-sm font-semibold text-[var(--text-primary)]">
+              {todayReps === 0 ? 'Nothing counted yet today' : `${inMala} of ${malaTarget}`}{malas > 0 ? ` · ${malas} mala${malas === 1 ? '' : 's'} today` : ''}
+            </span>
+          </button>
+          <button type="button" onClick={onTap} disabled={!hasTrack || perPlay === 0}
+            className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] text-xs font-bold disabled:opacity-40 flex-shrink-0">
+            <Plus size={14} /> Count 1
+          </button>
+          <button type="button" onClick={() => setOpen(true)} aria-label="Open mala counter settings" className="w-9 h-9 grid place-items-center rounded-full border border-[color-mix(in_srgb,var(--text-muted)_45%,transparent)] text-[var(--text-secondary)] flex-shrink-0">
+            <ChevronDown size={16} />
+          </button>
+        </div>
+      </section>
+    );
+  }
   return (
     <section aria-label="Mala counter" className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)]/60 p-4 sm:p-5 mb-6">
       <div className="flex flex-col sm:flex-row gap-5 sm:items-center">
@@ -125,7 +155,7 @@ export function MalaDeck({ perPlay, title, todayReps, malaTarget, playing, hasTr
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)] mb-1">Mala counter</p>
+          <div className="flex items-center justify-between mb-1"><p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">Mala counter</p><button type="button" onClick={() => setOpen(false)} aria-label="Collapse mala counter" className="text-[var(--text-muted)] p-1 -m-1"><ChevronDown size={16} className="rotate-180" /></button></div>
           <h2 className="font-serif text-2xl text-[var(--text-primary)] leading-tight mb-1 truncate">{title ?? 'Choose a mantra'}</h2>
           <p className="text-sm text-[var(--text-secondary)] mb-3">
             {todayReps === 0 ? 'Nothing counted yet today.' : `Today: ${todayReps} repetition${todayReps === 1 ? '' : 's'}`}

@@ -11,7 +11,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Repeat, Repeat1, Lock, ListMusic, Loader2, X, Check, Download } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Repeat, Repeat1, Lock, ListMusic, Loader2, X, Check, Download, Search } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { setLibraryOpen } from '../../lib/libraryOpen';
 import { VoiceService, useVoiceStatus } from '../../services/voiceService';
@@ -82,7 +82,10 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
   const lists = useMemo(() => [allList, ...playlists.filter((p) => p.trackIds.length)], [allList, playlists]);
   const [listId, setListId] = useState('all');
   const list = lists.find((l) => l.id === listId) || allList;
-  const rows = list.trackIds.map((id) => tracks.find((t) => t.id === id)!).filter(Boolean);
+  const [query, setQuery] = useState('');
+  const qn = query.trim().toLowerCase();
+  const rows = list.trackIds.map((id) => tracks.find((t) => t.id === id)!).filter(Boolean)
+    .filter((t) => !qn || `${t.title} ${t.subtitle}`.toLowerCase().includes(qn));
 
   const [loop, setLoop] = useState(true); // owners hear a track on repeat until they turn it off
   useEffect(() => { setLibraryOpen(true); return () => setLibraryOpen(false); }, []);
@@ -322,8 +325,17 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
       )}
 
       {(!tools || tab === 'library') && (<>
+      {tracks.length > 12 && (
+        <div className="relative mb-3">
+          <Search size={16} aria-hidden="true" className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+          <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} aria-label={`Search ${title}`} placeholder={`Search ${title.toLowerCase()}, e.g. Ganesha or Navratri`}
+            className="w-full h-11 rounded-full pl-11 pr-4 text-sm bg-[var(--bg-color)] text-[var(--text-primary)] border border-[color-mix(in_srgb,var(--text-muted)_45%,transparent)] outline-none focus:border-[var(--accent-primary)]" />
+        </div>
+      )}
+
       {/* Playlists */}
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-4 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist" aria-label="Playlists">
+      <div style={{ maskImage: 'linear-gradient(to right, #000 calc(100% - 32px), transparent)', WebkitMaskImage: 'linear-gradient(to right, #000 calc(100% - 32px), transparent)' }}
+        className="flex gap-2 overflow-x-auto pb-2 mb-4 -mx-1 px-1 pr-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist" aria-label="Playlists">
         {lists.map((l) => (
           <button key={l.id} role="tab" aria-selected={l.id === listId} onClick={() => setListId(l.id)}
             className={cn('flex-shrink-0 h-9 px-4 rounded-full text-[13px] font-bold whitespace-nowrap border transition-colors',
@@ -335,20 +347,23 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
       </div>
       {list.id !== 'all' && <p className="text-sm text-[var(--text-secondary)] mb-3 flex items-center gap-2"><ListMusic size={15} /> {list.blurb}</p>}
 
+      <style>{`@keyframes sl-eq { 0%,100% { height: 4px } 50% { height: 14px } } .sl-eq { height: 4px; animation: sl-eq .9s ease-in-out infinite; } @media (prefers-reduced-motion: reduce) { .sl-eq { animation: none; height: 10px; } }`}</style>
       {/* Tracks */}
       <ol className="divide-y divide-[var(--border-subtle)]/50 rounded-2xl border border-[var(--border-subtle)] overflow-hidden">
+        {rows.length === 0 && <li className="px-4 py-8 text-center text-sm text-[var(--text-muted)]">No match. Try a deity or festival name.</li>}
         {rows.map((t, i) => {
           const active = isMine && trackId === t.id;
           const locked = isLocked(t.id);
           return (
             <li key={t.id} className="relative">
-              <button onClick={() => onRow(t)} className={cn('w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
-                active ? 'bg-[var(--bg-surface)]' : 'hover:bg-[var(--bg-surface)]/60', locked && 'opacity-60')}
+              <button onClick={() => onRow(t)} className={cn('group w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
+                active ? 'bg-[var(--bg-surface)] shadow-[inset_3px_0_0_var(--accent-primary)]' : 'hover:bg-[var(--bg-surface)]/60', locked && 'opacity-60')}
                 aria-label={locked ? `${t.title}, locked. Unlock on the pricing page` : undefined}>
                 <span className="w-6 text-center text-xs text-[var(--text-muted)] flex-shrink-0">
                   {loadingId === t.id ? <Loader2 size={14} className="animate-spin mx-auto" />
                     : locked ? <Lock size={13} className="mx-auto" />
-                    : active && playing ? <Pause size={14} className="mx-auto text-[var(--accent-primary)]" fill="currentColor" /> : i + 1}
+                    : active && playing ? <span className="flex items-end justify-center gap-[2px] h-3.5" aria-label="Playing">{[0, 1, 2].map((b) => <span key={b} className="w-[3px] rounded-sm bg-[var(--accent-primary)] sl-eq" style={{ animationDelay: `${b * 0.18}s` }} />)}</span>
+                    : <><span className="group-hover:hidden">{i + 1}</span><Play size={14} fill="currentColor" className="hidden group-hover:block mx-auto text-[var(--text-primary)]" /></>}
                 </span>
                 <img src={t.cover} alt="" loading="lazy" className="w-12 h-12 rounded-lg object-cover flex-shrink-0 bg-[var(--bg-surface)]"
                   onError={(e) => { if (e.currentTarget.src !== new URL(cover, location.href).href) e.currentTarget.src = cover; }} />
