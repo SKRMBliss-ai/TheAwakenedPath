@@ -45,6 +45,18 @@ function DoorColumn({ palette, door, selected, onPick }: { palette: Palette; doo
         padding: '6px 12px', borderRadius: 999, background: palette.BAND, color: palette.ON_BAND }}>{door.who}</span>
       <h2 id={`door-${door.id}`} style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 3vw, 36px)', fontWeight: 500, lineHeight: 1.1, margin: 0 }}>{door.title}</h2>
       <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: palette.INK2 }}>{door.line}</p>
+      {door.id === 'mantras' && (
+        <div style={{ borderRadius: 16, overflow: 'hidden', border: `1px solid ${palette.BORDER}`, margin: '2px 0 2px', boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }}>
+          <img
+            src="/marketing/mantras/altar-9-mantras.webp"
+            alt="9 Sacred Mantras Golden Altar Tablet"
+            width={1024}
+            height={576}
+            style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }}
+            loading="lazy"
+          />
+        </div>
+      )}
       <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 7 }}>
         {door.includes.map((x) => (
           <li key={x} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 14, lineHeight: 1.45 }}>
@@ -140,7 +152,29 @@ function Checkout({ palette, id, user, onClose, queued, onAdd, onRemove }: {
   const label: React.CSSProperties = { display: 'block', fontSize: 12.5, fontWeight: 700, color: palette.INK2, marginBottom: 6 };
 
   return (
-    <div id="pricing-checkout" style={{ background: palette.CARD, border: `2px solid ${palette.PURPLE_STRONG}`, borderRadius: 28, padding: 'clamp(20px, 3vw, 28px)', fontFamily: SANS, color: palette.INK }}>
+    <div id="pricing-checkout" style={{ background: palette.CARD, border: `2px solid ${palette.PURPLE_STRONG}`, borderRadius: 28, padding: 'clamp(20px, 3vw, 28px)', fontFamily: SANS, color: palette.INK, overflow: 'hidden' }}>
+      <div style={{
+        margin: 'calc(-1 * clamp(20px, 3vw, 28px)) calc(-1 * clamp(20px, 3vw, 28px)) 20px',
+        height: 'clamp(110px, 15vw, 150px)',
+        position: 'relative',
+        overflow: 'hidden',
+        borderTopLeftRadius: 26,
+        borderTopRightRadius: 26,
+      }}>
+        <img
+          src="/marketing/mantras/diya-mauve.webp"
+          alt="Golden diya altar"
+          aria-hidden="true"
+          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 42%' }}
+        />
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: palette.isDark
+            ? 'linear-gradient(to bottom, rgba(20,16,22,0.15) 0%, rgba(20,16,22,0.88) 100%)'
+            : 'linear-gradient(to bottom, rgba(255,255,255,0.05) 0%, rgba(246,242,238,0.92) 100%)',
+        }} />
+      </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
         <div>
           <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: palette.BROWN }}>Your order</span>

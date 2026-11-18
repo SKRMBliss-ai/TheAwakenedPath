@@ -499,6 +499,16 @@ function PassCheckout({ palette, layout = 'summary' }: { palette: Palette; layou
             </p>
           </div>
         )}
+        <div style={{ borderRadius: 18, overflow: 'hidden', border: `1px solid ${palette.BORDER}`, margin: '0 0 18px', boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }}>
+          <img
+            src="/marketing/mantras/altar-9-mantras.webp"
+            alt="9 Sacred Mantras Golden Altar Tablet"
+            width={1024}
+            height={576}
+            style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }}
+            loading="lazy"
+          />
+        </div>
         <h3 style={{ margin: '0 0 14px', fontFamily: SERIF, fontSize: 28, fontWeight: 500 }}>What is inside</h3>
         <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 14 }}>
           {PASS_INCLUDES.map((line, i) => {
