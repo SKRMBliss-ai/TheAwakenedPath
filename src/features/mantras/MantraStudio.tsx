@@ -22,6 +22,7 @@ import {
   passPrice, singlePrice, singleId, soldSingly, findMantra, thumb, waLink, getMantraAudioUrl, type Mantra, type Moment,
 } from './mantraData';
 import { downloadAudio } from './mantraDownload';
+import { MantraWalkthroughModal } from './components/MantraWalkthroughModal';
 
 const DEVA = "'Noto Serif Devanagari', 'Tiro Devanagari Sanskrit', 'Nirmala UI', 'Mangal', serif";
 const PAGE = '/mantras';
@@ -1156,6 +1157,7 @@ const PASS_MOMENTS: { icon: typeof Repeat; h: string; b: string }[] = [
 function MantraPassSales() {
   const { palette, toggle } = useSiteTheme();
   const url = `${MANTRA_BASE_URL}/lifetime-pass`;
+  const [isWalkthroughOpen, setIsWalkthroughOpen] = useState(false);
 
   usePageSeo({
     title: 'Mantra Pass: Mala Counter, Sankalp Tracker & Puja Sequences | Soulful Mantra Studio',
@@ -1245,7 +1247,25 @@ function MantraPassSales() {
                 </div>
               ))}
             </div>
-            {buy('MANTRA_SALES_HERO_CTA')}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
+              {buy('MANTRA_SALES_HERO_CTA')}
+              <button
+                type="button"
+                onClick={() => {
+                  t('MANTRA_WALKTHROUGH_OPEN');
+                  setIsWalkthroughOpen(true);
+                }}
+                className="sms-btn"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 48, padding: '12px 22px',
+                  borderRadius: 999, border: `1.5px solid ${palette.BORDER}`, background: palette.CARD, color: palette.INK,
+                  fontFamily: SANS, fontSize: 15, fontWeight: 700, cursor: 'pointer',
+                }}
+              >
+                <Play size={16} fill={palette.PURPLE_STRONG} color={palette.PURPLE_STRONG} aria-hidden="true" />
+                Watch 1-minute walkthrough
+              </button>
+            </div>
             <p style={{ margin: '14px 0 0', fontSize: 13.5, lineHeight: 1.6, color: palette.INK2 }}>
               <strong style={{ color: palette.INK }}>Pay once, keep it.</strong> {passPrice()} once · full refund within {MANTRA_PASS_REFUND_DAYS} days
               <span style={{ display: 'block' }}>UPI, cards, net banking, wallets and PayPal</span>
@@ -1407,6 +1427,12 @@ function MantraPassSales() {
           </div>
         </div>
       )}
+
+      <MantraWalkthroughModal
+        isOpen={isWalkthroughOpen}
+        onClose={() => setIsWalkthroughOpen(false)}
+        palette={palette}
+      />
     </div>
   );
 }
