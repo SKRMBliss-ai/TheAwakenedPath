@@ -62,6 +62,7 @@ const ROUTES = [
   '/mantras/uma-maheshwara-mantra-v2',
   '/mantras/kubera-mantra-female',
   '/mantras/om-suryaya-namah-short',
+  '/mantras/jai-ram-shiv-ram-guru-ram-v2',
   '/knowyouremotionalhealth',
   '/aboutmindgym',
   '/policies',
