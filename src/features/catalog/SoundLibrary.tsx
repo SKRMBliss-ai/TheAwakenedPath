@@ -379,8 +379,8 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
 
       {/* Now playing */}
       {current && isMine && (
-        <div style={barBox ? { left: barBox.left, width: barBox.width } : undefined} className="fixed bottom-3 z-40 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-color)]/95 backdrop-blur-xl shadow-2xl overflow-hidden">
-          <div className="h-1 bg-[var(--border-subtle)] overflow-hidden"><div className="h-full bg-[var(--accent-primary)]" style={{ width: `${pct}%` }} /></div>
+        <div style={barBox ? { left: barBox.left, width: barBox.width } : undefined} className="fixed bottom-3 z-40 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-color)]/95 backdrop-blur-xl shadow-2xl">
+          <div className="h-1 bg-[var(--border-subtle)] overflow-hidden rounded-t-2xl"><div className="h-full bg-[var(--accent-primary)]" style={{ width: `${pct}%` }} /></div>
           <div className="flex items-center gap-3 p-3">
             <img src={current.cover} alt="" className="w-11 h-11 rounded-lg object-cover flex-shrink-0" />
             <span className="min-w-0 flex-1">
