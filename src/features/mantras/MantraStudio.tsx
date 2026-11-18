@@ -496,6 +496,7 @@ function MantraHub() {
   const { palette, toggle } = useSiteTheme();
   const [deity, setDeity] = useState<string | null>(null);
   const [moment, setMoment] = useState<Moment | null>(null);
+  const [query, setQuery] = useState('');
 
   usePageSeo({
     title: 'Mantra Library: Lyrics, Meaning & Chants | Soulful Mantra Studio',
@@ -518,10 +519,15 @@ function MantraHub() {
 
   useEffect(() => { t('PAGE_VISIT_MANTRAS'); }, []);
 
+  const q = query.trim().toLowerCase();
   const shown = useMemo(
-    () => MANTRAS.filter((m) => (!deity || m.deity === deity) && (!moment || m.moments.includes(moment))),
-    [deity, moment],
+    () => MANTRAS.filter((m) => (!deity || m.deity === deity) && (!moment || m.moments.includes(moment))
+      && (!q || [m.name, m.deity, m.blurb, ...m.occasions, ...m.transliteration, ...m.devanagari].join(' ').toLowerCase().includes(q))),
+    [deity, moment, q],
   );
+  // With no filter or search, the list is grouped by deity so it is easy to scan.
+  const grouped = !deity && !moment && !q;
+  const deityCount = (d: string) => MANTRAS.filter((m) => m.deity === d).length;
 
   const chip = (on: boolean): React.CSSProperties => ({
     background: on ? palette.PURPLE_STRONG : palette.CARD, color: on ? palette.ON_ACCENT : palette.INK2,
@@ -576,7 +582,14 @@ function MantraHub() {
       <section id="library" style={{ ...sec, paddingTop: 0 }}>
         <div style={wrap}>
           <SectionTitle palette={palette} art="emblem" artHeight={96} kicker="Mantra Library" title="Find a mantra for this moment"
-            sub="Pick a time of day or a deity. Every page has the text, the meaning and our recording." />
+            sub="Search, or pick a time of day or a deity. Every page has the text and the meaning." />
+
+          <div style={{ maxWidth: 520, margin: '0 auto 18px' }}>
+            <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Search mantras"
+              placeholder="Search by name, deity or festival, e.g. Navratri, Ganesha"
+              style={{ width: '100%', height: 48, borderRadius: 999, padding: '0 20px', fontFamily: SANS, fontSize: 15,
+                background: palette.CARD, color: palette.INK, border: `1px solid ${palette.BORDER}`, outline: 'none' }} />
+          </div>
 
           <div role="group" aria-label="Filter by moment" className="sms-chips" style={{ marginBottom: 10 }}>
             <button type="button" className="sms-chip" aria-pressed={!moment} style={chip(!moment)} onClick={() => setMoment(null)}>Any time</button>
@@ -589,12 +602,29 @@ function MantraHub() {
             <button type="button" className="sms-chip" aria-pressed={!deity} style={chip(!deity)} onClick={() => setDeity(null)}>All deities</button>
             {DEITIES.map((d) => (
               <button key={d} type="button" className="sms-chip" aria-pressed={deity === d} style={chip(deity === d)}
-                onClick={() => { setDeity(deity === d ? null : d); t('MANTRA_FILTER_DEITY', d); }}>{d}</button>
+                onClick={() => { setDeity(deity === d ? null : d); t('MANTRA_FILTER_DEITY', d); }}>{d} <span style={{ opacity: 0.6, marginLeft: 4 }}>{deityCount(d)}</span></button>
             ))}
           </div>
 
-          {shown.length > 0 ? (
-            <div className="sms-grid">{shown.map((m) => <MantraCard key={m.slug} palette={palette} m={m} />)}</div>
+          {shown.length > 0 && grouped ? (
+            <div style={{ display: 'grid', gap: 40 }}>
+              {DEITIES.map((d) => {
+                const list = shown.filter((m) => m.deity === d);
+                return list.length ? (
+                  <div key={d} aria-label={`${d} mantras`}>
+                    <h3 style={{ fontFamily: SERIF, fontSize: 26, fontWeight: 400, margin: '0 0 14px', color: palette.INK }}>
+                      {d} <span style={{ fontFamily: SANS, fontSize: 13, color: palette.INK2, marginLeft: 6 }}>{list.length}</span>
+                    </h3>
+                    <div className="sms-grid">{list.map((m) => <MantraCard key={m.slug} palette={palette} m={m} />)}</div>
+                  </div>
+                ) : null;
+              })}
+            </div>
+          ) : shown.length > 0 ? (
+            <>
+              <p style={{ margin: '0 0 16px', fontSize: 14, color: palette.INK2 }} role="status">{shown.length} mantra{shown.length === 1 ? '' : 's'}</p>
+              <div className="sms-grid">{shown.map((m) => <MantraCard key={m.slug} palette={palette} m={m} />)}</div>
+            </>
           ) : (
             <div style={{ ...box, padding: '28px 24px', textAlign: 'center', maxWidth: 560, margin: '0 auto' }}>
               <p style={{ margin: '0 0 14px', fontSize: 15, lineHeight: 1.6, color: palette.INK2 }}>
