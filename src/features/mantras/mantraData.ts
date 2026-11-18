@@ -655,6 +655,65 @@ const BASE_MANTRAS: Mantra[] = [
     occasions: ['Thursday', 'Guru Purnima', 'Daily chant'],
     audioUrl: '/Mantras/jai-ram-shiv-ram-guru-ram-1.mp3',
   },
+  {
+    slug: 'durga-mangalamayi-maa',
+    name: 'Mangalmayi Maa',
+    deity: 'Durga',
+    blurb: 'A short devotional chant to the auspicious, compassionate Mother.',
+    devanagari: ['मंगलमयी माँ, शुभदायिनी माँ, करुणामयी माँ ।', 'शरणम् शरणम् ॥'],
+    transliteration: ['Maṅgalamayī māṁ, śubhadāyinī māṁ, karuṇāmayī māṁ', 'Śaraṇam śaraṇam'],
+    meaning:
+      'Auspicious Mother, giver of blessings, Mother full of compassion: I take refuge in you, I take refuge.',
+    words: [
+      ['maṅgalamayī', 'full of auspiciousness'],
+      ['śubhadāyinī', 'giver of what is good'],
+      ['karuṇāmayī', 'full of compassion'],
+      ['śaraṇam', 'refuge'],
+    ],
+    when: 'During Navratri and Durga puja, in the morning or evening, or whenever you want to feel held.',
+    moments: ['morning', 'evening', 'festival'],
+    occasions: ['Navratri', 'Durga Puja', 'Seeking refuge'],
+    audioUrl: '/Mantras/durga-mangalamayi-maa.mp3',
+  },
+  {
+    slug: 'tulsi-mantra-singing',
+    name: 'Tulsi Pranam (sung)',
+    deity: 'Tulsi Mata',
+    blurb: 'The verse of salutation to Mother Tulsi, sung softly.',
+    devanagari: ['महाप्रसाद जननी । सर्व सौभाग्यवर्धिनी ।', 'आधि व्याधि हरा नित्यं । तुलसी त्वं नमोऽस्तुते ॥'],
+    transliteration: ['Mahāprasāda jananī, sarva saubhāgyavardhinī', 'Ādhi vyādhi harā nityaṁ, Tulasī tvaṁ namo’stute'],
+    meaning:
+      'Mother of the great blessing, increaser of all good fortune, who always takes away worry and sickness: Tulsi, I bow to you.',
+    words: [
+      ['mahāprasāda jananī', 'mother of the great blessing'],
+      ['saubhāgyavardhinī', 'one who increases good fortune'],
+      ['ādhi vyādhi', 'worry of the mind and illness of the body'],
+      ['namo’stute', 'I bow to you'],
+    ],
+    when: 'At twilight when you light the diya beside the Tulsi plant, and through the month of Kartik.',
+    moments: ['evening', 'festival'],
+    occasions: ['Tulsi Vivah', 'Kartik Maas', 'Evening Diya'],
+    audioUrl: '/Mantras/tulsi-mantra-singing.mp3',
+  },
+  {
+    slug: 'sharad-purnima-mantra',
+    name: 'Sharad Purnima Mahalakshmi Mantra',
+    deity: 'Lakshmi',
+    blurb: 'A short Mahalakshmi chant for the full-moon night of Sharad Purnima.',
+    devanagari: ['ॐ श्रीं ह्रीं श्रीं महालक्ष्म्यै नमः ॥'],
+    transliteration: ['Oṁ śrīṁ hrīṁ śrīṁ Mahālakṣmyai namaḥ'],
+    meaning: 'Om. With the seed sounds Shreem and Hreem, I bow to Mahalakshmi, the goddess of abundance and grace.',
+    words: [
+      ['śrīṁ', 'seed syllable of Lakshmi'],
+      ['hrīṁ', 'seed syllable of the divine mother'],
+      ['Mahālakṣmyai', 'to Mahalakshmi'],
+      ['namaḥ', 'I bow'],
+    ],
+    when: 'On the night of Sharad Purnima, under the full moon, with a lit diya. Chant with a mala, or simply listen.',
+    moments: ['evening', 'festival'],
+    occasions: ['Sharad Purnima', 'Kojagari Lakshmi Puja'],
+    audioUrl: '/Mantras/sharad-purnima-mantra.wav',
+  },
 ];
 
 /** A second recording of a mantra we already have, in a different melody. Same text and meaning. */
@@ -682,6 +741,10 @@ export const MANTRAS: Mantra[] = [
   variant('jai-ram-shiv-ram-guru-ram', {
     slug: 'jai-ram-shiv-ram-guru-ram-v2', name: 'Jai Ram Shiv Ram Guru Ram (second melody)',
     blurb: 'A second melody of the Thursday chant for the Guru.', audioUrl: '/Mantras/jai-ram-shiv-ram-guru-ram-2.mp3',
+  }),
+  variant('kubera-ashtalakshmi-mantra', {
+    slug: 'kubera-ashtalakshmi-mantra-v2', name: 'Kubera Ashtalakshmi Mantra (second melody)',
+    blurb: 'A second melody of the Kubera Ashtalakshmi mantra for prosperity at home.', audioUrl: '/Mantras/kubera-lakshmi-ganesha.mp3',
   }),
   variant('kubera-mantra', {
     slug: 'kubera-mantra-female', name: 'Kubera Mantra (female voice)',
