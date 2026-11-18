@@ -625,8 +625,12 @@ function PageStyles({ palette }: { palette: Palette }) {
         .sms-rail::-webkit-scrollbar { display: none; }
         .sms-rail .sms-flip { flex: 0 0 220px; scroll-snap-align: start; }
       }
-      .sms-track { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x proximity; padding: 4px 2px 10px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-      .sms-track::-webkit-scrollbar { display: none; }
+      .sms-track { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x proximity; padding: 4px 2px 14px; -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin; scrollbar-color: #A798A5 ${palette.isDark ? 'rgba(255,255,255,.10)' : 'rgba(0,0,0,.08)'}; }
+      .sms-track::-webkit-scrollbar { height: 8px; }
+      .sms-track::-webkit-scrollbar-track { background: ${palette.isDark ? 'rgba(255,255,255,.10)' : 'rgba(0,0,0,.08)'}; border-radius: 999px; }
+      .sms-track::-webkit-scrollbar-thumb { background: #A798A5; border-radius: 999px; }
+      .sms-track::-webkit-scrollbar-thumb:hover { background: #857583; }
       .sms-track .sms-flip { flex: 0 0 min(72vw, 236px); scroll-snap-align: start; }
       .sms-arrow { display: none; }
       @media (hover: hover) and (min-width: 768px) { .sms-arrow { display: grid; } }
