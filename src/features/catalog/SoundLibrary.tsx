@@ -327,9 +327,9 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
 
       {/* Now playing */}
       {current && isMine && (
-        <div className="fixed left-0 right-0 bottom-0 z-40 md:left-auto md:right-6 md:bottom-6 md:w-[420px] md:rounded-2xl border-t md:border border-[var(--border-subtle)] bg-[var(--bg-color)]/95 backdrop-blur-xl shadow-2xl">
-          <div className="h-1 bg-[var(--border-subtle)] md:rounded-t-2xl overflow-hidden"><div className="h-full bg-[var(--accent-primary)]" style={{ width: `${pct}%` }} /></div>
-          <div className="flex items-center gap-3 p-3">
+        <div className="fixed left-0 right-0 bottom-0 z-40 border-t border-[var(--border-subtle)] bg-[var(--bg-color)]/95 backdrop-blur-xl shadow-2xl">
+          <div className="h-1 bg-[var(--border-subtle)] overflow-hidden"><div className="h-full bg-[var(--accent-primary)]" style={{ width: `${pct}%` }} /></div>
+          <div className="flex items-center gap-3 p-3 max-w-5xl mx-auto">
             <img src={current.cover} alt="" className="w-11 h-11 rounded-lg object-cover flex-shrink-0" />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-semibold text-[var(--text-primary)]">{current.title}</span>
@@ -342,10 +342,12 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
             </button>
             <button aria-label="Next" onClick={() => step(1)} className="p-2 text-[var(--text-secondary)]"><SkipForward size={18} /></button>
             {tools && <SleepTimerButton />}
-            <button aria-label={loop ? 'Loop on' : 'Loop off'} onClick={toggleLoop}
-              className={cn('p-2 relative', loop && unlocked ? 'text-[var(--accent-primary)]' : 'text-[var(--text-muted)]')}>
+            <button aria-label={loop ? 'Loop on' : 'Loop off'} aria-pressed={loop && unlocked} onClick={toggleLoop}
+              className={cn('relative w-10 h-10 grid place-items-center rounded-full border transition-colors',
+                loop && unlocked ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent' : 'text-[var(--text-muted)] border-[var(--border-subtle)]')}>
               {queue ? <Repeat size={18} /> : <Repeat1 size={18} />}
               {!unlocked && <Lock size={9} className="absolute right-0.5 bottom-1" />}
+              {unlocked && <span className="sr-only">{loop ? 'On' : 'Off'}</span>}
             </button>
           </div>
         </div>
