@@ -1210,10 +1210,14 @@ function MantraPassSales() {
           <figure style={{ margin: 0, padding: 'clamp(14px, 2.2vw, 22px)', borderRadius: 30, background: GOLD_BAR,
             boxShadow: palette.isDark ? '0 30px 70px rgba(0,0,0,.55)' : '0 30px 70px rgba(122,95,68,.28)' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, borderRadius: 16, overflow: 'hidden' }}>
-              {MANTRAS.filter((m) => m.videos && m.videos.length > 0).slice(0, 9).map((m) => (
-                <img key={m.slug} src={`https://i.ytimg.com/vi/${m.videos![0].id}/mqdefault.jpg`} alt="" width={320} height={180}
-                  style={{ width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', display: 'block' }} />
-              ))}
+              {MANTRAS.filter((m) => m.videos && m.videos.length > 0).slice(0, 9).map((m) => {
+                const vid = m.videos![0].id;
+                const src = vid === 'DbKRBQObkEE' ? '/marketing/mantras/diya.gif' : `https://i.ytimg.com/vi/${vid}/mqdefault.jpg`;
+                return (
+                  <img key={m.slug} src={src} alt={m.name} width={320} height={180}
+                    style={{ width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', display: 'block' }} />
+                );
+              })}
             </div>
             <figcaption style={{ textAlign: 'center', paddingTop: 14, color: '#241E24' }}>
               <span style={{ display: 'block', fontFamily: SERIF, fontSize: 'clamp(20px, 2.4vw, 26px)', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Mantra Pass</span>
