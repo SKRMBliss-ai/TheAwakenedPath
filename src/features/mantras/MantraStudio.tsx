@@ -398,7 +398,7 @@ function SingleMantraBuy({ palette, m }: { palette: Palette; m: Mantra }) {
         </div>
       )}
       <p style={{ margin: '14px 0 0', fontSize: 13, lineHeight: 1.55, color: palette.INK2 }}>
-        Want more than one? The <a href={PASS_PATH} style={{ color: palette.PURPLE_STRONG, fontWeight: 700 }}>Mantra Pass</a> covers every mantra for {passPrice()}.
+        Prefer to listen? The <a href={PASS_PATH} style={{ color: palette.PURPLE_STRONG, fontWeight: 700 }}>Mantra Pass</a> lets you listen to every mantra in the app for {passPrice()}. It is listening only, with no downloads.
         {' '}See our <a href="/policies#refund" style={{ color: palette.PURPLE_STRONG }}>refund policy</a>.
       </p>
     </section>

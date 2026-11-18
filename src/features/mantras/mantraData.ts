@@ -775,12 +775,13 @@ export const PASS_INCLUDES = [
   'A sleep timer and lock-screen controls',
   'Every mantra we record in future, added to your pass free',
   'Request a mantra: tell us on WhatsApp what you would like recorded next',
+  'Listening only: the pass does not include mp3 downloads, which are sold one mantra at a time',
 ];
 
 export const MANTRA_FAQ: { q: string; a: string }[] = [
   {
     q: 'Can I buy just one mantra?',
-    a: `Yes. Every mantra except the aartis can be bought on its own as an mp3 download for ${singlePrice()}, from that mantra's page. You pay once and keep the file. If you want more than one, the Mantra Pass at ${passPrice()} covers the whole library, with the practice tools.`,
+    a: `Yes. Every mantra except the aartis can be bought on its own as an mp3 download for ${singlePrice()}, from that mantra's page. You pay once and keep the file. The Mantra Pass at ${passPrice()} is different: it lets you listen to the whole library in the app, with the practice tools, but it does not include downloads.`,
   },
   {
     q: 'Is the mantra library free?',
