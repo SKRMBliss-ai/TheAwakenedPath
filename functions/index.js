@@ -367,6 +367,54 @@ function extendMembershipUntilMs(currentTimestamp, days) {
     return base + days * 24 * 60 * 60 * 1000;
 }
 
+// Splits a single product ID or comma-separated list of product IDs into trimmed tokens.
+function parseCourseIds(courseId) {
+    if (!courseId) return [];
+    if (Array.isArray(courseId)) return courseId.map(String).map(s => s.trim()).filter(Boolean);
+    return String(courseId).split(',').map(s => s.trim()).filter(Boolean);
+}
+
+// Resolves pricing and grant metadata for a single item or bundle of items.
+function resolveItemsTotal(courseId, requestedCurrency, clientAmount) {
+    const items = parseCourseIds(courseId);
+    if (items.length === 0) return null;
+
+    let totalAmount = 0;
+    let chargeCurrency = String(requestedCurrency || "USD").toUpperCase();
+    let hasMembership = false;
+    let maxMembershipDays = 0;
+
+    for (const item of items) {
+        const pwyw = resolvePwywAmount(item, chargeCurrency, items.length === 1 ? clientAmount : undefined);
+        if (pwyw) {
+            chargeCurrency = pwyw.currency;
+            totalAmount += pwyw.amount;
+            if (pwyw.grantType === 'membership') {
+                hasMembership = true;
+                if (pwyw.days && pwyw.days > maxMembershipDays) {
+                    maxMembershipDays = pwyw.days;
+                }
+            }
+        } else {
+            const resolved = resolveCoursePrice(item, chargeCurrency);
+            if (resolved.amount == null) {
+                console.error(`Unknown product id in bundle: ${item}`);
+                return null;
+            }
+            chargeCurrency = resolved.currency;
+            totalAmount += resolved.amount;
+        }
+    }
+
+    return {
+        currency: chargeCurrency,
+        amount: chargeCurrency === "INR" || chargeCurrency === "JPY" ? Math.round(totalAmount) : Math.round(totalAmount * 100) / 100,
+        grantType: hasMembership ? 'membership' : 'course',
+        membershipDays: maxMembershipDays > 0 ? maxMembershipDays : null,
+        items
+    };
+}
+
 const SUBSCRIPTION_PLANS = {
     "premium_monthly": {
         name: "Mind Gym Premium",
@@ -1023,26 +1071,12 @@ async function getDailyYoutubeVideo(youtubeKey, firestoreDb) {
 exports.createRazorpayOrder = onRequest({ secrets: [razorpayKeyId, razorpayKeySecret], cors: true }, async (req, res) => {
     const { courseId, userId, currency = "USD", guestEmail, guestPhone, amount: clientAmount } = req.body;
 
-    // 1. Resolve price + charge currency. PWYW products (course-only donation,
-    //    membership monthly/yearly) take the buyer's own amount, clamped to a
-    //    floor; everything else keeps its fixed server-side price — no
-    //    regression for wisdom_untethered, all_access, soundscape tracks, etc.
-    const pwyw = resolvePwywAmount(courseId, currency, clientAmount);
-    let chargeCurrency, amount, grantType = "course", membershipDays = null;
-    if (pwyw) {
-        chargeCurrency = pwyw.currency;
-        amount = pwyw.amount;
-        grantType = pwyw.grantType;
-        membershipDays = pwyw.days;
-    } else {
-        const resolved = resolveCoursePrice(courseId, currency);
-        chargeCurrency = resolved.currency;
-        amount = resolved.amount;
-    }
-
-    if (amount == null) {
+    const orderInfo = resolveItemsTotal(courseId, currency, clientAmount);
+    if (!orderInfo || orderInfo.amount == null) {
         return res.status(400).send("Invalid or missing courseId");
     }
+
+    let { currency: chargeCurrency, amount, grantType, membershipDays } = orderInfo;
 
     try {
         const razorpay = new Razorpay({
@@ -1050,10 +1084,11 @@ exports.createRazorpayOrder = onRequest({ secrets: [razorpayKeyId, razorpayKeySe
             key_secret: razorpayKeySecret.value(),
         });
 
+        const receiptTag = String(courseId).replace(/[^a-zA-Z0-9_]/g, '_').substring(0, 20);
         const buildOptions = (cur, amt) => ({
             amount: Math.round(amt * 100), // In cents/paise
             currency: cur,
-            receipt: `r_${courseId.substring(0, 20)}_${Date.now()}`,
+            receipt: `r_${receiptTag}_${Date.now()}`,
             notes: {
                 courseId: courseId,
                 userId: userId || "anonymous",
@@ -1077,7 +1112,8 @@ exports.createRazorpayOrder = onRequest({ secrets: [razorpayKeyId, razorpayKeySe
             if (chargeCurrency !== "USD") {
                 console.warn(`Currency ${chargeCurrency} rejected by Razorpay; falling back to USD.`, curErr?.error?.description || curErr?.message);
                 chargeCurrency = "USD";
-                amount = pwyw ? resolvePwywAmount(courseId, "USD", clientAmount).amount : COURSE_PRICES[courseId];
+                const usdOrder = resolveItemsTotal(courseId, "USD", clientAmount);
+                amount = usdOrder ? usdOrder.amount : COURSE_PRICES[courseId];
                 order = await razorpay.orders.create(buildOptions("USD", amount));
             } else {
                 throw curErr;
@@ -1119,6 +1155,11 @@ async function grantPurchase({
 }) {
     let userEmail = null;
     const isGuest = userId === 'guest_pending' || userId.startsWith('guest_');
+    const items = parseCourseIds(courseId);
+
+    // Check idempotency for membership and emails
+    const txDoc = await db.collection("transactions").doc(paymentId).get();
+    const alreadyProcessed = txDoc.exists;
 
     if (isGuest) {
         userEmail = String(guestEmail || '').toLowerCase().trim();
@@ -1126,88 +1167,127 @@ async function grantPurchase({
 
         if (userEmail) {
             const guestRef = db.collection("guestPurchases").doc(userEmail);
-            if (grantType === 'membership' && membershipDays) {
-                const guestSnap = await guestRef.get();
-                const newUntilMs = extendMembershipUntilMs(guestSnap.exists ? guestSnap.data().membershipUntil : null, membershipDays);
-                await guestRef.set({
-                    email: userEmail,
-                    phone,
-                    membershipUntil: admin.firestore.Timestamp.fromMillis(newUntilMs),
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-            } else {
-                const updateData = {
-                    email: userEmail,
-                    phone,
-                    purchasedCourses: admin.firestore.FieldValue.arrayUnion(courseId),
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                };
-                if (isSoundscapeTrack(courseId)) {
-                    updateData.ownedTracks = admin.firestore.FieldValue.arrayUnion(courseId);
+            const guestSnap = await guestRef.get();
+            const guestData = guestSnap.exists ? guestSnap.data() : {};
+
+            let newUntilMs = null;
+            const coursesToAdd = [];
+            const tracksToAdd = [];
+
+            for (const item of items) {
+                const pwyw = PWYW_PRODUCTS[item];
+                if (pwyw && pwyw.grantType === 'membership' && pwyw.days) {
+                    if (!alreadyProcessed) {
+                        const baseMs = newUntilMs || (guestData.membershipUntil && typeof guestData.membershipUntil.toMillis === 'function' ? guestData.membershipUntil.toMillis() : null);
+                        newUntilMs = extendMembershipUntilMs(baseMs, pwyw.days);
+                    }
+                } else {
+                    coursesToAdd.push(item);
+                    if (isSoundscapeTrack(item)) {
+                        tracksToAdd.push(item);
+                    }
                 }
-                await guestRef.set(updateData, { merge: true });
             }
+
+            if (!newUntilMs && grantType === 'membership' && membershipDays && !alreadyProcessed) {
+                newUntilMs = extendMembershipUntilMs(guestData.membershipUntil, membershipDays);
+            }
+
+            const updateData = {
+                email: userEmail,
+                phone: phone || guestData.phone || '',
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            };
+            if (newUntilMs) {
+                updateData.membershipUntil = admin.firestore.Timestamp.fromMillis(newUntilMs);
+            }
+            if (coursesToAdd.length > 0) {
+                updateData.purchasedCourses = admin.firestore.FieldValue.arrayUnion(...coursesToAdd);
+            }
+            if (tracksToAdd.length > 0) {
+                updateData.ownedTracks = admin.firestore.FieldValue.arrayUnion(...tracksToAdd);
+            }
+
+            await guestRef.set(updateData, { merge: true });
         }
     } else {
         const userRef = db.collection("users").doc(userId);
-
-        // Fetch user to get email for welcome notification (and current
-        // membershipUntil, when extending).
         const userDoc = await userRef.get();
-        userEmail = userDoc.exists ? userDoc.data().email : null;
+        const userData = userDoc.exists ? userDoc.data() : {};
+        userEmail = userData.email || null;
 
-        if (grantType === 'membership' && membershipDays) {
-            const newUntilMs = extendMembershipUntilMs(userDoc.exists ? userDoc.data().membershipUntil : null, membershipDays);
-            await userRef.set({
-                membershipUntil: admin.firestore.Timestamp.fromMillis(newUntilMs),
-                updatedAt: admin.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
-        } else {
-            const updateData = {
-                purchasedCourses: admin.firestore.FieldValue.arrayUnion(courseId),
-                updatedAt: admin.firestore.FieldValue.serverTimestamp()
-            };
-            // If it's a soundscape track, also add to ownedTracks
-            if (isSoundscapeTrack(courseId)) {
-                updateData.ownedTracks = admin.firestore.FieldValue.arrayUnion(courseId);
-            }
-            await userRef.set(updateData, { merge: true });
-        }
-    }
+        let newUntilMs = null;
+        const coursesToAdd = [];
+        const tracksToAdd = [];
 
-    // Send the right email: guests must be told to sign up with THIS email
-    // to unlock; existing users get the standard welcome.
-    if (isKidsZoomPass(courseId) || isFamilyPack(courseId)) {
-        // A class booking: confirm to the parent and tell the team so someone
-        // agrees the class day and sends the Zoom link + printables.
-        try {
-            await sendKidsZoomBookingEmails({ toEmail: userEmail, phone: String(guestPhone || '').trim(), courseId, amount, currency, paymentId, provider });
-        } catch (emailErr) {
-            console.error("Failed to send kids Zoom booking emails:", emailErr);
-        }
-    }
-    if (isMantraPass(courseId)) {
-        // Downloads, not app access: confirm to the buyer and tell the team.
-        try {
-            await sendMantraPassEmails({ toEmail: userEmail, phone: String(guestPhone || '').trim(), amount, currency, paymentId, provider });
-        } catch (emailErr) {
-            console.error("Failed to send mantra pass emails:", emailErr);
-        }
-    }
-    // Kids passes are not app access, so no access email. The family package
-    // DOES unlock the adult app, so it also gets the normal sign-in email.
-    if (!isKidsZoomPass(courseId) && !isMantraPass(courseId) && userEmail) {
-        try {
-            if (isGuest) {
-                await sendGuestAccessEmail(userEmail);
+        for (const item of items) {
+            const pwyw = PWYW_PRODUCTS[item];
+            if (pwyw && pwyw.grantType === 'membership' && pwyw.days) {
+                if (!alreadyProcessed) {
+                    const baseMs = newUntilMs || (userData.membershipUntil && typeof userData.membershipUntil.toMillis === 'function' ? userData.membershipUntil.toMillis() : null);
+                    newUntilMs = extendMembershipUntilMs(baseMs, pwyw.days);
+                }
             } else {
-                const planName = grantType === 'membership'
-                    ? (membershipDays && membershipDays >= 300 ? 'Mind Gym Membership (Yearly)' : 'Mind Gym Membership (Monthly)')
-                    : (courseId === 'all_access' ? 'Premium (Lifetime)' : courseId);
-                await sendWelcomeEmail(userEmail, planName);
+                coursesToAdd.push(item);
+                if (isSoundscapeTrack(item)) {
+                    tracksToAdd.push(item);
+                }
             }
-        } catch (emailErr) {
-            console.error("Failed to send access email:", emailErr);
+        }
+
+        if (!newUntilMs && grantType === 'membership' && membershipDays && !alreadyProcessed) {
+            newUntilMs = extendMembershipUntilMs(userData.membershipUntil, membershipDays);
+        }
+
+        const updateData = {
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        };
+        if (newUntilMs) {
+            updateData.membershipUntil = admin.firestore.Timestamp.fromMillis(newUntilMs);
+        }
+        if (coursesToAdd.length > 0) {
+            updateData.purchasedCourses = admin.firestore.FieldValue.arrayUnion(...coursesToAdd);
+        }
+        if (tracksToAdd.length > 0) {
+            updateData.ownedTracks = admin.firestore.FieldValue.arrayUnion(...tracksToAdd);
+        }
+
+        await userRef.set(updateData, { merge: true });
+    }
+
+    // Send emails only if not already processed
+    if (!alreadyProcessed) {
+        let sentAccessEmail = false;
+        for (const item of items) {
+            if (isKidsZoomPass(item) || isFamilyPack(item)) {
+                try {
+                    await sendKidsZoomBookingEmails({ toEmail: userEmail, phone: String(guestPhone || '').trim(), courseId: item, amount, currency, paymentId, provider });
+                } catch (emailErr) {
+                    console.error("Failed to send kids Zoom booking emails:", emailErr);
+                }
+            }
+            if (isMantraPass(item)) {
+                try {
+                    await sendMantraPassEmails({ toEmail: userEmail, phone: String(guestPhone || '').trim(), amount, currency, paymentId, provider });
+                } catch (emailErr) {
+                    console.error("Failed to send mantra pass emails:", emailErr);
+                }
+            }
+            if (!isKidsZoomPass(item) && !isMantraPass(item) && userEmail && !sentAccessEmail) {
+                try {
+                    if (isGuest) {
+                        await sendGuestAccessEmail(userEmail);
+                    } else {
+                        const planName = PWYW_PRODUCTS[item]?.grantType === 'membership'
+                            ? (PWYW_PRODUCTS[item].days >= 300 ? 'Mind Gym Membership (Yearly)' : 'Mind Gym Membership (Monthly)')
+                            : (item === 'all_access' ? 'Premium (Lifetime)' : item);
+                        await sendWelcomeEmail(userEmail, planName);
+                    }
+                    sentAccessEmail = true;
+                } catch (emailErr) {
+                    console.error("Failed to send access email:", emailErr);
+                }
+            }
         }
     }
 
@@ -1356,29 +1436,19 @@ exports.getPaypalConfig = onRequest({ secrets: [paypalClientId], cors: true }, a
 exports.createPaypalOrder = onRequest({ secrets: [paypalClientId, paypalSecret], cors: true }, async (req, res) => {
     const { courseId, userId, currency = "USD", guestEmail, guestPhone, amount: clientAmount } = req.body;
 
-    const pwyw = resolvePwywAmount(courseId, currency, clientAmount);
-    let chargeCurrency, amount, grantType = "course", membershipDays = null;
-    if (pwyw) {
-        chargeCurrency = pwyw.currency;
-        amount = pwyw.amount;
-        grantType = pwyw.grantType;
-        membershipDays = pwyw.days;
-    } else {
-        const resolved = resolveCoursePrice(courseId, currency);
-        chargeCurrency = resolved.currency;
-        amount = resolved.amount;
-    }
-
-    if (amount == null) {
+    const orderInfo = resolveItemsTotal(courseId, currency, clientAmount);
+    if (!orderInfo || orderInfo.amount == null) {
         return res.status(400).send("Invalid or missing courseId");
     }
+
+    let { currency: chargeCurrency, amount, grantType, membershipDays } = orderInfo;
 
     // PayPal doesn't settle INR at all (no domestic PayPal payouts in India
     // since mid-2021) — fall back to USD rather than let order creation fail.
     if (chargeCurrency === "INR") {
         chargeCurrency = "USD";
-        amount = pwyw ? resolvePwywAmount(courseId, "USD", clientAmount).amount
-                      : resolveCoursePrice(courseId, "USD").amount;
+        const usdOrder = resolveItemsTotal(courseId, "USD", clientAmount);
+        amount = usdOrder ? usdOrder.amount : 0;
     }
 
     try {
@@ -1395,23 +1465,19 @@ exports.createPaypalOrder = onRequest({ secrets: [paypalClientId, paypalSecret],
                     // PayPal's own reference; not used to look the order back up —
                     // that happens via the order id in the capture response, same
                     // as Razorpay's razorpay_order_id round-trip.
-                    reference_id: `r_${courseId.substring(0, 20)}_${Date.now()}`,
-                    description: `Unlock ${courseId}`,
+                    reference_id: `r_${String(courseId).replace(/[^a-zA-Z0-9_]/g, '_').substring(0, 20)}_${Date.now()}`,
+                    description: `Unlock ${courseId}`.slice(0, 127),
                     amount: {
                         currency_code: chargeCurrency,
                         value: amount.toFixed(2),
                     },
-                    // PayPal has no free-form notes field like Razorpay's; custom_id
-                    // is the closest equivalent and is capped at 127 characters, so
-                    // pack only what capture needs to re-derive the grant — not the
-                    // guest contact details, which travel via guestPurchases lookup
-                    // keyed on the SAME email once verifyPaypalPayment runs.
+                    // custom_id is capped at 127 characters
                     custom_id: JSON.stringify({
                         courseId, userId: userId || 'anonymous', grantType,
                         membershipDays: membershipDays || null,
                         guestEmail: String(guestEmail || '').toLowerCase().trim(),
                         guestPhone: String(guestPhone || '').trim(),
-                    }),
+                    }).slice(0, 127),
                 }],
             }),
         });
@@ -1429,6 +1495,18 @@ exports.createPaypalOrder = onRequest({ secrets: [paypalClientId, paypalSecret],
         }
 
         const order = await resp.json();
+
+        // Save order metadata in Firestore so capture can reliably restore courseId and guest contact
+        await db.collection("paypalOrders").doc(order.id).set({
+            courseId,
+            userId: userId || 'anonymous',
+            grantType,
+            membershipDays: membershipDays || null,
+            guestEmail: String(guestEmail || '').toLowerCase().trim(),
+            guestPhone: String(guestPhone || '').trim(),
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
         // client_id is safe to return — it's the public half of the credential
         // pair and ships in the PayPal SDK script URL on every page load anyway.
         res.json({ id: order.id, client_id: paypalClientId.value() });
@@ -1476,7 +1554,17 @@ exports.verifyPaypalPayment = onRequest({ secrets: [paypalClientId, paypalSecret
         // custom_id round-trips on the capture itself, not on purchase_units
         // directly — PayPal echoes it back at that nesting.
         let meta = {};
-        try { meta = JSON.parse(capturedPayment.custom_id || '{}'); } catch { meta = {}; }
+        try {
+            const orderDoc = await db.collection("paypalOrders").doc(orderID).get();
+            if (orderDoc.exists) {
+                meta = orderDoc.data();
+            }
+        } catch (e) {
+            console.warn("Could not read paypalOrders doc:", e);
+        }
+        if (!meta.courseId) {
+            try { meta = JSON.parse(capturedPayment.custom_id || '{}'); } catch { meta = {}; }
+        }
 
         await grantPurchase({
             userId: meta.userId || 'guest_pending',
@@ -1717,73 +1805,19 @@ exports.razorpayWebhook = onRequest({ secrets: [razorpayKeyId, razorpayKeySecret
         const membershipDays = parseInt(notes.membershipDays || '0', 10) || null;
 
         if (userId && courseId) {
-            // Idempotency: Razorpay may retry the webhook. Only run side effects
-            // (esp. the guest email) the FIRST time we see this payment id.
-            const txRef = db.collection("transactions").doc(payment.id);
-            const alreadyProcessed = (await txRef.get()).exists;
-
-            const isGuest = userId === 'guest_pending' || userId.startsWith('guest_');
-            if (isGuest) {
-                // Prefer the email WE captured (order notes); fall back to Razorpay's,
-                // ignoring its "void@razorpay.com" placeholder.
-                const rzpEmail = String(payment.email || '').toLowerCase().trim();
-                const customerEmail = String(guestEmail || '').toLowerCase().trim()
-                    || (rzpEmail !== 'void@razorpay.com' ? rzpEmail : '');
-                const customerPhone = String(guestPhone || payment.contact || '').trim();
-                if (customerEmail) {
-                    const guestRef = db.collection("guestPurchases").doc(customerEmail);
-                    if (grantType === 'membership' && membershipDays && !alreadyProcessed) {
-                        const guestSnap = await guestRef.get();
-                        const newUntilMs = extendMembershipUntilMs(guestSnap.exists ? guestSnap.data().membershipUntil : null, membershipDays);
-                        await guestRef.set({
-                            email: customerEmail,
-                            phone: customerPhone,
-                            membershipUntil: admin.firestore.Timestamp.fromMillis(newUntilMs),
-                            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                        }, { merge: true });
-                    } else if (grantType !== 'membership') {
-                        await guestRef.set({
-                            email: customerEmail,
-                            phone: customerPhone,
-                            purchasedCourses: admin.firestore.FieldValue.arrayUnion(courseId),
-                            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                        }, { merge: true });
-                    }
-                    // Tell the guest to sign up with this email — but only once.
-                    if (!alreadyProcessed) {
-                        try { await sendGuestAccessEmail(customerEmail); }
-                        catch (e) { console.error("[razorpayWebhook] guest email failed:", e); }
-                    }
-                }
-            } else if (grantType === 'membership' && membershipDays) {
-                // Only extend once per payment — a retried webhook must not double-add days.
-                if (!alreadyProcessed) {
-                    const userRef = db.collection("users").doc(userId);
-                    const userDoc = await userRef.get();
-                    const newUntilMs = extendMembershipUntilMs(userDoc.exists ? userDoc.data().membershipUntil : null, membershipDays);
-                    await userRef.set({
-                        membershipUntil: admin.firestore.Timestamp.fromMillis(newUntilMs),
-                        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                    }, { merge: true });
-                }
-            } else {
-                const userRef = db.collection("users").doc(userId);
-                await userRef.set({
-                    purchasedCourses: admin.firestore.FieldValue.arrayUnion(courseId),
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-            }
-
-            await txRef.set({
+            await grantPurchase({
                 userId,
                 courseId,
                 grantType,
-                razorpayOrderId: payment.order_id,
-                razorpayPaymentId: payment.id,
-                amount: payment.amount / 100,
-                status: "SUCCESS_WEBHOOK",
-                timestamp: admin.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
+                membershipDays,
+                guestEmail,
+                guestPhone,
+                provider: 'razorpay_webhook',
+                orderId: payment.order_id,
+                paymentId: payment.id,
+                amount: typeof payment.amount === 'number' ? payment.amount / 100 : null,
+                currency: payment.currency || 'INR',
+            });
         }
     } else if (event === "subscription.charged") {
         const subscription = payload.subscription.entity;

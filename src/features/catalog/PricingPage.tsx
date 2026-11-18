@@ -8,7 +8,7 @@
 // Products, prices and refunds all come from catalog.ts.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { getAuth, onAuthStateChanged, type User } from 'firebase/auth';
 import { Check, ShieldCheck, Loader2 } from 'lucide-react';
 import { usePageSeo } from '../../lib/seo';
@@ -18,7 +18,7 @@ import { SiteHeader, SiteFooter, SERIF, SANS } from '../../components/site/SiteC
 import { siteNav } from '../../components/site/siteNav';
 import { useRazorpay } from '../../hooks/useRazorpay';
 import { usePaypal } from '../../hooks/usePaypal';
-import { CURRENCY, DOORS, PRODUCTS, canonicalId, isPwyw, priceOf, product, refundOf, wasOf, type Door, type Product } from './catalog';
+import { CURRENCY, DOORS, PRODUCTS, canonicalId, formatPrice, priceOf, product, refundOf, wasOf, type Door, type Product } from './catalog';
 
 const t = (a: string, d = '') => track(a, d, '/pricing');
 const PER: Record<Product['billing'], string> = { once: ' once', month: '/month', year: '/year' };
@@ -83,8 +83,6 @@ function DoorColumn({ palette, door, selected, onPick }: { palette: Palette; doo
   );
 }
 
-interface Details { name: string; email: string; phone: string }
-
 /** Other plans worth adding to this order: the default plan of each other door, skipping anything this plan already includes. */
 function upsells(id: string): string[] {
   const have = new Set(product(id).unlocks);
@@ -92,36 +90,39 @@ function upsells(id: string): string[] {
     && !Array.from(have).every((u) => product(pid).unlocks.includes(u))); // not already included, and not something that makes this plan redundant
 }
 
-function Checkout({ palette, id, user, onClose, queued, onAdd, onRemove, onNext, prefill, onDetails }: {
+function Checkout({ palette, id, user, onClose, queued, onAdd, onRemove }: {
   palette: Palette; id: string; user: User | null; onClose: () => void;
-  queued: string[]; onAdd: (id: string) => void; onRemove: (id: string) => void; onNext: (id: string, d: Details) => void;
-  prefill: Details | null; onDetails: (d: Details) => void;
+  queued: string[]; onAdd: (id: string) => void; onRemove: (id: string) => void;
 }) {
   const p = product(id);
   const { checkOut, isProcessing } = useRazorpay();
   const { renderCheckout, isAvailable: paypalAvailable } = usePaypal();
-  const [name, setName] = useState(prefill?.name || user?.displayName || '');
-  const [email, setEmail] = useState(prefill?.email || user?.email || '');
-  const [phone, setPhone] = useState(prefill?.phone || '');
+  const [name, setName] = useState(user?.displayName || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [phone, setPhone] = useState('');
   const [done, setDone] = useState(false);
   const emailOk = email.includes('@') && !!email.split('@')[1]?.includes('.');
   const phoneOk = phone.replace(/\D/g, '').length >= 8;
   // Email and phone are both required: access is opened by signing in with this email,
   // and we use the phone for WhatsApp support and kids class scheduling.
   const ready = name.trim().length > 0 && emailOk && phoneOk;
-  const amount = isPwyw(id) ? p.price[CURRENCY] : undefined;
+
+  const allItems = [id, ...queued];
+  const totalAmount = allItems.reduce((sum, item) => sum + (product(item)?.price[CURRENCY] || 0), 0);
+  const courseIdBundle = allItems.join(',');
+  const formattedTotal = formatPrice(totalAmount);
   const uid = user && !user.isAnonymous ? user.uid : 'guest_pending';
-  const paid = () => { t('PRICING_PAID', id); onDetails({ name, email, phone }); setDone(true); };
+  const paid = () => { t('PRICING_PAID', courseIdBundle); setDone(true); };
   const addable = upsells(id).filter((x) => !queued.includes(x) && !queued.some((q) => product(q).name === product(x).name));
 
   useEffect(() => {
     if (!ready || done) return;
     const timer = setTimeout(() => {
-      renderCheckout('pricing-paypal', uid, email.trim(), id, CURRENCY, paid, phone.trim(), amount);
+      renderCheckout('pricing-paypal', uid, email.trim(), courseIdBundle, CURRENCY, paid, phone.trim(), totalAmount);
     }, 500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, ready, name, email, phone]);
+  }, [courseIdBundle, totalAmount, ready, name, email, phone]);
 
   const input: React.CSSProperties = { width: '100%', minHeight: 48, borderRadius: 14, border: `1px solid ${palette.BORDER}`, background: palette.BG,
     color: palette.INK, fontFamily: SANS, fontSize: 16, padding: '10px 14px', boxSizing: 'border-box' };
@@ -141,25 +142,19 @@ function Checkout({ palette, id, user, onClose, queued, onAdd, onRemove, onNext,
       {done ? (
         <div role="status" style={{ marginTop: 16, padding: 18, borderRadius: 18, background: palette.BAND, color: palette.ON_BAND, lineHeight: 1.6 }}>
           <strong style={{ display: 'block', fontFamily: SERIF, fontSize: 24, fontWeight: 500 }}>Thank you. Your payment is confirmed.</strong>
+          <p style={{ margin: '8px 0 12px', fontSize: 15 }}>
+            {allItems.length > 1
+              ? `All ${allItems.length} plans (${allItems.map(x => product(x).name).join(', ')}) are unlocked together.`
+              : `${p.name} is unlocked.`}
+          </p>
           {uid === 'guest_pending'
-            ? <>One last step: <strong>sign in with {email}</strong> to open what you bought. Your purchase is saved to this email, so it unlocks the moment you sign in, on any device.</>
-            : <>It is unlocked on your account ({email}) now.</>}
-          {queued.length > 0 ? (
-            <>
-              <button type="button" onClick={() => onNext(queued[0], { name, email, phone })}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: 48, marginTop: 14, padding: '0 20px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: SANS, fontSize: 15,
-                  background: palette.ON_BAND, color: palette.BAND, fontWeight: 800 }}>
-                Next: pay for {product(queued[0]).name} · {priceOf(queued[0])} →
-              </button>
-              <p style={{ margin: '8px 0 0', fontSize: 13 }}>Your details are filled in. {queued.length > 1 ? `${queued.length} more to go.` : 'This is the last one.'}</p>
-            </>
-          ) : (
-            <a href={uid === 'guest_pending' ? '/mindgym?claim=1' : '/mindgym'}
-              style={{ display: 'inline-flex', alignItems: 'center', minHeight: 44, marginTop: 12, padding: '0 20px', borderRadius: 999,
-                background: palette.PURPLE_STRONG, color: palette.ON_ACCENT, fontWeight: 700, textDecoration: 'none' }}>
-              {uid === 'guest_pending' ? 'Sign in to access →' : 'Open Mind Gym →'}
-            </a>
-          )}
+            ? <p style={{ margin: 0, fontSize: 14 }}>One last step: <strong>sign in with {email}</strong> to open what you bought. Your purchase is saved to this email, so it unlocks the moment you sign in, on any device.</p>
+            : <p style={{ margin: 0, fontSize: 14 }}>It is unlocked on your account ({email}) now.</p>}
+          <a href={uid === 'guest_pending' ? '/mindgym?claim=1' : '/mindgym'}
+            style={{ display: 'inline-flex', alignItems: 'center', minHeight: 44, marginTop: 14, padding: '0 20px', borderRadius: 999,
+              background: palette.PURPLE_STRONG, color: palette.ON_ACCENT, fontWeight: 700, textDecoration: 'none' }}>
+            {uid === 'guest_pending' ? 'Sign in to access →' : 'Open Mind Gym →'}
+          </a>
         </div>
       ) : (
         <>
@@ -171,24 +166,21 @@ function Checkout({ palette, id, user, onClose, queued, onAdd, onRemove, onNext,
           <dl style={{ margin: '16px 0 12px', padding: '14px 16px', borderRadius: 16, border: `1px dashed ${palette.BORDER}`, display: 'grid', gridTemplateColumns: '1fr auto', gap: '6px 12px', fontSize: 14.5 }}>
             <dt style={{ color: palette.INK2 }}>{p.name}{p.billing !== 'once' ? ` (${p.billing === 'month' ? 'one month' : 'one year'})` : ''}</dt>
             <dd style={{ margin: 0 }}>{wasOf(id) && <s style={{ color: palette.INK2, marginRight: 8 }}>{wasOf(id)}</s>}{priceOf(id)}</dd>
-            <dt style={{ fontWeight: 700, paddingTop: 8, borderTop: `1px solid ${palette.BORDER}` }}>Amount to pay now</dt>
-            <dd style={{ margin: 0, fontWeight: 700, paddingTop: 8, borderTop: `1px solid ${palette.BORDER}` }}>{priceOf(id)}</dd>
+            {queued.map((q) => (
+              <Fragment key={q}>
+                <dt style={{ color: palette.INK2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                  <span>{product(q).name}{product(q).billing !== 'once' ? ` (${product(q).billing === 'month' ? 'one month' : 'one year'})` : ''}</span>
+                  <button type="button" onClick={() => onRemove(q)} aria-label={`Remove ${product(q).name}`}
+                    style={{ background: 'none', border: 'none', color: palette.INK2, textDecoration: 'underline', cursor: 'pointer', fontFamily: SANS, fontSize: 12.5, padding: 0 }}>Remove</button>
+                </dt>
+                <dd style={{ margin: 0 }}>{priceOf(q)}</dd>
+              </Fragment>
+            ))}
+            <dt style={{ fontWeight: 700, paddingTop: 8, borderTop: `1px solid ${palette.BORDER}` }}>
+              {queued.length > 0 ? 'Total amount to pay' : 'Amount to pay now'}
+            </dt>
+            <dd style={{ margin: 0, fontWeight: 700, paddingTop: 8, borderTop: `1px solid ${palette.BORDER}` }}>{formattedTotal}</dd>
           </dl>
-          {queued.length > 0 && (
-            <div style={{ margin: '0 0 12px', padding: '12px 16px', borderRadius: 16, background: palette.isDark ? 'rgba(191,176,189,0.10)' : 'rgba(105,94,104,0.06)' }}>
-              <p style={{ margin: '0 0 8px', fontSize: 12.5, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: palette.BROWN }}>Added, paid next</p>
-              {queued.map((q) => (
-                <div key={q} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, fontSize: 14, minHeight: 36 }}>
-                  <span><strong>{product(q).name}</strong>{product(q).billing !== 'once' ? ` (${product(q).billing === 'month' ? 'one month' : 'one year'})` : ''}</span>
-                  <span style={{ whiteSpace: 'nowrap' }}>{priceOf(q)}{' '}
-                    <button type="button" onClick={() => onRemove(q)} aria-label={`Remove ${product(q).name}`}
-                      style={{ marginLeft: 6, background: 'none', border: 'none', color: palette.INK2, textDecoration: 'underline', cursor: 'pointer', fontFamily: SANS, fontSize: 12.5, minHeight: 32 }}>Remove</button>
-                  </span>
-                </div>
-              ))}
-              <p style={{ margin: '6px 0 0', fontSize: 12.5, lineHeight: 1.5, color: palette.INK2 }}>Each plan is paid for separately. After this payment we open the next one for you, with your details filled in.</p>
-            </div>
-          )}
           {addable.length > 0 && (
             <div style={{ margin: '0 0 16px' }}>
               <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 700, color: palette.INK }}>Add to your order</p>
@@ -215,11 +207,11 @@ function Checkout({ palette, id, user, onClose, queued, onAdd, onRemove, onNext,
             <label><span style={label}>WhatsApp / phone number</span><input style={input} type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" /></label>
           </div>
           <button type="button" disabled={!ready || isProcessing}
-            onClick={() => { t('PRICING_PAY_CLICK', id); checkOut(uid, email.trim(), name.trim(), id, CURRENCY, paid, phone.trim(), amount); }}
+            onClick={() => { t('PRICING_PAY_CLICK', courseIdBundle); checkOut(uid, email.trim(), name.trim(), courseIdBundle, CURRENCY, paid, phone.trim(), totalAmount); }}
             style={{ width: '100%', minHeight: 52, marginTop: 16, borderRadius: 999, border: 'none', fontFamily: SANS, fontSize: 16, fontWeight: 700,
               background: ready ? palette.PURPLE_STRONG : palette.BORDER, color: ready ? palette.ON_ACCENT : palette.INK2, cursor: ready ? 'pointer' : 'not-allowed',
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-            {isProcessing ? <><Loader2 size={17} className="animate-spin" /> Opening secure payment…</> : `Proceed to pay ${priceOf(id)}`}
+            {isProcessing ? <><Loader2 size={17} className="animate-spin" /> Opening secure payment…</> : `Proceed to pay ${formattedTotal}`}
           </button>
           <p style={{ textAlign: 'center', fontSize: 12, color: palette.INK2, margin: '10px 0 0' }}>
             {ready ? 'UPI, cards, net banking and wallets by Razorpay, or pay below.' : 'Enter your name, email and phone number to continue.'}
@@ -227,7 +219,7 @@ function Checkout({ palette, id, user, onClose, queued, onAdd, onRemove, onNext,
           {ready && paypalAvailable !== false && <div id="pricing-paypal" style={{ marginTop: 12 }} />}
           <p style={{ display: 'flex', gap: 8, alignItems: 'flex-start', margin: '14px 0 0', fontSize: 13, lineHeight: 1.55, color: palette.INK2 }}>
             <ShieldCheck size={17} color={palette.PURPLE_STRONG} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />
-            <span>{refundOf(id)} {p.billing !== 'once' && 'One-time payment for this period; it does not renew by itself. '}See our <a href="/policies#refund" style={{ color: palette.PURPLE_STRONG }}>refund policy</a>.</span>
+            <span>{allItems.length > 1 ? 'Satisfaction guaranteed. ' : refundOf(id) + ' '}{allItems.some(item => product(item).billing !== 'once') && 'One-time payment for this period; it does not renew by itself. '}See our <a href="/policies#refund" style={{ color: palette.PURPLE_STRONG }}>refund policy</a>.</span>
           </p>
         </>
       )}
@@ -244,7 +236,6 @@ export default function PricingPage() {
   });
   const checkoutRef = useRef<HTMLDivElement>(null);
   const [queued, setQueued] = useState<string[]>([]);
-  const [details, setDetails] = useState<Details | null>(null);
 
   useEffect(() => onAuthStateChanged(getAuth(), setUser), []);
   useEffect(() => { t('PAGE_VISIT_PRICING', selected || ''); }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -303,9 +294,7 @@ export default function PricingPage() {
           <section style={{ ...sec, paddingTop: 0 }}>
             <div style={{ ...wrap, maxWidth: 620 }}>
               <Checkout key={selected} palette={palette} id={selected} user={user} onClose={() => { setSelected(null); setQueued([]); }}
-                queued={queued} onAdd={(x) => setQueued((q) => [...q, x])} onRemove={(x) => setQueued((q) => q.filter((y) => y !== x))}
-                onNext={(x, d) => { setDetails(d); setQueued((q) => q.slice(1)); setSelected(x); const u = new URL(window.location.href); u.searchParams.set('select', x); window.history.replaceState({}, '', u); }}
-                prefill={details} onDetails={setDetails} />
+                queued={queued} onAdd={(x) => setQueued((q) => [...q, x])} onRemove={(x) => setQueued((q) => q.filter((y) => y !== x))} />
             </div>
           </section>
         )}
