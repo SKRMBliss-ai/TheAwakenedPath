@@ -769,7 +769,9 @@ function MantraHub() {
     const rows = [
       ...MOMENTS.filter((mo) => mo.id === 'morning' || mo.id === 'evening' || mo.id === 'sleep').map((mo) => ({ id: mo.id, title: mo.label, blurb: mo.blurb, list: byMoment(mo.id) })),
       { id: 'navratri', title: 'Navratri', blurb: 'The nine forms of the Goddess, day by day', list: navratri },
-      ...MOMENTS.filter((mo) => mo.id === 'festival' || mo.id === 'allday').map((mo) => ({ id: mo.id, title: mo.label, blurb: mo.blurb, list: byMoment(mo.id) })),
+      // Navratri has its own row, so it is not repeated under Festival puja.
+      ...MOMENTS.filter((mo) => mo.id === 'festival' || mo.id === 'allday').map((mo) => ({ id: mo.id, title: mo.label, blurb: mo.blurb,
+        list: byMoment(mo.id).filter((m) => mo.id !== 'festival' || !navratri.includes(m)) })),
     ];
     return rows.filter((rw) => rw.list.length > 0);
   }, [shown]);
