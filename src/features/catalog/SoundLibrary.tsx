@@ -62,7 +62,9 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
   const unlocked = previewAsOwner || (!previewAsGuest && owns(profile, kind, isPremiumUser));
   // Without the pass, only the first FREE_TRACKS tracks play; the rest open /pricing.
   const freeIds = useMemo(() => new Set(tracks.slice(0, FREE_TRACKS).map((t) => t.id)), [tracks]);
-  const isLocked = (id: string) => !unlocked && !freeIds.has(id);
+  // A track bought on its own (the older one-track purchase) stays unlocked for that buyer.
+  const ownedIds = useMemo(() => new Set(profile?.purchasedCourses ?? []), [profile]);
+  const isLocked = (id: string) => !unlocked && !freeIds.has(id) && !(!previewAsGuest && ownedIds.has(id));
   const goPricing = () => { trackEvent('LIBRARY_LOCKED_CLICK', kind); window.location.assign(pricingHref(UPGRADE[kind].single)); };
   const { status, category, trackId } = useVoiceStatus();
 
