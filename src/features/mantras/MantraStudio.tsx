@@ -1210,7 +1210,7 @@ function MantraPassSales() {
           <figure style={{ margin: 0, padding: 'clamp(14px, 2.2vw, 22px)', borderRadius: 30, background: GOLD_BAR,
             boxShadow: palette.isDark ? '0 30px 70px rgba(0,0,0,.55)' : '0 30px 70px rgba(122,95,68,.28)' }}>
             <div style={{ borderRadius: 16, overflow: 'hidden' }}>
-              <img src="/marketing/mantras/diya.gif" alt="Soulful Mantra Studio: Mantra Pass" width={640} height={360}
+              <img src="/marketing/mantras/diya.gif?v=2" alt="Soulful Mantra Studio: Mantra Pass" width={640} height={360}
                 style={{ width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', display: 'block' }} />
             </div>
             <figcaption style={{ textAlign: 'center', paddingTop: 14, color: '#241E24' }}>
