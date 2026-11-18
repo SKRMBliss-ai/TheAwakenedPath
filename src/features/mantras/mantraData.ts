@@ -762,6 +762,44 @@ export const MANTRAS: Mantra[] = [
   }),
 ];
 
+// Cover pictures (text-free, one deity each). Mantras not listed keep the studio emblem.
+const COVER_DIR = '/marketing/mantras/covers/';
+const COVERS: Record<string, string> = {
+  'om-gan-ganapataye-namah': 'om-gan-ganapataye-namah',
+  'ganesha-aarti': 'ganesha-aarti',
+  'mahalakshmi-mantra': 'lakshmi-lotus-coins',
+  'mahalakshmi-mantra-v2': 'lakshmi-lotus-coins',
+  'sharad-purnima-mantra': 'lakshmi-lotus-coins',
+  'kubera-mantra': 'kubera-gold-pot',
+  'kubera-mantra-female': 'kubera-gold-pot',
+  'kubera-ashtalakshmi-mantra': 'lakshmi-eight-lotuses',
+  'kubera-ashtalakshmi-mantra-v2': 'lakshmi-eight-lotuses',
+  'dhanvantari-mantra': 'dhanvantari-nectar-kalash',
+  'maha-sudarshana-mantra': 'vishnu-sudarshana',
+  'om-suryaya-namah': 'surya-rising-sun',
+  'om-suryaya-namah-short': 'surya-rising-sun',
+  'om-adityaya-namah': 'surya-rising-sun',
+  'surya-arghya-mantra': 'surya-arghya-water-offering',
+  'tulsi-mantra': 'tulsi-vrindavan-diya',
+  'tulsi-aarti': 'tulsi-vrindavan-diya',
+  'tulsi-mantra-singing': 'tulsi-vrindavan-diya',
+  'saraswati-mantra': 'saraswati-veena',
+  'shiva-mantra': 'shiva-meditation-ganga',
+  'uma-maheshwara-mantra': 'shiva-parvati-together',
+  'uma-maheshwara-mantra-v2': 'shiva-parvati-together',
+  'shailaputri-mantra': 'shailaputri-bull',
+  'navratri-day2-brahmacharini': 'brahmacharini-japa-mala',
+  'navratri-day5-skandamata': 'skandamata-infant-skanda',
+  'navratri-day6-katyayani': 'katyayani-lion-sword-lotus',
+  'navratri-day7-kalaratri': 'kalaratri-protective',
+  'navratri-day8-mahagauri': 'mahagauri-white-bull',
+  'navratri-day9-siddhidatri': 'siddhidatri-lotus',
+  'durga-yam-devi-sarvabhuteshu': 'durga-lion',
+  'durga-sarvamangala-mangalye': 'durga-lion',
+  'durga-mangalamayi-maa': 'durga-lion',
+};
+MANTRAS.forEach((m) => { const c = COVERS[m.slug]; if (c && !m.cover) m.cover = `${COVER_DIR}${c}.webp`; });
+
 export const DEITIES = Array.from(new Set(MANTRAS.map((m) => m.deity)));
 export const findMantra = (slug: string) => MANTRAS.find((m) => m.slug === slug) || null;
 export const thumb = (videoId: string) => `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;

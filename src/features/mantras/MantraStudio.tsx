@@ -122,8 +122,9 @@ function Rail({ palette, title, blurb, list }: { palette: Palette; title: string
 /** A picture card that flips over to show the text, a line of meaning and the link to the page. */
 function FlipCard({ palette, m }: { palette: Palette; m: Mantra }) {
   const [flipped, setFlipped] = useState(false);
-  const hasVideo = !!(m.videos && m.videos[0]);
-  const img = hasVideo ? thumb(m.videos![0].id) : (m.cover || '/marketing/mantras/emblem-sunburst.webp');
+  const hasCover = !!m.cover;
+  const hasVideo = !hasCover && !!(m.videos && m.videos[0]);
+  const img = m.cover || (hasVideo ? thumb(m.videos![0].id) : '/marketing/mantras/emblem-sunburst.webp');
   const flip = () => { setFlipped((f) => !f); t('MANTRA_CARD_FLIP', m.slug); };
   // Cards stay in the page's own surface colour; the brand mauve is only for the buttons.
   const MAUVE = 'linear-gradient(165deg, #A798A5 0%, #857583 100%)';
@@ -136,7 +137,7 @@ function FlipCard({ palette, m }: { palette: Palette; m: Mantra }) {
           style={{ padding: 0, border: `1px solid ${palette.BORDER}`, cursor: 'pointer', background: palette.CARD, color: palette.INK, textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
           <span style={{ position: 'relative', display: 'block', flex: '1 1 0', minHeight: 0, background: palette.BG2, overflow: 'hidden' }}>
             <img src={img} alt="" loading="lazy" width={480} height={270}
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: hasVideo ? 'cover' : 'contain', padding: hasVideo ? 0 : 8, display: 'block',
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: hasVideo || hasCover ? 'cover' : 'contain', padding: hasVideo || hasCover ? 0 : 8, display: 'block',
                 transform: hasVideo ? 'scale(1.34)' : undefined /* crops the black bars YouTube adds to its 4:3 thumbnails */ }} />
             <span style={{ position: 'absolute', left: 10, top: 10, padding: '4px 10px', borderRadius: 999, background: 'rgba(10,8,6,.62)', backdropFilter: 'blur(6px)',
               fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#E9CFA4' }}>{m.deity}</span>
@@ -206,7 +207,7 @@ function MantraCard({ palette, m }: { palette: Palette; m: Mantra }) {
       style={{ display: 'flex', flexDirection: 'column', background: palette.CARD, border: `1px solid ${palette.BORDER}`,
         borderRadius: 22, overflow: 'hidden', textDecoration: 'none', color: palette.INK }}>
       <span style={{ position: 'relative', display: 'block', aspectRatio: '16 / 9', background: palette.BG2, overflow: 'hidden' }}>
-        <img src={m.videos && m.videos[0] ? thumb(m.videos[0].id) : (m.cover || '/marketing/mantras/emblem-sunburst.webp')} alt="" loading="lazy" width={480} height={270}
+        <img src={m.cover || (m.videos && m.videos[0] ? thumb(m.videos[0].id) : '/marketing/mantras/emblem-sunburst.webp')} alt="" loading="lazy" width={480} height={270}
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         <button
           type="button"
