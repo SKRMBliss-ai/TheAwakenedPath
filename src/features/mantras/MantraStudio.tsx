@@ -2,13 +2,13 @@
 // Soulful Mantra Studio — /mantras (library hub) and /mantras/<slug> (one mantra).
 //
 // The funnel: free library (text, meaning, our YouTube recording) → one paid
-// product, the Mantra Pass (ad-free loop play in playlists + PDFs + sadhana plans).
+// product, the Mantra Pass (mala counter, sankalp tracker, puja sequences, sleep timer, loop and playlists).
 // All catalogue and price data lives in mantraData.ts.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getAuth } from 'firebase/auth';
-import { BookOpen, Repeat, ListMusic, FileText, Bell, MessageCircle, ShieldCheck, Sunrise, Play, Pause, Youtube, Volume2, VolumeX, Music2 } from 'lucide-react';
+import { BookOpen, Repeat, ListMusic, FileText, Bell, MessageCircle, ShieldCheck, Sunrise, Play, Pause, Youtube } from 'lucide-react';
 import { usePageSeo } from '../../lib/seo';
 import { track } from '../../lib/analytics';
 import { useSiteTheme, type Palette } from '../../lib/siteTheme';
@@ -154,262 +154,64 @@ function MantraCard({ palette, m }: { palette: Palette; m: Mantra }) {
   );
 }
 
-/** Soundscape Chanting Player for the single chant loop (plays without ads; download disabled). */
-function MantraSoundscapePlayer({ palette, m }: { palette: Palette; m: Mantra }) {
+const SAMPLE_SECONDS = 30;
+
+/** A 30-second taste of the chant. The full recording is on YouTube; the practice tools are in the pass. */
+function MantraSample({ palette, m }: { palette: Palette; m: Mantra }) {
   const { status, category, trackId } = useVoiceStatus();
-  const [progress, setProgress] = useState({ currentTime: 0, duration: 0 });
-  const [isSeeking, setIsSeeking] = useState(false);
-  const [seekVal, setSeekVal] = useState(0);
-  const [loop, setLoop] = useState(true);
-  const [volume, setVolume] = useState(VoiceService.volume || 0.8);
-  const [showVolume, setShowVolume] = useState(false);
-
+  const [secs, setSecs] = useState(0);
+  const [ended, setEnded] = useState(false);
   const audioUrl = m.audioUrl || getMantraAudioUrl(m.slug);
-  const isPlaying = status === 'playing' && category === 'music' && trackId === m.slug;
-  const isPaused = status === 'paused' && trackId === m.slug;
-  const isActive = trackId === m.slug;
+  const id = `sample:${m.slug}`;
+  const active = trackId === id && category === 'music';
+  const isPlaying = active && status === 'playing';
 
-  // Poll progress while this track is active
   useEffect(() => {
-    if (!isActive) return;
-    const interval = setInterval(() => {
-      if (!isSeeking) {
-        setProgress(VoiceService.audioProgress);
+    if (!active) return;
+    const i = setInterval(() => {
+      const p = VoiceService.audioProgress;
+      setSecs(p.currentTime);
+      if (p.currentTime >= SAMPLE_SECONDS) {
+        VoiceService.stopMusic();
+        setEnded(true);
       }
     }, 250);
-    return () => clearInterval(interval);
-  }, [isActive, isSeeking]);
+    return () => clearInterval(i);
+  }, [active]);
 
-  const togglePlay = () => {
-    t('MANTRA_SOUNDSCAPE_TOGGLE', m.slug);
-    if (isPlaying) {
-      VoiceService.pause();
-    } else if (isPaused) {
-      VoiceService.resume('music');
-    } else {
-      VoiceService.playAudioURL(audioUrl, { trackId: m.slug, loop, category: 'music' });
-    }
+  const toggle = () => {
+    t('MANTRA_SAMPLE_TOGGLE', m.slug);
+    if (isPlaying) { VoiceService.pause(); return; }
+    if (active && status === 'paused') { VoiceService.resume('music'); return; }
+    setEnded(false);
+    setSecs(0);
+    void VoiceService.playAudioURL(audioUrl, { trackId: id, category: 'music' });
   };
 
-  const toggleLoop = () => {
-    const next = !loop;
-    setLoop(next);
-    VoiceService.setLoop(next);
-    t('MANTRA_SOUNDSCAPE_LOOP_TOGGLE', `${m.slug}:${next}`);
-  };
-
-  const handleSeekStart = () => {
-    setIsSeeking(true);
-    setSeekVal(progress.currentTime);
-  };
-
-  const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSeekVal(parseFloat(e.target.value));
-  };
-
-  const handleSeekEnd = () => {
-    VoiceService.seek(seekVal);
-    setProgress((p) => ({ ...p, currentTime: seekVal }));
-    setIsSeeking(false);
-  };
-
-  const handleVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = parseFloat(e.target.value);
-    setVolume(v);
-    VoiceService.setVolume(v);
-  };
-
-  const formatTime = (secs: number) => {
-    if (!isFinite(secs) || isNaN(secs) || secs < 0) return '0:00';
-    const mins = Math.floor(secs / 60);
-    const s = Math.floor(secs % 60);
-    return `${mins}:${s.toString().padStart(2, '0')}`;
-  };
-
-  const progressPct = progress.duration > 0
-    ? ((isSeeking ? seekVal : progress.currentTime) / progress.duration) * 100
-    : 0;
+  const pct = active ? Math.min(100, (secs / SAMPLE_SECONDS) * 100) : ended ? 100 : 0;
 
   return (
-    <section
-      onContextMenu={(e) => e.preventDefault()}
-      style={{
-        background: palette.isDark ? 'rgba(255,255,255,0.035)' : 'rgba(0,0,0,0.02)',
-        border: `1.5px solid ${isPlaying ? palette.PURPLE_STRONG : palette.BORDER}`,
-        borderRadius: 20,
-        padding: '20px 22px',
-        position: 'relative',
-        overflow: 'hidden',
-        boxShadow: isPlaying
-          ? (palette.isDark ? '0 8px 30px rgba(169,138,103,0.18)' : '0 8px 24px rgba(74,50,96,0.12)')
-          : 'none',
-        transition: 'all 0.3s ease',
-      }}
-      aria-label="Soundscape Chanting Player"
-    >
-      {/* Top row: badge + equalizer */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            width: 30, height: 30, borderRadius: 8,
-            background: palette.isDark ? 'rgba(169,138,103,0.15)' : 'rgba(74,50,96,0.1)',
-            color: palette.PURPLE_STRONG,
-          }}>
-            <Music2 size={16} aria-hidden="true" />
-          </span>
-          <div>
-            <span style={{
-              fontFamily: SANS, fontSize: 10.5, fontWeight: 800, letterSpacing: '0.18em',
-              textTransform: 'uppercase', color: palette.BROWN, display: 'block', lineHeight: 1.2,
-            }}>
-              Sacred Soundscape · Clean Audio
-            </span>
-            <span style={{ fontFamily: SANS, fontSize: 12, color: palette.INK2 }}>
-              Ad-free single chant loop
-            </span>
-          </div>
-        </div>
-
-        {/* Animated equalizer waves */}
-        {isPlaying && (
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 16 }} aria-hidden="true">
-            {[0, 1, 2, 3].map((i) => (
-              <span
-                key={i}
-                style={{
-                  width: 3,
-                  borderRadius: 2,
-                  background: palette.PURPLE_STRONG,
-                  animation: 'sms-eq 0.75s ease-in-out infinite alternate',
-                  animationDelay: `${i * 0.15}s`,
-                }}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Main player controls: Play/Pause button + progress rail */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
-        <button
-          type="button"
-          onClick={togglePlay}
-          aria-label={isPlaying ? `Pause ${m.name}` : `Play ${m.name}`}
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: '50%',
-            border: 'none',
-            background: palette.PURPLE_STRONG,
-            color: palette.ON_ACCENT,
-            display: 'grid',
-            placeItems: 'center',
-            cursor: 'pointer',
-            flexShrink: 0,
-            boxShadow: `0 4px 14px ${palette.PURPLE_STRONG}40`,
-            transition: 'transform 0.2s ease',
-          }}
-          className="sms-btn"
-        >
-          {isPlaying ? (
-            <Pause size={20} fill="currentColor" aria-hidden="true" />
-          ) : (
-            <Play size={20} fill="currentColor" aria-hidden="true" style={{ marginLeft: 2 }} />
-          )}
+    <section onContextMenu={(e) => e.preventDefault()} aria-label="30-second sample"
+      style={{ background: palette.isDark ? 'rgba(255,255,255,0.035)' : 'rgba(0,0,0,0.02)', border: `1.5px solid ${isPlaying ? palette.PURPLE_STRONG : palette.BORDER}`, borderRadius: 20, padding: '18px 20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <button type="button" onClick={toggle} aria-label={isPlaying ? `Pause sample of ${m.name}` : `Play a 30-second sample of ${m.name}`} className="sms-btn"
+          style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: palette.PURPLE_STRONG, color: palette.ON_ACCENT, display: 'grid', placeItems: 'center', cursor: 'pointer', flexShrink: 0 }}>
+          {isPlaying ? <Pause size={20} fill="currentColor" aria-hidden="true" /> : <Play size={20} fill="currentColor" aria-hidden="true" style={{ marginLeft: 2 }} />}
         </button>
-
-        {/* Seek rail and time indicators */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{
-            position: 'relative', height: 6, borderRadius: 3,
-            background: palette.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
-            cursor: 'pointer', overflow: 'hidden',
-          }}>
-            <div style={{
-              position: 'absolute', top: 0, left: 0, bottom: 0,
-              width: `${progressPct}%`,
-              background: palette.PURPLE_STRONG,
-              transition: isSeeking ? 'none' : 'width 0.2s linear',
-            }} />
-            <input
-              type="range"
-              min={0}
-              max={progress.duration || 100}
-              step={0.1}
-              value={isSeeking ? seekVal : progress.currentTime}
-              onMouseDown={handleSeekStart}
-              onTouchStart={handleSeekStart}
-              onChange={handleSeekChange}
-              onMouseUp={handleSeekEnd}
-              onTouchEnd={handleSeekEnd}
-              style={{
-                position: 'absolute', inset: 0, width: '100%', height: '100%',
-                opacity: 0, cursor: 'pointer', margin: 0,
-              }}
-              aria-label="Seek chant position"
-            />
-          </div>
-          <div style={{
-            display: 'flex', justifyContent: 'space-between',
-            fontFamily: SANS, fontSize: 11, color: palette.INK2, marginTop: 5,
-          }}>
-            <span>{formatTime(isSeeking ? seekVal : progress.currentTime)}</span>
-            <span>{progress.duration > 0 ? formatTime(progress.duration) : '--:--'}</span>
+          <span style={{ fontFamily: SANS, fontSize: 10.5, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: palette.BROWN, display: 'block', marginBottom: 6 }}>
+            Hear a 30-second sample
+          </span>
+          <div style={{ height: 6, borderRadius: 3, background: palette.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${pct}%`, background: palette.PURPLE_STRONG, transition: 'width 0.25s linear' }} />
           </div>
         </div>
       </div>
-
-      {/* Bottom bar: Continuous Loop toggle + Volume */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, paddingTop: 10, borderTop: `1px solid ${palette.BORDER}` }}>
-        <button
-          type="button"
-          onClick={toggleLoop}
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            background: loop ? (palette.isDark ? 'rgba(169,138,103,0.2)' : 'rgba(74,50,96,0.1)') : 'transparent',
-            border: `1px solid ${loop ? palette.PURPLE_STRONG : palette.BORDER}`,
-            borderRadius: 999,
-            padding: '5px 12px',
-            fontSize: 12,
-            fontFamily: SANS,
-            fontWeight: 600,
-            color: loop ? palette.PURPLE_STRONG : palette.INK2,
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-          }}
-          title="Loop chant continuously for sadhana"
-        >
-          <Repeat size={13} aria-hidden="true" />
-          <span>{loop ? 'Looping continuously' : 'Loop chant: Off'}</span>
-        </button>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <button
-            type="button"
-            onClick={() => setShowVolume((v) => !v)}
-            aria-label="Toggle volume slider"
-            style={{
-              background: 'transparent', border: 'none', color: palette.INK2,
-              cursor: 'pointer', display: 'grid', placeItems: 'center', padding: 4,
-            }}
-          >
-            {volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
-          </button>
-          {showVolume && (
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.05}
-              value={volume}
-              onChange={handleVolume}
-              style={{ width: 64, cursor: 'pointer', accentColor: palette.PURPLE_STRONG }}
-              aria-label="Volume slider"
-            />
-          )}
-        </div>
-      </div>
+      {ended && (
+        <p style={{ fontFamily: SANS, fontSize: 13.5, lineHeight: 1.6, color: palette.INK2, margin: '12px 0 0' }}>
+          That was the sample. The full recording is on YouTube below. To count your repetitions and keep a daily practice, see the Mantra Pass.
+        </p>
+      )}
     </section>
   );
 }
@@ -580,7 +382,7 @@ function PassBand({ palette, href }: { palette: Palette; href: string }) {
             Every mantra on a loop, without ads.
           </h2>
           <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: palette.ON_BAND_SOFT }}>
-            Playlists by deity, time of day and festival, lyrics and meaning PDFs, and a 21 and 40 day sadhana plan. {passPrice()} once, future mantras included.
+            A mala counter, a sankalp tracker, puja sequences, a sleep timer, and loop and playlists for every mantra. {passPrice()} once, new mantras included.
           </p>
         </div>
         <a href={href} onClick={() => t('MANTRA_BAND_CTA')} className="sms-btn" style={{ display: 'inline-flex', alignItems: 'center', minHeight: 50, padding: '0 28px',
@@ -851,7 +653,7 @@ function MantraHub() {
       {/* Mantra Pass */}
       <section id="pass" style={sec}>
         <SectionTitle palette={palette} art="bowl" artHeight={130} kicker="Mantra Pass" title="Take the whole library with you"
-          sub="For daily practice without interruption: every mantra on a loop with no ads, organised playlists, the words on paper, and a plan to follow." />
+          sub="For daily practice without interruption: a mala counter, a sankalp tracker, puja sequences, a sleep timer, and every mantra on a loop or in playlists." />
         <PassCheckout palette={palette} />
         <p style={{ textAlign: 'center', margin: '18px 0 0' }}>
           <a href={PASS_PATH} onClick={() => t('MANTRA_PASS_LEARN_MORE')} style={{ display: 'inline-block', padding: '8px 4px', fontSize: 14.5, fontWeight: 700, color: palette.PURPLE_STRONG }}>
@@ -996,8 +798,7 @@ function MantraDetail({ m }: { m: Mantra }) {
             </div>
 
             <aside style={{ display: 'grid', gap: 20 }}>
-              {/* Sacred Soundscape: Clean Audio Chanting Player */}
-              <MantraSoundscapePlayer palette={palette} m={m} />
+              <MantraSample palette={palette} m={m} />
 
               {main && (
                 <section style={{ ...box, padding: 14 }} aria-label="Listen on YouTube">
@@ -1034,9 +835,9 @@ function MantraDetail({ m }: { m: Mantra }) {
               <section style={{ ...box, borderColor: palette.PURPLE_STRONG }} aria-label="Mantra Pass">
                 <Art name="bowl" height={110} style={{ margin: '0 0 14px' }} />
                 <Kicker palette={palette}>Mantra Pass</Kicker>
-                <h2 style={{ ...h2, fontSize: 24, marginBottom: 8 }}>Play this chant on a loop, without ads</h2>
+                <h2 style={{ ...h2, fontSize: 24, marginBottom: 8 }}>Practise with this chant, every day</h2>
                 <p style={{ fontSize: 14.5, lineHeight: 1.65, color: palette.INK2, margin: '0 0 16px' }}>
-                  Every mantra in organised playlists by deity, time of day and festival, with a lyrics PDF and a 21 and 40 day plan. {passPrice()} once. Future mantras included.
+                  Every mantra in the library with a mala counter, a 21 or 40 day sankalp tracker, puja sequences for the festivals, a sleep timer and lock-screen controls. {passPrice()} once. New mantras included.
                 </p>
                 <Btn palette={palette} href={PASS_PATH} label="See the Mantra Pass" event="MANTRA_DETAIL_PASS" />
               </section>
@@ -1079,7 +880,7 @@ function MantraPassSales() {
   usePageSeo({
     title: 'Mantra Pass: Ad-Free Mantra Playlists, Pay Once | Soulful Mantra Studio',
     description:
-      'One payment for our whole mantra library: every chant on a loop without ads, playlists by deity, time of day and festival, lyrics and meaning PDFs, and 21 and 40 day sadhana plans. No subscription.',
+      'One payment for our whole mantra library with practice tools: a mala counter, a sankalp tracker, puja sequences, a sleep timer, and loop and playlists for every chant. No subscription.',
     url,
     image: 'https://www.skrmblissai.in/marketing/mantras/lockup.webp',
     jsonLd: [{
@@ -1144,7 +945,7 @@ function MantraPassSales() {
             </p>
             <ul style={{ listStyle: 'none', margin: '0 0 22px', padding: 0, display: 'grid', gap: 10 }}>
               {['No ads before, during or after a chant', 'One mantra on a loop for as long as you sit', 'Playlists by deity, time of day and festival',
-                'The words and their meaning beside every chant'].map((line) => (
+                'A mala counter, sankalp tracker and puja sequences'].map((line) => (
                 <li key={line} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 15.5, fontWeight: 600, color: palette.INK }}>
                   <span style={{ flexShrink: 0, display: 'grid', placeItems: 'center', width: 24, height: 24, borderRadius: '50%', background: GOLD_BAR, color: '#241E24', fontSize: 13, fontWeight: 900 }}>✓</span>
                   {line}
@@ -1238,7 +1039,7 @@ function MantraPassSales() {
             {[
               { n: '1', h: 'Choose your moment', b: 'Morning, the evening lamp, a festival or bedtime. Open that playlist and pick one mantra.' },
               { n: '2', h: 'Press play and let it loop', b: 'Listen first. Read the meaning. Join in when the words feel familiar, with a mala or without.' },
-              { n: '3', h: 'Stay with it', b: 'Follow the 21-day plan, then the 40-day plan. Same mantra, same time, a few minutes a day.' },
+              { n: '3', h: 'Stay with it', b: 'Begin a 21 or 40 day sankalp. Same mantra, same time, a few minutes a day, with the count and your streak kept for you.' },
             ].map((s) => (
               <div key={s.n} style={{ ...box, padding: '22px 22px' }}>
                 <span style={{ display: 'block', fontSize: 11, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: palette.BROWN, marginBottom: 8 }}>Step {s.n}</span>

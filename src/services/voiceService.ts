@@ -440,7 +440,15 @@ export class VoiceService {
     /**
      * Plays a direct audio URL (e.g., local MP3) instead of generating TTS.
      */
-    static async playAudioURL(url: string, options: { onEnd?: () => void, trackId?: string, loop?: boolean, category?: 'music' | 'tts' } = {}): Promise<void> {
+    static async playAudioURL(url: string, options: {
+        onEnd?: () => void, trackId?: string, loop?: boolean, category?: 'music' | 'tts',
+        /** Play the clip this many times (Infinity = until stopped). Turns on counted-repeat mode. */
+        repeat?: number,
+        /** Counted-repeat mode: called after every completed repetition with the running count. */
+        onRound?: (completed: number) => void,
+        /** Counted-repeat mode: called once, after the final repetition has finished. */
+        onFinish?: () => void,
+    } = {}): Promise<void> {
         if (this._currentUrl === url && this.musicAudio && !this.musicAudio.paused) {
             console.log("VoiceService: Already playing URL.");
             return;
@@ -471,7 +479,30 @@ export class VoiceService {
             audio.preload = "auto";
             audio.crossOrigin = "anonymous"; 
             audio.volume = 0; // Start muted for ramp-up
-            audio.loop = !!options.loop;
+            // Counted-repeat mode uses the browser's own looping (it keeps playing
+            // with the screen off, unlike restarting from a script) and counts each
+            // wrap-around. Everything that does not pass repeat/onRound/onFinish
+            // behaves exactly as before.
+            const counted = options.repeat !== undefined || !!options.onRound || !!options.onFinish;
+            this._countedRepeat = counted;
+            this._repeatTotal = options.repeat ?? 1;
+            this._rounds = 0;
+            audio.loop = counted ? this._repeatTotal > 1 : !!options.loop;
+            if (counted) {
+                let lastTime = 0;
+                audio.addEventListener('timeupdate', () => {
+                    const t = audio.currentTime;
+                    const d = audio.duration || 0;
+                    // A big backwards jump near the clip's end is the loop wrapping
+                    // (a manual rewind is much smaller, so it is not counted).
+                    if (d > 0 && audio.loop && lastTime - t > d * 0.6 && this.musicAudio === audio) {
+                        this._rounds += 1;
+                        options.onRound?.(this._rounds);
+                        this.applyRepeatLoop();
+                    }
+                    lastTime = t;
+                });
+            }
 
             this.musicAudio = audio;
             this._currentUrl = url;
@@ -481,8 +512,15 @@ export class VoiceService {
             this.setStatus('playing');
 
             audio.onended = () => {
-                if (audio.loop) return; // loop handles its own state
+                if (counted) {
+                    if (this.musicAudio !== audio) return; // stopped or replaced meanwhile
+                    this._rounds += 1;
+                    options.onRound?.(this._rounds);
+                } else if (audio.loop) {
+                    return; // loop handles its own state
+                }
                 this.setStatus('idle');
+                if (counted) setTimeout(() => options.onFinish?.(), 0);
                 this._activeCategory = null;
                 this._musicUrl = null;
                 this._currentTrackId = null;
@@ -797,6 +835,26 @@ export class VoiceService {
         if (this.musicAudio) {
             this.musicAudio.loop = val;
         }
+    }
+
+    // ── Counted-repeat mode (see playAudioURL) ──────────────────────────────
+    private static _countedRepeat = false;
+    private static _repeatTotal = 1;
+    private static _rounds = 0;
+
+    /** Repetitions completed so far in counted-repeat mode. */
+    static get rounds() { return this._rounds; }
+
+    /** Change the repeat target while playing (Infinity = until stopped). */
+    static setRepeat(total: number) {
+        this._repeatTotal = total;
+        this.applyRepeatLoop();
+    }
+
+    /** Keep looping until the final repetition, which is left to end by itself. */
+    private static applyRepeatLoop() {
+        if (!this._countedRepeat || !this.musicAudio) return;
+        this.musicAudio.loop = this._rounds < this._repeatTotal - 1;
     }
 
     static get isLooping(): boolean {

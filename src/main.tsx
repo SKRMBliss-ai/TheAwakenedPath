@@ -309,7 +309,7 @@ if (isLibraryPreviewRoute) {
     default: () => {
       const q = new URLSearchParams(window.location.search);
       const guest = q.get('guest') === '1';
-      return q.get('lib') === 'sounds' ? <m.SacredSoundsLibrary previewAsGuest={guest} /> : <m.MantraLibrary previewAsGuest={guest} />;
+      return q.get('lib') === 'sounds' ? <m.SacredSoundsLibrary previewAsGuest={guest} /> : <m.MantraLibrary previewAsGuest={guest} previewAsOwner={q.get('owner') === '1'} />;
     },
   })));
   root.render(

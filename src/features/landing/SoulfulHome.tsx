@@ -12,13 +12,7 @@ import HeroMark from '../../components/site/HeroMark';
 import SacredGeometry from './components/SacredGeometry';
 import CursorGlow from './components/CursorGlow';
 import HeroSection from './components/HeroSection';
-import WhatBringsYou from './components/WhatBringsYou';
-import TinyTransformation from './components/TinyTransformation';
-import FeatureGrid from './components/FeatureGrid';
-import FeaturedCourse from './components/FeaturedCourse';
-import KidsChallengeCrossSell from './components/KidsChallengeCrossSell';
 import { trackKids } from './kidsChallengeData';
-import InteractiveReflection from './components/InteractiveReflection';
 import YouTubeSection from './components/YouTubeSection';
 import FreeGuides from './components/FreeGuides';
 import AiKnowledgeBlock from './components/AiKnowledgeBlock';
@@ -76,7 +70,6 @@ export default function SoulfulHome() {
   const INK    = palette.INK;
   const INK2   = palette.INK2;
   const CARD   = palette.CARD;
-  const CLAY    = palette.BROWN;
 
   // ── Audience toggle ──────────────────────────────────────────────────────
   const [audience, setAudience] = useState<'you' | 'brands' | 'products'>(() => {
@@ -231,7 +224,7 @@ export default function SoulfulHome() {
             : siteNav({ home: true })}
           cta={audience === 'brands'
             ? { label: 'Start a project →', href: WHATSAPP, onClick: () => track('HOME_BRANDS_WHATSAPP') }
-            : { label: 'Enter Mind Gym →', href: '/mindgym', onClick: () => track('HOME_ENTER_APP') }}
+            : { label: 'Sign in', href: '/mindgym', onClick: () => track('HOME_SIGN_IN') }}
         />
       </div>
 
@@ -353,75 +346,30 @@ export default function SoulfulHome() {
       {audience === 'you' && (
         <main id="mindgym" style={{ position: 'relative', zIndex: 2 }}>
 
+          {/* One story, top to bottom:
+              1. Hero: who we are, and one action (go to the three doors)
+              2. The three doors: the only place offers are shown
+              3. Fresh videos from both channels, free guides
+              4. Background reading for search, then one closing call to action
+              The older sections that re-sold the same offers in other words
+              ("What brings you here", feature grid, "Our Programs") were removed
+              so a visitor meets each offer once. */}
+
           {/* 1. Hero */}
           <HeroSection
             palette={palette}
-            onStartPractice={() => { track('HOME_HERO_START'); window.location.href = '/mindgym'; }}
-            onExploreMindGym={() => { track('HOME_HERO_EXPLORE'); document.getElementById('mindgym-features')?.scrollIntoView({ behavior: 'smooth' }); }}
+            onStartPractice={() => { track('HOME_HERO_CHOOSE'); document.getElementById('choose')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
           />
 
-          {/* 1b. Choose your path — the five doors across both studios */}
-          <div id="choose">
+          {/* 2. The three doors */}
+          <div id="choose" style={{ scrollMarginTop: 80 }}>
             <PathChooser palette={palette} />
           </div>
 
           {/* Section divider */}
           <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
 
-          {/* 2. What brings you here */}
-          <WhatBringsYou palette={palette} />
-
-          {/* Section divider */}
-          <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
-
-          {/* 3. Tiny transformation */}
-          <TinyTransformation palette={palette} />
-
-          {/* Section divider */}
-          <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
-
-          {/* 4. Experience Mind Gym — feature grid */}
-          <div id="mindgym-features">
-            <FeatureGrid
-              palette={palette}
-              onExplore={() => { track('HOME_FEATURES_EXPLORE'); window.location.href = '/mindgym'; }}
-            />
-          </div>
-
-          {/* Section divider */}
-          <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
-
-          {/* 6. Our Programs Section */}
-          <section className="si-reveal" aria-labelledby="our-programs-heading" style={{ paddingTop: 'clamp(32px, 5vw, 64px)' }}>
-            <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', textAlign: 'center', marginBottom: 'clamp(24px, 4vw, 48px)' }}>
-              <h2 id="our-programs-heading" style={{
-                fontFamily: SERIF,
-                fontSize: 'clamp(36px, 5vw, 56px)',
-                margin: 0,
-                color: palette.INK,
-                lineHeight: 1.1
-              }}>
-                Our Programs
-              </h2>
-            </div>
-
-            <FeaturedCourse palette={palette} />
-
-            <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
-
-            <KidsChallengeCrossSell palette={palette} source="home" />
-          </section>
-
-          {/* Section divider */}
-          <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
-
-          {/* 7. Interactive Reflection */}
-          <InteractiveReflection palette={palette} />
-
-          {/* Section divider */}
-          <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
-
-          {/* 8. YouTube section */}
+          {/* 3. Fresh videos from both channels */}
           <div id="videos">
             <YouTubeSection palette={palette} onTrack={track} />
           </div>
@@ -440,45 +388,7 @@ export default function SoulfulHome() {
           {/* 9.5 AI Master Knowledge & Citation Hub */}
           <AiKnowledgeBlock palette={palette} />
 
-          {/* Section divider */}
-          <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
-
-          {/* 10. Pay-what-you-feel philosophy */}
-          <section
-            className="si-reveal"
-            style={{ padding: 'clamp(56px, 8vw, 80px) clamp(24px, 6vw, 96px)', textAlign: 'center', position: 'relative', zIndex: 2, overflow: 'hidden' }}
-          >
-            {/* Background image - dimmed */}
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                backgroundImage: 'url("https://firebasestorage.googleapis.com/v0/b/awakened-path-2026.firebasestorage.app/o/Marketting%2FShSm1.png?alt=media")',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                opacity: 0.15,
-                zIndex: -1,
-                pointerEvents: 'none',
-              }}
-            />
-            <div style={{ maxWidth: 680, margin: '0 auto', position: 'relative' }}>
-              <div style={{ marginBottom: 18, color: CLAY, display: 'flex', justifyContent: 'center' }}>
-                <Ico d={'M8 12V6.5a1.5 1.5 0 0 1 3 0V12|M11 12V5.5a1.5 1.5 0 0 1 3 0V12|M14 12V7a1.5 1.5 0 0 1 3 0v7a7 7 0 0 1-7 7 7 7 0 0 1-7-7v-3a1.5 1.5 0 0 1 3 0'} size={36} />
-              </div>
-              <p style={{
-                fontFamily: SERIF,
-                fontSize: 'clamp(20px, 3vw, 30px)',
-                fontWeight: 400, fontStyle: 'italic', lineHeight: 1.45,
-                color: isDark ? 'rgba(237,233,227,0.85)' : '#4A3C2E',
-                margin: '0 0 14px',
-              }}>
-                "Take what you need. Give what you can. Everything here is offered pay-what-you-feel."
-              </p>
-              <p style={{ fontFamily: SANS, fontSize: 13, color: isDark ? 'rgba(237,233,227,0.5)' : '#7A5F44', fontWeight: 600 }}>— The Soulful Mind Studio promise</p>
-            </div>
-          </section>
-
-          {/* 11. Final emotional CTA */}
+          {/* 4. Final call to action */}
           <FinalCta
             palette={palette}
             onCta={() => track('HOME_FINAL_CTA')}

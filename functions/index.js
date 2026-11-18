@@ -624,15 +624,18 @@ async function fetchPlaylistVideoIds(youtubeKey, playlistId, headers) {
         .filter(Boolean);
 }
 
-async function resolveUploadsPlaylistId(youtubeKey, handle) {
+async function resolveUploadsPlaylistId(youtubeKey, handle, fallbackQuery = 'Soulful Intelligence Studio') {
     const ua = { 'User-Agent': 'MindGym/1.0' };
     const channelsUrl = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&forHandle=${encodeURIComponent(handle)}&key=${encodeURIComponent(youtubeKey)}`;
     const channelsData = await httpsGetJsonWithHeaders(channelsUrl, ua);
     const item = channelsData && channelsData.items && channelsData.items[0];
     let uploads = item && item.contentDetails && item.contentDetails.relatedPlaylists && item.contentDetails.relatedPlaylists.uploads;
     if (uploads) return uploads;
+    // No name search for channels that pass fallbackQuery = null: a search could
+    // return a different channel's uploads, which is worse than showing nothing.
+    if (!fallbackQuery) return null;
 
-    const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&maxResults=1&q=${encodeURIComponent('Soulful Intelligence Studio')}&key=${encodeURIComponent(youtubeKey)}`;
+    const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&maxResults=1&q=${encodeURIComponent(fallbackQuery)}&key=${encodeURIComponent(youtubeKey)}`;
     const searchData = await httpsGetJsonWithHeaders(searchUrl, ua);
     const channelId = searchData && searchData.items && searchData.items[0] && searchData.items[0].snippet && searchData.items[0].snippet.channelId;
     if (!channelId) return null;
@@ -658,7 +661,14 @@ exports.getLatestVideos = onRequest({ secrets: [youtubeApiKey], cors: true }, as
     // capping at 12 meant streams with no video in the last dozen uploads
     // across the WHOLE channel silently vanished from the section.
     const max = Math.min(Math.max(parseInt(req.query.max, 10) || 6, 1), 40);
-    const cacheRef = db.collection('cache').doc('latest_youtube_videos');
+    // ?channel=mantra reads Soulful Mantra Studio's uploads; anything else is the
+    // Mind Studio channel exactly as before. Each channel has its own cache doc,
+    // and only the Mind channel uses the curated playlists and pinned course ids.
+    const isMantraChannel = req.query.channel === 'mantra';
+    const channelHandle = isMantraChannel ? '@SoulfulMantraStudio' : '@SoulfulIntelligenceStudio';
+    const streamPlaylists = isMantraChannel ? {} : STREAM_PLAYLISTS;
+    const streamVideoIds = isMantraChannel ? {} : STREAM_VIDEO_IDS;
+    const cacheRef = db.collection('cache').doc(isMantraChannel ? 'latest_youtube_videos_mantra' : 'latest_youtube_videos');
 
     let cached = null;
     try {
@@ -687,7 +697,13 @@ exports.getLatestVideos = onRequest({ secrets: [youtubeApiKey], cors: true }, as
         const key = youtubeApiKey.value();
         if (!key) throw new Error('YOUTUBE_API_KEY not configured');
 
-        const uploads = await resolveUploadsPlaylistId(key, '@SoulfulIntelligenceStudio');
+        // A channel's uploads playlist id is its channel id with the "UC" prefix
+        // swapped for "UU". Soulful Mantra Studio (UCTnnd3vblEx7L04ck8cQSTw) is
+        // read by id, so it works whichever way its handle is spelled and needs
+        // no handle lookup.
+        const uploads = isMantraChannel
+            ? 'UUTnnd3vblEx7L04ck8cQSTw'
+            : await resolveUploadsPlaylistId(key, channelHandle, undefined);
         if (!uploads) throw new Error('Could not resolve uploads playlist');
 
         const ua = { 'User-Agent': 'MindGym/1.0' };
@@ -736,7 +752,7 @@ exports.getLatestVideos = onRequest({ secrets: [youtubeApiKey], cors: true }, as
         }
 
         await Promise.all([
-            ...Object.entries(STREAM_PLAYLISTS).map(async ([stream, playlistId]) => {
+            ...Object.entries(streamPlaylists).map(async ([stream, playlistId]) => {
                 try {
                     const ids = (await fetchPlaylistVideoIds(key, playlistId, ua)).slice(0, 5);
                     await mergeSnippetsById(ids);
@@ -744,7 +760,7 @@ exports.getLatestVideos = onRequest({ secrets: [youtubeApiKey], cors: true }, as
                     console.warn(`[getLatestVideos] playlist backfill ${stream} (${playlistId}) failed:`, e.message);
                 }
             }),
-            ...Object.entries(STREAM_VIDEO_IDS).map(async ([stream, ids]) => {
+            ...Object.entries(streamVideoIds).map(async ([stream, ids]) => {
                 try {
                     await mergeSnippetsById(ids);
                 } catch (e) {
@@ -791,7 +807,7 @@ exports.getLatestVideos = onRequest({ secrets: [youtubeApiKey], cors: true }, as
         // client still keyword-matches anything left unmapped.
         const streamById = new Map();
         await Promise.all([
-            ...Object.entries(STREAM_PLAYLISTS).map(async ([stream, playlistId]) => {
+            ...Object.entries(streamPlaylists).map(async ([stream, playlistId]) => {
                 try {
                     const playlistIds = await fetchPlaylistVideoIds(key, playlistId, ua);
                     playlistIds.forEach((id) => { if (!streamById.has(id)) streamById.set(id, stream); });
@@ -799,7 +815,7 @@ exports.getLatestVideos = onRequest({ secrets: [youtubeApiKey], cors: true }, as
                     console.warn(`[getLatestVideos] playlist ${stream} (${playlistId}) failed:`, e.message);
                 }
             }),
-            ...Object.entries(STREAM_VIDEO_IDS).map(async ([stream, ids]) => {
+            ...Object.entries(streamVideoIds).map(async ([stream, ids]) => {
                 ids.forEach((id) => { if (!streamById.has(id)) streamById.set(id, stream); });
             }),
         ]);
