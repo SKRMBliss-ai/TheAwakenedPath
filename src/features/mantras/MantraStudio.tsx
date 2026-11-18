@@ -414,7 +414,7 @@ function SingleMantraBuy({ palette, m }: { palette: Palette; m: Mantra }) {
         Need a different length, for example 10 minutes or an hour? After you download, message us on{' '}
         <a href={waLink(`Hi Soulful Mantra Studio, I bought ${m.name}. I would like a version that is ___ long.`)} target="_blank" rel="noopener noreferrer"
           onClick={() => t('MANTRA_SINGLE_LENGTH_WHATSAPP', m.slug)} style={{ color: palette.PURPLE_STRONG, fontWeight: 700 }}>WhatsApp</a>{' '}
-        with the length you want and we will send it to you.
+        with the length you want and we will send it to you free.
       </p>
       <p style={{ margin: '10px 0 0', fontSize: 13, lineHeight: 1.55, color: palette.INK2 }}>
         Prefer to listen? The <a href={PASS_PATH} style={{ color: palette.PURPLE_STRONG, fontWeight: 700 }}>Mantra Pass</a> lets you listen to every mantra in the app for {passPrice()}. It is listening only, with no downloads.
