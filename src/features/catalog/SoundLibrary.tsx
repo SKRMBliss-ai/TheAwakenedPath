@@ -13,6 +13,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Play, Pause, SkipBack, SkipForward, Repeat, Repeat1, Lock, ListMusic, Loader2, X, Check, Download } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { setLibraryOpen } from '../../lib/libraryOpen';
 import { VoiceService, useVoiceStatus } from '../../services/voiceService';
 import { useAuth } from '../auth/AuthContext';
 import { track as trackEvent } from '../../lib/analytics';
@@ -83,7 +84,8 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
   const list = lists.find((l) => l.id === listId) || allList;
   const rows = list.trackIds.map((id) => tracks.find((t) => t.id === id)!).filter(Boolean);
 
-  const [loop, setLoop] = useState(false);
+  const [loop, setLoop] = useState(true); // owners hear a track on repeat until they turn it off
+  useEffect(() => { setLibraryOpen(true); return () => setLibraryOpen(false); }, []);
   const [queue, setQueue] = useState<string[] | null>(null); // playlist or puja being played through
   const [queueRepeat, setQueueRepeat] = useState(1);
   const [pujaName, setPujaName] = useState<string | null>(null);

@@ -4,9 +4,11 @@ import { Play, Pause, X, Volume2, VolumeX, SkipBack, SkipForward } from 'lucide-
 import { VoiceService, useVoiceStatus } from '../../services/voiceService';
 import { SACRED_TRACKS } from '../../features/music/musicData';
 import { cn } from '../../lib/utils';
+import { useLibraryOpen } from '../../lib/libraryOpen';
 
 export const MusicMiniPlayer: React.FC = () => {
   const { status, category, musicUrl, trackId } = useVoiceStatus();
+  const libraryOpen = useLibraryOpen(); // the library has its own player bar
   const [progress, setProgress] = useState({ currentTime: 0, duration: 0 });
   const [volume, setVolume] = useState(VoiceService.volume);
   const [showVolume, setShowVolume] = useState(false);
@@ -29,7 +31,7 @@ export const MusicMiniPlayer: React.FC = () => {
   const currentTrack = SACRED_TRACKS.find(t => t.id === trackId) || SACRED_TRACKS.find(t => t.previewUrl === musicUrl);
 
   // Visible whenever a music track is loaded — survives TTS interruptions
-  const isVisible = !!currentTrack || !!musicUrl;
+  const isVisible = !libraryOpen && (!!currentTrack || !!musicUrl);
 
   // Poll progress
   useEffect(() => {
