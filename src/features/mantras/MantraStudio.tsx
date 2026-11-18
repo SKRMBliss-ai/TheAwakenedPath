@@ -124,15 +124,15 @@ function FlipCard({ palette, m }: { palette: Palette; m: Mantra }) {
   const hasVideo = !!(m.videos && m.videos[0]);
   const img = hasVideo ? thumb(m.videos![0].id) : (m.cover || '/marketing/mantras/emblem-sunburst.webp');
   const flip = () => { setFlipped((f) => !f); t('MANTRA_CARD_FLIP', m.slug); };
-  // Brand mauve, deepened into a gradient so white text reads well in both themes.
-  const MAUVE = palette.isDark ? 'linear-gradient(165deg, #6E5E6C 0%, #4D424B 100%)' : 'linear-gradient(165deg, #A798A5 0%, #857583 100%)';
+  // Cards stay in the page's own surface colour; the brand mauve is only for the buttons.
+  const MAUVE = 'linear-gradient(165deg, #A798A5 0%, #857583 100%)';
   return (
     <div className="sms-flip" data-flipped={flipped}>
       <div className="sms-flip-inner">
         {/* Front: the picture, the name and a clear "flip" cue */}
         <button type="button" className="sms-face" onClick={flip} tabIndex={flipped ? -1 : 0} aria-hidden={flipped}
           aria-label={`${m.name}. Flip for details`}
-          style={{ padding: 0, border: '1px solid rgba(255,255,255,.12)', cursor: 'pointer', background: MAUVE, color: '#fff', textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
+          style={{ padding: 0, border: `1px solid ${palette.BORDER}`, cursor: 'pointer', background: palette.CARD, color: palette.INK, textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
           <span style={{ position: 'relative', display: 'block', aspectRatio: '16 / 9', background: palette.BG2, overflow: 'hidden', flexShrink: 0 }}>
             <img src={img} alt="" loading="lazy" width={480} height={270}
               style={{ width: '100%', height: '100%', objectFit: hasVideo ? 'cover' : 'contain', padding: hasVideo ? 0 : 8, display: 'block' }} />
@@ -140,9 +140,9 @@ function FlipCard({ palette, m }: { palette: Palette; m: Mantra }) {
               fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#E9CFA4' }}>{m.deity}</span>
           </span>
           <span style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '12px 14px 12px', minHeight: 0 }}>
-            <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontFamily: SERIF, fontSize: 18, lineHeight: 1.2, color: '#fff' }}>{m.name}</span>
+            <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontFamily: SERIF, fontSize: 18, lineHeight: 1.2, color: palette.INK }}>{m.name}</span>
             <span style={{ marginTop: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, alignSelf: 'flex-start', padding: '6px 12px', borderRadius: 999,
-              background: 'rgba(255,255,255,.16)', border: '1px solid rgba(255,255,255,.34)', fontSize: 12, fontWeight: 700, color: '#fff' }}>
+              background: MAUVE, border: 'none', fontSize: 12, fontWeight: 700, color: '#fff' }}>
               <RotateCw size={13} aria-hidden="true" /> Flip for details
             </span>
           </span>
@@ -150,20 +150,20 @@ function FlipCard({ palette, m }: { palette: Palette; m: Mantra }) {
 
         {/* Back: text, meaning and the way in */}
         <div className="sms-face sms-face-back" aria-hidden={!flipped}
-          style={{ background: MAUVE, border: '1px solid rgba(255,255,255,.12)', color: '#fff', padding: 14, display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#EBD9B6', marginBottom: 4 }}>{m.deity}</span>
-          <span style={{ fontFamily: SERIF, fontSize: 17, lineHeight: 1.2, marginBottom: 8, color: '#fff', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{m.name}</span>
-          <span style={{ fontSize: 14, lineHeight: 1.45, color: '#fff', marginBottom: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.devanagari[0]}</span>
-          <span style={{ fontSize: 12.5, lineHeight: 1.5, color: 'rgba(255,255,255,.82)', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{m.blurb}</span>
+          style={{ background: palette.CARD, border: `1px solid ${palette.BORDER}`, color: palette.INK, padding: 14, display: 'flex', flexDirection: 'column' }}>
+          <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: palette.BROWN, marginBottom: 4 }}>{m.deity}</span>
+          <span style={{ fontFamily: SERIF, fontSize: 17, lineHeight: 1.2, marginBottom: 8, color: palette.INK, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{m.name}</span>
+          <span style={{ fontSize: 14, lineHeight: 1.45, color: palette.INK, marginBottom: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.devanagari[0]}</span>
+          <span style={{ fontSize: 12.5, lineHeight: 1.5, color: palette.INK2, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{m.blurb}</span>
           <span style={{ marginTop: 'auto', display: 'grid', gap: 2 }}>
             <a href={`${PAGE}/${m.slug}`} tabIndex={flipped ? 0 : -1} onClick={() => t('MANTRA_CARD_CLICK', m.slug)}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 38, borderRadius: 999, background: '#fff', color: '#5E505C',
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 38, borderRadius: 999, background: MAUVE, color: '#fff',
                 fontSize: 13.5, fontWeight: 800, textDecoration: 'none', textAlign: 'center', padding: '0 12px' }}>
               Text, meaning &amp; chant
             </a>
             <button type="button" onClick={flip} tabIndex={flipped ? 0 : -1}
               style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 28, background: 'none', border: 'none', cursor: 'pointer',
-                color: 'rgba(255,255,255,.85)', fontSize: 12.5, fontWeight: 700 }}>
+                color: palette.INK2, fontSize: 12.5, fontWeight: 700 }}>
               <RotateCw size={13} aria-hidden="true" /> Flip back
             </button>
           </span>
