@@ -17,7 +17,7 @@ import { VoiceService, useVoiceStatus } from '../../services/voiceService';
 import { useAuth } from '../auth/AuthContext';
 import { track as trackEvent } from '../../lib/analytics';
 import { pricingHref, UPGRADE, owns, priceOf, product, wasOf } from './catalog';
-import { useSadhana, sankalpProgress, repsOn, dateKey } from '../mantras/sadhana/sadhanaStore';
+import { useSadhana, isAarti, sankalpProgress, repsOn, dateKey } from '../mantras/sadhana/sadhanaStore';
 import { PUJA_SEQUENCES, resolveSequence, PUJA_REPEATS } from '../mantras/sadhana/pujaSequences';
 import { MalaDeck, SankalpTab, PujaTab, SleepTimerButton, PracticeTeaser } from '../mantras/sadhana/PracticeTools';
 import { useMediaSession, softBell } from '../mantras/sadhana/practiceAudio';
@@ -113,7 +113,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
 
   /** Count one repetition of a mantra and ring the bell when a mala completes. */
   const countOne = (slug: string) => {
-    if (slug.endsWith('-aarti')) return; // an aarti is a song, not a repeated mantra
+    if (isAarti(slug)) return; // an aarti is a song, not a repeated mantra
     const sd = live.current.sadhana;
     const total = repsOn(sd.state, dateKey(), slug) + 1;
     sd.addReps(slug, 1);
@@ -133,7 +133,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
         trackId: t.id, category: 'music', repeat,
         onRound: (n) => {
           setRound(n);
-          if (live.current.tools && slug && !slug.endsWith('-aarti')) countOne(slug);
+          if (live.current.tools && slug && !isAarti(slug)) countOne(slug);
         },
         onFinish: () => {
           const { queue: qq, loop: lp, pujaName: pj } = live.current;

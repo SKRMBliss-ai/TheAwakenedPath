@@ -22,6 +22,10 @@ import { useCallback, useMemo, useState } from 'react';
 export const MALA_OPTIONS = [11, 21, 27, 54, 108] as const;
 export const SANKALP_LENGTHS = [21, 40] as const;
 
+/** Whole songs (aartis), not repeated mantras: they are listed together and never counted. */
+const AARTI_SLUGS = new Set(['ganesha-aarti', 'tulsi-aarti', 'saraswati-mantra']);
+export const isAarti = (slug: string) => AARTI_SLUGS.has(slug);
+
 export interface Sankalp {
   slug: string;
   days: number;

@@ -4,6 +4,7 @@
 import { useMemo } from 'react';
 import { SoundLibrary, type LibraryTrack, type Playlist } from './SoundLibrary';
 import { MANTRAS, MOMENTS, DEITIES, getMantraAudioUrl, thumb } from '../mantras/mantraData';
+import { isAarti } from '../mantras/sadhana/sadhanaStore';
 import { SACRED_TRACKS } from '../music/musicData';
 import { VoiceService } from '../../services/voiceService';
 import { useTheme } from '../../theme/ThemeSystem';
@@ -22,7 +23,7 @@ export function MantraLibrary({ previewAsGuest = false, previewAsOwner = false }
   const playlists: Playlist[] = useMemo(() => [
     // Aartis are whole songs, not repeated mantras, so they get their own list.
     { id: 'type:aarti', name: 'Aarti', blurb: 'Devotional songs of offering, sung at the close of a puja.',
-      trackIds: MANTRAS.filter((m) => m.slug.endsWith('-aarti')).map((m) => `mantra:${m.slug}`) },
+      trackIds: MANTRAS.filter((m) => isAarti(m.slug)).map((m) => `mantra:${m.slug}`) },
     ...MOMENTS.map((mo) => ({
       id: `moment:${mo.id}`, name: mo.label, blurb: mo.blurb,
       trackIds: MANTRAS.filter((m) => m.moments.includes(mo.id)).map((m) => `mantra:${m.slug}`),
