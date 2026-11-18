@@ -798,6 +798,11 @@ function MantraHub() {
         <video src={BRAND_VIDEO} autoPlay muted loop playsInline preload="auto"
           aria-label="Soulful Mantra Studio: Sacred sound and stillness"
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        {/* The video generator leaves a small sparkle mark in the lower right corner. This
+            softly blurs just that spot (a feathered circle) so it no longer shows. */}
+        <span aria-hidden="true" style={{ position: 'absolute', left: '88.2%', top: '78.6%', width: '6.8%', aspectRatio: '1 / 1.1', pointerEvents: 'none',
+          backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
+          maskImage: 'radial-gradient(circle, #000 52%, transparent 72%)', WebkitMaskImage: 'radial-gradient(circle, #000 52%, transparent 72%)' }} />
       </div>
 
       <header style={{ ...sec, paddingTop: 'clamp(32px, 5vw, 56px)', textAlign: 'center' }}>
