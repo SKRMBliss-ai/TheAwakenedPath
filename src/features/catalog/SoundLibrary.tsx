@@ -83,6 +83,13 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
   const [pujaRepeats, setPujaRepeats] = useState<number>(PUJA_REPEATS[1]);
 
   const isMantras = kind === 'mantras';
+
+  // The tab says what this screen is, not the app around it.
+  useEffect(() => {
+    const prev = document.title;
+    document.title = `${title} · ${kicker}`;
+    return () => { document.title = prev; };
+  }, [title, kicker]);
   const tools = isMantras && unlocked; // practice tools are for owners
   const sadhana = useSadhana(user?.uid ?? '');
 
