@@ -305,6 +305,7 @@ function SingleMantraBuy({ palette, m }: { palette: Palette; m: Mantra }) {
   const { checkOut, isProcessing } = useRazorpay();
   const { renderCheckout, isAvailable: paypalAvailable } = usePaypal();
   const [open, setOpen] = useState(false);
+  const [panel, setPanel] = useState(false); // the whole card is collapsed until asked for
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -358,9 +359,18 @@ function SingleMantraBuy({ palette, m }: { palette: Palette; m: Mantra }) {
   });
 
   return (
-    <section style={{ background: palette.CARD, border: `1px solid ${palette.BORDER}`, borderRadius: 24, padding: 22 }} aria-label="Download this mantra">
-      <Kicker palette={palette}>Own this mantra</Kicker>
-      <h2 style={{ fontFamily: SERIF, fontWeight: 500, fontSize: 24, margin: '0 0 8px' }}>Download it</h2>
+    <section style={{ background: palette.CARD, border: `1px solid ${palette.BORDER}`, borderRadius: 24, overflow: 'hidden' }} aria-label="Download this mantra">
+      <button type="button" aria-expanded={panel || !!done} aria-controls={`single-${m.slug}`} onClick={() => { setPanel((v) => !v); if (!panel) t('MANTRA_SINGLE_EXPAND', m.slug); }}
+        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', background: 'none', border: 'none',
+          cursor: 'pointer', textAlign: 'left', color: palette.INK, fontFamily: SANS }}>
+        <span>
+          <span style={{ display: 'block', fontSize: 10.5, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: palette.BROWN, marginBottom: 3 }}>Own this mantra</span>
+          <span style={{ display: 'block', fontFamily: SERIF, fontSize: 21, fontWeight: 500 }}>Download the mp3 · {singlePrice()}</span>
+        </span>
+        <ChevronRight size={20} aria-hidden="true" style={{ flexShrink: 0, color: palette.INK2, transform: panel || done ? 'rotate(90deg)' : 'none', transition: 'transform .25s ease' }} />
+      </button>
+      {(panel || done) && (
+      <div id={`single-${m.slug}`} style={{ padding: '0 22px 22px' }}>
       <p style={{ fontSize: 14.5, lineHeight: 1.65, color: palette.INK2, margin: '0 0 14px' }}>
         The studio recording of {m.name} as an mp3, yours to keep. {singlePrice()}, paid once.
       </p>
@@ -398,9 +408,17 @@ function SingleMantraBuy({ palette, m }: { palette: Palette; m: Mantra }) {
         </div>
       )}
       <p style={{ margin: '14px 0 0', fontSize: 13, lineHeight: 1.55, color: palette.INK2 }}>
+        Need a different length, for example 10 minutes or an hour? After you download, message us on{' '}
+        <a href={waLink(`Hi Soulful Mantra Studio, I bought ${m.name}. I would like a version that is ___ long.`)} target="_blank" rel="noopener noreferrer"
+          onClick={() => t('MANTRA_SINGLE_LENGTH_WHATSAPP', m.slug)} style={{ color: palette.PURPLE_STRONG, fontWeight: 700 }}>WhatsApp</a>{' '}
+        with the length you want and we will send it to you.
+      </p>
+      <p style={{ margin: '10px 0 0', fontSize: 13, lineHeight: 1.55, color: palette.INK2 }}>
         Prefer to listen? The <a href={PASS_PATH} style={{ color: palette.PURPLE_STRONG, fontWeight: 700 }}>Mantra Pass</a> lets you listen to every mantra in the app for {passPrice()}. It is listening only, with no downloads.
         {' '}See our <a href="/policies#refund" style={{ color: palette.PURPLE_STRONG }}>refund policy</a>.
       </p>
+      </div>
+      )}
     </section>
   );
 }
