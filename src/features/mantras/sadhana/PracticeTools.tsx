@@ -89,7 +89,9 @@ export function SleepTimerButton() {
 }
 
 // ── Mala counter ────────────────────────────────────────────────────────────
-export function MalaDeck({ title, todayReps, malaTarget, playing, hasTrack, onTarget, onTap, onClear }: {
+export function MalaDeck({ perPlay, title, todayReps, malaTarget, playing, hasTrack, onTarget, onTap, onClear }: {
+  /** Chants in one playthrough of the selected recording; 0 when it is not counted (an aarti). */
+  perPlay: number;
   title: string | null;
   todayReps: number;
   malaTarget: number;
@@ -146,7 +148,7 @@ export function MalaDeck({ title, todayReps, malaTarget, playing, hasTrack, onTa
               className="inline-flex items-center gap-1.5 h-10 px-3 rounded-full border border-[var(--border-subtle)] text-xs font-bold text-[var(--text-secondary)] disabled:opacity-40">
               <RotateCcw size={14} /> Clear today
             </button>
-            <span className="text-xs text-[var(--text-muted)]">{playing ? 'Counting as the chant plays.' : 'Counts each time a chant finishes, or tap to count.'}</span>
+            <span className="text-xs text-[var(--text-muted)]">{perPlay === 0 ? 'An aarti is a song, so it is not counted.' : `Adds ${perPlay} each time this recording finishes${playing ? ' (counting now)' : ''}, or tap to count.`}</span>
           </div>
         </div>
       </div>

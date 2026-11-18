@@ -18,6 +18,7 @@ import { useAuth } from '../auth/AuthContext';
 import { track as trackEvent } from '../../lib/analytics';
 import { pricingHref, UPGRADE, owns, priceOf, product, wasOf } from './catalog';
 import { useSadhana, isAarti, sankalpProgress, repsOn, dateKey } from '../mantras/sadhana/sadhanaStore';
+import { chantsPer } from '../mantras/sadhana/chantCounts';
 import { PUJA_SEQUENCES, resolveSequence, PUJA_REPEATS } from '../mantras/sadhana/pujaSequences';
 import { MalaDeck, SankalpTab, PujaTab, SleepTimerButton, PracticeTeaser } from '../mantras/sadhana/PracticeTools';
 import { useMediaSession, softBell } from '../mantras/sadhana/practiceAudio';
@@ -112,12 +113,13 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
   }, [isMine]);
 
   /** Count one repetition of a mantra and ring the bell when a mala completes. */
-  const countOne = (slug: string) => {
+  const countOne = (slug: string, n = 1) => {
     if (isAarti(slug)) return; // an aarti is a song, not a repeated mantra
     const sd = live.current.sadhana;
-    const total = repsOn(sd.state, dateKey(), slug) + 1;
-    sd.addReps(slug, 1);
-    if (total % sd.state.malaTarget === 0) softBell();
+    const before = repsOn(sd.state, dateKey(), slug);
+    sd.addReps(slug, n);
+    // Ring when this count carries the total across a mala boundary.
+    if (Math.floor((before + n) / sd.state.malaTarget) > Math.floor(before / sd.state.malaTarget)) softBell();
   };
 
   const playTrack = async (t: LibraryTrack, q: string[] | null = live.current.queue, repeatOverride?: number) => {
@@ -127,13 +129,14 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
       const url = t.resolve ? await t.resolve() : t.path;
       const L = live.current;
       // Owners can loop or repeat; everyone else hears the track once.
-      const repeat = !L.unlocked ? 1 : repeatOverride ?? (q ? L.queueRepeat : L.loop ? Infinity : 1);
       const slug = slugOf(t.id);
+      const per = slug ? chantsPer(slug) : 1; // chants inside one playthrough
+      const repeat = !L.unlocked ? 1 : repeatOverride ?? (q ? Math.max(1, Math.ceil(L.queueRepeat / per)) : L.loop ? Infinity : 1);
       await VoiceService.playAudioURL(url, {
         trackId: t.id, category: 'music', repeat,
         onRound: (n) => {
           setRound(n);
-          if (live.current.tools && slug && !isAarti(slug)) countOne(slug);
+          if (live.current.tools && slug && !isAarti(slug)) countOne(slug, per);
         },
         onFinish: () => {
           const { queue: qq, loop: lp, pujaName: pj } = live.current;
@@ -210,7 +213,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
     if (!t) return;
     setQueue(null); setPujaName(null);
     live.current.queue = null;
-    void playTrack(t, null, Math.max(1, count));
+    void playTrack(t, null, Math.max(1, Math.ceil(count / chantsPer(slug))));
   };
 
   useMediaSession({
@@ -272,7 +275,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
           onStart={(slug, days, daily) => sadhana.start(slug, days, daily)} onEnd={sadhana.end} onChant={chantNow} />
       )}
       {tools && tab === 'library' && (
-        <MalaDeck title={counterTrack?.title ?? null} todayReps={counterSlug ? repsOn(sadhana.state, dateKey(), counterSlug) : 0}
+        <MalaDeck perPlay={counterSlug && !isAarti(counterSlug) ? chantsPer(counterSlug) : 0} title={counterTrack?.title ?? null} todayReps={counterSlug ? repsOn(sadhana.state, dateKey(), counterSlug) : 0}
           malaTarget={sadhana.state.malaTarget} playing={playing} hasTrack={!!counterSlug}
           onTarget={sadhana.setMalaTarget} onTap={() => counterSlug && countOne(counterSlug)} onClear={() => counterSlug && sadhana.clearToday(counterSlug)} />
       )}
