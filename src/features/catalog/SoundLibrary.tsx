@@ -113,6 +113,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
 
   /** Count one repetition of a mantra and ring the bell when a mala completes. */
   const countOne = (slug: string) => {
+    if (slug.endsWith('-aarti')) return; // an aarti is a song, not a repeated mantra
     const sd = live.current.sadhana;
     const total = repsOn(sd.state, dateKey(), slug) + 1;
     sd.addReps(slug, 1);
@@ -132,7 +133,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
         trackId: t.id, category: 'music', repeat,
         onRound: (n) => {
           setRound(n);
-          if (live.current.tools && slug) countOne(slug);
+          if (live.current.tools && slug && !slug.endsWith('-aarti')) countOne(slug);
         },
         onFinish: () => {
           const { queue: qq, loop: lp, pujaName: pj } = live.current;
