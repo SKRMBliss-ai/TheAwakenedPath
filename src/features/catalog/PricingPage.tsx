@@ -83,13 +83,26 @@ function DoorColumn({ palette, door, selected, onPick }: { palette: Palette; doo
   );
 }
 
-function Checkout({ palette, id, user, onClose }: { palette: Palette; id: string; user: User | null; onClose: () => void }) {
+interface Details { name: string; email: string; phone: string }
+
+/** Other plans worth adding to this order: the default plan of each other door, skipping anything this plan already includes. */
+function upsells(id: string): string[] {
+  const have = new Set(product(id).unlocks);
+  return DOORS.map((d) => d.plans[0]).filter((pid) => pid !== id && product(pid).name !== product(id).name && !product(pid).unlocks.every((u) => have.has(u))
+    && !Array.from(have).every((u) => product(pid).unlocks.includes(u))); // not already included, and not something that makes this plan redundant
+}
+
+function Checkout({ palette, id, user, onClose, queued, onAdd, onRemove, onNext, prefill, onDetails }: {
+  palette: Palette; id: string; user: User | null; onClose: () => void;
+  queued: string[]; onAdd: (id: string) => void; onRemove: (id: string) => void; onNext: (id: string, d: Details) => void;
+  prefill: Details | null; onDetails: (d: Details) => void;
+}) {
   const p = product(id);
   const { checkOut, isProcessing } = useRazorpay();
   const { renderCheckout, isAvailable: paypalAvailable } = usePaypal();
-  const [name, setName] = useState(user?.displayName || '');
-  const [email, setEmail] = useState(user?.email || '');
-  const [phone, setPhone] = useState('');
+  const [name, setName] = useState(prefill?.name || user?.displayName || '');
+  const [email, setEmail] = useState(prefill?.email || user?.email || '');
+  const [phone, setPhone] = useState(prefill?.phone || '');
   const [done, setDone] = useState(false);
   const emailOk = email.includes('@') && !!email.split('@')[1]?.includes('.');
   const phoneOk = phone.replace(/\D/g, '').length >= 8;
@@ -98,7 +111,8 @@ function Checkout({ palette, id, user, onClose }: { palette: Palette; id: string
   const ready = name.trim().length > 0 && emailOk && phoneOk;
   const amount = isPwyw(id) ? p.price[CURRENCY] : undefined;
   const uid = user && !user.isAnonymous ? user.uid : 'guest_pending';
-  const paid = () => { t('PRICING_PAID', id); setDone(true); };
+  const paid = () => { t('PRICING_PAID', id); onDetails({ name, email, phone }); setDone(true); };
+  const addable = upsells(id).filter((x) => !queued.includes(x) && !queued.some((q) => product(q).name === product(x).name));
 
   useEffect(() => {
     if (!ready || done) return;
@@ -120,11 +134,6 @@ function Checkout({ palette, id, user, onClose }: { palette: Palette; id: string
           <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: palette.BROWN }}>Your order</span>
           <h2 style={{ fontFamily: SERIF, fontSize: 30, fontWeight: 500, margin: '4px 0 2px' }}>{p.name}</h2>
           <p style={{ margin: 0, fontSize: 14, color: palette.INK2 }}>{p.pitch}</p>
-          <p style={{ margin: '10px 0 0', fontSize: 13, color: palette.INK2 }}>
-            You are buying this one plan. Want something else too?{' '}
-            <a href="#plans" onClick={(e) => { e.preventDefault(); onClose(); document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
-              style={{ color: palette.PURPLE_STRONG, fontWeight: 700 }}>Add another plan</a>
-          </p>
         </div>
         <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: palette.INK2, fontSize: 13.5, textDecoration: 'underline', cursor: 'pointer', minHeight: 44 }}>Change</button>
       </div>
@@ -135,11 +144,22 @@ function Checkout({ palette, id, user, onClose }: { palette: Palette; id: string
           {uid === 'guest_pending'
             ? <>One last step: <strong>sign in with {email}</strong> to open what you bought. Your purchase is saved to this email, so it unlocks the moment you sign in, on any device.</>
             : <>It is unlocked on your account ({email}) now.</>}
-          <a href={uid === 'guest_pending' ? '/mindgym?claim=1' : '/mindgym'}
-            style={{ display: 'inline-flex', alignItems: 'center', minHeight: 44, marginTop: 12, padding: '0 20px', borderRadius: 999,
-              background: palette.PURPLE_STRONG, color: palette.ON_ACCENT, fontWeight: 700, textDecoration: 'none' }}>
-            {uid === 'guest_pending' ? 'Sign in to access →' : 'Open Mind Gym →'}
-          </a>
+          {queued.length > 0 ? (
+            <>
+              <button type="button" onClick={() => onNext(queued[0], { name, email, phone })}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: 48, marginTop: 14, padding: '0 20px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: SANS, fontSize: 15,
+                  background: palette.ON_BAND, color: palette.BAND, fontWeight: 800 }}>
+                Next: pay for {product(queued[0]).name} · {priceOf(queued[0])} →
+              </button>
+              <p style={{ margin: '8px 0 0', fontSize: 13 }}>Your details are filled in. {queued.length > 1 ? `${queued.length} more to go.` : 'This is the last one.'}</p>
+            </>
+          ) : (
+            <a href={uid === 'guest_pending' ? '/mindgym?claim=1' : '/mindgym'}
+              style={{ display: 'inline-flex', alignItems: 'center', minHeight: 44, marginTop: 12, padding: '0 20px', borderRadius: 999,
+                background: palette.PURPLE_STRONG, color: palette.ON_ACCENT, fontWeight: 700, textDecoration: 'none' }}>
+              {uid === 'guest_pending' ? 'Sign in to access →' : 'Open Mind Gym →'}
+            </a>
+          )}
         </div>
       ) : (
         <>
@@ -148,12 +168,46 @@ function Checkout({ palette, id, user, onClose }: { palette: Palette; id: string
               After paying you will sign in with this email to access it. Already have an account? <a href="/mindgym?claim=1" style={{ color: palette.PURPLE_STRONG, fontWeight: 700 }}>Sign in first</a>.
             </p>
           )}
-          <dl style={{ margin: '16px 0', padding: '14px 16px', borderRadius: 16, border: `1px dashed ${palette.BORDER}`, display: 'grid', gridTemplateColumns: '1fr auto', gap: '6px 12px', fontSize: 14.5 }}>
+          <dl style={{ margin: '16px 0 12px', padding: '14px 16px', borderRadius: 16, border: `1px dashed ${palette.BORDER}`, display: 'grid', gridTemplateColumns: '1fr auto', gap: '6px 12px', fontSize: 14.5 }}>
             <dt style={{ color: palette.INK2 }}>{p.name}{p.billing !== 'once' ? ` (${p.billing === 'month' ? 'one month' : 'one year'})` : ''}</dt>
             <dd style={{ margin: 0 }}>{wasOf(id) && <s style={{ color: palette.INK2, marginRight: 8 }}>{wasOf(id)}</s>}{priceOf(id)}</dd>
-            <dt style={{ fontWeight: 700, paddingTop: 8, borderTop: `1px solid ${palette.BORDER}` }}>Amount to pay</dt>
+            <dt style={{ fontWeight: 700, paddingTop: 8, borderTop: `1px solid ${palette.BORDER}` }}>Amount to pay now</dt>
             <dd style={{ margin: 0, fontWeight: 700, paddingTop: 8, borderTop: `1px solid ${palette.BORDER}` }}>{priceOf(id)}</dd>
           </dl>
+          {queued.length > 0 && (
+            <div style={{ margin: '0 0 12px', padding: '12px 16px', borderRadius: 16, background: palette.isDark ? 'rgba(191,176,189,0.10)' : 'rgba(105,94,104,0.06)' }}>
+              <p style={{ margin: '0 0 8px', fontSize: 12.5, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: palette.BROWN }}>Added, paid next</p>
+              {queued.map((q) => (
+                <div key={q} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, fontSize: 14, minHeight: 36 }}>
+                  <span><strong>{product(q).name}</strong>{product(q).billing !== 'once' ? ` (${product(q).billing === 'month' ? 'one month' : 'one year'})` : ''}</span>
+                  <span style={{ whiteSpace: 'nowrap' }}>{priceOf(q)}{' '}
+                    <button type="button" onClick={() => onRemove(q)} aria-label={`Remove ${product(q).name}`}
+                      style={{ marginLeft: 6, background: 'none', border: 'none', color: palette.INK2, textDecoration: 'underline', cursor: 'pointer', fontFamily: SANS, fontSize: 12.5, minHeight: 32 }}>Remove</button>
+                  </span>
+                </div>
+              ))}
+              <p style={{ margin: '6px 0 0', fontSize: 12.5, lineHeight: 1.5, color: palette.INK2 }}>Each plan is paid for separately. After this payment we open the next one for you, with your details filled in.</p>
+            </div>
+          )}
+          {addable.length > 0 && (
+            <div style={{ margin: '0 0 16px' }}>
+              <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 700, color: palette.INK }}>Add to your order</p>
+              <div style={{ display: 'grid', gap: 8 }}>
+                {addable.map((x) => (
+                  <button key={x} type="button" onClick={() => { t('PRICING_ADD', x); onAdd(x); }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', padding: '10px 14px', borderRadius: 14, cursor: 'pointer', fontFamily: SANS, color: palette.INK,
+                      background: 'transparent', border: `1px solid ${palette.BORDER}` }}>
+                    <span aria-hidden="true" style={{ flexShrink: 0, display: 'grid', placeItems: 'center', width: 30, height: 30, borderRadius: '50%', background: palette.PURPLE_STRONG, color: palette.ON_ACCENT, fontSize: 20, lineHeight: 1 }}>+</span>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ display: 'block', fontSize: 14.5, fontWeight: 700 }}>{product(x).name}</span>
+                      <span style={{ display: 'block', fontSize: 12.5, color: palette.INK2, lineHeight: 1.4 }}>{product(x).pitch}</span>
+                    </span>
+                    <span style={{ fontSize: 14, fontWeight: 800, whiteSpace: 'nowrap' }}>{priceOf(x)}<span style={{ fontSize: 11.5, fontWeight: 500, color: palette.INK2 }}>{PER[product(x).billing]}</span></span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <div style={{ display: 'grid', gap: 12 }}>
             <label><span style={label}>Your name</span><input style={input} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" /></label>
             <label><span style={label}>Email{uid !== 'guest_pending' ? ' (your account)' : ' (use this email to sign in later)'}</span>
@@ -189,6 +243,8 @@ export default function PricingPage() {
     return s && PRODUCTS.some((p) => p.id === s) ? canonicalId(s) : null;
   });
   const checkoutRef = useRef<HTMLDivElement>(null);
+  const [queued, setQueued] = useState<string[]>([]);
+  const [details, setDetails] = useState<Details | null>(null);
 
   useEffect(() => onAuthStateChanged(getAuth(), setUser), []);
   useEffect(() => { t('PAGE_VISIT_PRICING', selected || ''); }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -204,6 +260,7 @@ export default function PricingPage() {
 
   const pick = (id: string) => {
     t('PRICING_PICK', id);
+    setQueued([]);
     setSelected(id);
     const url = new URL(window.location.href); url.searchParams.set('select', id); window.history.replaceState({}, '', url);
   };
@@ -245,7 +302,10 @@ export default function PricingPage() {
         {selected && (
           <section style={{ ...sec, paddingTop: 0 }}>
             <div style={{ ...wrap, maxWidth: 620 }}>
-              <Checkout key={selected} palette={palette} id={selected} user={user} onClose={() => setSelected(null)} />
+              <Checkout key={selected} palette={palette} id={selected} user={user} onClose={() => { setSelected(null); setQueued([]); }}
+                queued={queued} onAdd={(x) => setQueued((q) => [...q, x])} onRemove={(x) => setQueued((q) => q.filter((y) => y !== x))}
+                onNext={(x, d) => { setDetails(d); setQueued((q) => q.slice(1)); setSelected(x); const u = new URL(window.location.href); u.searchParams.set('select', x); window.history.replaceState({}, '', u); }}
+                prefill={details} onDetails={setDetails} />
             </div>
           </section>
         )}
