@@ -377,35 +377,41 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
       </div>
       <style>{`@keyframes sl-eq { 0%,100% { height: 4px } 50% { height: 14px } } .sl-eq { height: 4px; animation: sl-eq .9s ease-in-out infinite; } @media (prefers-reduced-motion: reduce) { .sl-eq { animation: none; height: 10px; } }`}</style>
       {/* Tracks */}
-      <ol className="divide-y divide-[var(--border-subtle)]/50 rounded-2xl border border-[var(--border-subtle)] overflow-hidden">
-        {rows.length === 0 && <li className="px-4 py-8 text-center text-sm text-[var(--text-muted)]">No match. Try a deity or festival name.</li>}
-        {rows.map((t, i) => {
+      <ol className="grid gap-2.5 md:grid-cols-2">
+        {rows.length === 0 && <li className="md:col-span-2 rounded-2xl border border-[var(--border-subtle)] px-4 py-8 text-center text-sm text-[var(--text-muted)]">No match. Try a deity or festival name.</li>}
+        {rows.map((t) => {
           const active = isMine && trackId === t.id;
           const locked = isLocked(t.id);
+          const mine = isMantras && boughtSingly(t.id);
           return (
             <li key={t.id} className="relative">
-              <button onClick={() => onRow(t)} className={cn('group w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
-                active ? 'bg-[var(--bg-surface)] shadow-[inset_3px_0_0_var(--accent-primary)]' : 'hover:bg-[var(--bg-surface)]/60', locked && 'opacity-60')}
+              <button onClick={() => onRow(t)} className={cn('group w-full flex items-center gap-3.5 p-2.5 pr-3 rounded-2xl border text-left transition-all',
+                active ? 'bg-[var(--bg-surface)] border-[var(--accent-primary)] shadow-md' : 'bg-[var(--bg-surface)]/50 border-[var(--border-subtle)] hover:bg-[var(--bg-surface)] hover:-translate-y-0.5 hover:shadow-md',
+                locked && 'opacity-70')}
                 aria-label={locked ? `${t.title}, locked. Unlock on the pricing page` : undefined}>
-                <span className="w-6 text-center text-xs text-[var(--text-muted)] flex-shrink-0">
-                  {loadingId === t.id ? <Loader2 size={14} className="animate-spin mx-auto" />
-                    : locked ? <Lock size={13} className="mx-auto" />
-                    : active && playing ? <span className="flex items-end justify-center gap-[2px] h-3.5" aria-label="Playing">{[0, 1, 2].map((b) => <span key={b} className="w-[3px] rounded-sm bg-[var(--accent-primary)] sl-eq" style={{ animationDelay: `${b * 0.18}s` }} />)}</span>
-                    : <><span className="group-hover:hidden">{i + 1}</span><Play size={14} fill="currentColor" className="hidden group-hover:block mx-auto text-[var(--text-primary)]" /></>}
-                </span>
-                <img src={t.cover} alt="" loading="lazy" className="w-12 h-12 rounded-lg object-cover flex-shrink-0 bg-[var(--bg-surface)]"
+                <img src={t.cover} alt="" loading="lazy" className="w-16 h-16 rounded-xl object-cover flex-shrink-0 bg-[var(--bg-color)]"
                   onError={(e) => { if (e.currentTarget.src !== new URL(cover, location.href).href) e.currentTarget.src = cover; }} />
                 <span className="min-w-0 flex-1">
                   <span className={cn('block truncate text-[15px] font-semibold', active ? 'text-[var(--accent-primary)]' : 'text-[var(--text-primary)]')}>{t.title}</span>
-                  <span className="block truncate text-xs text-[var(--text-muted)]">{t.subtitle}</span>
+                  <span className="block truncate text-xs text-[var(--text-muted)] mt-0.5">{t.subtitle}</span>
+                  <span className="flex items-center gap-2 mt-1.5 text-[11px] text-[var(--text-muted)]">
+                    {!unlocked && !locked && <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[var(--accent-primary)]/15 text-[var(--accent-primary)]">Free</span>}
+                    {locked && <span className="inline-flex items-center gap-1"><Lock size={11} /> Pass</span>}
+                    {t.duration && <span>{t.duration}</span>}
+                  </span>
                 </span>
-                {!unlocked && !locked && <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[var(--accent-primary)]/15 text-[var(--accent-primary)] flex-shrink-0">Free</span>}
-                {t.duration && <span className="text-xs text-[var(--text-muted)] flex-shrink-0 hidden sm:block">{t.duration}</span>}
-                {isMantras && boughtSingly(t.id) && <span className="w-9 flex-shrink-0" aria-hidden="true" />}
+                <span className={cn('w-11 h-11 rounded-full grid place-items-center flex-shrink-0 border transition-colors',
+                  active ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent' : 'border-[color-mix(in_srgb,var(--text-muted)_55%,transparent)] text-[var(--text-primary)] group-hover:bg-[var(--accent-primary)] group-hover:text-[var(--bg-color)] group-hover:border-transparent',
+                  mine && 'mr-11')}>
+                  {loadingId === t.id ? <Loader2 size={16} className="animate-spin" />
+                    : locked ? <Lock size={15} />
+                    : active && playing ? <span className="flex items-end justify-center gap-[2px] h-4" aria-label="Playing">{[0, 1, 2].map((b) => <span key={b} className="w-[3px] rounded-sm bg-current sl-eq" style={{ animationDelay: `${b * 0.18}s` }} />)}</span>
+                    : <Play size={16} fill="currentColor" className="ml-0.5" />}
+                </span>
               </button>
-              {isMantras && boughtSingly(t.id) && (
+              {mine && (
                 <button type="button" onClick={() => void saveFile(t)} aria-label={`Download ${t.title}`} title="Download your mp3"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 grid place-items-center rounded-full border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--accent-primary)]">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 grid place-items-center rounded-full border border-[var(--border-subtle)] bg-[var(--bg-color)] text-[var(--text-secondary)] hover:text-[var(--accent-primary)]">
                   {saving === t.id ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
                 </button>
               )}

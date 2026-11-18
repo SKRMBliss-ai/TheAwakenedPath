@@ -8,7 +8,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getAuth } from 'firebase/auth';
-import { BookOpen, Repeat, ListMusic, FileText, Bell, MessageCircle, ShieldCheck, Sunrise, Play, Pause, Youtube, RotateCw, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BookOpen, Repeat, ListMusic, FileText, Bell, MessageCircle, ShieldCheck, Sunrise, Play, Pause, Youtube, RotateCw, Search, ChevronLeft, ChevronRight, Moon } from 'lucide-react';
 import { usePageSeo } from '../../lib/seo';
 import { track } from '../../lib/analytics';
 import { useSiteTheme, type Palette } from '../../lib/siteTheme';
@@ -482,7 +482,7 @@ function PassCheckout({ palette, layout = 'summary' }: { palette: Palette; layou
   });
 
   return (
-    <div className="sms-pass" style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: '1.15fr 1fr', gap: 24, alignItems: 'start' }}>
+    <div className={order ? 'sms-pass sms-pass-order' : 'sms-pass'} style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: '1.15fr 1fr', gap: 24, alignItems: 'start' }}>
       <div style={{ background: palette.CARD, border: `1px solid ${palette.BORDER}`, borderRadius: 28, padding: 'clamp(22px, 4vw, 34px)' }}>
         {order && (
           <div style={{ marginBottom: 22, paddingBottom: 22, borderBottom: `1px solid ${palette.BORDER}` }}>
@@ -652,6 +652,7 @@ function PageStyles({ palette }: { palette: Palette }) {
       @media (prefers-reduced-motion: reduce) { .sms-ticker { animation: none; } }
       @media (max-width: 860px) {
         .sms-pass, .sms-detail, .sms-listen, .sms-sales-hero { grid-template-columns: 1fr !important; }
+        .sms-pass-order > :nth-child(2) { order: -1; }
         .sms-listen { text-align: center; }
         .sms-listen img { margin-left: auto; margin-right: auto; }
         .sms-chips { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; padding-bottom: 6px; -webkit-overflow-scrolling: touch; }
@@ -1228,15 +1229,24 @@ function MantraPassSales() {
             <p style={{ fontSize: 17, lineHeight: 1.7, color: palette.INK2, margin: '0 0 18px', maxWidth: 560 }}>
               Our whole mantra library in one quiet place, for your morning, your evening lamp, your festivals and your rest.
             </p>
-            <ul style={{ listStyle: 'none', margin: '0 0 22px', padding: 0, display: 'grid', gap: 10 }}>
-              {['A mala counter that counts for you, with a soft bell', 'A 21 or 40 day sankalp with your streak', 'Puja sequences: Diwali, Dhanteras, Chhath and more',
-                'Any mantra on a loop, with a sleep timer'].map((line) => (
-                <li key={line} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 15.5, fontWeight: 600, color: palette.INK }}>
-                  <span style={{ flexShrink: 0, display: 'grid', placeItems: 'center', width: 24, height: 24, borderRadius: '50%', background: GOLD_BAR, color: '#241E24', fontSize: 13, fontWeight: 900 }}>✓</span>
-                  {line}
-                </li>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 10, margin: '0 0 22px' }}>
+              {([
+                [Repeat, 'Mala counter', 'Counts every repetition for you, with a soft bell'],
+                [Sunrise, 'Sankalp tracker', 'A 21 or 40 day vow, with your daily streak'],
+                [ListMusic, 'Puja sequences', 'Diwali, Dhanteras, Chhath and more, in order'],
+                [Moon, 'Loop and sleep timer', 'Any mantra on repeat, fading out as you rest'],
+              ] as const).map(([Icon, h, b]) => (
+                <div key={h} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '12px 14px', borderRadius: 16, background: palette.CARD, border: `1px solid ${palette.BORDER}` }}>
+                  <span style={{ flexShrink: 0, display: 'grid', placeItems: 'center', width: 36, height: 36, borderRadius: 12, background: GOLD_BAR, color: '#241E24' }}>
+                    <Icon size={18} aria-hidden="true" />
+                  </span>
+                  <span>
+                    <span style={{ display: 'block', fontSize: 15, fontWeight: 700, color: palette.INK, lineHeight: 1.25 }}>{h}</span>
+                    <span style={{ display: 'block', fontSize: 13, lineHeight: 1.5, color: palette.INK2, marginTop: 2 }}>{b}</span>
+                  </span>
+                </div>
               ))}
-            </ul>
+            </div>
             {buy('MANTRA_SALES_HERO_CTA')}
             <p style={{ margin: '14px 0 0', fontSize: 13.5, lineHeight: 1.6, color: palette.INK2 }}>
               <strong style={{ color: palette.INK }}>Pay once, keep it.</strong> {passPrice()} once · full refund within {MANTRA_PASS_REFUND_DAYS} days
@@ -1260,7 +1270,7 @@ function MantraPassSales() {
               const m = findMantra(f.slug) || MANTRAS[0];
               return (
                 <div key={f.h} className="sms-card" style={{ ...box, padding: 16, display: 'flex', flexDirection: 'column' }}>
-                  <img src={m.videos && m.videos[0] ? thumb(m.videos[0].id) : (m.cover || '/marketing/mantras/emblem-sunburst.webp')} alt="" loading="lazy" width={480} height={360}
+                  <img src={m.cover || (m.videos && m.videos[0] ? thumb(m.videos[0].id) : '/marketing/mantras/emblem-sunburst.webp')} alt="" loading="lazy" width={480} height={360}
                     style={{ width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: 16, display: 'block', marginBottom: 14 }} />
                   <h3 style={{ margin: '0 6px 6px', fontFamily: SERIF, fontSize: 25, fontWeight: 500, lineHeight: 1.2 }}>{f.h}</h3>
                   <p style={{ margin: '0 6px 6px', fontSize: 14.5, lineHeight: 1.65, color: palette.INK2 }}>{f.b}</p>
