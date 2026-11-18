@@ -177,7 +177,16 @@ function FlipCard({ palette, m }: { palette: Palette; m: Mantra }) {
 
 function MantraCard({ palette, m }: { palette: Palette; m: Mantra }) {
   const { status, category, trackId } = useVoiceStatus();
-  const isPlaying = status === 'playing' && category === 'music' && trackId === m.slug;
+  const sampleId = `sample:${m.slug}`;
+  const active = category === 'music' && trackId === sampleId;
+  const isPlaying = status === 'playing' && active;
+
+  // The card plays a 30-second taste only; the full recording is on the mantra's page and in the pass.
+  useEffect(() => {
+    if (!active) return;
+    const i = setInterval(() => { if (VoiceService.audioProgress.currentTime >= SAMPLE_SECONDS) VoiceService.stopMusic(); }, 250);
+    return () => clearInterval(i);
+  }, [active]);
 
   const quickPlay = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -185,14 +194,10 @@ function MantraCard({ palette, m }: { palette: Palette; m: Mantra }) {
     t('MANTRA_QUICK_PLAY', m.slug);
     if (isPlaying) {
       VoiceService.pause();
-    } else if (status === 'paused' && trackId === m.slug) {
+    } else if (status === 'paused' && trackId === sampleId) {
       VoiceService.resume('music');
     } else {
-      VoiceService.playAudioURL(m.audioUrl || getMantraAudioUrl(m.slug), {
-        trackId: m.slug,
-        loop: true,
-        category: 'music',
-      });
+      VoiceService.playAudioURL(m.audioUrl || getMantraAudioUrl(m.slug), { trackId: sampleId, category: 'music' });
     }
   };
 
@@ -206,7 +211,7 @@ function MantraCard({ palette, m }: { palette: Palette; m: Mantra }) {
         <button
           type="button"
           onClick={quickPlay}
-          aria-label={isPlaying ? `Pause chant ${m.name}` : `Play chant ${m.name}`}
+          aria-label={isPlaying ? `Pause sample of ${m.name}` : `Play a 30-second sample of ${m.name}`}
           style={{
             position: 'absolute', right: 12, bottom: 12,
             width: 38, height: 38, borderRadius: '50%',
