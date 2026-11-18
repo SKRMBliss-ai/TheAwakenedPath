@@ -98,6 +98,24 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
 
   const isMantras = kind === 'mantras';
 
+  // The player bar lines up with the page content, so the app's sidebar never covers it.
+  const pageRef = useRef<HTMLDivElement>(null);
+  const [barBox, setBarBox] = useState<{ left: number; width: number } | null>(null);
+  useEffect(() => {
+    const el = pageRef.current;
+    if (!el) return;
+    const measure = () => {
+      const r = el.getBoundingClientRect();
+      const pad = window.innerWidth >= 768 ? 32 : 16;
+      setBarBox({ left: Math.max(8, r.left + pad), width: Math.max(280, r.width - pad * 2) });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    window.addEventListener('resize', measure);
+    return () => { ro.disconnect(); window.removeEventListener('resize', measure); };
+  }, []);
+
   // The tab says what this screen is, not the app around it.
   useEffect(() => {
     const prev = document.title;
@@ -249,25 +267,35 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
   const up = UPGRADE[kind];
 
   return (
-    <div className="relative max-w-5xl mx-auto px-4 md:px-8 pt-6 pb-36">
-      {/* Header */}
-      <header className="flex flex-col sm:flex-row gap-5 sm:items-end mb-6">
-        <img src={cover} alt="" className="w-40 h-40 sm:w-48 sm:h-48 rounded-2xl object-contain p-5 shadow-xl flex-shrink-0 bg-[var(--bg-surface)]" />
-        <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)] mb-2">{kicker}</p>
-          <h1 className="font-serif text-4xl md:text-5xl text-[var(--text-primary)] leading-tight mb-2">{title}</h1>
-          <p className="text-sm text-[var(--text-secondary)] max-w-xl mb-4">{description}</p>
-          <div className="flex flex-wrap items-center gap-3">
-            <button onClick={playAll} className="inline-flex items-center gap-2 h-11 px-6 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] font-bold text-sm">
-              {unlocked ? <Play size={16} fill="currentColor" /> : <Lock size={15} />} Play {list.id === 'all' ? 'all' : list.name}
-            </button>
-            {unlocked ? (
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--accent-primary)]"><Check size={14} /> {isMantras ? 'Unlocked: loop, playlists and practice tools' : 'Unlocked: loop and playlists'}</span>
-            ) : (
-              <button onClick={goPricing} className="h-11 px-5 rounded-full border border-[var(--border-subtle)] text-sm font-bold text-[var(--text-primary)] hover:bg-[var(--bg-surface)]">
-                Unlock · {priceOf(up.single)}
+    <div ref={pageRef} className="relative max-w-5xl mx-auto px-4 md:px-8 pt-6 pb-28">
+      {/* Header: a soft mauve hero card */}
+      <header className="relative overflow-hidden rounded-3xl border border-[var(--border-subtle)] p-5 sm:p-8 mb-6"
+        style={{ background: 'linear-gradient(135deg, color-mix(in srgb, #A798A5 22%, var(--bg-surface)) 0%, var(--bg-surface) 62%)' }}>
+        <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-16 w-72 h-72 rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(233,201,138,.28) 0%, rgba(233,201,138,0) 70%)' }} />
+        <div className="relative flex flex-col sm:flex-row gap-5 sm:gap-8 sm:items-center">
+          <img src={cover} alt="" className="w-28 h-28 sm:w-40 sm:h-40 rounded-2xl object-contain p-2 flex-shrink-0 self-start sm:self-center" />
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)] mb-2">{kicker}</p>
+            <h1 className="font-serif text-4xl md:text-6xl text-[var(--text-primary)] leading-none mb-3">{title}</h1>
+            <p className="text-[15px] text-[var(--text-secondary)] max-w-xl mb-5 leading-relaxed">{description}</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <button onClick={playAll} className="inline-flex items-center gap-2 h-12 px-7 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] font-bold text-sm shadow-lg">
+                {unlocked ? <Play size={16} fill="currentColor" /> : <Lock size={15} />} Play {list.id === 'all' ? 'all' : list.name}
               </button>
-            )}
+              <span className="inline-flex items-center h-8 px-3 rounded-full bg-[var(--bg-color)]/60 border border-[var(--border-subtle)] text-xs font-bold text-[var(--text-secondary)]">
+                {tracks.length} {isMantras ? 'mantras' : 'tracks'}
+              </span>
+              {unlocked ? (
+                <span className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-[var(--bg-color)]/60 border border-[var(--border-subtle)] text-xs font-bold text-[var(--accent-primary)]">
+                  <Check size={13} /> {isMantras ? 'Loop, playlists and practice tools' : 'Loop and playlists'}
+                </span>
+              ) : (
+                <button onClick={goPricing} className="h-12 px-5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-color)]/60 text-sm font-bold text-[var(--text-primary)] hover:bg-[var(--bg-surface)]">
+                  Unlock · {priceOf(up.single)}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -351,9 +379,9 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
 
       {/* Now playing */}
       {current && isMine && (
-        <div className="fixed left-0 right-0 bottom-0 z-40 border-t border-[var(--border-subtle)] bg-[var(--bg-color)]/95 backdrop-blur-xl shadow-2xl">
+        <div style={barBox ? { left: barBox.left, width: barBox.width } : undefined} className="fixed bottom-3 z-40 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-color)]/95 backdrop-blur-xl shadow-2xl overflow-hidden">
           <div className="h-1 bg-[var(--border-subtle)] overflow-hidden"><div className="h-full bg-[var(--accent-primary)]" style={{ width: `${pct}%` }} /></div>
-          <div className="flex items-center gap-3 p-3 max-w-5xl mx-auto">
+          <div className="flex items-center gap-3 p-3">
             <img src={current.cover} alt="" className="w-11 h-11 rounded-lg object-cover flex-shrink-0" />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-semibold text-[var(--text-primary)]">{current.title}</span>
