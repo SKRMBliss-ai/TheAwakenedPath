@@ -235,7 +235,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
     <div className="relative max-w-5xl mx-auto px-4 md:px-8 pt-6 pb-36">
       {/* Header */}
       <header className="flex flex-col sm:flex-row gap-5 sm:items-end mb-6">
-        <img src={cover} alt="" className="w-40 h-40 sm:w-48 sm:h-48 rounded-2xl object-cover shadow-xl flex-shrink-0 bg-[var(--bg-surface)]" />
+        <img src={cover} alt="" className="w-40 h-40 sm:w-48 sm:h-48 rounded-2xl object-contain p-2 shadow-xl flex-shrink-0 bg-[var(--bg-surface)]" />
         <div className="min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)] mb-2">{kicker}</p>
           <h1 className="font-serif text-4xl md:text-5xl text-[var(--text-primary)] leading-tight mb-2">{title}</h1>
