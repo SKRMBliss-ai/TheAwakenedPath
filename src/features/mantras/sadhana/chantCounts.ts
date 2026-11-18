@@ -19,6 +19,16 @@ export const CHANTS_PER_RECORDING: Record<string, number> = {
   'uma-maheshwara-mantra': 14,
   'maha-sudarshana-mantra': 1,
   'shailaputri-mantra': 12,
+  'navratri-day2-brahmacharini': 11,
+  'navratri-day5-skandamata': 16,
+  'navratri-day6-katyayani': 12,
+  'navratri-day7-kalaratri': 10,
+  'navratri-day8-mahagauri': 8,
+  'navratri-day9-siddhidatri': 10,
+  'durga-yam-devi-sarvabhuteshu': 1,
+  'durga-sarvamangala-mangalye': 1,
+  'lokah-samastah-sukhino': 7,
+  'jai-ram-shiv-ram-guru-ram': 6,
 };
 
 /** Chants in one playthrough of this recording (1 when not known). */
