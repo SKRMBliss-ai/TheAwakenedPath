@@ -1206,12 +1206,12 @@ function MantraPassSales() {
       {/* Hero */}
       <header style={{ ...sec, paddingTop: 'clamp(28px, 4.5vw, 56px)' }}>
         <div className="sms-sales-hero" style={{ ...wrap, maxWidth: 1200, display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: 'clamp(24px, 4vw, 56px)', alignItems: 'center' }}>
-          {/* Sacred artwork in a gold frame */}
+          {/* Sacred triptych artwork in a gold frame */}
           <figure style={{ margin: 0, padding: 'clamp(14px, 2.2vw, 22px)', borderRadius: 30, background: GOLD_BAR,
             boxShadow: palette.isDark ? '0 30px 70px rgba(0,0,0,.55)' : '0 30px 70px rgba(122,95,68,.28)' }}>
-            <div style={{ borderRadius: 16, overflow: 'hidden' }}>
-              <img src="/marketing/mantras/diya.gif?v=2" alt="Soulful Mantra Studio: Mantra Pass" width={640} height={360}
-                style={{ width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', display: 'block' }} />
+            <div style={{ borderRadius: 18, overflow: 'hidden' }}>
+              <img src="/marketing/mantras/mantra-pass-triptych.webp?v=1" alt="Soulful Mantra Studio: Mantra Pass — Ganesha, Shiva, Lakshmi" width={1024} height={768}
+                style={{ width: '100%', height: 'auto', aspectRatio: '4 / 3', objectFit: 'cover', display: 'block' }} />
             </div>
             <figcaption style={{ textAlign: 'center', paddingTop: 14, color: '#241E24' }}>
               <span style={{ display: 'block', fontFamily: SERIF, fontSize: 'clamp(20px, 2.4vw, 26px)', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Mantra Pass</span>
