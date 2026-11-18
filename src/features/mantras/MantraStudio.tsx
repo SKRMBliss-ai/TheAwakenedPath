@@ -8,7 +8,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getAuth } from 'firebase/auth';
-import { BookOpen, Repeat, ListMusic, FileText, Bell, MessageCircle, ShieldCheck, Sunrise, Play, Pause, Youtube, RotateCw, Search } from 'lucide-react';
+import { BookOpen, Repeat, ListMusic, FileText, Bell, MessageCircle, ShieldCheck, Sunrise, Play, Pause, Youtube, RotateCw, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { usePageSeo } from '../../lib/seo';
 import { track } from '../../lib/analytics';
 import { useSiteTheme, type Palette } from '../../lib/siteTheme';
@@ -91,19 +91,48 @@ function Btn({ palette, href, label, event, ghost = false, external = false }: {
   );
 }
 
+/** One horizontally scrolling row of cards (a "rail"), with arrows on desktop. */
+function Rail({ palette, title, blurb, list }: { palette: Palette; title: string; blurb: string; list: Mantra[] }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const go = (dir: 1 | -1) => ref.current?.scrollBy({ left: dir * Math.max(240, (ref.current?.clientWidth ?? 600) * 0.85), behavior: 'smooth' });
+  const arrow: React.CSSProperties = {
+    width: 36, height: 36, borderRadius: '50%', placeItems: 'center', cursor: 'pointer', background: palette.CARD, color: palette.INK,
+    border: `1px solid ${palette.BORDER}`,
+  };
+  return (
+    <section aria-label={title} style={{ marginBottom: 30 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
+        <div>
+          <h3 style={{ fontFamily: SERIF, fontSize: 26, fontWeight: 400, margin: 0, color: palette.INK }}>
+            {title} <span style={{ fontFamily: SANS, fontSize: 13, color: palette.INK2, marginLeft: 6 }}>{list.length}</span>
+          </h3>
+          <p style={{ margin: '3px 0 0', fontSize: 13.5, color: palette.INK2 }}>{blurb}</p>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button type="button" className="sms-arrow" aria-label={`Scroll ${title} left`} onClick={() => go(-1)} style={arrow}><ChevronLeft size={18} /></button>
+          <button type="button" className="sms-arrow" aria-label={`Scroll ${title} right`} onClick={() => go(1)} style={arrow}><ChevronRight size={18} /></button>
+        </div>
+      </div>
+      <div ref={ref} className="sms-track">{list.map((m) => <FlipCard key={m.slug} palette={palette} m={m} />)}</div>
+    </section>
+  );
+}
+
 /** A picture card that flips over to show the text, a line of meaning and the link to the page. */
 function FlipCard({ palette, m }: { palette: Palette; m: Mantra }) {
   const [flipped, setFlipped] = useState(false);
   const hasVideo = !!(m.videos && m.videos[0]);
   const img = hasVideo ? thumb(m.videos![0].id) : (m.cover || '/marketing/mantras/emblem-sunburst.webp');
   const flip = () => { setFlipped((f) => !f); t('MANTRA_CARD_FLIP', m.slug); };
+  // Brand mauve, deepened into a gradient so white text reads well in both themes.
+  const MAUVE = palette.isDark ? 'linear-gradient(165deg, #5E4F5D 0%, #3E333D 100%)' : 'linear-gradient(165deg, #82717F 0%, #5A4C59 100%)';
   return (
     <div className="sms-flip" data-flipped={flipped}>
       <div className="sms-flip-inner">
         {/* Front: the picture, the name and a clear "flip" cue */}
         <button type="button" className="sms-face" onClick={flip} tabIndex={flipped ? -1 : 0} aria-hidden={flipped}
           aria-label={`${m.name}. Flip for details`}
-          style={{ padding: 0, border: `1px solid ${palette.BORDER}`, cursor: 'pointer', background: palette.CARD, color: palette.INK, textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
+          style={{ padding: 0, border: '1px solid rgba(255,255,255,.12)', cursor: 'pointer', background: MAUVE, color: '#fff', textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
           <span style={{ position: 'relative', display: 'block', aspectRatio: '16 / 9', background: palette.BG2, overflow: 'hidden', flexShrink: 0 }}>
             <img src={img} alt="" loading="lazy" width={480} height={270}
               style={{ width: '100%', height: '100%', objectFit: hasVideo ? 'cover' : 'contain', padding: hasVideo ? 0 : 8, display: 'block' }} />
@@ -111,9 +140,9 @@ function FlipCard({ palette, m }: { palette: Palette; m: Mantra }) {
               fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#E9CFA4' }}>{m.deity}</span>
           </span>
           <span style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '12px 14px 12px', minHeight: 0 }}>
-            <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontFamily: SERIF, fontSize: 18, lineHeight: 1.2 }}>{m.name}</span>
+            <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontFamily: SERIF, fontSize: 18, lineHeight: 1.2, color: '#fff' }}>{m.name}</span>
             <span style={{ marginTop: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, alignSelf: 'flex-start', padding: '6px 12px', borderRadius: 999,
-              background: palette.isDark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.05)', border: `1px solid ${palette.BORDER}`, fontSize: 12, fontWeight: 700, color: palette.BROWN }}>
+              background: 'rgba(255,255,255,.16)', border: '1px solid rgba(255,255,255,.34)', fontSize: 12, fontWeight: 700, color: '#fff' }}>
               <RotateCw size={13} aria-hidden="true" /> Flip for details
             </span>
           </span>
@@ -121,20 +150,20 @@ function FlipCard({ palette, m }: { palette: Palette; m: Mantra }) {
 
         {/* Back: text, meaning and the way in */}
         <div className="sms-face sms-face-back" aria-hidden={!flipped}
-          style={{ background: palette.CARD, border: `1px solid ${palette.PURPLE_STRONG}`, color: palette.INK, padding: 14, display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: palette.BROWN, marginBottom: 4 }}>{m.deity}</span>
-          <span style={{ fontFamily: SERIF, fontSize: 17, lineHeight: 1.2, marginBottom: 8, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{m.name}</span>
-          <span style={{ fontSize: 14, lineHeight: 1.45, color: palette.INK, marginBottom: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.devanagari[0]}</span>
-          <span style={{ fontSize: 12.5, lineHeight: 1.5, color: palette.INK2, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{m.blurb}</span>
+          style={{ background: MAUVE, border: '1px solid rgba(255,255,255,.12)', color: '#fff', padding: 14, display: 'flex', flexDirection: 'column' }}>
+          <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#EBD9B6', marginBottom: 4 }}>{m.deity}</span>
+          <span style={{ fontFamily: SERIF, fontSize: 17, lineHeight: 1.2, marginBottom: 8, color: '#fff', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{m.name}</span>
+          <span style={{ fontSize: 14, lineHeight: 1.45, color: '#fff', marginBottom: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.devanagari[0]}</span>
+          <span style={{ fontSize: 12.5, lineHeight: 1.5, color: 'rgba(255,255,255,.82)', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{m.blurb}</span>
           <span style={{ marginTop: 'auto', display: 'grid', gap: 2 }}>
             <a href={`${PAGE}/${m.slug}`} tabIndex={flipped ? 0 : -1} onClick={() => t('MANTRA_CARD_CLICK', m.slug)}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 38, borderRadius: 999, background: palette.PURPLE_STRONG, color: palette.ON_ACCENT,
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 38, borderRadius: 999, background: '#fff', color: '#4F424E',
                 fontSize: 13.5, fontWeight: 800, textDecoration: 'none', textAlign: 'center', padding: '0 12px' }}>
               Text, meaning &amp; chant
             </a>
             <button type="button" onClick={flip} tabIndex={flipped ? 0 : -1}
               style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 28, background: 'none', border: 'none', cursor: 'pointer',
-                color: palette.INK2, fontSize: 12.5, fontWeight: 700 }}>
+                color: 'rgba(255,255,255,.85)', fontSize: 12.5, fontWeight: 700 }}>
               <RotateCw size={13} aria-hidden="true" /> Flip back
             </button>
           </span>
@@ -464,12 +493,11 @@ function PageStyles({ palette }: { palette: Palette }) {
         .sms-rail::-webkit-scrollbar { display: none; }
         .sms-rail .sms-flip { flex: 0 0 220px; scroll-snap-align: start; }
       }
-      .sms-groups { display: grid; gap: 30px; }
-      @media (min-width: 641px) {
-        .sms-groups { grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 250px)); gap: 16px; justify-content: start; }
-        .sms-group, .sms-group .sms-flips { display: contents; }
-        .sms-group-head { display: none !important; }
-      }
+      .sms-track { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x proximity; padding: 4px 2px 10px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+      .sms-track::-webkit-scrollbar { display: none; }
+      .sms-track .sms-flip { flex: 0 0 min(72vw, 236px); scroll-snap-align: start; }
+      .sms-arrow { display: none; }
+      @media (hover: hover) and (min-width: 768px) { .sms-arrow { display: grid; } }
       .sms-flip { position: relative; aspect-ratio: 1 / 1; perspective: 1200px; }
       .sms-flip-inner { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .6s cubic-bezier(.2,.7,.2,1); }
       .sms-flip[data-flipped="true"] .sms-flip-inner { transform: rotateY(180deg); }
@@ -601,6 +629,17 @@ function MantraHub() {
   );
   // With no filter or search, the list is grouped by deity so it is easy to scan.
   const grouped = !deity && !moment && !q;
+  // The default view: one short row per moment, swiped sideways, so the page stays short.
+  const rails = useMemo(() => {
+    const byMoment = (id: Moment) => shown.filter((m) => m.moments.includes(id));
+    const navratri = shown.filter((m) => m.occasions.some((o) => /navratri/i.test(o)));
+    const rows = [
+      ...MOMENTS.filter((mo) => mo.id === 'morning' || mo.id === 'evening' || mo.id === 'sleep').map((mo) => ({ id: mo.id, title: mo.label, blurb: mo.blurb, list: byMoment(mo.id) })),
+      { id: 'navratri', title: 'Navratri', blurb: 'The nine forms of the Goddess, day by day', list: navratri },
+      ...MOMENTS.filter((mo) => mo.id === 'festival' || mo.id === 'allday').map((mo) => ({ id: mo.id, title: mo.label, blurb: mo.blurb, list: byMoment(mo.id) })),
+    ];
+    return rows.filter((rw) => rw.list.length > 0);
+  }, [shown]);
   const deityCount = (d: string) => MANTRAS.filter((m) => m.deity === d).length;
 
   const chip = (on: boolean): React.CSSProperties => ({
@@ -682,21 +721,8 @@ function MantraHub() {
           </div>
 
           {shown.length > 0 && grouped ? (
-            <div className="sms-groups">
-              {DEITIES.map((d) => {
-                const list = shown.filter((m) => m.deity === d);
-                return list.length ? (
-                  <div key={d} className="sms-group" aria-label={`${d} mantras`}>
-                    <div className="sms-group-head" style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '0 0 12px' }}>
-                      <h3 style={{ fontFamily: SANS, fontSize: 12, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: palette.BROWN, margin: 0 }}>
-                        {d} <span style={{ opacity: 0.6, marginLeft: 4 }}>{list.length}</span>
-                      </h3>
-                      <span style={{ flex: 1, height: 1, background: palette.BORDER }} />
-                    </div>
-                    <div className="sms-flips sms-rail">{list.map((m) => <FlipCard key={m.slug} palette={palette} m={m} />)}</div>
-                  </div>
-                ) : null;
-              })}
+            <div>
+              {rails.map((rl) => <Rail key={rl.id} palette={palette} title={rl.title} blurb={rl.blurb} list={rl.list} />)}
             </div>
           ) : shown.length > 0 ? (
             <>
