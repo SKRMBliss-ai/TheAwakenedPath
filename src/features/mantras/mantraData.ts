@@ -806,8 +806,7 @@ MANTRAS.forEach((m) => { const c = COVERS[m.slug]; if (c && !m.cover) m.cover = 
 
 export const DEITIES = Array.from(new Set(MANTRAS.map((m) => m.deity)));
 export const findMantra = (slug: string) => MANTRAS.find((m) => m.slug === slug) || null;
-export const thumb = (videoId: string) =>
-  videoId === 'DbKRBQObkEE' ? '/marketing/mantras/diya.gif' : `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+export const thumb = (videoId: string) => `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
 
 export const PASS_INCLUDES = [
   'Every mantra and all meditation music, on a loop for as long as you like, in the app',
