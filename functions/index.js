@@ -261,6 +261,17 @@ const COURSE_PRICES_INR = {
     "sound_bundle": 999
 };
 
+// Single mantra downloads: each mantra can be bought on its own as an mp3.
+// Product id = "mantra_song_" + the mantra slug. Same price for all (USD 14.99,
+// INR 899). Keep this list in step with MANTRAS in src/features/mantras/mantraData.ts
+// (aartis are not sold singly). They are not in COURSE_IDS, so isSoundscapeTrack()
+// is true and a purchase lands in both purchasedCourses and ownedTracks.
+const MANTRA_SONG_SLUGS = ["karagre-vasate-lakshmi","om-gan-ganapataye-namah","mahalakshmi-mantra","kubera-mantra","kubera-ashtalakshmi-mantra","dhanvantari-mantra","om-suryaya-namah","surya-arghya-mantra","om-adityaya-namah","tulsi-mantra","shiva-mantra","uma-maheshwara-mantra","maha-sudarshana-mantra","shailaputri-mantra","navratri-day2-brahmacharini","navratri-day5-skandamata","navratri-day6-katyayani","navratri-day7-kalaratri","navratri-day8-mahagauri","navratri-day9-siddhidatri","durga-yam-devi-sarvabhuteshu","durga-sarvamangala-mangalye","lokah-samastah-sukhino","jai-ram-shiv-ram-guru-ram","durga-mangalamayi-maa","tulsi-mantra-singing","sharad-purnima-mantra","mahalakshmi-mantra-v2","uma-maheshwara-mantra-v2","om-suryaya-namah-short","jai-ram-shiv-ram-guru-ram-v2","kubera-ashtalakshmi-mantra-v2","kubera-mantra-female"];
+MANTRA_SONG_SLUGS.forEach((slug) => {
+    COURSE_PRICES["mantra_song_" + slug] = 14.99;
+    COURSE_PRICES_INR["mantra_song_" + slug] = 899;
+});
+
 // Multi-currency pricing. INR/USD tables above cover every course; the extra
 // currencies below are for the actively-sold course(s). Any course/currency not
 // listed falls back to USD so checkout can never break. Keep the VALUES in sync

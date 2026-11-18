@@ -11,13 +11,14 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Repeat, Repeat1, Lock, ListMusic, Loader2, X, Check } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Repeat, Repeat1, Lock, ListMusic, Loader2, X, Check, Download } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { VoiceService, useVoiceStatus } from '../../services/voiceService';
 import { useAuth } from '../auth/AuthContext';
 import { track as trackEvent } from '../../lib/analytics';
 import { pricingHref, UPGRADE, owns, priceOf, product, wasOf } from './catalog';
 import { useSadhana, isAarti, sankalpProgress, repsOn, dateKey } from '../mantras/sadhana/sadhanaStore';
+import { downloadAudio } from '../mantras/mantraDownload';
 import { chantsPer } from '../mantras/sadhana/chantCounts';
 import { PUJA_SEQUENCES, resolveSequence, PUJA_REPEATS } from '../mantras/sadhana/pujaSequences';
 import { MalaDeck, SankalpTab, PujaTab, SleepTimerButton, PracticeTeaser } from '../mantras/sadhana/PracticeTools';
@@ -64,7 +65,15 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
   const freeIds = useMemo(() => new Set(tracks.slice(0, FREE_TRACKS).map((t) => t.id)), [tracks]);
   // A track bought on its own (the older one-track purchase) stays unlocked for that buyer.
   const ownedIds = useMemo(() => new Set(profile?.purchasedCourses ?? []), [profile]);
-  const isLocked = (id: string) => !unlocked && !freeIds.has(id) && !(!previewAsGuest && ownedIds.has(id));
+  // A mantra bought on its own is "mantra_song_<slug>"; older single tracks use the track id.
+  const boughtSingly = (id: string) => !previewAsGuest && (ownedIds.has(id) || (id.startsWith('mantra:') && ownedIds.has(`mantra_song_${id.slice(7)}`)));
+  const isLocked = (id: string) => !unlocked && !freeIds.has(id) && !boughtSingly(id);
+  const [saving, setSaving] = useState<string | null>(null);
+  const saveFile = async (t: LibraryTrack) => {
+    setSaving(t.id);
+    try { await downloadAudio(t.path, t.title); } catch { alert('The download could not start. Please check your connection and try again.'); }
+    finally { setSaving(null); }
+  };
   const goPricing = () => { trackEvent('LIBRARY_LOCKED_CLICK', kind); window.location.assign(pricingHref(UPGRADE[kind].single)); };
   const { status, category, trackId } = useVoiceStatus();
 
@@ -302,7 +311,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
           const active = isMine && trackId === t.id;
           const locked = isLocked(t.id);
           return (
-            <li key={t.id}>
+            <li key={t.id} className="relative">
               <button onClick={() => onRow(t)} className={cn('w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
                 active ? 'bg-[var(--bg-surface)]' : 'hover:bg-[var(--bg-surface)]/60', locked && 'opacity-60')}
                 aria-label={locked ? `${t.title}, locked. Unlock on the pricing page` : undefined}>
@@ -319,7 +328,14 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
                 </span>
                 {!unlocked && !locked && <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[var(--accent-primary)]/15 text-[var(--accent-primary)] flex-shrink-0">Free</span>}
                 {t.duration && <span className="text-xs text-[var(--text-muted)] flex-shrink-0 hidden sm:block">{t.duration}</span>}
+                {isMantras && boughtSingly(t.id) && <span className="w-9 flex-shrink-0" aria-hidden="true" />}
               </button>
+              {isMantras && boughtSingly(t.id) && (
+                <button type="button" onClick={() => void saveFile(t)} aria-label={`Download ${t.title}`} title="Download your mp3"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 grid place-items-center rounded-full border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--accent-primary)]">
+                  {saving === t.id ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
+                </button>
+              )}
             </li>
           );
         })}

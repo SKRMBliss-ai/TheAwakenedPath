@@ -36,6 +36,16 @@ const PASS_FOUNDING: Record<KidsCurrency, number> = { USD: 14.99, INR: 999 };
 export const MANTRA_CURRENCY: KidsCurrency = KIDS_ZOOM_CURRENCY;
 export const passPrice = () => formatKidsPrice(PASS_FOUNDING[MANTRA_CURRENCY], MANTRA_CURRENCY);
 
+// One mantra on its own, as a downloadable mp3. Same price for every mantra.
+// Keep in sync with MANTRA_SONG_SLUGS and the price tables in functions/index.js.
+const SINGLE_PRICE: Record<KidsCurrency, number> = { USD: 14.99, INR: 899 };
+export const singlePrice = () => formatKidsPrice(SINGLE_PRICE[MANTRA_CURRENCY], MANTRA_CURRENCY);
+/** Product id the backend knows a single mantra by. */
+export const singleId = (slug: string) => `mantra_song_${slug}`;
+/** Aartis are songs and are only available through the Mantra Pass. */
+const NOT_SOLD_SINGLY = new Set(['ganesha-aarti', 'tulsi-aarti', 'saraswati-mantra']);
+export const soldSingly = (slug: string) => !NOT_SOLD_SINGLY.has(slug);
+
 // ── Catalogue ────────────────────────────────────────────────────────────────
 export type Moment = 'morning' | 'evening' | 'sleep' | 'festival' | 'allday';
 
@@ -768,6 +778,10 @@ export const PASS_INCLUDES = [
 ];
 
 export const MANTRA_FAQ: { q: string; a: string }[] = [
+  {
+    q: 'Can I buy just one mantra?',
+    a: `Yes. Every mantra except the aartis can be bought on its own as an mp3 download for ${singlePrice()}, from that mantra's page. You pay once and keep the file. If you want more than one, the Mantra Pass at ${passPrice()} covers the whole library, with the practice tools.`,
+  },
   {
     q: 'Is the mantra library free?',
     a: 'Yes. Every mantra page, with the Sanskrit text, transliteration, meaning and our YouTube recording, is free to read and listen to. The Mantra Pass is for people who want to practise with the mantras: a mala counter, a sankalp tracker, puja sequences, a sleep timer, and loop and playlists.',

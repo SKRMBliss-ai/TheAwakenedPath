@@ -19,8 +19,9 @@ import { VoiceService, useVoiceStatus } from '../../services/voiceService';
 import {
   MANTRAS, MOMENTS, DEITIES, MANTRA_FAQ, PASS_INCLUDES, MANTRA_BASE_URL, MANTRA_SUBSCRIBE_URL,
   MANTRA_WHATSAPP, MANTRA_WHATSAPP_GROUP, MANTRA_PASS_ID, MANTRA_PASS_OPEN, MANTRA_PASS_REFUND_DAYS, MANTRA_CURRENCY,
-  passPrice, findMantra, thumb, waLink, getMantraAudioUrl, type Mantra, type Moment,
+  passPrice, singlePrice, singleId, soldSingly, findMantra, thumb, waLink, getMantraAudioUrl, type Mantra, type Moment,
 } from './mantraData';
+import { downloadAudio } from './mantraDownload';
 
 const DEVA = "'Noto Serif Devanagari', 'Tiro Devanagari Sanskrit', 'Nirmala UI', 'Mangal', serif";
 const PAGE = '/mantras';
@@ -299,7 +300,112 @@ function MantraSample({ palette, m }: { palette: Palette; m: Mantra }) {
   );
 }
 
-/** The one paid product. Guest checkout: Razorpay (card, UPI, wallets) and PayPal. */
+/** Buy this one mantra as an mp3 and download it. Guest checkout, same payments as the pass. */
+function SingleMantraBuy({ palette, m }: { palette: Palette; m: Mantra }) {
+  const { checkOut, isProcessing } = useRazorpay();
+  const { renderCheckout, isAvailable: paypalAvailable } = usePaypal();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [done, setDone] = useState<string | null>(null);
+  const [fileError, setFileError] = useState(false);
+  const emailOk = email.includes('@') && !!email.split('@')[1]?.includes('.');
+  const ready = name.trim().length > 0 && emailOk;
+  const productId = singleId(m.slug);
+  const path = m.audioUrl || getMantraAudioUrl(m.slug);
+  const paypalDiv = `mantra-single-paypal-${m.slug}`;
+
+  const save = async () => {
+    setFileError(false);
+    try { await downloadAudio(path, m.name); } catch { setFileError(true); }
+  };
+
+  const onPaid = (paidEmail: string) => {
+    t('MANTRA_SINGLE_PAID', `${m.slug}:${paidEmail}`);
+    setOpen(false);
+    setDone(paidEmail);
+    void save();
+  };
+
+  useEffect(() => {
+    if (!open || !ready) return;
+    const userId = getAuth().currentUser?.uid || 'guest_pending';
+    const paidEmail = email.trim();
+    const timer = setTimeout(() => {
+      renderCheckout(paypalDiv, userId, paidEmail, productId, MANTRA_CURRENCY, () => onPaid(paidEmail), phone.trim());
+    }, 500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, ready, name, email, phone]);
+
+  const pay = () => {
+    if (!ready) return;
+    const paidEmail = email.trim();
+    const userId = getAuth().currentUser?.uid || 'guest_pending';
+    t('MANTRA_SINGLE_PAY_CLICK', m.slug);
+    checkOut(userId, paidEmail, name.trim(), productId, MANTRA_CURRENCY, () => onPaid(paidEmail), phone.trim());
+  };
+
+  const input: React.CSSProperties = {
+    width: '100%', minHeight: 46, borderRadius: 12, border: `1px solid ${palette.BORDER}`, background: palette.BG,
+    color: palette.INK, fontFamily: SANS, fontSize: 16, padding: '8px 12px', boxSizing: 'border-box',
+  };
+  const lab: React.CSSProperties = { display: 'block', fontSize: 12.5, fontWeight: 700, color: palette.INK2, marginBottom: 5 };
+  const btn = (on: boolean): React.CSSProperties => ({
+    width: '100%', minHeight: 48, borderRadius: 999, border: 'none', fontFamily: SANS, fontSize: 15, fontWeight: 700,
+    background: on ? palette.PURPLE_STRONG : palette.BORDER, color: on ? palette.ON_ACCENT : palette.INK2, cursor: on ? 'pointer' : 'not-allowed',
+  });
+
+  return (
+    <section style={{ background: palette.CARD, border: `1px solid ${palette.BORDER}`, borderRadius: 24, padding: 22 }} aria-label="Download this mantra">
+      <Kicker palette={palette}>Own this mantra</Kicker>
+      <h2 style={{ fontFamily: SERIF, fontWeight: 500, fontSize: 24, margin: '0 0 8px' }}>Download it</h2>
+      <p style={{ fontSize: 14.5, lineHeight: 1.65, color: palette.INK2, margin: '0 0 14px' }}>
+        The studio recording of {m.name} as an mp3, yours to keep. {singlePrice()}, paid once.
+      </p>
+
+      {done ? (
+        <div role="status" style={{ padding: 16, borderRadius: 16, background: palette.BAND, color: palette.ON_BAND, fontSize: 14.5, lineHeight: 1.6 }}>
+          <strong style={{ display: 'block', fontFamily: SERIF, fontSize: 20, fontWeight: 500 }}>Thank you. Your download has started.</strong>
+          {fileError
+            ? <>It did not start. <button type="button" onClick={save} style={{ background: 'none', border: 'none', padding: 0, color: palette.ON_BAND, fontWeight: 700, textDecoration: 'underline', cursor: 'pointer' }}>Try again</button>, or message us on WhatsApp.</>
+            : <>Not there? <button type="button" onClick={save} style={{ background: 'none', border: 'none', padding: 0, color: palette.ON_BAND, fontWeight: 700, textDecoration: 'underline', cursor: 'pointer' }}>Download again</button>.</>}
+          {' '}A receipt goes to {done}. Sign in with this email in the Mind Gym app to find it again.
+        </div>
+      ) : !open ? (
+        <button type="button" className="sms-btn" onClick={() => { setOpen(true); t('MANTRA_SINGLE_START', m.slug); }} style={btn(true)}>
+          Buy and download · {singlePrice()}
+        </button>
+      ) : (
+        <div>
+          <div style={{ display: 'grid', gap: 10 }}>
+            <label><span style={lab}>Your name</span><input style={input} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" /></label>
+            <label><span style={lab}>Email</span><input style={input} type="email" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" /></label>
+            <label><span style={lab}>WhatsApp number (optional)</span><input style={input} type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" /></label>
+          </div>
+          <button type="button" onClick={pay} disabled={!ready || isProcessing} style={{ ...btn(ready), marginTop: 14, opacity: isProcessing ? 0.7 : 1 }}>
+            {isProcessing ? 'Opening secure payment…' : `Pay ${singlePrice()} and download`}
+          </button>
+          <p style={{ textAlign: 'center', fontSize: 12, color: palette.INK2, margin: '8px 0 0' }}>UPI, cards, net banking and wallets, handled securely by Razorpay.</p>
+          {ready && paypalAvailable !== false && (
+            <>
+              <p style={{ textAlign: 'center', fontSize: 12, color: palette.INK2, margin: '12px 0 8px' }}>or pay with</p>
+              <div id={paypalDiv} />
+            </>
+          )}
+          {!ready && <p style={{ textAlign: 'center', fontSize: 12, color: palette.INK2, margin: '10px 0 0' }}>Enter your name and email to continue.</p>}
+        </div>
+      )}
+      <p style={{ margin: '14px 0 0', fontSize: 13, lineHeight: 1.55, color: palette.INK2 }}>
+        Want more than one? The <a href={PASS_PATH} style={{ color: palette.PURPLE_STRONG, fontWeight: 700 }}>Mantra Pass</a> covers every mantra for {passPrice()}.
+        {' '}See our <a href="/policies#refund" style={{ color: palette.PURPLE_STRONG }}>refund policy</a>.
+      </p>
+    </section>
+  );
+}
+
+/** The Mantra Pass. Guest checkout: Razorpay (card, UPI, wallets) and PayPal. */
 function PassCheckout({ palette, layout = 'summary' }: { palette: Palette; layout?: 'summary' | 'order' }) {
   const order = layout === 'order';
   const { checkOut, isProcessing } = useRazorpay();
@@ -966,6 +1072,8 @@ function MantraDetail({ m }: { m: Mantra }) {
                   </ul>
                 </section>
               )}
+
+              {soldSingly(m.slug) && <SingleMantraBuy palette={palette} m={m} />}
 
               <section style={{ ...box, borderColor: palette.PURPLE_STRONG }} aria-label="Mantra Pass">
                 <Art name="bowl" height={110} style={{ margin: '0 0 14px' }} />
