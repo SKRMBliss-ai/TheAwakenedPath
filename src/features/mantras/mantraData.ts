@@ -781,7 +781,7 @@ export const PASS_INCLUDES = [
 export const MANTRA_FAQ: { q: string; a: string }[] = [
   {
     q: 'Can I buy just one mantra?',
-    a: `Yes. Every mantra except the aartis can be bought on its own as an mp3 download for ${singlePrice()}, from that mantra's page. You pay once and keep the file. The Mantra Pass at ${passPrice()} is different: it lets you listen to the whole library in the app, with the practice tools, but it does not include downloads.`,
+    a: `Yes. Every mantra except the aartis can be bought on its own as an mp3 for ${singlePrice()}, from that mantra's page. You keep the file, and you choose its length: after you pay, message us on WhatsApp with the length you want (for example 10 minutes, 30 minutes or an hour) and we send it to you. One custom length comes with each purchase. The Mantra Pass at ${passPrice()} is different: it lets you listen to the whole library in the app, with the practice tools, but it does not include downloads.`,
   },
   {
     q: 'Is the mantra library free?',

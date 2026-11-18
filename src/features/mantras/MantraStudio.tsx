@@ -366,7 +366,7 @@ function SingleMantraBuy({ palette, m }: { palette: Palette; m: Mantra }) {
         <span>
           <span style={{ display: 'block', fontSize: 10.5, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: palette.BROWN, marginBottom: 3 }}>Own this mantra</span>
           <span style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-            <span style={{ fontFamily: SERIF, fontSize: 21, fontWeight: 500 }}>Download the mp3</span>
+            <span style={{ fontFamily: SERIF, fontSize: 20, fontWeight: 500, lineHeight: 1.2 }}>Your mantra, in the length you choose</span>
             <span style={{ fontFamily: SANS, fontSize: 17, fontWeight: 700, fontVariantNumeric: 'lining-nums tabular-nums', color: palette.PURPLE_STRONG }}>{singlePrice()}</span>
           </span>
         </span>
@@ -374,13 +374,19 @@ function SingleMantraBuy({ palette, m }: { palette: Palette; m: Mantra }) {
       </button>
       {(panel || done) && (
       <div id={`single-${m.slug}`} style={{ padding: '0 22px 22px' }}>
-      <p style={{ fontSize: 14.5, lineHeight: 1.65, color: palette.INK2, margin: '0 0 14px' }}>
-        The studio recording of {m.name} as an mp3, yours to keep. {singlePrice()}, paid once.
-      </p>
+      <ul style={{ listStyle: 'none', margin: '0 0 14px', padding: 0, display: 'grid', gap: 8, fontSize: 14.5, lineHeight: 1.55, color: palette.INK2 }}>
+        <li><strong style={{ color: palette.INK }}>An mp3 to keep</strong> and use anywhere: {m.name}, from our studio.</li>
+        <li><strong style={{ color: palette.INK }}>Pick your length:</strong> 10 minutes, 30 minutes, an hour or more. After you pay, message us on WhatsApp with the length and we send it to you.</li>
+        <li>One custom length with each purchase. {singlePrice()}, paid once.</li>
+      </ul>
 
       {done ? (
         <div role="status" style={{ padding: 16, borderRadius: 16, background: palette.BAND, color: palette.ON_BAND, fontSize: 14.5, lineHeight: 1.6 }}>
           <strong style={{ display: 'block', fontFamily: SERIF, fontSize: 20, fontWeight: 500 }}>Thank you. Your download has started.</strong>
+          <a href={waLink(`Hi Soulful Mantra Studio, I bought ${m.name}. I would like a version that is ___ long.`)} target="_blank" rel="noopener noreferrer" onClick={() => t('MANTRA_SINGLE_LENGTH_WHATSAPP', m.slug)}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 44, margin: '12px 0', borderRadius: 999, background: palette.ON_BAND, color: palette.BAND, fontWeight: 800, textDecoration: 'none', padding: '0 16px', textAlign: 'center' }}>
+            Choose your length on WhatsApp
+          </a>
           {fileError
             ? <>It did not start. <button type="button" onClick={save} style={{ background: 'none', border: 'none', padding: 0, color: palette.ON_BAND, fontWeight: 700, textDecoration: 'underline', cursor: 'pointer' }}>Try again</button>, or message us on WhatsApp.</>
             : <>Not there? <button type="button" onClick={save} style={{ background: 'none', border: 'none', padding: 0, color: palette.ON_BAND, fontWeight: 700, textDecoration: 'underline', cursor: 'pointer' }}>Download again</button>.</>}
@@ -411,12 +417,6 @@ function SingleMantraBuy({ palette, m }: { palette: Palette; m: Mantra }) {
         </div>
       )}
       <p style={{ margin: '14px 0 0', fontSize: 13, lineHeight: 1.55, color: palette.INK2 }}>
-        Need a different length, for example 10 minutes or an hour? After you download, message us on{' '}
-        <a href={waLink(`Hi Soulful Mantra Studio, I bought ${m.name}. I would like a version that is ___ long.`)} target="_blank" rel="noopener noreferrer"
-          onClick={() => t('MANTRA_SINGLE_LENGTH_WHATSAPP', m.slug)} style={{ color: palette.PURPLE_STRONG, fontWeight: 700 }}>WhatsApp</a>{' '}
-        with the length you want and we will send it to you free.
-      </p>
-      <p style={{ margin: '10px 0 0', fontSize: 13, lineHeight: 1.55, color: palette.INK2 }}>
         Prefer to listen? The <a href={PASS_PATH} style={{ color: palette.PURPLE_STRONG, fontWeight: 700 }}>Mantra Pass</a> lets you listen to every mantra in the app for {passPrice()}. It is listening only, with no downloads.
         {' '}See our <a href="/policies#refund" style={{ color: palette.PURPLE_STRONG }}>refund policy</a>.
       </p>
