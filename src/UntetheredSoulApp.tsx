@@ -2850,6 +2850,7 @@ export default function UntetheredApp() {
       {/* ── Mobile bottom navigation — thumb-reachable core tabs (hidden on desktop) ── */}
       {!(activeTab === 'meditation' && isSidebarCollapsed) && activeTab !== 'wisdom_untethered' && (
         <nav
+          data-bottom-nav
           className="lg:hidden fixed bottom-0 left-0 right-0 z-40 flex items-stretch justify-around border-t border-[var(--border-subtle)] bg-[var(--bg-primary)]/95 backdrop-blur-xl"
           style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         >

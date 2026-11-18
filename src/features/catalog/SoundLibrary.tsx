@@ -114,14 +114,17 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
 
   // The player bar lines up with the page content, so the app's sidebar never covers it.
   const pageRef = useRef<HTMLDivElement>(null);
-  const [barBox, setBarBox] = useState<{ left: number; width: number } | null>(null);
+  const [barBox, setBarBox] = useState<{ left: number; width: number; bottom: number } | null>(null);
   useEffect(() => {
     const el = pageRef.current;
     if (!el) return;
     const measure = () => {
       const r = el.getBoundingClientRect();
       const pad = window.innerWidth >= 768 ? 32 : 16;
-      setBarBox({ left: Math.max(8, r.left + pad), width: Math.max(280, r.width - pad * 2) });
+      // On small screens the app has its own bottom menu; sit above it, not behind it.
+      const nav = document.querySelector('[data-bottom-nav]');
+      const navH = nav && getComputedStyle(nav).display !== 'none' ? nav.getBoundingClientRect().height : 0;
+      setBarBox({ left: Math.max(8, r.left + pad), width: Math.max(280, r.width - pad * 2), bottom: navH + 12 });
     };
     measure();
     const ro = new ResizeObserver(measure);
@@ -281,7 +284,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
   const up = UPGRADE[kind];
 
   return (
-    <div ref={pageRef} className="relative max-w-5xl mx-auto px-4 md:px-8 pt-6 pb-28">
+    <div ref={pageRef} className="relative max-w-5xl mx-auto px-4 md:px-8 pt-6 pb-28" style={{ paddingBottom: 112 + Math.max(0, (barBox?.bottom ?? 12) - 12) }}>
       {/* Header: a soft mauve hero card */}
       <header className="relative overflow-hidden rounded-3xl border border-[var(--border-subtle)] p-5 sm:p-8 mb-6"
         style={{ background: 'linear-gradient(135deg, color-mix(in srgb, #A798A5 22%, var(--bg-surface)) 0%, var(--bg-surface) 62%)' }}>
@@ -428,7 +431,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
 
       {/* Now playing */}
       {current && isMine && (
-        <div style={barBox ? { left: barBox.left, width: barBox.width } : undefined} className="fixed bottom-3 z-40 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-color)]/95 backdrop-blur-xl shadow-2xl">
+        <div style={barBox ? { left: barBox.left, width: barBox.width, bottom: barBox.bottom } : undefined} className="fixed bottom-3 z-40 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-color)]/95 backdrop-blur-xl shadow-2xl">
           <div className="h-1 bg-[var(--border-subtle)] overflow-hidden rounded-t-2xl"><div className="h-full bg-[var(--accent-primary)]" style={{ width: `${pct}%` }} /></div>
           <div className="flex items-center gap-3 p-3">
             <img src={current.cover} alt="" className="w-11 h-11 rounded-lg object-cover flex-shrink-0" />
