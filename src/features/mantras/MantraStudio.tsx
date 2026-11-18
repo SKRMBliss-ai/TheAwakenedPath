@@ -379,11 +379,9 @@ function SingleMantraBuy({ palette, m }: { palette: Palette; m: Mantra }) {
       </button>
       {(panel || done) && (
       <div id={`single-${m.slug}`} style={{ padding: '0 22px 22px' }}>
-      <ul style={{ listStyle: 'none', margin: '0 0 14px', padding: 0, display: 'grid', gap: 8, fontSize: 14.5, lineHeight: 1.55, color: palette.INK2 }}>
-        <li><strong style={{ color: palette.INK }}>An mp3 to keep</strong> and use anywhere: {m.name}, from our studio.</li>
-        <li><strong style={{ color: palette.INK }}>Pick your length:</strong> 10 minutes, 30 minutes, an hour or more. After you pay, message us on WhatsApp with the length and we send it to you.</li>
-        <li>One custom length with each purchase. {singlePrice()}, paid once.</li>
-      </ul>
+      <p style={{ fontSize: 14.5, lineHeight: 1.6, color: palette.INK2, margin: '0 0 14px' }}>
+        <strong style={{ color: palette.INK }}>An mp3 to keep.</strong> After you pay, tell us the length on WhatsApp (10 minutes, an hour or more) and we send it. One length per purchase.
+      </p>
 
       {done ? (
         <div role="status" style={{ padding: 16, borderRadius: 16, background: palette.BAND, color: palette.ON_BAND, fontSize: 14.5, lineHeight: 1.6 }}>
