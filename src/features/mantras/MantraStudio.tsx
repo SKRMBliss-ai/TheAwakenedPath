@@ -125,7 +125,7 @@ function FlipCard({ palette, m }: { palette: Palette; m: Mantra }) {
   const img = hasVideo ? thumb(m.videos![0].id) : (m.cover || '/marketing/mantras/emblem-sunburst.webp');
   const flip = () => { setFlipped((f) => !f); t('MANTRA_CARD_FLIP', m.slug); };
   // Brand mauve, deepened into a gradient so white text reads well in both themes.
-  const MAUVE = palette.isDark ? 'linear-gradient(165deg, #5E4F5D 0%, #3E333D 100%)' : 'linear-gradient(165deg, #82717F 0%, #5A4C59 100%)';
+  const MAUVE = palette.isDark ? 'linear-gradient(165deg, #6E5E6C 0%, #4D424B 100%)' : 'linear-gradient(165deg, #A798A5 0%, #857583 100%)';
   return (
     <div className="sms-flip" data-flipped={flipped}>
       <div className="sms-flip-inner">
@@ -157,7 +157,7 @@ function FlipCard({ palette, m }: { palette: Palette; m: Mantra }) {
           <span style={{ fontSize: 12.5, lineHeight: 1.5, color: 'rgba(255,255,255,.82)', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{m.blurb}</span>
           <span style={{ marginTop: 'auto', display: 'grid', gap: 2 }}>
             <a href={`${PAGE}/${m.slug}`} tabIndex={flipped ? 0 : -1} onClick={() => t('MANTRA_CARD_CLICK', m.slug)}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 38, borderRadius: 999, background: '#fff', color: '#4F424E',
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 38, borderRadius: 999, background: '#fff', color: '#5E505C',
                 fontSize: 13.5, fontWeight: 800, textDecoration: 'none', textAlign: 'center', padding: '0 12px' }}>
               Text, meaning &amp; chant
             </a>
