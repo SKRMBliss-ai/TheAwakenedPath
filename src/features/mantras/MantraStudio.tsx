@@ -1180,6 +1180,12 @@ function MantraPassSales() {
       <PageStyles palette={palette} />
       <Header palette={palette} toggle={toggle} home={false} />
 
+      <nav aria-label="Back" style={{ ...wrap, padding: '10px 20px 0' }}>
+        <a href={PAGE} onClick={() => t('MANTRA_PASS_BACK')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, color: palette.PURPLE_STRONG, fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
+          <ChevronLeft size={18} aria-hidden="true" /> Back to the mantra library
+        </a>
+      </nav>
+
       {/* Offer ticker — plain facts about the pass, nothing we cannot back up */}
       <div aria-hidden="true" style={{ overflow: 'hidden', background: GOLD_BAR, color: '#241E24', borderBottom: '1px solid rgba(36,30,36,0.18)' }}>
         <div className="sms-ticker">
