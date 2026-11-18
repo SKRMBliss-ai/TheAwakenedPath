@@ -32,6 +32,7 @@ export const CHANTS_PER_RECORDING: Record<string, number> = {
   'mahalakshmi-mantra-v2': 3,
   'uma-maheshwara-mantra-v2': 13,
   'kubera-mantra-female': 1,
+  'om-suryaya-namah-short': 4,
 };
 
 /** Chants in one playthrough of this recording (1 when not known). */

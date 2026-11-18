@@ -675,6 +675,10 @@ export const MANTRAS: Mantra[] = [
     slug: 'uma-maheshwara-mantra-v2', name: 'Uma Maheshwara Mantra (second melody)',
     blurb: 'A second, longer melody for family harmony and the unity of strength and grace.', audioUrl: '/Mantras/uma-maheshwara-mantra-take2.mp3',
   }),
+  variant('om-suryaya-namah', {
+    slug: 'om-suryaya-namah-short', name: 'Om Suryaya Namah (short version)',
+    blurb: 'A short version of the Surya chant, for a quick morning offering.', audioUrl: '/Mantras/om-suryaya-namah-short.mp3',
+  }),
   variant('kubera-mantra', {
     slug: 'kubera-mantra-female', name: 'Kubera Mantra (female voice)',
     blurb: 'The Kubera mantra for prosperity, sung in a female voice.', audioUrl: '/Mantras/kubera-mantra-female.mp3',
