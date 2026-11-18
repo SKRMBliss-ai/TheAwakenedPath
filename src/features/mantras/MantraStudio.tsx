@@ -133,15 +133,16 @@ function FlipCard({ palette, m }: { palette: Palette; m: Mantra }) {
         <button type="button" className="sms-face" onClick={flip} tabIndex={flipped ? -1 : 0} aria-hidden={flipped}
           aria-label={`${m.name}. Flip for details`}
           style={{ padding: 0, border: `1px solid ${palette.BORDER}`, cursor: 'pointer', background: palette.CARD, color: palette.INK, textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
-          <span style={{ position: 'relative', display: 'block', aspectRatio: '16 / 9', background: palette.BG2, overflow: 'hidden', flexShrink: 0 }}>
+          <span style={{ position: 'relative', display: 'block', flex: '1 1 0', minHeight: 0, background: palette.BG2, overflow: 'hidden' }}>
             <img src={img} alt="" loading="lazy" width={480} height={270}
-              style={{ width: '100%', height: '100%', objectFit: hasVideo ? 'cover' : 'contain', padding: hasVideo ? 0 : 8, display: 'block' }} />
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: hasVideo ? 'cover' : 'contain', padding: hasVideo ? 0 : 8, display: 'block',
+                transform: hasVideo ? 'scale(1.34)' : undefined /* crops the black bars YouTube adds to its 4:3 thumbnails */ }} />
             <span style={{ position: 'absolute', left: 10, top: 10, padding: '4px 10px', borderRadius: 999, background: 'rgba(10,8,6,.62)', backdropFilter: 'blur(6px)',
               fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#E9CFA4' }}>{m.deity}</span>
           </span>
-          <span style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '12px 14px 12px', minHeight: 0 }}>
+          <span style={{ display: 'flex', flexDirection: 'column', flex: '0 0 auto', gap: 8, padding: '10px 14px 12px' }}>
             <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontFamily: SERIF, fontSize: 18, lineHeight: 1.2, color: palette.INK }}>{m.name}</span>
-            <span style={{ marginTop: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, alignSelf: 'flex-start', padding: '6px 12px', borderRadius: 999,
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, alignSelf: 'flex-start', padding: '6px 12px', borderRadius: 999,
               background: MAUVE, border: 'none', fontSize: 12, fontWeight: 700, color: '#fff' }}>
               <RotateCw size={13} aria-hidden="true" /> Flip for details
             </span>
