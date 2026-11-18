@@ -22,14 +22,14 @@ export function MantraLibrary({ previewAsGuest = false, previewAsOwner = false }
 
   const playlists: Playlist[] = useMemo(() => [
     // Aartis are whole songs, not repeated mantras, so they get their own list.
-    { id: 'type:aarti', name: 'Aarti', blurb: 'Devotional songs of offering, sung at the close of a puja.',
+    { id: 'type:aarti', group: 'Type', name: 'Aarti', blurb: 'Devotional songs of offering, sung at the close of a puja.',
       trackIds: MANTRAS.filter((m) => isAarti(m.slug)).map((m) => `mantra:${m.slug}`) },
     ...MOMENTS.map((mo) => ({
-      id: `moment:${mo.id}`, name: mo.label, blurb: mo.blurb,
+      id: `moment:${mo.id}`, group: 'When', name: mo.label, blurb: mo.blurb,
       trackIds: MANTRAS.filter((m) => m.moments.includes(mo.id)).map((m) => `mantra:${m.slug}`),
     })),
     ...DEITIES.map((d) => ({
-      id: `deity:${d}`, name: d, blurb: `Mantras to ${d}.`,
+      id: `deity:${d}`, group: 'Deity', name: d, blurb: `Mantras to ${d}.`,
       trackIds: MANTRAS.filter((m) => m.deity === d).map((m) => `mantra:${m.slug}`),
     })),
   ], []);
@@ -67,7 +67,7 @@ export function SacredSoundsLibrary({ previewAsGuest = false }: { previewAsGuest
 
   const playlists: Playlist[] = useMemo(() => {
     const moods = Array.from(new Set(SACRED_TRACKS.map((t) => t.mood)));
-    return moods.map((m) => ({ id: `mood:${m}`, name: m, blurb: MOOD_BLURB[m] || '', trackIds: SACRED_TRACKS.filter((t) => t.mood === m).map((t) => t.id) }));
+    return moods.map((m) => ({ id: `mood:${m}`, group: 'Mood', name: m, blurb: MOOD_BLURB[m] || '', trackIds: SACRED_TRACKS.filter((t) => t.mood === m).map((t) => t.id) }));
   }, []);
 
   return (

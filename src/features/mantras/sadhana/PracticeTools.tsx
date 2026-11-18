@@ -25,6 +25,7 @@ const SLEEP_OPTIONS = [15, 30, 45, 60] as const;
 
 export function SleepTimerButton() {
   const [open, setOpen] = useState(false);
+  const boxRef = useRef<HTMLDivElement>(null);
   const [endsAt, setEndsAt] = useState<number | null>(null);
   const [now, setNow] = useState(() => nowMs());
   const timers = useRef<{ end?: ReturnType<typeof setTimeout>; fade?: ReturnType<typeof setInterval> }>({});
@@ -41,6 +42,17 @@ export function SleepTimerButton() {
     const i = setInterval(() => setNow(nowMs()), 15_000);
     return () => clearInterval(i);
   }, [endsAt]);
+
+  // Clicking anywhere else, or pressing Escape, closes the menu.
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: MouseEvent | TouchEvent) => { if (boxRef.current && !boxRef.current.contains(e.target as Node)) setOpen(false); };
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('mousedown', away);
+    document.addEventListener('touchstart', away);
+    document.addEventListener('keydown', esc);
+    return () => { document.removeEventListener('mousedown', away); document.removeEventListener('touchstart', away); document.removeEventListener('keydown', esc); };
+  }, [open]);
 
   const start = (minutes: number) => {
     clear();
@@ -69,7 +81,7 @@ export function SleepTimerButton() {
   const minsLeft = endsAt ? Math.max(1, Math.ceil((endsAt - now) / 60_000)) : 0;
 
   return (
-    <div className="relative">
+    <div className="relative" ref={boxRef}>
       <button type="button" aria-label={endsAt ? `Sleep timer: ${minsLeft} minutes left` : 'Sleep timer'} onClick={() => setOpen((o) => !o)}
         className={cn('p-2 flex items-center gap-1', endsAt ? 'text-[var(--accent-primary)]' : 'text-[var(--text-muted)]')}>
         <Moon size={18} />

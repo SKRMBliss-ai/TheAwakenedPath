@@ -45,6 +45,8 @@ export interface Playlist {
   name: string;
   blurb: string;
   trackIds: string[];
+  /** Filter row this belongs to (When, Deity, Type, Mood). One can be chosen per row, and rows combine. */
+  group?: string;
 }
 
 export function SoundLibrary({ kind, title, kicker, description, cover, tracks, playlists, previewAsGuest = false, previewAsOwner = false }: {
@@ -78,13 +80,22 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
   const goPricing = () => { trackEvent('LIBRARY_LOCKED_CLICK', kind); window.location.assign(pricingHref(UPGRADE[kind].single)); };
   const { status, category, trackId } = useVoiceStatus();
 
-  const allList: Playlist = useMemo(() => ({ id: 'all', name: 'All', blurb: description, trackIds: tracks.map((t) => t.id) }), [tracks, description]);
-  const lists = useMemo(() => [allList, ...playlists.filter((p) => p.trackIds.length)], [allList, playlists]);
-  const [listId, setListId] = useState('all');
-  const list = lists.find((l) => l.id === listId) || allList;
+  // Filters: one choice per row (When, Deity, Type...), and the rows combine.
+  const [sel, setSel] = useState<Record<string, string>>({});
+  const groupOf = (p: Playlist) => p.group || 'Playlists';
+  const groups = useMemo(() => {
+    const m = new Map<string, Playlist[]>();
+    playlists.filter((p) => p.trackIds.length).forEach((p) => { const g = p.group || 'Playlists'; m.set(g, [...(m.get(g) ?? []), p]); });
+    return Array.from(m.entries());
+  }, [playlists]);
+  const activeLists = playlists.filter((p) => sel[groupOf(p)] === p.id);
+  const baseIds = activeLists.reduce((ids, l) => ids.filter((id) => l.trackIds.includes(id)), tracks.map((t) => t.id));
+  const countFor = (p: Playlist) => tracks.filter((t) => p.trackIds.includes(t.id)
+    && activeLists.filter((l) => groupOf(l) !== groupOf(p)).every((l) => l.trackIds.includes(t.id))).length;
+  const listName = activeLists.length ? activeLists.map((l) => l.name).join(' · ') : 'all';
   const [query, setQuery] = useState('');
   const qn = query.trim().toLowerCase();
-  const rows = list.trackIds.map((id) => tracks.find((t) => t.id === id)!).filter(Boolean)
+  const rows = baseIds.map((id) => tracks.find((t) => t.id === id)!).filter(Boolean)
     .filter((t) => !qn || `${t.title} ${t.subtitle}`.toLowerCase().includes(qn));
 
   const [loop, setLoop] = useState(true); // owners hear a track on repeat until they turn it off
@@ -284,7 +295,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
             <p className="text-[15px] text-[var(--text-secondary)] max-w-xl mb-5 leading-relaxed">{description}</p>
             <div className="flex flex-wrap items-center gap-3">
               <button onClick={playAll} className="inline-flex items-center gap-2 h-12 px-7 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] font-bold text-sm shadow-lg">
-                {unlocked ? <Play size={16} fill="currentColor" /> : <Lock size={15} />} Play {list.id === 'all' ? 'all' : list.name}
+                {unlocked ? <Play size={16} fill="currentColor" /> : <Lock size={15} />} Play {listName}
               </button>
               <span className="inline-flex items-center h-8 px-3 rounded-full bg-[var(--bg-color)]/60 border border-[var(--border-subtle)] text-xs font-bold text-[var(--text-secondary)]">
                 {tracks.length} {isMantras ? 'mantras' : 'tracks'}
@@ -333,20 +344,37 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
         </div>
       )}
 
-      {/* Playlists */}
-      <div style={{ maskImage: 'linear-gradient(to right, #000 calc(100% - 32px), transparent)', WebkitMaskImage: 'linear-gradient(to right, #000 calc(100% - 32px), transparent)' }}
-        className="flex gap-2 overflow-x-auto pb-2 mb-4 -mx-1 px-1 pr-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist" aria-label="Playlists">
-        {lists.map((l) => (
-          <button key={l.id} role="tab" aria-selected={l.id === listId} onClick={() => setListId(l.id)}
-            className={cn('flex-shrink-0 h-9 px-4 rounded-full text-[13px] font-bold whitespace-nowrap border transition-colors',
-              l.id === listId ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent'
-                : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_55%,transparent)] hover:text-[var(--text-primary)]')}>
-            {l.name} <span className="opacity-60 ml-1">{l.trackIds.length}</span>
-          </button>
+      {/* Filters */}
+      <div className="mb-4 space-y-2" role="group" aria-label="Filter the list">
+        {groups.map(([g, items]) => (
+          <div key={g} className="flex items-center gap-3">
+            <span className="w-12 flex-shrink-0 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">{g}</span>
+            <div style={{ maskImage: 'linear-gradient(to right, #000 calc(100% - 32px), transparent)', WebkitMaskImage: 'linear-gradient(to right, #000 calc(100% - 32px), transparent)' }}
+              className="flex gap-2 overflow-x-auto pb-1 pr-8 min-w-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {[{ id: '', name: 'All' } as { id: string; name: string }, ...items].map((p) => {
+                const on = (sel[g] ?? '') === p.id;
+                const full = p.id ? items.find((x) => x.id === p.id)! : null;
+                const n = full ? countFor(full) : null;
+                if (full && n === 0 && !on) return null;
+                return (
+                  <button key={p.id || 'all'} type="button" aria-pressed={on} onClick={() => setSel((s) => ({ ...s, [g]: on ? '' : p.id }))}
+                    className={cn('flex-shrink-0 h-9 px-4 rounded-full text-[13px] font-bold whitespace-nowrap border transition-colors',
+                      on ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent'
+                        : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_55%,transparent)]')}>
+                    {p.name}{n !== null && <span className="opacity-60 ml-1">{n}</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         ))}
+        {activeLists.length > 0 && (
+          <div className="flex items-center justify-between gap-3 pt-1">
+            <p className="text-sm text-[var(--text-secondary)] flex items-center gap-2 min-w-0"><ListMusic size={15} className="flex-shrink-0" /> <span className="truncate">{rows.length} {rows.length === 1 ? 'result' : 'results'} for {listName}</span></p>
+            <button type="button" onClick={() => setSel({})} className="text-xs font-bold underline text-[var(--text-secondary)] flex-shrink-0">Clear filters</button>
+          </div>
+        )}
       </div>
-      {list.id !== 'all' && <p className="text-sm text-[var(--text-secondary)] mb-3 flex items-center gap-2"><ListMusic size={15} /> {list.blurb}</p>}
-
       <style>{`@keyframes sl-eq { 0%,100% { height: 4px } 50% { height: 14px } } .sl-eq { height: 4px; animation: sl-eq .9s ease-in-out infinite; } @media (prefers-reduced-motion: reduce) { .sl-eq { animation: none; height: 10px; } }`}</style>
       {/* Tracks */}
       <ol className="divide-y divide-[var(--border-subtle)]/50 rounded-2xl border border-[var(--border-subtle)] overflow-hidden">
@@ -400,7 +428,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
             <img src={current.cover} alt="" className="w-11 h-11 rounded-lg object-cover flex-shrink-0" />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-semibold text-[var(--text-primary)]">{current.title}</span>
-              <span className="block truncate text-[11px] text-[var(--text-muted)]">{pujaName ? `${pujaName} · ${queue ? queue.indexOf(current.id) + 1 : 1} of ${queue?.length ?? 1}` : queue ? `Playing ${list.name} playlist` : current.subtitle}</span>
+              <span className="block truncate text-[11px] text-[var(--text-muted)]">{pujaName ? `${pujaName} · ${queue ? queue.indexOf(current.id) + 1 : 1} of ${queue?.length ?? 1}` : queue ? (activeLists.length ? `Playing ${listName}` : 'Playing the whole library') : current.subtitle}</span>
             </span>
             <button aria-label="Previous" onClick={() => step(-1)} className="p-2 text-[var(--text-secondary)]"><SkipBack size={18} /></button>
             <button aria-label={playing ? 'Pause' : 'Play'} onClick={() => (playing ? VoiceService.pause() : VoiceService.resume('music'))}
