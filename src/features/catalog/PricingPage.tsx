@@ -83,11 +83,17 @@ function DoorColumn({ palette, door, selected, onPick }: { palette: Palette; doo
   );
 }
 
-/** Other plans worth adding to this order: the default plan of each other door, skipping anything this plan already includes. */
+/** Other plans worth adding to this order: the primary plan of each door, plus standalone course where applicable. */
 function upsells(id: string): string[] {
-  const have = new Set(product(id).unlocks);
-  return DOORS.map((d) => d.plans[0]).filter((pid) => pid !== id && product(pid).name !== product(id).name && !product(pid).unlocks.every((u) => have.has(u))
-    && !Array.from(have).every((u) => product(pid).unlocks.includes(u))); // not already included, and not something that makes this plan redundant
+  const candidates = [
+    'membership_monthly',   // Adult Mind Gym
+    'kids_zoom_monthly',    // Kids Mind Gym
+    'mantra_lifetime_pass', // Mantra Pass
+  ];
+  if (!product(id).unlocks.includes('emotion_course')) {
+    candidates.push('emotion_feelings_course');
+  }
+  return candidates.filter((pid) => pid !== id && product(pid).name !== product(id).name);
 }
 
 function Checkout({ palette, id, user, onClose, queued, onAdd, onRemove }: {
@@ -113,7 +119,12 @@ function Checkout({ palette, id, user, onClose, queued, onAdd, onRemove }: {
   const formattedTotal = formatPrice(totalAmount);
   const uid = user && !user.isAnonymous ? user.uid : 'guest_pending';
   const paid = () => { t('PRICING_PAID', courseIdBundle); setDone(true); };
-  const addable = upsells(id).filter((x) => !queued.includes(x) && !queued.some((q) => product(q).name === product(x).name));
+  const allUnlocks = new Set(allItems.flatMap((item) => product(item)?.unlocks || []));
+  const addable = upsells(id).filter((x) =>
+    !queued.includes(x) &&
+    !queued.some((q) => product(q).name === product(x).name) &&
+    !(x === 'emotion_feelings_course' && allUnlocks.has('mind_gym'))
+  );
 
   useEffect(() => {
     if (!ready || done) return;
