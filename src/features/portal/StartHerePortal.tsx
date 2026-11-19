@@ -1,50 +1,18 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Check, Sparkles, Heart, Music, Flame } from 'lucide-react';
+import { ArrowRight, Sparkles, Heart } from 'lucide-react';
 
 interface StartHerePortalProps {
   onSelectAdult: (target?: 'dashboard' | 'workout') => void;
   onSelectKids: () => void;
   onSelectMantras: () => void;
-  onSelectMusic: () => void;
+  onSelectMusic?: () => void;
   userName?: string;
 }
-
-const CARDS = [
-  {
-    id: 'adult',
-    kicker: 'For you',
-    title: 'Adult Mind Gym',
-    image: '/marketing/adult-mind-gym-hero.webp',
-    imageAlt: 'Adult Mind Gym guide meditating while journaling',
-    glow: 'rgba(233, 201, 138, 0.45)',
-    halo: 'rgba(255, 210, 140, 0.35)',
-  },
-  {
-    id: 'kids',
-    kicker: 'Ages 3–12',
-    title: 'Kids Mind Gym',
-    image: '/marketing/kids/smily-boy-chirpy-hero.webp',
-    imageAlt: 'Smiling boy with Chirpy companion',
-    glow: 'rgba(233, 201, 138, 0.45)',
-    halo: 'rgba(255, 210, 140, 0.35)',
-  },
-  {
-    id: 'mantras',
-    kicker: 'Sacred chanting',
-    title: 'Mantras & Soundscape',
-    image: '/marketing/mantras/covers/om-gan-ganapataye-namah.webp',
-    imageAlt: 'Lord Ganesha in meditation on lotus',
-    glow: 'rgba(233, 201, 138, 0.45)',
-    halo: 'rgba(255, 210, 140, 0.35)',
-  },
-] as const;
 
 export function StartHerePortal({
   onSelectAdult,
   onSelectKids,
   onSelectMantras,
-  onSelectMusic,
   userName,
 }: StartHerePortalProps) {
   return (
