@@ -20,7 +20,7 @@ const ART: Record<Door['id'], { img: string; alt: string; object?: boolean; fade
   // right edges are faded into the card background, which uses the same colour.
   me: { img: '/marketing/mind-gym-guide-namaste.webp', alt: 'A guide with hands pressed together in namaste', fade: true },
   child: { img: '/marketing/kids/hero-sim-diary.webp', alt: 'Sim Katyal with her son and the daily diary chart' },
-  mantras: { img: '/marketing/mantras/bowl-lotus.webp', alt: 'A golden singing bowl resting on a lotus', object: true },
+  mantras: { img: '/marketing/mantras/altar-9-mantras.webp', alt: 'Golden 9-mantra altar with Vedic deities and lotus crest', object: true },
 };
 
 const PER = { once: ' once', month: '/month', year: '/year' } as const;
@@ -58,8 +58,16 @@ export default function PathChooser({ palette }: { palette: Palette }) {
                     className={[art.object ? 'pc-obj' : '', art.fade ? 'pc-fade' : ''].join(' ').trim() || undefined} />
                 </a>
                 <div className="pc-body">
-                  <span style={{ alignSelf: 'flex-start', fontFamily: SANS, fontSize: 12, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase',
-                    padding: '6px 12px', borderRadius: 999, background: palette.BAND, color: palette.ON_BAND }}>{d.who}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <span style={{ alignSelf: 'flex-start', fontFamily: SANS, fontSize: 12, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase',
+                      padding: '6px 12px', borderRadius: 999, background: palette.BAND, color: palette.ON_BAND }}>{d.who}</span>
+                    {d.id === 'mantras' && (
+                      <span style={{ fontFamily: SANS, fontSize: 10.5, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase',
+                        padding: '4px 10px', borderRadius: 999, background: 'linear-gradient(135deg, #E9C98A 0%, #D8AE5E 100%)', color: '#1A140B', boxShadow: '0 2px 8px rgba(216,174,94,0.3)' }}>
+                        NEW OFFERING
+                      </span>
+                    )}
+                  </div>
                   <h3 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 3vw, 36px)', fontWeight: 500, lineHeight: 1.1, margin: 0 }}>{d.title}</h3>
                   <p style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.6, color: palette.INK2, margin: 0 }}>{d.line}</p>
                   <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 7 }}>

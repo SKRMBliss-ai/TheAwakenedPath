@@ -406,34 +406,37 @@ const SOCIALS: { label: string; url: string; d: string }[] = [
   { label: 'Facebook', url: FACEBOOK_URL, d: 'M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073Z' },
 ];
 
+const MANTRA_SUBSCRIBE_URL = 'https://www.youtube.com/@SoulfulMantraStudio?sub_confirmation=1';
+
 const FOOTER_COLS: { title: string; items: NavLink[] }[] = [
   {
-    title: 'What we offer',
+    title: 'Mind & Wellbeing',
     items: [
-      { label: 'For me: Adult Mind Gym', href: '/aboutmindgym' },
-      { label: 'For my child: Kids Mind Gym', href: '/tiny-kids-transformations' },
-      { label: 'Mantras & Music', href: '/mantras' },
-      { label: 'Pricing', href: '/pricing' },
+      { label: 'Adult Mind Gym', href: '/aboutmindgym' },
+      { label: 'Kids Mind Gym', href: '/tiny-kids-transformations' },
+      { label: 'Feelings & Emotions course', href: '/feelingsandemotioncourse' },
       { label: 'Emotional health check', href: '/knowyouremotionalhealth' },
+      { label: 'Plans & Pricing', href: '/pricing' },
     ],
   },
   {
-    title: 'Studio',
+    title: 'Sacred Mantras',
+    items: [
+      { label: 'Mantra Library (25+ Chants)', href: '/mantras#library' },
+      { label: 'Mantra Pass (Lifetime)', href: '/mantras/lifetime-pass' },
+      { label: 'Daily Sadhana & Mala Counter', href: '/mantras#begin' },
+      { label: 'Gita Recitations (Soon)', href: '/mantras#gita' },
+      { label: 'Sacred Chants Channel', href: MANTRA_SUBSCRIBE_URL },
+    ],
+  },
+  {
+    title: 'Studio & Legal',
     items: [
       { label: 'About us', href: '/about-us' },
       { label: 'Digital services', href: '/#services' },
-      { label: 'Videos', href: '/#videos' },
-      { label: 'YouTube channel', href: YOUTUBE_URL },
-    ],
-  },
-  {
-    title: 'Contact & legal',
-    items: [
       { label: 'connect@skrmblissai.in', href: 'mailto:connect@skrmblissai.in' },
       { label: 'WhatsApp +91 82175 81238', href: WHATSAPP_URL },
-      { label: 'Privacy', href: '/policies#privacy' },
-      { label: 'Terms', href: '/policies#terms' },
-      { label: 'Refunds', href: '/policies#refund' },
+      { label: 'Privacy · Terms · Refunds', href: '/policies' },
     ],
   },
 ];
@@ -468,7 +471,7 @@ export function SiteFooter({ palette, brand, description, cols, youtubeUrl, what
               <SiteLogo palette={palette} size={brand ? 56 : 44} brand={brand} />
             </a>
             <p className="si-foot-desc" style={{ fontSize: 13.5, lineHeight: 1.7, margin: '0 0 16px', color: palette.INK2 }}>
-              {description ?? 'A studio for a quieter mind and braver ideas — practices, a course, free tools, and digital work made with care.'}
+              {description ?? 'A sanctuary for a quieter mind, sacred sound, and braver ideas — Vedic mantras, daily mindfulness, courses, and digital tools made with care.'}
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
               {socials.map((s) => (

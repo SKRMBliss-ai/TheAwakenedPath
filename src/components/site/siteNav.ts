@@ -19,7 +19,16 @@ export function siteNav({ home = false }: { home?: boolean } = {}): NavLink[] {
       ],
     },
     { label: 'For my child', href: '/tiny-kids-transformations' },
-    { label: 'Mantras & Music', href: '/mantras' },
+    {
+      label: 'Mantras & Music',
+      href: '/mantras',
+      subItems: [
+        { label: 'Mantra Library', sub: '25+ sacred Vedic chants with Devanagari & meanings', href: '/mantras#library' },
+        { label: 'Mantra Pass', sub: 'Lifetime ad-free chanting, 108 mala counter, puja sequences', href: '/mantras/lifetime-pass', badge: 'NEW' },
+        { label: 'Daily Sadhana', sub: 'Morning rituals, 21-day sankalp & sleep timer', href: '/mantras#begin' },
+        { label: 'Gita Chants', sub: 'Chapter recitations with commentary', href: '/mantras#gita', badge: 'SOON' },
+      ],
+    },
     { label: 'Pricing', href: '/pricing' },
     {
       label: 'More',

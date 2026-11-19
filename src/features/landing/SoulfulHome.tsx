@@ -1,4 +1,5 @@
 import PathChooser from './components/PathChooser';
+import MantrasNewOffering from './components/MantrasNewOffering';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, MessageCircle } from 'lucide-react';
@@ -12,7 +13,6 @@ import HeroMark from '../../components/site/HeroMark';
 import SacredGeometry from './components/SacredGeometry';
 import CursorGlow from './components/CursorGlow';
 import HeroSection from './components/HeroSection';
-import { trackKids } from './kidsChallengeData';
 import YouTubeSection from './components/YouTubeSection';
 import FreeGuides from './components/FreeGuides';
 import AiKnowledgeBlock from './components/AiKnowledgeBlock';
@@ -193,20 +193,22 @@ export default function SoulfulHome() {
       {/* ── Cursor warm glow ─────────────────────────────────────────────── */}
       <CursorGlow />
 
-      {/* ── Kids Challenge announcement strip ────────────────────────────── */}
+      {/* ── New Offering announcement strip ────────────────────────────── */}
       <a
-        href="/tiny-kids-transformations"
-        onClick={() => trackKids('KIDS_ANNOUNCEMENT_BAR', '/')}
+        href="/mantras/lifetime-pass"
+        onClick={() => track('HOME_ANNOUNCEMENT_MANTRA_PASS')}
         style={{
           position: 'relative', zIndex: 51, display: 'flex', alignItems: 'center',
           justifyContent: 'center', gap: 8, flexWrap: 'wrap',
           padding: '9px 16px', textAlign: 'center', textDecoration: 'none',
-          background: palette.PURPLE_STRONG, color: palette.ON_ACCENT,
+          background: isDark ? 'linear-gradient(90deg, #2D1F2D 0%, #3D263C 50%, #2D1F2D 100%)' : 'linear-gradient(90deg, #F5EDE1 0%, #EFE1D0 50%, #F5EDE1 100%)',
+          color: isDark ? '#EBD29C' : '#6A4F2C',
+          borderBottom: `1px solid ${isDark ? 'rgba(233,201,138,0.22)' : 'rgba(216,174,94,0.3)'}`,
           fontFamily: SANS, fontSize: 12.5, fontWeight: 700,
         }}
       >
-        <span>🌈 New for kids — the Kids Mind Gym, with live Zoom class included, ages 3–12</span>
-        <span style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>See membership →</span>
+        <span>🪔 New offering: Soulful Mantra Studio — Ad-free sacred Vedic chanting with 108 mala counter</span>
+        <span style={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>Explore Mantra Pass →</span>
       </a>
 
       {/* ── Navigation header ────────────────────────────────────────────── */}
@@ -364,6 +366,14 @@ export default function SoulfulHome() {
           {/* 2. The three doors */}
           <div id="choose" style={{ scrollMarginTop: 80 }}>
             <PathChooser palette={palette} />
+          </div>
+
+          {/* Section divider */}
+          <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
+
+          {/* 2.5 New Offering: Soulful Mantra Studio & Mantra Pass */}
+          <div id="mantras-offering">
+            <MantrasNewOffering palette={palette} />
           </div>
 
           {/* Section divider */}
