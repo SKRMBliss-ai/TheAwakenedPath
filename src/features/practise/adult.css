@@ -190,3 +190,24 @@ body.dark-mode .ag-embed ::placeholder {
   line-height: 1.18;
   font-weight: 600;
 }
+
+@media (max-width: 640px) {
+  .ag-stage button {
+    min-height: 44px;
+    font-size: 15px !important;
+  }
+  .ag-stage .text-\[11px\],
+  .ag-stage .text-\[12px\],
+  .ag-stage .text-\[13px\] {
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+  }
+  .ag-stage .text-\[14px\] {
+    font-size: 15.5px !important;
+    line-height: 1.55 !important;
+  }
+  .ag-stage p {
+    font-size: 15.5px !important;
+    line-height: 1.6 !important;
+  }
+}

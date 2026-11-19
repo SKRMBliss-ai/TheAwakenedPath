@@ -39,7 +39,7 @@ export default function MindGymForAll({ onEnter }: { onEnter: (route: GymRoute) 
       <header className="flex items-center gap-3 pt-6 pb-2 sm:pt-8 [@media(max-height:520px)]:pt-3">
         <GymMark />
         <span
-          className="text-[11px] font-semibold uppercase tracking-[0.2em]"
+          className="text-xs font-bold uppercase tracking-[0.2em]"
           style={{ color: 'var(--gym-ink-muted)' }}
         >
           My Best Every Day
@@ -198,11 +198,11 @@ function EntryCard({
           >
             {title}
           </h2>
-          <p className="mt-1 text-[13px] sm:text-[14px] font-medium" style={{ color: ink }}>
+          <p className="mt-1 text-[14px] sm:text-[15px] font-semibold" style={{ color: ink }}>
             {who}
           </p>
           <p
-            className="mt-2 text-[14px] sm:text-[15px]"
+            className="mt-2 text-[15px] sm:text-[16px]"
             style={{ color: 'var(--gym-ink-soft)', lineHeight: 1.55 }}
           >
             {blurb}
@@ -249,7 +249,7 @@ function Assurance({
   return (
     <li className="flex items-center gap-2">
       <Icon size={15} strokeWidth={1.8} className="shrink-0" style={{ color: 'var(--gym-accent)' }} />
-      <span className="text-[12px] sm:text-[12.5px] leading-tight" style={{ color: 'var(--gym-ink-muted)' }}>
+      <span className="text-[13px] sm:text-[13.5px] font-medium leading-tight" style={{ color: 'var(--gym-ink-muted)' }}>
         {label}
       </span>
     </li>

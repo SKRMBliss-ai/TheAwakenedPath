@@ -41,10 +41,10 @@ function DoorColumn({ palette, door, selected, onPick }: { palette: Palette; doo
   return (
     <section id={door.id} aria-labelledby={`door-${door.id}`} className="pr-col"
       style={{ background: palette.CARD, border: `1px solid ${palette.BORDER}`, borderRadius: 28, padding: 'clamp(20px, 2.6vw, 28px)', display: 'flex', flexDirection: 'column', gap: 14, scrollMarginTop: 90 }}>
-      <span style={{ alignSelf: 'flex-start', fontSize: 12, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase',
+      <span style={{ alignSelf: 'flex-start', fontSize: 13, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase',
         padding: '6px 12px', borderRadius: 999, background: palette.BAND, color: palette.ON_BAND }}>{door.who}</span>
       <h2 id={`door-${door.id}`} style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 3vw, 36px)', fontWeight: 500, lineHeight: 1.1, margin: 0 }}>{door.title}</h2>
-      <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: palette.INK2 }}>{door.line}</p>
+      <p style={{ margin: 0, fontSize: 15.5, lineHeight: 1.6, color: palette.INK2 }}>{door.line}</p>
       {door.id === 'mantras' && (
         <div style={{ borderRadius: 16, overflow: 'hidden', border: `1px solid ${palette.BORDER}`, margin: '2px 0 2px', boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }}>
           <img
@@ -57,10 +57,10 @@ function DoorColumn({ palette, door, selected, onPick }: { palette: Palette; doo
           />
         </div>
       )}
-      <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 7 }}>
+      <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 8 }}>
         {door.includes.map((x) => (
-          <li key={x} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 14, lineHeight: 1.45 }}>
-            <Check size={16} color={palette.PURPLE_STRONG} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} /> {x}
+          <li key={x} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 15, lineHeight: 1.5 }}>
+            <Check size={16} color={palette.PURPLE_STRONG} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} /> {x}
           </li>
         ))}
       </ul>
@@ -74,19 +74,19 @@ function DoorColumn({ palette, door, selected, onPick }: { palette: Palette; doo
                 cursor: 'pointer', textAlign: 'left', fontFamily: SANS, color: palette.INK,
                 background: on ? (palette.isDark ? 'rgba(191,176,189,0.14)' : 'rgba(105,94,104,0.08)') : 'transparent',
                 border: `${on ? 2 : 1}px solid ${on ? palette.PURPLE_STRONG : palette.BORDER}` }}>
-              <span style={{ fontSize: 14.5, fontWeight: 700, lineHeight: 1.3 }}>{optionLabel(id, door)}</span>
-              <span style={{ fontSize: 16, fontWeight: 800, whiteSpace: 'nowrap' }}>
-                {priceOf(id)}<span style={{ fontSize: 12.5, fontWeight: 500, color: palette.INK2 }}>{PER[p.billing]}</span>
+              <span style={{ fontSize: 15.5, fontWeight: 700, lineHeight: 1.3 }}>{optionLabel(id, door)}</span>
+              <span style={{ fontSize: 16.5, fontWeight: 800, whiteSpace: 'nowrap' }}>
+                {priceOf(id)}<span style={{ fontSize: 13.5, fontWeight: 500, color: palette.INK2 }}>{PER[p.billing]}</span>
               </span>
             </button>
           );
         })}
       </div>
       {door.extra && (
-        <p style={{ margin: 0, fontSize: 13, color: palette.INK2 }}>
+        <p style={{ margin: 0, fontSize: 14, color: palette.INK2 }}>
           {door.extra.label}{' '}
           <button type="button" onClick={() => onPick(door.extra!.id)}
-            style={{ background: 'none', border: 'none', padding: 0, color: palette.PURPLE_STRONG, fontWeight: 700, cursor: 'pointer', fontFamily: SANS, fontSize: 13, textDecoration: 'underline' }}>
+            style={{ background: 'none', border: 'none', padding: 0, color: palette.PURPLE_STRONG, fontWeight: 700, cursor: 'pointer', fontFamily: SANS, fontSize: 14, textDecoration: 'underline' }}>
             {priceOf(door.extra.id)} once
           </button>
         </p>

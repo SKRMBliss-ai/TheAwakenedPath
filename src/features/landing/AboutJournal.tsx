@@ -132,20 +132,20 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
             </div>
             {/* Badge */}
             <div
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${GOLD_BORDER} text-[10px] tracking-[0.2em] uppercase font-bold mb-6 md:mb-8`}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${GOLD_BORDER} text-xs tracking-[0.16em] uppercase font-bold mb-6 md:mb-8`}
                 style={{
                     background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.6)',
                     backdropFilter: 'blur(12px)',
                     color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
                 }}
             >
-                <Sparkles className="w-3 h-3 text-[#A98A67] animate-pulse" />
+                <Sparkles className="w-3.5 h-3.5 text-[#A98A67] animate-pulse" />
                 <span>Mind Gym</span>
             </div>
 
             {/* Headline */}
             <h1
-                className="font-[Outfit] text-[clamp(32px,6vw,72px)] font-light leading-[1.05] tracking-tight"
+                className="font-[Outfit] text-[clamp(34px,6vw,72px)] font-light leading-[1.05] tracking-tight"
                 style={{ color: isDark ? '#ffffff' : '#0c0910' }}
             >
                 Train your mind.<br />
@@ -154,8 +154,8 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
 
             {/* Description */}
             <p
-                className="mt-6 max-w-md md:max-w-xl text-sm md:text-lg leading-relaxed font-light"
-                style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}
+                className="mt-6 max-w-md md:max-w-xl text-base md:text-lg leading-relaxed font-light"
+                style={{ color: isDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.75)' }}
             >
                 A daily rhythm of journaling, video teachings, and awareness practices — designed to quiet the mental noise and help you actually feel at peace.
             </p>
@@ -164,7 +164,7 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
             <div className="mt-8 flex flex-col sm:flex-row gap-3 items-center md:items-start">
                 <a
                     href={PREMIUM_URL}
-                    className="group inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-[#8C7B8A] hover:bg-[#8C7B8A] text-[#0c0910] text-sm font-bold tracking-wide transition-all shadow-xl hover:shadow-[#8C7B8A]/30"
+                    className="group inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-[#8C7B8A] hover:bg-[#8C7B8A] text-[#0c0910] text-base font-bold tracking-wide transition-all shadow-xl hover:shadow-[#8C7B8A]/30"
                 >
                     Begin Journey
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -175,7 +175,7 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                         e.preventDefault();
                         document.getElementById('download')?.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className="group inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full text-sm font-semibold tracking-wide transition-all border border-white/20 bg-white/5 hover:bg-white/10 backdrop-blur-md"
+                    className="group inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full text-base font-semibold tracking-wide transition-all border border-white/20 bg-white/5 hover:bg-white/10 backdrop-blur-md"
                     style={{ color: isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)' }}
                 >
                     Download Guide
@@ -219,13 +219,13 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                         className="relative z-20 mx-4 mt-6 mb-8"
                     >
                         <div className="text-center mb-5 px-2">
-                            <p className="text-[11px] uppercase tracking-[0.22em] text-[#A98A67] mb-2 font-semibold">
+                            <p className="text-xs uppercase tracking-[0.2em] text-[#A98A67] mb-2 font-semibold">
                                 Mind Gym
                             </p>
-                            <h2 className="font-[Outfit] text-[clamp(22px,5vw,30px)] font-light tracking-tight text-white">
+                            <h2 className="font-[Outfit] text-[clamp(24px,5.5vw,32px)] font-light tracking-tight text-white">
                                 Your daily practice, in one sacred space.
                             </h2>
-                            <p className="mt-2 text-xs text-white/55 leading-relaxed">
+                            <p className="mt-2 text-sm text-white/75 leading-relaxed">
                                 Journal, reflect, track growth, and stay present through every part of your day.
                             </p>
                         </div>
@@ -281,13 +281,13 @@ const Hero = ({ theme }: { theme: 'dark' | 'light' }) => {
                 className="relative z-30 px-8 xl:px-16 pb-12"
             >
                 <div className="max-w-6xl mx-auto text-center mb-6">
-                    <p className="text-[11px] uppercase tracking-[0.22em] text-[#A98A67] mb-3 font-semibold">
+                    <p className="text-xs uppercase tracking-[0.2em] text-[#A98A67] mb-3 font-semibold">
                         Mind Gym
                     </p>
                     <h2 className="font-[Outfit] text-[clamp(26px,4vw,38px)] font-light tracking-tight text-black dark:text-white">
                         Your daily practice, in one sacred space.
                     </h2>
-                    <p className="mt-3 text-sm text-black/50 dark:text-white/50 leading-relaxed">
+                    <p className="mt-3 text-base text-black/60 dark:text-white/70 leading-relaxed">
                         Journal, reflect, track growth, and stay present through every part of your day.
                     </p>
                 </div>
@@ -371,7 +371,7 @@ function DailyJourneyVideo({ theme }: { theme: 'dark' | 'light' }) {
                     <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5 text-red-500">
                         <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                     </svg>
-                    <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-black/50 dark:text-white/50">
+                    <span className="text-xs font-bold uppercase tracking-[0.16em] text-black/60 dark:text-white/60">
                         Demo · The 4-Step Daily Process
                     </span>
                 </div>
@@ -416,8 +416,8 @@ function DailyJourneyVideo({ theme }: { theme: 'dark' | 'light' }) {
                         {/* Bottom bar */}
                         <div className="absolute bottom-0 left-0 right-0 px-5 py-4 flex items-end justify-between pointer-events-none">
                             <div>
-                                <p className="text-white text-[11px] uppercase tracking-widest font-semibold opacity-80">Watch the walkthrough</p>
-                                <p className="text-white/60 text-xs mt-0.5">Learn · Practice · Reflect · Live It</p>
+                                <p className="text-white text-xs uppercase tracking-widest font-semibold opacity-90">Watch the walkthrough</p>
+                                <p className="text-white/80 text-sm mt-0.5">Learn · Practice · Reflect · Live It</p>
                             </div>
                             {/* YouTube badge — opens new tab, independent of play button */}
                             <a
@@ -431,14 +431,14 @@ function DailyJourneyVideo({ theme }: { theme: 'dark' | 'light' }) {
                                 <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3 text-red-500">
                                     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                                 </svg>
-                                <span className="text-[10px] font-bold text-white tracking-wider uppercase">YouTube ↗</span>
+                                <span className="text-xs font-bold text-white tracking-wider uppercase">YouTube ↗</span>
                             </a>
                         </div>
                     </>
                 )}
             </div>
 
-            <p className="text-center text-[11px] text-black/40 dark:text-white/35 mt-4 tracking-wide">
+            <p className="text-center text-xs text-black/50 dark:text-white/45 mt-4 tracking-wide">
                 This video walks you through exactly how to use these 4 steps daily →
             </p>
         </motion.div>

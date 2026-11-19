@@ -475,9 +475,9 @@ function PassCheckout({ palette, layout = 'summary' }: { palette: Palette; layou
     width: '100%', minHeight: 48, borderRadius: 14, border: `1px solid ${palette.BORDER}`, background: palette.BG,
     color: palette.INK, fontFamily: SANS, fontSize: 16, padding: '10px 14px', boxSizing: 'border-box',
   };
-  const label: React.CSSProperties = { display: 'block', fontSize: 12.5, fontWeight: 700, color: palette.INK2, marginBottom: 6 };
+  const label: React.CSSProperties = { display: 'block', fontSize: 14, fontWeight: 700, color: palette.INK2, marginBottom: 6 };
   const big = (on: boolean): React.CSSProperties => ({
-    width: '100%', minHeight: 52, borderRadius: 999, border: 'none', fontFamily: SANS, fontSize: 16, fontWeight: 700,
+    width: '100%', minHeight: 52, borderRadius: 999, border: 'none', fontFamily: SANS, fontSize: 16.5, fontWeight: 700,
     background: on ? palette.PURPLE_STRONG : palette.BORDER, color: on ? palette.ON_ACCENT : palette.INK2,
     cursor: on ? 'pointer' : 'not-allowed',
   });
@@ -489,12 +489,12 @@ function PassCheckout({ palette, layout = 'summary' }: { palette: Palette; layou
           <div style={{ marginBottom: 22, paddingBottom: 22, borderBottom: `1px solid ${palette.BORDER}` }}>
             <Art name="bowl" height={120} style={{ margin: '0 0 14px' }} />
             <h1 style={{ margin: '0 0 4px', fontFamily: SERIF, fontSize: 'clamp(30px, 4vw, 40px)', fontWeight: 500, lineHeight: 1.1 }}>Mantra Pass</h1>
-            <p style={{ margin: '0 0 12px', fontSize: 13.5, color: palette.INK2 }}>By Soulful Mantra Studio</p>
-            <p style={{ margin: '0 0 10px', fontSize: 15.5, lineHeight: 1.65, color: palette.INK2 }}>
+            <p style={{ margin: '0 0 12px', fontSize: 14.5, color: palette.INK2 }}>By Soulful Mantra Studio</p>
+            <p style={{ margin: '0 0 10px', fontSize: 16, lineHeight: 1.65, color: palette.INK2 }}>
               Our whole mantra library in one calm place, sorted by deity, by time of day and by festival.
               Pick what today asks for (a morning prayer, the evening lamp, a festival puja, rest) and let it play on a loop, while the mala counter keeps count for you.
             </p>
-            <p style={{ margin: 0, fontSize: 15.5, lineHeight: 1.65, color: palette.INK2 }}>
+            <p style={{ margin: 0, fontSize: 16, lineHeight: 1.65, color: palette.INK2 }}>
               One payment. No renewals. Every mantra we record later is added for you.
             </p>
           </div>
@@ -514,7 +514,7 @@ function PassCheckout({ palette, layout = 'summary' }: { palette: Palette; layou
           {PASS_INCLUDES.map((line, i) => {
             const Icon = [Repeat, ListMusic, FileText, Sunrise, Bell, MessageCircle][i] || BookOpen;
             return (
-              <li key={line} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', fontSize: 15, lineHeight: 1.55, color: palette.INK2 }}>
+              <li key={line} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', fontSize: 15.5, lineHeight: 1.55, color: palette.INK2 }}>
                 <span style={{ flexShrink: 0, display: 'grid', placeItems: 'center', width: 36, height: 36, borderRadius: 12, background: palette.BAND, color: palette.ON_BAND }}>
                   <Icon size={18} aria-hidden="true" />
                 </span>
@@ -527,16 +527,16 @@ function PassCheckout({ palette, layout = 'summary' }: { palette: Palette; layou
 
       <div style={{ background: palette.CARD, border: `2px solid ${palette.PURPLE_STRONG}`, borderRadius: 28, padding: 'clamp(22px, 4vw, 30px)' }}>
         <span style={{ display: 'inline-block', background: palette.PURPLE_STRONG, color: palette.ON_ACCENT, borderRadius: 999,
-          padding: '5px 14px', fontSize: 10.5, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Pay once</span>
+          padding: '6px 16px', fontSize: 12, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Pay once</span>
         <p style={{ margin: '14px 0 2px', fontFamily: SANS, fontSize: 44, fontWeight: 700, lineHeight: 1.05, color: palette.INK }}>
           {passPrice()}
         </p>
-        <p style={{ margin: '0 0 16px', fontSize: 14, lineHeight: 1.55, color: palette.INK2 }}>
+        <p style={{ margin: '0 0 16px', fontSize: 15.5, lineHeight: 1.55, color: palette.INK2 }}>
           Pay once. No subscription.
         </p>
 
         {done ? (
-          <div role="status" style={{ padding: '18px 18px', borderRadius: 18, background: palette.BAND, color: palette.ON_BAND, fontSize: 15, lineHeight: 1.6 }}>
+          <div role="status" style={{ padding: '18px 18px', borderRadius: 18, background: palette.BAND, color: palette.ON_BAND, fontSize: 15.5, lineHeight: 1.6 }}>
             <strong style={{ display: 'block', fontFamily: SERIF, fontSize: 24, fontWeight: 500 }}>Thank you. Your pass is confirmed.</strong>
             Your access link is on its way to {done}, usually the same day and always within 24 hours.
             Not there? <a href={waLink('Hi, I bought the Mantra Pass and need my access link.')} style={{ color: palette.ON_BAND, fontWeight: 700 }}>Message us on WhatsApp</a>.
@@ -554,7 +554,7 @@ function PassCheckout({ palette, layout = 'summary' }: { palette: Palette; layou
         ) : (
           <div ref={formRef}>
             <h2 style={{ margin: '0 0 4px', fontFamily: SERIF, fontSize: 24, fontWeight: 500 }}>Your details</h2>
-            <p style={{ margin: '0 0 14px', fontSize: 13.5, color: palette.INK2 }}>We send your access link to this email address.</p>
+            <p style={{ margin: '0 0 14px', fontSize: 14.5, color: palette.INK2 }}>We send your access link to this email address.</p>
             <div style={{ display: 'grid', gap: 12 }}>
               <label><span style={label}>Your name</span>
                 <input style={input} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" /></label>
@@ -564,7 +564,7 @@ function PassCheckout({ palette, layout = 'summary' }: { palette: Palette; layou
                 <input style={input} type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" /></label>
             </div>
             <dl style={{ margin: '18px 0 0', padding: '14px 16px', borderRadius: 16, border: `1px dashed ${palette.BORDER}`, display: 'grid',
-              gridTemplateColumns: '1fr auto', gap: '8px 12px', fontSize: 14, color: palette.INK2 }}>
+              gridTemplateColumns: '1fr auto', gap: '8px 12px', fontSize: 15, color: palette.INK2 }}>
               <dt>Mantra Pass</dt>
               <dd style={{ margin: 0 }}>{passPrice()}</dd>
               <dt style={{ fontWeight: 700, color: palette.INK, paddingTop: 8, borderTop: `1px solid ${palette.BORDER}` }}>Amount to pay</dt>
@@ -573,15 +573,15 @@ function PassCheckout({ palette, layout = 'summary' }: { palette: Palette; layou
             <button type="button" onClick={pay} disabled={!ready || isProcessing} style={{ ...big(ready), marginTop: 16, opacity: isProcessing ? 0.7 : 1 }}>
               {isProcessing ? 'Opening secure payment…' : `Proceed to pay ${passPrice()}`}
             </button>
-            <p style={{ textAlign: 'center', fontSize: 12, color: palette.INK2, margin: '10px 0 0' }}>UPI, cards, net banking and wallets, handled securely by Razorpay.</p>
+            <p style={{ textAlign: 'center', fontSize: 13.5, color: palette.INK2, margin: '10px 0 0' }}>UPI, cards, net banking and wallets, handled securely by Razorpay.</p>
             {ready && paypalAvailable !== false && (
               <>
-                <p style={{ textAlign: 'center', fontSize: 12, color: palette.INK2, margin: '14px 0 8px' }}>or pay with</p>
+                <p style={{ textAlign: 'center', fontSize: 13.5, color: palette.INK2, margin: '14px 0 8px' }}>or pay with</p>
                 <div id="mantra-paypal-container" />
               </>
             )}
             {!ready && (
-              <p style={{ textAlign: 'center', fontSize: 12, color: palette.INK2, margin: '12px 0 0' }}>Enter your name and email to continue.</p>
+              <p style={{ textAlign: 'center', fontSize: 13.5, color: palette.INK2, margin: '12px 0 0' }}>Enter your name and email to continue.</p>
             )}
           </div>
         )}
@@ -667,6 +667,18 @@ function PageStyles({ palette }: { palette: Palette }) {
         .sms-listen { text-align: center; }
         .sms-listen img { margin-left: auto; margin-right: auto; }
         .sms-chips { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; padding-bottom: 6px; -webkit-overflow-scrolling: touch; }
+      }
+      @media (max-width: 640px) {
+        .sms-sales-hero h1 { font-size: 34px !important; line-height: 1.15 !important; }
+        .sms-sales-hero p { font-size: 16px !important; line-height: 1.65 !important; }
+        .sms-chip { font-size: 14px !important; min-height: 42px !important; }
+        .sms-btn { font-size: 15.5px !important; min-height: 48px !important; }
+        .sms-ticker span { font-size: 13.5px !important; }
+        .sms-card h3 { font-size: 22px !important; }
+        .sms-card p { font-size: 15px !important; line-height: 1.6 !important; }
+        .sms-face-back span { font-size: 14px !important; }
+        .sms-pass h1 { font-size: 32px !important; }
+        .sms-pass p { font-size: 15.5px !important; line-height: 1.6 !important; }
       }
       @media (prefers-reduced-motion: reduce) { .sms-card, .sms-btn { transition: none; } .sms-card:hover, .sms-btn:hover { transform: none; } }
     `}</style>
@@ -1251,8 +1263,8 @@ function MantraPassSales() {
                     <Icon size={18} aria-hidden="true" />
                   </span>
                   <span>
-                    <span style={{ display: 'block', fontSize: 15, fontWeight: 700, color: palette.INK, lineHeight: 1.25 }}>{h}</span>
-                    <span style={{ display: 'block', fontSize: 13, lineHeight: 1.5, color: palette.INK2, marginTop: 2 }}>{b}</span>
+                    <span style={{ display: 'block', fontSize: 16.5, fontWeight: 700, color: palette.INK, lineHeight: 1.25 }}>{h}</span>
+                    <span style={{ display: 'block', fontSize: 14.5, lineHeight: 1.5, color: palette.INK2, marginTop: 3 }}>{b}</span>
                   </span>
                 </div>
               ))}
@@ -1276,7 +1288,7 @@ function MantraPassSales() {
                 Watch 1-minute walkthrough
               </button>
             </div>
-            <p style={{ margin: '14px 0 0', fontSize: 13.5, lineHeight: 1.6, color: palette.INK2 }}>
+            <p style={{ margin: '14px 0 0', fontSize: 15, lineHeight: 1.6, color: palette.INK2 }}>
               <strong style={{ color: palette.INK }}>Pay once, keep it.</strong> {passPrice()} once · full refund within {MANTRA_PASS_REFUND_DAYS} days
               <span style={{ display: 'block' }}>UPI, cards, net banking, wallets and PayPal</span>
             </p>
@@ -1301,7 +1313,7 @@ function MantraPassSales() {
                   <img src={m.cover || (m.videos && m.videos[0] ? thumb(m.videos[0].id) : '/marketing/mantras/emblem-sunburst.webp')} alt="" loading="lazy" width={480} height={360}
                     style={{ width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: 16, display: 'block', marginBottom: 14 }} />
                   <h3 style={{ margin: '0 6px 6px', fontFamily: SERIF, fontSize: 25, fontWeight: 500, lineHeight: 1.2 }}>{f.h}</h3>
-                  <p style={{ margin: '0 6px 6px', fontSize: 14.5, lineHeight: 1.65, color: palette.INK2 }}>{f.b}</p>
+                  <p style={{ margin: '0 6px 6px', fontSize: 15.5, lineHeight: 1.65, color: palette.INK2 }}>{f.b}</p>
                 </div>
               );
             })}
@@ -1322,7 +1334,7 @@ function MantraPassSales() {
                 </span>
                 <span>
                   <strong style={{ display: 'block', fontFamily: SERIF, fontSize: 22, fontWeight: 500, lineHeight: 1.2, marginBottom: 4 }}>{h}</strong>
-                  <span style={{ fontSize: 14.5, lineHeight: 1.6, color: palette.INK2 }}>{b}</span>
+                  <span style={{ fontSize: 15.5, lineHeight: 1.6, color: palette.INK2 }}>{b}</span>
                 </span>
               </div>
             ))}
