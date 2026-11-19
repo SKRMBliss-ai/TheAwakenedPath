@@ -156,6 +156,12 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
   const slugOf = (id: string | null | undefined) => (id && id.startsWith('mantra:') ? id.slice(7) : null);
   const counterSlug = slugOf(current?.id) ?? sadhana.state.lastSlug ?? slugOf(tracks[0]?.id);
   const counterTrack = counterSlug ? tracks.find((t) => t.id === `mantra:${counterSlug}`) ?? null : null;
+  const lastMantra = tools && sadhana.state.lastSlug
+    ? tracks.find((t) => t.id === `mantra:${sadhana.state.lastSlug}`) ?? null
+    : null;
+  const lastMantraCount = lastMantra && sadhana.state.lastSlug
+    ? repsOn(sadhana.state, dateKey(), sadhana.state.lastSlug)
+    : 0;
 
   useEffect(() => {
     if (!isMine) return;
@@ -176,11 +182,12 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
   const playTrack = async (t: LibraryTrack, q: string[] | null = live.current.queue, repeatOverride?: number) => {
     setLoadingId(t.id);
     setRound(0);
+    const slug = slugOf(t.id);
+    if (live.current.tools && slug && !isAarti(slug)) live.current.sadhana.setLastSlug(slug);
     try {
       const url = t.resolve ? await t.resolve() : t.path;
       const L = live.current;
       // Owners can loop or repeat; everyone else hears the track once.
-      const slug = slugOf(t.id);
       const per = slug ? chantsPer(slug) : 1; // chants inside one playthrough
       const repeat = !L.unlocked ? 1 : repeatOverride ?? (q ? Math.max(1, Math.ceil(L.queueRepeat / per)) : L.loop ? Infinity : 1);
       await VoiceService.playAudioURL(url, {
@@ -225,6 +232,18 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
     setQueue(q); setQueueRepeat(1); setPujaName(null);
     live.current = { ...live.current, queue: q, queueRepeat: 1, pujaName: null };
     if (rows[0]) void playTrack(rows[0], q);
+  };
+
+  const resumeLastMantra = () => {
+    if (!lastMantra) return;
+    setZenChantOpen(true);
+    if (trackId === lastMantra.id && isMine && status === 'paused') {
+      VoiceService.resume('music');
+      return;
+    }
+    setQueue(null); setPujaName(null);
+    live.current.queue = null;
+    void playTrack(lastMantra, null);
   };
 
   const toggleLoop = () => {
@@ -320,6 +339,19 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
           </div>
         </div>
       </header>
+
+      {lastMantra && (
+        <section aria-label="Continue your mantra practice" className="mb-3 sm:mb-5 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3 sm:p-4 flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Continue where you left off</p>
+            <p className="truncate text-sm font-semibold text-[var(--text-primary)] mt-0.5">{lastMantra.title}</p>
+            <p className="text-xs text-[var(--text-secondary)] mt-0.5">Today: {lastMantraCount} chants · Saved on this device</p>
+          </div>
+          <button type="button" onClick={resumeLastMantra} aria-label={`Resume ${lastMantra.title}`} className="h-11 min-w-11 px-4 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] font-bold text-sm inline-flex items-center justify-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">
+            <Play size={15} fill="currentColor" /> <span className="hidden sm:inline">Resume</span>
+          </button>
+        </section>
+      )}
 
       {tools && (
         <div className="flex gap-1.5 sm:gap-2 mb-2.5 sm:mb-5" role="tablist" aria-label="Mantras sections">
