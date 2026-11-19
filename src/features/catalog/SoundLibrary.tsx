@@ -239,8 +239,8 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
   const resumeLastMantra = () => {
     if (!lastMantra) return;
     setZenChantOpen(true);
-    if (trackId === lastMantra.id && isMine && status === 'paused') {
-      VoiceService.resume('music');
+    if (trackId === lastMantra.id && isMine && (playing || status === 'paused')) {
+      if (status === 'paused') VoiceService.resume('music');
       return;
     }
     setQueue(null); setPujaName(null);
