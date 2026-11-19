@@ -90,15 +90,16 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
     return Array.from(m.entries());
   }, [playlists]);
   const flatPlaylists = useMemo(() => playlists.filter((p) => p.trackIds.length > 0), [playlists]);
-  const activeLists = playlists.filter((p) => sel[groupOf(p)] === p.id);
-  const baseIds = activeLists.reduce((ids, l) => ids.filter((id) => l.trackIds.includes(id)), tracks.map((t) => t.id));
-  const countFor = (p: Playlist) => tracks.filter((t) => p.trackIds.includes(t.id)
-    && activeLists.filter((l) => groupOf(l) !== groupOf(p)).every((l) => l.trackIds.includes(t.id))).length;
+  const activeLists = useMemo(() => playlists.filter((p) => sel[groupOf(p)] === p.id), [playlists, sel]);
+  const baseIds = useMemo(() => activeLists.reduce((ids, l) => ids.filter((id) => l.trackIds.includes(id)), tracks.map((t) => t.id)), [activeLists, tracks]);
+  const playlistCounts = useMemo(() => new Map(playlists.map((p) => [p.id, tracks.filter((t) => p.trackIds.includes(t.id)
+    && activeLists.filter((l) => groupOf(l) !== groupOf(p)).every((l) => l.trackIds.includes(t.id))).length])), [playlists, tracks, activeLists]);
+  const countFor = (p: Playlist) => playlistCounts.get(p.id) ?? 0;
   const listName = activeLists.length ? activeLists.map((l) => l.name).join(' · ') : 'all';
   const [query, setQuery] = useState('');
   const qn = query.trim().toLowerCase();
-  const rows = baseIds.map((id) => tracks.find((t) => t.id === id)!).filter(Boolean)
-    .filter((t) => !qn || `${t.title} ${t.subtitle}`.toLowerCase().includes(qn));
+  const rows = useMemo(() => baseIds.map((id) => tracks.find((t) => t.id === id)).filter((t): t is LibraryTrack => !!t)
+    .filter((t) => !qn || `${t.title} ${t.subtitle}`.toLowerCase().includes(qn)), [baseIds, tracks, qn]);
 
   const [loop, setLoop] = useState(true); // owners hear a track on repeat until they turn it off
   useEffect(() => { setLibraryOpen(true); return () => setLibraryOpen(false); }, []);
@@ -476,7 +477,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
           const locked = isLocked(t.id);
           const mine = isMantras && boughtSingly(t.id);
           return (
-            <li key={t.id} className="relative">
+            <li key={t.id} className="relative" style={{ contentVisibility: 'auto', containIntrinsicSize: '96px' }}>
               <button onClick={() => onRow(t)} className={cn('group w-full flex items-center gap-3 p-2 pr-2 sm:gap-3.5 sm:p-2.5 sm:pr-3 rounded-2xl border text-left transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-primary)]',
                 active ? 'bg-[var(--bg-surface)] border-[var(--accent-primary)] shadow-md' : 'bg-[var(--bg-surface)] border-[var(--border-subtle)] hover:-translate-y-0.5 hover:shadow-md',
                 locked && 'opacity-70')}
