@@ -314,13 +314,13 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
         <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-16 w-72 h-72 rounded-full"
           style={{ background: 'radial-gradient(circle, rgba(233,201,138,.28) 0%, rgba(233,201,138,0) 70%)' }} />
         <div className="relative flex flex-col sm:flex-row gap-3 sm:gap-8 sm:items-center">
-          <img src={cover} alt="" className="hidden sm:block w-28 h-28 sm:w-40 sm:h-40 rounded-2xl object-contain p-2 flex-shrink-0 self-start sm:self-center" />
+          <img src={cover} alt="" loading="lazy" decoding="async" className="hidden sm:block w-28 h-28 sm:w-40 sm:h-40 rounded-2xl object-contain p-2 flex-shrink-0 self-start sm:self-center" />
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)] mb-1 sm:mb-2">{kicker}</p>
             <h1 className="font-serif text-3xl sm:text-4xl md:text-6xl text-[var(--text-primary)] leading-none mb-2 sm:mb-3">{title}</h1>
             <p className="hidden sm:block text-[15px] text-[var(--text-secondary)] max-w-xl mb-5 leading-relaxed">{description}</p>
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <button onClick={playAll} className="inline-flex items-center gap-1.5 sm:gap-2 h-9 sm:h-12 px-4 sm:px-7 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] font-bold text-xs sm:text-sm shadow-md">
+              <button onClick={playAll} className="inline-flex items-center gap-1.5 sm:gap-2 h-11 sm:h-12 px-4 sm:px-7 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] font-bold text-sm shadow-md">
                 {unlocked ? <Play size={14} fill="currentColor" /> : <Lock size={14} />} Play {listName}
               </button>
               <span className="inline-flex items-center h-7 sm:h-8 px-2.5 sm:px-3 rounded-full bg-[var(--bg-color)]/60 border border-[var(--border-subtle)] text-[11px] sm:text-xs font-bold text-[var(--text-secondary)]">
@@ -331,7 +331,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
                   <Check size={13} /> {isMantras ? 'Loop, playlists and practice tools' : 'Loop and playlists'}
                 </span>
               ) : (
-                <button onClick={goPricing} className="h-9 sm:h-12 px-4 sm:px-5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-color)]/60 text-xs sm:text-sm font-bold text-[var(--text-primary)] hover:bg-[var(--bg-surface)]">
+                <button onClick={goPricing} className="h-11 sm:h-12 px-4 sm:px-5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-color)]/60 text-sm font-bold text-[var(--text-primary)] hover:bg-[var(--bg-surface)]">
                   Unlock · {priceOf(up.single)}
                 </button>
               )}
@@ -345,7 +345,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Continue where you left off</p>
             <p className="truncate text-sm font-semibold text-[var(--text-primary)] mt-0.5">{lastMantra.title}</p>
-            <p className="text-xs text-[var(--text-secondary)] mt-0.5">Today: {lastMantraCount} chants · Saved on this device</p>
+            <p className="text-sm text-[var(--text-secondary)] mt-0.5">Today: {lastMantraCount} repetitions · Saved on this device</p>
           </div>
           <button type="button" onClick={resumeLastMantra} aria-label={`Resume ${lastMantra.title}`} className="h-11 min-w-11 px-4 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] font-bold text-sm inline-flex items-center justify-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">
             <Play size={15} fill="currentColor" /> <span className="hidden sm:inline">Resume</span>
@@ -357,7 +357,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
         <div className="flex gap-1.5 sm:gap-2 mb-2.5 sm:mb-5" role="tablist" aria-label="Mantras sections">
           {([['library', 'Library'], ['puja', 'Puja sequences'], ['sankalp', 'My sadhana']] as const).map(([id, label]) => (
             <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)}
-              className={cn('h-8 sm:h-9 px-3 sm:px-4 rounded-full text-xs sm:text-[13px] font-bold border transition-colors',
+              className={cn('h-11 sm:h-9 px-3 sm:px-4 rounded-full text-sm sm:text-[13px] font-bold border transition-colors',
                 tab === id ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent' : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_55%,transparent)]')}>{label}</button>
           ))}
         </div>
@@ -380,7 +380,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
         <div className="relative mb-2 sm:mb-3">
           <Search size={15} aria-hidden="true" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
           <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} aria-label={`Search ${title}`} placeholder={`Search ${title.toLowerCase()}, e.g. Ganesha or Navratri`}
-            className="w-full h-9 sm:h-11 rounded-full pl-9 sm:pl-11 pr-4 text-xs sm:text-sm bg-[var(--bg-color)] text-[var(--text-primary)] border border-[color-mix(in_srgb,var(--text-muted)_45%,transparent)] outline-none focus:border-[var(--accent-primary)]" />
+            className="w-full h-11 rounded-full pl-9 sm:pl-11 pr-4 text-sm bg-[var(--bg-color)] text-[var(--text-primary)] border border-[color-mix(in_srgb,var(--text-muted)_45%,transparent)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]" />
         </div>
       )}
 
@@ -400,7 +400,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
               aria-pressed={activeLists.length === 0}
               onClick={() => setSel({})}
               className={cn(
-                'flex-shrink-0 h-7 px-3 rounded-full text-[11px] font-semibold whitespace-nowrap border transition-colors',
+                'flex-shrink-0 h-11 px-3 rounded-full text-[13px] font-semibold whitespace-nowrap border transition-colors',
                 activeLists.length === 0
                   ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent shadow-xs'
                   : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_50%,transparent)]'
@@ -420,7 +420,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
                   aria-pressed={on}
                   onClick={() => setSel((s) => ({ ...s, [g]: on ? '' : p.id }))}
                   className={cn(
-                    'flex-shrink-0 h-7 px-2.5 rounded-full text-[11px] font-semibold whitespace-nowrap border transition-colors',
+                    'flex-shrink-0 h-11 px-3 rounded-full text-[13px] font-semibold whitespace-nowrap border transition-colors',
                     on
                       ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent shadow-xs'
                       : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_50%,transparent)] hover:border-[var(--text-muted)]'
@@ -448,7 +448,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
                   if (full && n === 0 && !on) return null;
                   return (
                     <button key={p.id || 'all'} type="button" aria-pressed={on} onClick={() => setSel((s) => ({ ...s, [g]: on ? '' : p.id }))}
-                      className={cn('flex-shrink-0 h-7 px-2.5 rounded-full text-[11px] font-semibold whitespace-nowrap border transition-colors',
+                      className={cn('flex-shrink-0 h-11 px-3 rounded-full text-[13px] font-semibold whitespace-nowrap border transition-colors',
                         on ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent shadow-xs'
                           : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_50%,transparent)] hover:border-[var(--text-muted)]')}>
                       {p.name}{n !== null && <span className="opacity-55 ml-1 text-[10px]">{n}</span>}
@@ -462,8 +462,8 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
 
         {activeLists.length > 0 && (
           <div className="flex items-center justify-between gap-3 pt-1">
-            <p className="text-xs text-[var(--text-secondary)] flex items-center gap-1.5 min-w-0"><ListMusic size={14} className="flex-shrink-0" /> <span className="truncate">{rows.length} {rows.length === 1 ? 'result' : 'results'} for {listName}</span></p>
-            <button type="button" onClick={() => setSel({})} className="text-xs font-bold underline text-[var(--text-secondary)] flex-shrink-0">Clear filters</button>
+            <p className="text-sm text-[var(--text-secondary)] flex items-center gap-1.5 min-w-0"><ListMusic size={14} className="flex-shrink-0" /> <span className="truncate">{rows.length} {rows.length === 1 ? 'result' : 'results'} for {listName}</span></p>
+            <button type="button" onClick={() => setSel({})} className="min-h-11 px-2 text-sm font-bold underline text-[var(--text-secondary)] flex-shrink-0">Clear filters</button>
           </div>
         )}
       </div>
@@ -477,15 +477,15 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
           const mine = isMantras && boughtSingly(t.id);
           return (
             <li key={t.id} className="relative">
-              <button onClick={() => onRow(t)} className={cn('group w-full flex items-center gap-3.5 p-2.5 pr-3 rounded-2xl border text-left transition-all',
+              <button onClick={() => onRow(t)} className={cn('group w-full flex items-center gap-3 p-2 pr-2 sm:gap-3.5 sm:p-2.5 sm:pr-3 rounded-2xl border text-left transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-primary)]',
                 active ? 'bg-[var(--bg-surface)] border-[var(--accent-primary)] shadow-md' : 'bg-[var(--bg-surface)] border-[var(--border-subtle)] hover:-translate-y-0.5 hover:shadow-md',
                 locked && 'opacity-70')}
                 aria-label={locked ? `${t.title}, locked. Unlock on the pricing page` : undefined}>
-                <img src={t.cover} alt="" loading="lazy" className="w-16 h-16 rounded-xl object-cover flex-shrink-0 bg-[var(--bg-color)]"
+                <img src={t.cover} alt="" loading="lazy" decoding="async" className="w-16 h-16 rounded-xl object-cover flex-shrink-0 bg-[var(--bg-color)]"
                   onError={(e) => { if (e.currentTarget.src !== new URL(cover, location.href).href) e.currentTarget.src = cover; }} />
                 <span className="min-w-0 flex-1">
                   <span className={cn('block truncate text-[15px] font-semibold', active ? 'text-[var(--accent-primary)]' : 'text-[var(--text-primary)]')}>{t.title}</span>
-                  <span className="block truncate text-xs text-[var(--text-muted)] mt-0.5">{t.subtitle}</span>
+                  <span className="block truncate text-sm text-[var(--text-muted)] mt-0.5">{t.subtitle}</span>
                   <span className="flex items-center gap-2 mt-1.5 text-[11px] text-[var(--text-muted)]">
                     {!unlocked && !locked && <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[var(--accent-primary)]/15 text-[var(--accent-primary)]">Free</span>}
                     {locked && <span className="inline-flex items-center gap-1"><Lock size={11} /> Pass</span>}
@@ -503,7 +503,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
               </button>
               {mine && (
                 <button type="button" onClick={() => void saveFile(t)} aria-label={`Download ${t.title}`} title="Download your mp3"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 grid place-items-center rounded-full border border-[var(--border-subtle)] bg-[var(--bg-color)] text-[var(--text-secondary)] hover:text-[var(--accent-primary)]">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 grid place-items-center rounded-full border border-[var(--border-subtle)] bg-[var(--bg-color)] text-[var(--text-secondary)] hover:text-[var(--accent-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-primary)]">
                   {saving === t.id ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
                 </button>
               )}
@@ -520,19 +520,19 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
 
       {/* Now playing */}
       {current && isMine && (
-        <div style={barBox ? { left: barBox.left, width: barBox.width, bottom: barBox.bottom } : undefined} className="fixed bottom-3 z-40 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-color)]/95 backdrop-blur-xl shadow-2xl">
+        <div style={barBox ? { left: barBox.left, width: barBox.width, bottom: `calc(${barBox.bottom}px + env(safe-area-inset-bottom, 0px))` } : undefined} className="fixed bottom-3 z-40 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-color)]/95 backdrop-blur-xl shadow-2xl">
           <div className="h-1 bg-[var(--border-subtle)] overflow-hidden rounded-t-2xl"><div className="h-full bg-[var(--accent-primary)]" style={{ width: `${pct}%` }} /></div>
-          <div className="flex items-center gap-3 p-3">
+          <div className="flex items-center gap-1 sm:gap-3 p-2 sm:p-3">
             <button
               type="button"
               onClick={() => tools && setZenChantOpen(true)}
               className="flex items-center gap-3 min-w-0 flex-1 text-left cursor-pointer group"
               aria-label={tools ? 'Open full-screen chanting view' : undefined}
             >
-              <img src={current.cover} alt="" className="w-11 h-11 rounded-lg object-cover flex-shrink-0 group-hover:opacity-85 transition-opacity" />
+              <img src={current.cover} alt="" className="hidden sm:block w-11 h-11 rounded-lg object-cover flex-shrink-0 group-hover:opacity-85 transition-opacity" />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors">{current.title}</span>
-                <span className="block truncate text-[11px] text-[var(--text-muted)]">{pujaName ? `${pujaName} · ${queue ? queue.indexOf(current.id) + 1 : 1} of ${queue?.length ?? 1}` : queue ? (activeLists.length ? `Playing ${listName}` : 'Playing the whole library') : current.subtitle}</span>
+                <span className="block truncate text-xs text-[var(--text-muted)]">{pujaName ? `${pujaName} · ${queue ? queue.indexOf(current.id) + 1 : 1} of ${queue?.length ?? 1}` : queue ? (activeLists.length ? `Playing ${listName}` : 'Playing the whole library') : current.subtitle}</span>
               </span>
             </button>
             {tools && (
@@ -541,22 +541,22 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
                 onClick={() => setZenChantOpen(true)}
                 aria-label="Open Zen Chanting View"
                 title="Full-screen Minimalist Chanting View"
-                className="flex items-center gap-1 h-9 px-2.5 rounded-full bg-gradient-to-r from-amber-500/20 to-amber-600/20 border border-amber-500/35 text-[var(--accent-primary)] text-xs font-bold flex-shrink-0 hover:border-amber-400"
+                className="flex items-center justify-center gap-1 w-11 h-11 sm:w-auto sm:px-2.5 rounded-full bg-gradient-to-r from-amber-500/20 to-amber-600/20 border border-amber-500/35 text-[var(--accent-primary)] text-xs font-bold flex-shrink-0 hover:border-amber-400"
               >
                 <span className="text-amber-400 font-serif text-sm">ॐ</span>
                 <span className="hidden sm:inline">Zen View</span>
               </button>
             )}
-            <button aria-label="Previous" onClick={() => step(-1)} className="p-2 text-[var(--text-secondary)]"><SkipBack size={18} /></button>
+            <button aria-label="Previous" onClick={() => step(-1)} className="w-11 h-11 grid place-items-center text-[var(--text-secondary)] rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent-primary)]"><SkipBack size={18} /></button>
             <button aria-label={playing ? 'Pause' : 'Play'} onClick={() => (playing ? VoiceService.pause() : VoiceService.resume('music'))}
-              className="w-10 h-10 grid place-items-center rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)]">
+              className="w-11 h-11 grid place-items-center rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)]">
               {playing ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" className="ml-0.5" />}
             </button>
-            <button aria-label="Next" onClick={() => step(1)} className="p-2 text-[var(--text-secondary)]"><SkipForward size={18} /></button>
+            <button aria-label="Next" onClick={() => step(1)} className="w-11 h-11 grid place-items-center text-[var(--text-secondary)] rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent-primary)]"><SkipForward size={18} /></button>
             {tools && <SleepTimerButton />}
             <button aria-label={loop ? 'Loop on' : 'Loop off'} aria-pressed={loop && unlocked} onClick={toggleLoop}
               title={!unlocked ? 'Unlock to loop this track' : loop ? 'Loop is on. Click to turn off' : 'Turn on loop mode'}
-              className={cn('relative w-10 h-10 grid place-items-center rounded-full border transition-colors',
+              className={cn('relative w-11 h-11 grid place-items-center rounded-full border transition-colors',
                 loop && unlocked ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent' : 'text-[var(--text-muted)] border-[var(--border-subtle)]')}>
               {queue ? <Repeat size={18} /> : <Repeat1 size={18} />}
               {!unlocked && <Lock size={9} className="absolute right-0.5 bottom-1" />}

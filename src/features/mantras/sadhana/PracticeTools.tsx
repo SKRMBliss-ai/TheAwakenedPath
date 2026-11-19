@@ -83,7 +83,7 @@ export function SleepTimerButton() {
   return (
     <div className="relative" ref={boxRef}>
       <button type="button" aria-label={endsAt ? `Sleep timer: ${minsLeft} minutes left` : 'Sleep timer'} onClick={() => setOpen((o) => !o)}
-        className={cn('p-2 flex items-center gap-1', endsAt ? 'text-[var(--accent-primary)]' : 'text-[var(--text-muted)]')}>
+        className={cn('w-11 h-11 rounded-full grid place-items-center relative', endsAt ? 'text-[var(--accent-primary)]' : 'text-[var(--text-muted)]')}>
         <Moon size={18} />
         {endsAt && <span className="text-[10px] font-bold tabular-nums">{minsLeft}m</span>}
       </button>
@@ -91,9 +91,9 @@ export function SleepTimerButton() {
         <div role="menu" className="absolute bottom-full right-0 mb-2 w-40 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-color)] shadow-2xl p-1.5 z-50">
           <p className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Stop in</p>
           {SLEEP_OPTIONS.map((m) => (
-            <button key={m} role="menuitem" onClick={() => start(m)} className="w-full text-left px-2 py-2 rounded-lg text-sm text-[var(--text-primary)] hover:bg-[var(--bg-surface)]">{m} minutes</button>
+            <button key={m} role="menuitem" onClick={() => start(m)} className="w-full min-h-11 text-left px-3 py-2 rounded-lg text-sm text-[var(--text-primary)] hover:bg-[var(--bg-surface)]">{m} minutes</button>
           ))}
-          {endsAt && <button role="menuitem" onClick={cancel} className="w-full text-left px-2 py-2 rounded-lg text-sm text-[var(--accent-primary)] hover:bg-[var(--bg-surface)]">Cancel timer</button>}
+          {endsAt && <button role="menuitem" onClick={cancel} className="w-full min-h-11 text-left px-3 py-2 rounded-lg text-sm text-[var(--accent-primary)] hover:bg-[var(--bg-surface)]">Cancel timer</button>}
         </div>
       )}
     </div>
@@ -133,7 +133,7 @@ export function MalaDeck({ perPlay, title, todayReps, malaTarget, playing, hasTr
                 strokeDasharray={2 * Math.PI * 18} strokeDashoffset={2 * Math.PI * 18 * (1 - inMala / malaTarget)} style={{ transition: 'stroke-dashoffset .4s ease' }} />
             </svg>
           </div>
-          <button type="button" onClick={() => setOpen(true)} aria-expanded={false} className="min-w-0 flex-1 text-left">
+          <button type="button" onClick={() => setOpen(true)} aria-expanded={false} className="min-h-11 min-w-0 flex-1 text-left">
             <span className="hidden sm:block text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">Mala counter{playing && perPlay > 0 ? ' · counting' : ''}</span>
             <span className="block truncate text-xs sm:text-sm font-semibold text-[var(--text-primary)]">
               {todayReps === 0 ? 'Mala · 0 of ' + malaTarget : `${inMala} of ${malaTarget}`}{malas > 0 ? ` · ${malas}m` : ''}
@@ -141,16 +141,16 @@ export function MalaDeck({ perPlay, title, todayReps, malaTarget, playing, hasTr
           </button>
           {onOpenZen && (
             <button type="button" onClick={onOpenZen} aria-label="Open full-screen minimalist chanting view"
-              className="inline-flex items-center gap-1 h-8 sm:h-9 px-2 sm:px-3 rounded-full bg-gradient-to-r from-amber-500/20 to-amber-600/20 border border-amber-500/40 text-[var(--accent-primary)] text-xs font-bold flex-shrink-0 hover:border-amber-400">
+              className="inline-flex items-center justify-center gap-1 w-11 h-11 sm:w-auto sm:h-9 px-2 sm:px-3 rounded-full bg-gradient-to-r from-amber-500/20 to-amber-600/20 border border-amber-500/40 text-[var(--accent-primary)] text-xs sm:text-sm font-bold flex-shrink-0 hover:border-amber-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent-primary)]">
               <span className="text-amber-400 font-serif text-sm">ॐ</span>
               <span className="hidden sm:inline">Zen View</span>
             </button>
           )}
           <button type="button" onClick={onTap} disabled={!hasTrack || perPlay === 0}
-            className="inline-flex items-center gap-1 h-8 sm:h-9 px-2.5 sm:px-3.5 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] text-xs font-bold disabled:opacity-40 flex-shrink-0">
+            className="inline-flex items-center gap-1 h-11 sm:h-9 px-2.5 sm:px-3.5 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] text-sm font-bold disabled:opacity-40 flex-shrink-0">
             <Plus size={13} /> Count 1
           </button>
-          <button type="button" onClick={() => setOpen(true)} aria-label="Open mala counter settings" className="w-8 h-8 sm:w-9 sm:h-9 grid place-items-center rounded-full border border-[color-mix(in_srgb,var(--text-muted)_45%,transparent)] text-[var(--text-secondary)] flex-shrink-0">
+          <button type="button" onClick={() => setOpen(true)} aria-label="Open mala counter settings" className="w-11 h-11 sm:w-9 sm:h-9 grid place-items-center rounded-full border border-[color-mix(in_srgb,var(--text-muted)_45%,transparent)] text-[var(--text-secondary)] flex-shrink-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent-primary)]">
             <ChevronDown size={15} />
           </button>
         </div>
@@ -175,7 +175,7 @@ export function MalaDeck({ perPlay, title, todayReps, malaTarget, playing, hasTr
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between mb-1"><p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">Mala counter</p><button type="button" onClick={() => setOpen(false)} aria-label="Collapse mala counter" className="text-[var(--text-muted)] p-1 -m-1"><ChevronDown size={16} className="rotate-180" /></button></div>
+        <div className="flex items-center justify-between mb-1"><p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">Mala counter</p><button type="button" onClick={() => setOpen(false)} aria-label="Collapse mala counter" className="w-11 h-11 grid place-items-center rounded-full text-[var(--text-muted)]"><ChevronDown size={16} className="rotate-180" /></button></div>
           <h2 className="font-serif text-2xl text-[var(--text-primary)] leading-tight mb-1 truncate">{title ?? 'Choose a mantra'}</h2>
           <p className="text-sm text-[var(--text-secondary)] mb-3">
             {todayReps === 0 ? 'Nothing counted yet today.' : `Today: ${todayReps} repetition${todayReps === 1 ? '' : 's'}`}
@@ -184,7 +184,7 @@ export function MalaDeck({ perPlay, title, todayReps, malaTarget, playing, hasTr
           <div className="flex flex-wrap items-center gap-2 mb-3" role="group" aria-label="Repetitions in one mala">
             {MALA_OPTIONS.map((n) => (
               <button key={n} type="button" aria-pressed={n === malaTarget} onClick={() => onTarget(n)}
-                className={cn('h-8 px-3 rounded-full text-xs font-bold border transition-colors',
+                className={cn('h-11 sm:h-8 px-4 sm:px-3 rounded-full text-sm sm:text-xs font-bold border transition-colors',
                   n === malaTarget ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent'
                     : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_55%,transparent)] hover:text-[var(--text-primary)]')}>{n}</button>
             ))}
@@ -192,16 +192,16 @@ export function MalaDeck({ perPlay, title, todayReps, malaTarget, playing, hasTr
           <div className="flex flex-wrap items-center gap-2">
             {onOpenZen && (
               <button type="button" onClick={onOpenZen} aria-label="Open full-screen minimalist chanting view"
-                className="inline-flex items-center gap-2 h-10 px-4 rounded-full bg-gradient-to-r from-amber-500/25 to-amber-600/25 border border-amber-500/40 text-[var(--accent-primary)] text-sm font-bold hover:border-amber-400">
+                className="inline-flex items-center gap-2 h-11 px-4 rounded-full bg-gradient-to-r from-amber-500/25 to-amber-600/25 border border-amber-500/40 text-sm font-bold hover:border-amber-400">
                 <span className="text-amber-400 font-serif text-base">ॐ</span> Fullscreen Zen Chanting
               </button>
             )}
             <button type="button" onClick={onTap} disabled={!hasTrack}
-              className="inline-flex items-center gap-2 h-10 px-4 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] text-sm font-bold disabled:opacity-40">
+              className="inline-flex items-center gap-2 h-11 px-4 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] text-sm font-bold disabled:opacity-40">
               <Plus size={16} /> Count one by hand
             </button>
             <button type="button" onClick={onClear} disabled={!todayReps}
-              className="inline-flex items-center gap-1.5 h-10 px-3 rounded-full border border-[var(--border-subtle)] text-xs font-bold text-[var(--text-secondary)] disabled:opacity-40">
+              className="inline-flex items-center gap-1.5 h-11 px-3 rounded-full border border-[var(--border-subtle)] text-sm font-bold text-[var(--text-secondary)] disabled:opacity-40">
               <RotateCcw size={14} /> Clear today
             </button>
             {perPlay > 0 && (
@@ -253,7 +253,7 @@ export function SankalpTab({ state, progress, mantraOptions, titleOf, onStart, o
             <div className="flex gap-2" role="group" aria-label="Sankalp length">
               {SANKALP_LENGTHS.map((n) => (
                 <button key={n} type="button" aria-pressed={n === days} onClick={() => setDays(n)}
-                  className={cn('h-10 px-5 rounded-full text-sm font-bold border',
+                  className={cn('h-11 px-5 rounded-full text-sm font-bold border',
                     n === days ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent' : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_55%,transparent)]')}>{n} days</button>
               ))}
             </div>
@@ -263,7 +263,7 @@ export function SankalpTab({ state, progress, mantraOptions, titleOf, onStart, o
             <div className="flex flex-wrap gap-2" role="group" aria-label="Daily repetitions">
               {MALA_OPTIONS.map((n) => (
                 <button key={n} type="button" aria-pressed={n === daily} onClick={() => setDaily(n)}
-                  className={cn('h-9 px-4 rounded-full text-sm font-bold border',
+                  className={cn('h-11 px-4 rounded-full text-sm font-bold border',
                     n === daily ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent' : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_55%,transparent)]')}>{n}</button>
               ))}
             </div>
@@ -300,7 +300,7 @@ export function SankalpTab({ state, progress, mantraOptions, titleOf, onStart, o
             </span>
             {!progress.todayDone && (
               <button type="button" onClick={() => onChant(s.slug, remaining)}
-                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] text-xs font-bold">
+                className="inline-flex items-center gap-1.5 h-11 px-4 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] text-sm font-bold">
                 <Play size={13} fill="currentColor" /> Chant {remaining} now
               </button>
             )}
@@ -355,7 +355,7 @@ export function PujaTab({ sequences, repeats, onRepeats, onBegin, active }: {
         <span className="text-xs font-bold text-[var(--text-secondary)] mr-1">Each mantra</span>
         {PUJA_REPEATS.map((n) => (
           <button key={n} type="button" aria-pressed={n === repeats} onClick={() => onRepeats(n)}
-            className={cn('h-8 px-3 rounded-full text-xs font-bold border',
+            className={cn('h-11 px-4 rounded-full text-sm font-bold border',
               n === repeats ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent' : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_55%,transparent)]')}>{n}×</button>
         ))}
       </div>
@@ -374,7 +374,7 @@ export function PujaTab({ sequences, repeats, onRepeats, onBegin, active }: {
               {steps.map((st) => <li key={st.slug}>{st.title}</li>)}
             </ol>
             <button type="button" onClick={() => onBegin(seq.id)}
-              className="mt-auto inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] text-sm font-bold">
+              className="mt-auto inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] text-sm font-bold">
               <Play size={14} fill="currentColor" /> Begin · {steps.length} mantras × {repeats}
             </button>
           </li>
@@ -405,7 +405,7 @@ export function PracticeTeaser({ onUnlock, price }: { onUnlock: () => void; pric
         ))}
       </ul>
       <button type="button" onClick={onUnlock}
-        className="inline-flex items-center h-10 px-5 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] text-sm font-bold">
+        className="inline-flex items-center h-11 px-5 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] text-sm font-bold">
         Unlock · {price}
       </button>
     </section>
