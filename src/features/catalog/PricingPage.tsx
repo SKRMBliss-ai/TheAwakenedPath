@@ -119,6 +119,16 @@ function Checkout({ palette, id, user, onClose, queued, onAdd, onRemove }: {
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState('');
   const [done, setDone] = useState(false);
+
+  // Sync if user profile hydrates after component mount
+  useEffect(() => {
+    if (user?.email && !email) {
+      setEmail(user.email);
+    }
+    if (user?.displayName && !name) {
+      setName(user.displayName);
+    }
+  }, [user]);
   const emailOk = email.includes('@') && !!email.split('@')[1]?.includes('.');
   const phoneOk = phone.replace(/\D/g, '').length >= 8;
   // Email and phone are both required: access is opened by signing in with this email,
@@ -246,10 +256,10 @@ function Checkout({ palette, id, user, onClose, queued, onAdd, onRemove }: {
             </div>
           )}
           <div style={{ display: 'grid', gap: 12 }}>
-            <label><span style={label}>Your name</span><input style={input} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" /></label>
-            <label><span style={label}>Email{uid !== 'guest_pending' ? ' (your account)' : ' (use this email to sign in later)'}</span>
-              <input style={input} type="email" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" readOnly={uid !== 'guest_pending'} /></label>
-            <label><span style={label}>WhatsApp / phone number</span><input style={input} type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" /></label>
+            <label><span style={label}>Your name</span><input style={input} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Full name" /></label>
+            <label><span style={label}>Email{user?.email ? ' (your account)' : ' (use this email to sign in later)'}</span>
+              <input style={input} type="email" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="name@example.com" /></label>
+            <label><span style={label}>WhatsApp / phone number</span><input style={input} type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" placeholder="Mobile / WhatsApp number" /></label>
           </div>
           <button type="button" disabled={!ready || isProcessing}
             onClick={() => { t('PRICING_PAY_CLICK', courseIdBundle); checkOut(uid, email.trim(), name.trim(), courseIdBundle, CURRENCY, paid, phone.trim(), totalAmount); }}
