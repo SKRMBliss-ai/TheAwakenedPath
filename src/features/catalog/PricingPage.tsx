@@ -163,35 +163,89 @@ function Checkout({ palette, id, user, onClose, queued, onAdd, onRemove }: {
 
   return (
     <div id="pricing-checkout" style={{ background: palette.CARD, border: `2px solid ${palette.PURPLE_STRONG}`, borderRadius: 28, padding: 'clamp(20px, 3vw, 28px)', fontFamily: SANS, color: palette.INK, overflow: 'hidden' }}>
+      {/* Header Visual — Spacious, uncropped sacred diya */}
       <div style={{
         margin: 'calc(-1 * clamp(20px, 3vw, 28px)) calc(-1 * clamp(20px, 3vw, 28px)) 20px',
-        height: 'clamp(110px, 15vw, 150px)',
+        height: 'clamp(180px, 24vw, 240px)',
         position: 'relative',
         overflow: 'hidden',
         borderTopLeftRadius: 26,
         borderTopRightRadius: 26,
+        background: palette.isDark ? '#241B24' : '#F7F1E6',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}>
         <img
-          src="/marketing/mantras/diya-mauve.webp"
-          alt="Golden diya altar"
+          src={palette.isDark ? '/marketing/mantras/diya-mauve.webp' : '/marketing/mantras/diya-ivory.webp'}
+          alt="Golden sacred diya altar"
           aria-hidden="true"
-          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 42%' }}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center 46%',
+          }}
         />
+        {/* Soft bottom fade into card surface */}
         <div style={{
           position: 'absolute',
-          inset: 0,
-          background: palette.isDark
-            ? 'linear-gradient(to bottom, rgba(20,16,22,0.15) 0%, rgba(20,16,22,0.88) 100%)'
-            : 'linear-gradient(to bottom, rgba(255,255,255,0.05) 0%, rgba(246,242,238,0.92) 100%)',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 64,
+          background: `linear-gradient(to bottom, transparent 0%, ${palette.CARD} 100%)`,
+          pointerEvents: 'none',
         }} />
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-        <div>
-          <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: palette.BROWN }}>Your order</span>
-          <h2 style={{ fontFamily: SERIF, fontSize: 30, fontWeight: 500, margin: '4px 0 2px' }}>{p.name}</h2>
-          <p style={{ margin: 0, fontSize: 14, color: palette.INK2 }}>{p.pitch}</p>
+
+      {/* Order Info & Change Button */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 14, marginBottom: 4 }}>
+        <div style={{ flex: 1 }}>
+          <span style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            fontSize: 10.5,
+            fontWeight: 800,
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            color: palette.isDark ? '#E5A93C' : '#B46C1E',
+            background: palette.isDark ? 'rgba(229,169,60,0.14)' : 'rgba(180,108,30,0.08)',
+            padding: '3px 10px',
+            borderRadius: 999,
+            marginBottom: 8,
+          }}>
+            ✦ YOUR ORDER
+          </span>
+          <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(24px, 4vw, 32px)', fontWeight: 600, margin: '2px 0 4px', color: palette.INK, letterSpacing: '-0.01em' }}>
+            {p.name}
+          </h2>
+          <p style={{ margin: 0, fontSize: 14, color: palette.INK2, lineHeight: 1.5 }}>
+            {p.pitch}
+          </p>
         </div>
-        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: palette.INK2, fontSize: 13.5, textDecoration: 'underline', cursor: 'pointer', minHeight: 44 }}>Change</button>
+        <button
+          type="button"
+          onClick={onClose}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4,
+            padding: '6px 14px',
+            borderRadius: 999,
+            border: `1px solid ${palette.BORDER}`,
+            background: palette.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+            color: palette.INK2,
+            fontSize: 12.5,
+            fontWeight: 600,
+            cursor: 'pointer',
+            flexShrink: 0,
+            marginTop: 4,
+          }}
+        >
+          Change
+        </button>
       </div>
 
       {done ? (
@@ -218,7 +272,17 @@ function Checkout({ palette, id, user, onClose, queued, onAdd, onRemove }: {
               After paying you will sign in with this email to access it. Already have an account? <a href="/mindgym?claim=1" style={{ color: palette.PURPLE_STRONG, fontWeight: 700 }}>Sign in first</a>.
             </p>
           )}
-          <dl style={{ margin: '16px 0 12px', padding: '14px 16px', borderRadius: 16, border: `1px dashed ${palette.BORDER}`, display: 'grid', gridTemplateColumns: '1fr auto', gap: '6px 12px', fontSize: 14.5 }}>
+          <dl style={{
+            margin: '16px 0 14px',
+            padding: '14px 18px',
+            borderRadius: 18,
+            border: `1px solid ${palette.BORDER}`,
+            background: palette.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)',
+            display: 'grid',
+            gridTemplateColumns: '1fr auto',
+            gap: '8px 14px',
+            fontSize: 14.5,
+          }}>
             <dt style={{ color: palette.INK2 }}>{p.name}{p.billing !== 'once' ? ` (${p.billing === 'month' ? 'one month' : 'one year'})` : ''}</dt>
             <dd style={{ margin: 0 }}>{wasOf(id) && <s style={{ color: palette.INK2, marginRight: 8 }}>{wasOf(id)}</s>}{priceOf(id)}</dd>
             {queued.map((q) => (
@@ -231,10 +295,10 @@ function Checkout({ palette, id, user, onClose, queued, onAdd, onRemove }: {
                 <dd style={{ margin: 0 }}>{priceOf(q)}</dd>
               </Fragment>
             ))}
-            <dt style={{ fontWeight: 700, paddingTop: 8, borderTop: `1px solid ${palette.BORDER}` }}>
+            <dt style={{ fontWeight: 800, paddingTop: 10, borderTop: `1px solid ${palette.BORDER}`, color: palette.INK }}>
               {queued.length > 0 ? 'Total amount to pay' : 'Amount to pay now'}
             </dt>
-            <dd style={{ margin: 0, fontWeight: 700, paddingTop: 8, borderTop: `1px solid ${palette.BORDER}` }}>{formattedTotal}</dd>
+            <dd style={{ margin: 0, fontWeight: 800, fontSize: 16, paddingTop: 10, borderTop: `1px solid ${palette.BORDER}`, color: palette.isDark ? '#E5A93C' : '#B46C1E' }}>{formattedTotal}</dd>
           </dl>
           {addable.length > 0 && (
             <div style={{ margin: '0 0 16px' }}>
@@ -263,15 +327,34 @@ function Checkout({ palette, id, user, onClose, queued, onAdd, onRemove }: {
           </div>
           <button type="button" disabled={!ready || isProcessing}
             onClick={() => { t('PRICING_PAY_CLICK', courseIdBundle); checkOut(uid, email.trim(), name.trim(), courseIdBundle, CURRENCY, paid, phone.trim(), totalAmount); }}
-            style={{ width: '100%', minHeight: 52, marginTop: 16, borderRadius: 999, border: 'none', fontFamily: SANS, fontSize: 16, fontWeight: 700,
-              background: ready ? palette.PURPLE_STRONG : palette.BORDER, color: ready ? palette.ON_ACCENT : palette.INK2, cursor: ready ? 'pointer' : 'not-allowed',
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            style={{
+              width: '100%',
+              minHeight: 52,
+              marginTop: 18,
+              borderRadius: 999,
+              border: 'none',
+              fontFamily: SANS,
+              fontSize: 16,
+              fontWeight: 800,
+              letterSpacing: '0.01em',
+              background: ready
+                ? (palette.isDark ? 'linear-gradient(135deg, #F3BA4F 0%, #D4881E 100%)' : 'linear-gradient(135deg, #E09F3E 0%, #C47A1B 100%)')
+                : palette.BORDER,
+              color: ready ? '#1A1105' : palette.INK2,
+              cursor: ready ? 'pointer' : 'not-allowed',
+              boxShadow: ready ? '0 8px 24px rgba(212,136,30,0.30)' : 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              transition: 'all 0.25s ease',
+            }}>
             {isProcessing ? <><Loader2 size={17} className="animate-spin" /> Opening secure payment…</> : `Proceed to pay ${formattedTotal}`}
           </button>
-          <p style={{ textAlign: 'center', fontSize: 12, color: palette.INK2, margin: '10px 0 0' }}>
-            {ready ? 'UPI, cards, net banking and wallets by Razorpay, or pay below.' : 'Enter your name, email and phone number to continue.'}
+          <p style={{ textAlign: 'center', fontSize: 12.5, color: palette.INK2, margin: '10px 0 0' }}>
+            {ready ? '🔒 Instant unlock via UPI, Google Pay, PhonePe, Cards & Net Banking' : 'Enter your name, email and phone number to continue.'}
           </p>
-          {ready && paypalAvailable !== false && <div id="pricing-paypal" style={{ marginTop: 12 }} />}
+          {ready && paypalAvailable !== false && CURRENCY !== 'INR' && <div id="pricing-paypal" style={{ marginTop: 12 }} />}
           <p style={{ display: 'flex', gap: 8, alignItems: 'flex-start', margin: '14px 0 0', fontSize: 13, lineHeight: 1.55, color: palette.INK2 }}>
             <ShieldCheck size={17} color={palette.PURPLE_STRONG} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />
             <span>{allItems.length > 1 ? 'Satisfaction guaranteed. ' : refundOf(id) + ' '}{allItems.some(item => product(item).billing !== 'once') && 'One-time payment for this period; it does not renew by itself. '}See our <a href="/policies#refund" style={{ color: palette.PURPLE_STRONG }}>refund policy</a>.</span>
