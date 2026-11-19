@@ -478,7 +478,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
           return (
             <li key={t.id} className="relative">
               <button onClick={() => onRow(t)} className={cn('group w-full flex items-center gap-3.5 p-2.5 pr-3 rounded-2xl border text-left transition-all',
-                active ? 'bg-[var(--bg-surface)] border-[var(--accent-primary)] shadow-md' : 'bg-[var(--bg-surface)]/50 border-[var(--border-subtle)] hover:bg-[var(--bg-surface)] hover:-translate-y-0.5 hover:shadow-md',
+                active ? 'bg-[var(--bg-surface)] border-[var(--accent-primary)] shadow-md' : 'bg-[var(--bg-surface)] border-[var(--border-subtle)] hover:-translate-y-0.5 hover:shadow-md',
                 locked && 'opacity-70')}
                 aria-label={locked ? `${t.title}, locked. Unlock on the pricing page` : undefined}>
                 <img src={t.cover} alt="" loading="lazy" className="w-16 h-16 rounded-xl object-cover flex-shrink-0 bg-[var(--bg-color)]"
