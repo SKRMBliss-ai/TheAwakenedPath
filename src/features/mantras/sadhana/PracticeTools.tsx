@@ -83,7 +83,7 @@ export function SleepTimerButton() {
   return (
     <div className="relative" ref={boxRef}>
       <button type="button" aria-label={endsAt ? `Sleep timer: ${minsLeft} minutes left` : 'Sleep timer'} onClick={() => setOpen((o) => !o)}
-        className={cn('w-11 h-11 rounded-full grid place-items-center relative', endsAt ? 'text-[var(--accent-primary)]' : 'text-[var(--text-muted)]')}>
+        className={cn('w-11 h-11 rounded-full grid place-items-center relative', endsAt ? 'text-[var(--accent-text)]' : 'text-[var(--text-muted)]')}>
         <Moon size={18} />
         {endsAt && <span className="text-[10px] font-bold tabular-nums">{minsLeft}m</span>}
       </button>
@@ -93,7 +93,7 @@ export function SleepTimerButton() {
           {SLEEP_OPTIONS.map((m) => (
             <button key={m} role="menuitem" onClick={() => start(m)} className="w-full min-h-11 text-left px-3 py-2 rounded-lg text-sm text-[var(--text-primary)] hover:bg-[var(--bg-surface)]">{m} minutes</button>
           ))}
-          {endsAt && <button role="menuitem" onClick={cancel} className="w-full min-h-11 text-left px-3 py-2 rounded-lg text-sm text-[var(--accent-primary)] hover:bg-[var(--bg-surface)]">Cancel timer</button>}
+          {endsAt && <button role="menuitem" onClick={cancel} className="w-full min-h-11 text-left px-3 py-2 rounded-lg text-sm text-[var(--accent-text)] hover:bg-[var(--bg-surface)]">Cancel timer</button>}
         </div>
       )}
     </div>
@@ -135,19 +135,19 @@ export function MalaDeck({ perPlay, title, todayReps, malaTarget, playing, hasTr
           </div>
           <button type="button" onClick={() => setOpen(true)} aria-expanded={false} className="min-h-11 min-w-0 flex-1 text-left">
             <span className="hidden sm:block text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">Mala counter{playing && perPlay > 0 ? ' · counting' : ''}</span>
-            <span className="block truncate text-xs sm:text-sm font-semibold text-[var(--text-primary)]">
+            <span className="block truncate text-sm font-semibold text-[var(--text-primary)]">
               {todayReps === 0 ? 'Mala · 0 of ' + malaTarget : `${inMala} of ${malaTarget}`}{malas > 0 ? ` · ${malas}m` : ''}
             </span>
           </button>
           {onOpenZen && (
             <button type="button" onClick={onOpenZen} aria-label="Open full-screen minimalist chanting view"
-              className="inline-flex items-center justify-center gap-1 w-11 h-11 sm:w-auto sm:h-9 px-2 sm:px-3 rounded-full bg-gradient-to-r from-amber-500/20 to-amber-600/20 border border-amber-500/40 text-[var(--accent-primary)] text-xs sm:text-sm font-bold flex-shrink-0 hover:border-amber-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent-primary)]">
+              className="inline-flex items-center justify-center gap-1 min-w-11 h-11 px-2 rounded-full bg-gradient-to-r from-amber-500/20 to-amber-600/20 border border-amber-500/40 text-[var(--text-primary)] text-sm font-bold flex-shrink-0 hover:border-amber-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent-primary)]">
               <span className="text-amber-400 font-serif text-sm">ॐ</span>
-              <span className="hidden sm:inline">Zen View</span>
+              <span>Chant</span>
             </button>
           )}
           <button type="button" onClick={onTap} disabled={!hasTrack || perPlay === 0}
-            className="inline-flex items-center gap-1 h-11 sm:h-9 px-2.5 sm:px-3.5 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] text-sm font-bold disabled:opacity-40 flex-shrink-0">
+            className="inline-flex items-center gap-1 h-11 sm:h-9 px-2.5 sm:px-3.5 rounded-full bg-[var(--accent-solid)] text-[var(--on-accent)] text-sm font-bold disabled:opacity-40 flex-shrink-0">
             <Plus size={13} /> Count 1
           </button>
           <button type="button" onClick={() => setOpen(true)} aria-label="Open mala counter settings" className="w-11 h-11 sm:w-9 sm:h-9 grid place-items-center rounded-full border border-[color-mix(in_srgb,var(--text-muted)_45%,transparent)] text-[var(--text-secondary)] flex-shrink-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent-primary)]">
@@ -185,7 +185,7 @@ export function MalaDeck({ perPlay, title, todayReps, malaTarget, playing, hasTr
             {MALA_OPTIONS.map((n) => (
               <button key={n} type="button" aria-pressed={n === malaTarget} onClick={() => onTarget(n)}
                 className={cn('h-11 sm:h-8 px-4 sm:px-3 rounded-full text-sm sm:text-xs font-bold border transition-colors',
-                  n === malaTarget ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent'
+                  n === malaTarget ? 'bg-[var(--accent-solid)] text-[var(--on-accent)] border-transparent'
                     : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_55%,transparent)] hover:text-[var(--text-primary)]')}>{n}</button>
             ))}
           </div>
@@ -197,7 +197,7 @@ export function MalaDeck({ perPlay, title, todayReps, malaTarget, playing, hasTr
               </button>
             )}
             <button type="button" onClick={onTap} disabled={!hasTrack}
-              className="inline-flex items-center gap-2 h-11 px-4 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] text-sm font-bold disabled:opacity-40">
+              className="inline-flex items-center gap-2 h-11 px-4 rounded-full bg-[var(--accent-solid)] text-[var(--on-accent)] text-sm font-bold disabled:opacity-40">
               <Plus size={16} /> Count one by hand
             </button>
             <button type="button" onClick={onClear} disabled={!todayReps}
@@ -205,7 +205,7 @@ export function MalaDeck({ perPlay, title, todayReps, malaTarget, playing, hasTr
               <RotateCcw size={14} /> Clear today
             </button>
             {perPlay > 0 && (
-              <span className="text-xs text-[var(--text-muted)]">
+              <span className="text-sm text-[var(--text-secondary)]">
                 Adds {perPlay} each time this recording finishes{playing ? ' (counting now)' : ''}, or tap to count.
               </span>
             )}
@@ -242,37 +242,37 @@ export function SankalpTab({ state, progress, mantraOptions, titleOf, onStart, o
         </p>
         <div className="grid gap-4 max-w-xl">
           <label className="block">
-            <span className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Mantra</span>
+            <span className="block text-sm font-bold text-[var(--text-secondary)] mb-1.5">Mantra</span>
             <select value={slug} onChange={(e) => setSlug(e.target.value)}
               className="w-full h-11 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-color)] text-[var(--text-primary)] px-3 text-sm">
               {mantraOptions.map((m) => <option key={m.slug} value={m.slug}>{m.title}</option>)}
             </select>
           </label>
           <div>
-            <span className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Length</span>
+            <span className="block text-sm font-bold text-[var(--text-secondary)] mb-1.5">Length</span>
             <div className="flex gap-2" role="group" aria-label="Sankalp length">
               {SANKALP_LENGTHS.map((n) => (
                 <button key={n} type="button" aria-pressed={n === days} onClick={() => setDays(n)}
                   className={cn('h-11 px-5 rounded-full text-sm font-bold border',
-                    n === days ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent' : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_55%,transparent)]')}>{n} days</button>
+                    n === days ? 'bg-[var(--accent-solid)] text-[var(--on-accent)] border-transparent' : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_55%,transparent)]')}>{n} days</button>
               ))}
             </div>
           </div>
           <div>
-            <span className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">Repetitions each day</span>
+            <span className="block text-sm font-bold text-[var(--text-secondary)] mb-1.5">Repetitions each day</span>
             <div className="flex flex-wrap gap-2" role="group" aria-label="Daily repetitions">
               {MALA_OPTIONS.map((n) => (
                 <button key={n} type="button" aria-pressed={n === daily} onClick={() => setDaily(n)}
                   className={cn('h-11 px-4 rounded-full text-sm font-bold border',
-                    n === daily ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent' : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_55%,transparent)]')}>{n}</button>
+                    n === daily ? 'bg-[var(--accent-solid)] text-[var(--on-accent)] border-transparent' : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_55%,transparent)]')}>{n}</button>
               ))}
             </div>
           </div>
           <button type="button" disabled={!slug} onClick={() => onStart(slug, days, daily)}
-            className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] font-bold text-sm disabled:opacity-40">
+            className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full bg-[var(--accent-solid)] text-[var(--on-accent)] font-bold text-sm disabled:opacity-40">
             Begin {days}-day sankalp
           </button>
-          <p className="text-xs text-[var(--text-muted)]">Your count is saved on this device.</p>
+          <p className="text-sm text-[var(--text-secondary)]">Your count is saved on this device.</p>
         </div>
       </section>
     );
@@ -300,7 +300,7 @@ export function SankalpTab({ state, progress, mantraOptions, titleOf, onStart, o
             </span>
             {!progress.todayDone && (
               <button type="button" onClick={() => onChant(s.slug, remaining)}
-                className="inline-flex items-center gap-1.5 h-11 px-4 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] text-sm font-bold">
+                className="inline-flex items-center gap-1.5 h-11 px-4 rounded-full bg-[var(--accent-solid)] text-[var(--on-accent)] text-sm font-bold">
                 <Play size={13} fill="currentColor" /> Chant {remaining} now
               </button>
             )}
@@ -315,8 +315,8 @@ export function SankalpTab({ state, progress, mantraOptions, titleOf, onStart, o
         {progress.cells.map((c, i) => (
           <li key={c.key} title={`Day ${i + 1}${c.state === 'done' ? ': done' : c.state === 'missed' ? ': missed' : ''}`}
             className={cn('aspect-square rounded-lg grid place-items-center text-[11px] font-bold border',
-              c.state === 'done' && 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent',
-              c.state === 'today' && 'border-[var(--accent-primary)] text-[var(--accent-primary)]',
+              c.state === 'done' && 'bg-[var(--accent-solid)] text-[var(--on-accent)] border-transparent',
+              c.state === 'today' && 'border-[var(--accent-primary)] text-[var(--accent-text)]',
               c.state === 'missed' && 'border-[var(--border-subtle)] text-[var(--text-muted)] line-through opacity-70',
               c.state === 'upcoming' && 'border-[var(--border-subtle)] text-[var(--text-muted)] opacity-40')}>
             {c.state === 'done' ? <Check size={14} /> : i + 1}
@@ -327,13 +327,13 @@ export function SankalpTab({ state, progress, mantraOptions, titleOf, onStart, o
       {confirmEnd ? (
         <div className="flex items-center gap-3 text-sm">
           <span className="text-[var(--text-secondary)]">End this sankalp?</span>
-          <button type="button" onClick={() => { onEnd(); setConfirmEnd(false); }} className="font-bold text-[var(--accent-primary)]">Yes, end it</button>
-          <button type="button" onClick={() => setConfirmEnd(false)} className="font-bold text-[var(--text-secondary)]">Keep going</button>
+          <button type="button" onClick={() => { onEnd(); setConfirmEnd(false); }} className="min-h-11 px-2 font-bold text-[var(--accent-text)]">Yes, end it</button>
+          <button type="button" onClick={() => setConfirmEnd(false)} className="min-h-11 px-2 font-bold text-[var(--text-secondary)]">Keep going</button>
         </div>
       ) : (
-        <button type="button" onClick={() => setConfirmEnd(true)} className="text-xs font-semibold text-[var(--text-muted)] underline">End this sankalp</button>
+        <button type="button" onClick={() => setConfirmEnd(true)} className="min-h-11 px-2 text-sm font-semibold text-[var(--text-muted)] underline">End this sankalp</button>
       )}
-      <p className="text-xs text-[var(--text-muted)] mt-3">Saved on this device. A missed day does not reset your count.</p>
+      <p className="text-sm text-[var(--text-secondary)] mt-3">Saved on this device. A missed day does not reset your count.</p>
     </section>
   );
 }
@@ -352,11 +352,11 @@ export function PujaTab({ sequences, repeats, onRepeats, onBegin, active }: {
         Press play once. Each mantra is chanted the number of times you choose, then the next begins, in the traditional order.
       </p>
       <div className="flex flex-wrap items-center gap-2 mb-5" role="group" aria-label="Times each mantra is chanted">
-        <span className="text-xs font-bold text-[var(--text-secondary)] mr-1">Each mantra</span>
+        <span className="text-sm font-bold text-[var(--text-secondary)] mr-1">Each mantra</span>
         {PUJA_REPEATS.map((n) => (
           <button key={n} type="button" aria-pressed={n === repeats} onClick={() => onRepeats(n)}
             className={cn('h-11 px-4 rounded-full text-sm font-bold border',
-              n === repeats ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent' : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_55%,transparent)]')}>{n}×</button>
+              n === repeats ? 'bg-[var(--accent-solid)] text-[var(--on-accent)] border-transparent' : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_55%,transparent)]')}>{n}×</button>
         ))}
       </div>
       {active && (
@@ -370,11 +370,11 @@ export function PujaTab({ sequences, repeats, onRepeats, onBegin, active }: {
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)] mb-1">{seq.occasion}</p>
             <h3 className="font-serif text-xl text-[var(--text-primary)] mb-1">{seq.name}</h3>
             <p className="text-sm text-[var(--text-secondary)] mb-3">{seq.blurb}</p>
-            <ol className="text-xs text-[var(--text-secondary)] mb-4 space-y-0.5 list-decimal list-inside">
+            <ol className="text-sm text-[var(--text-secondary)] mb-4 space-y-0.5 list-decimal list-inside">
               {steps.map((st) => <li key={st.slug}>{st.title}</li>)}
             </ol>
             <button type="button" onClick={() => onBegin(seq.id)}
-              className="mt-auto inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] text-sm font-bold">
+              className="mt-auto inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-[var(--accent-solid)] text-[var(--on-accent)] text-sm font-bold">
               <Play size={14} fill="currentColor" /> Begin · {steps.length} mantras × {repeats}
             </button>
           </li>
@@ -405,7 +405,7 @@ export function PracticeTeaser({ onUnlock, price }: { onUnlock: () => void; pric
         ))}
       </ul>
       <button type="button" onClick={onUnlock}
-        className="inline-flex items-center h-11 px-5 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] text-sm font-bold">
+        className="inline-flex items-center h-11 px-5 rounded-full bg-[var(--accent-solid)] text-[var(--on-accent)] text-sm font-bold">
         Unlock · {price}
       </button>
     </section>

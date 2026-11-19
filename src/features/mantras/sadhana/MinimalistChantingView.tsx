@@ -1,8 +1,7 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Play, Pause, RotateCcw, ChevronDown, Moon, Sun, Square, Bell } from 'lucide-react';
-import { softBell } from './practiceAudio';
 import { MALA_OPTIONS } from './sadhanaStore';
 
 export interface MinimalistChantingViewProps {
@@ -107,8 +106,8 @@ function AartiPlayerView({
         </div>
 
         <div
-          className="flex items-center justify-between text-[11px] font-semibold tabular-nums px-0.5"
-          style={{ color: isDark ? 'rgba(255, 255, 255, 0.55)' : 'rgba(58, 39, 24, 0.55)' }}
+          className="flex items-center justify-between text-xs font-semibold tabular-nums px-0.5"
+          style={{ color: isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(58, 39, 24, 0.82)' }}
         >
           <span>{fmtTime(currentTime)}</span>
           <span>{duration > 0 ? fmtTime(duration) : ''}</span>
@@ -168,7 +167,7 @@ function SacredOmHeader({ isDark, deity, title }: { isDark: boolean; deity?: str
       {deity && (
         <p
           className="text-xs uppercase tracking-[0.2em] font-medium mt-0.5"
-          style={{ color: isDark ? 'rgba(255, 209, 71, 0.85)' : '#9C7A4A' }}
+          style={{ color: isDark ? 'rgba(255, 209, 71, 0.95)' : '#705426' }}
         >
           {deity}
         </p>
@@ -196,12 +195,14 @@ function MalaCircle({
   target,
   malasCompleted,
   onTapCount,
+  reducedMotion,
 }: {
   isDark: boolean;
   count: number;
   target: number;
   malasCompleted: number;
   onTapCount: () => void;
+  reducedMotion: boolean;
 }) {
   const [pulse, setPulse] = useState(false);
   const inMala = count % target;
@@ -303,7 +304,7 @@ function MalaCircle({
             strokeDasharray={2 * Math.PI * radius}
             strokeDashoffset={2 * Math.PI * radius * (1 - pct)}
             transform={`rotate(-90 ${center} ${center})`}
-            style={{ transition: 'stroke-dashoffset 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)' }}
+            style={{ transition: reducedMotion ? 'none' : 'stroke-dashoffset 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)' }}
             filter={isDark ? 'url(#goldGlow)' : undefined}
           />
 
@@ -370,7 +371,7 @@ function MalaCircle({
           )}
 
           {/* Pulse Ripple Circle on Tap */}
-          {pulse && (
+          {pulse && !reducedMotion && (
             <circle
               cx={center}
               cy={center}
@@ -388,9 +389,9 @@ function MalaCircle({
           {/* Crisp, clean, modern numeral */}
           <motion.div
             key={inMala}
-            initial={{ scale: 0.94, opacity: 0.8 }}
+            initial={reducedMotion ? false : { scale: 0.94, opacity: 0.8 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+            transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 350, damping: 25 }}
             className="tabular-nums font-bold tracking-tight"
             style={{
               fontFamily: "'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
@@ -408,7 +409,7 @@ function MalaCircle({
           {/* Clean, minimalist target indicator */}
           <div
             className="text-xs font-semibold tracking-widest uppercase mt-1.5"
-            style={{ color: isDark ? 'rgba(255, 255, 255, 0.55)' : 'rgba(58, 39, 24, 0.55)' }}
+            style={{ color: isDark ? 'rgba(255, 255, 255, 0.82)' : 'rgba(58, 39, 24, 0.82)' }}
           >
             {inMala === 0 && count > 0 ? 'Mala complete' : `/ ${target}`}
           </div>
@@ -431,7 +432,7 @@ function MalaCircle({
       {/* Gentle Tap Hint */}
       <p
         className="mt-3 text-xs tracking-wide text-center"
-        style={{ color: isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(58, 39, 24, 0.5)' }}
+        style={{ color: isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(58, 39, 24, 0.82)' }}
       >
         Tap circle to count · Audio counts automatically
       </p>
@@ -469,15 +470,25 @@ export function MinimalistChantingView({
   );
   const queryTheme = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('theme') : null;
   const resolvedInitial = queryTheme === 'light' ? false : queryTheme === 'dark' ? true : initialDark;
+  const prefersReducedMotion = useReducedMotion() ?? false;
   const [themeOverride, setThemeOverride] = useState<boolean | null>(null);
   const isDark = themeOverride ?? resolvedInitial;
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   // Keep screen awake while chanting if WakeLock API is supported
   useEffect(() => {
     if (!isOpen || typeof navigator === 'undefined' || !('wakeLock' in navigator)) return;
     let lock: WakeLockSentinel | null = null;
-    navigator.wakeLock.request('screen').then((l) => { lock = l; }).catch(() => { });
-    return () => { lock?.release().catch(() => { }); };
+    let cancelled = false;
+    navigator.wakeLock.request('screen').then((requestedLock) => {
+      if (cancelled) { void requestedLock.release().catch(() => {}); return; }
+      lock = requestedLock;
+    }).catch(() => {});
+    return () => {
+      cancelled = true;
+      void lock?.release().catch(() => {});
+    };
   }, [isOpen]);
 
   // Hide background docks and widgets when Zen Chanting is active
@@ -489,26 +500,31 @@ export function MinimalistChantingView({
     };
   }, [isOpen]);
 
-  // Close on Escape key
+  // Keep keyboard focus inside the full-screen dialog and restore it on close.
   useEffect(() => {
     if (!isOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    closeButtonRef.current?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { onClose(); return; }
+      if (event.key !== 'Tab') return;
+      const focusable = dialogRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])');
+      if (!focusable?.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      previousFocus?.focus();
+    };
   }, [isOpen, onClose]);
 
-  const inMala = todayReps % malaTarget;
   const malas = Math.floor(todayReps / malaTarget);
 
-  const handleManualCount = useCallback(() => {
-    const nextCount = inMala + 1;
-    onCountOne();
-    if (nextCount % malaTarget === 0) {
-      softBell();
-    }
-  }, [inMala, malaTarget, onCountOne]);
+  const handleManualCount = useCallback(() => onCountOne(), [onCountOne]);
 
   if (!isOpen) return null;
 
@@ -516,11 +532,16 @@ export function MinimalistChantingView({
     <AnimatePresence>
       <motion.div
         key="minimalist-chanting-view"
-        initial={{ opacity: 0, y: '100%' }}
+        initial={prefersReducedMotion ? false : { opacity: 0, y: '100%' }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: '100%' }}
-        transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+        transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', damping: 28, stiffness: 280 }}
         className="fixed inset-0 flex flex-col justify-between overflow-hidden select-none"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${title} chanting view`}
+        tabIndex={-1}
+        ref={dialogRef}
         style={{
           position: 'fixed',
           top: 0,
@@ -561,9 +582,10 @@ export function MinimalistChantingView({
           {/* Minimize / Close back to library */}
           <button
             type="button"
+            ref={closeButtonRef}
             onClick={onClose}
             aria-label="Back to Library"
-            className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer flex-shrink-0"
+            className="flex items-center gap-2 min-h-11 px-4 rounded-full text-sm font-bold transition-all shadow-sm active:scale-95 cursor-pointer flex-shrink-0"
             style={{
               background: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.88)',
               color: isDark ? '#FFE57F' : '#5A3810',
@@ -583,7 +605,7 @@ export function MinimalistChantingView({
             type="button"
             onClick={() => setThemeOverride((d) => !(d ?? resolvedInitial))}
             aria-label={isDark ? 'Switch to Sacred Ivory mode' : 'Switch to Midnight Gold mode'}
-            className="p-2 rounded-full transition-colors"
+            className="w-11 h-11 grid place-items-center rounded-full transition-colors"
             style={{
               background: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
               color: isDark ? '#FFD147' : '#6A4518',
@@ -625,6 +647,7 @@ export function MinimalistChantingView({
             target={malaTarget}
             malasCompleted={malas}
             onTapCount={handleManualCount}
+            reducedMotion={prefersReducedMotion}
           />
         ) : (
           <AartiPlayerView

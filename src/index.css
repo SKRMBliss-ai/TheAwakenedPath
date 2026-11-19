@@ -59,6 +59,7 @@ html, body {
 
   /* Accents */
   --accent-primary:          #8C7B8A;
+  --accent-text:             #CFC2CD;
   --accent-secondary:        #8C7B8A;
   --brand-primary:           #8C7B8A;
   --brand-secondary:         #8C7B8A;
@@ -87,10 +88,8 @@ html, body {
   --done-accent:          #8FB9A3;
   --done-accent-soft:     rgba(143, 185, 163, 0.14);
   --done-accent-line:     rgba(143, 185, 163, 0.45);
-  /* Solid-fill accent for buttons. Separate from --accent-primary because the
-     light plum measures only 3.95:1 against white text — below the 4.5:1
-     minimum — so filled controls use the deeper tone (6.17:1). */
-  --accent-solid:         #B9A5B7;
+  /* Solid-fill button accent uses the upper brand mauve with dark text. */
+  --accent-solid:         #A798A5;
   --on-accent:            #1a1410;
 
   /* Borders */
@@ -1148,7 +1147,7 @@ textarea:focus-visible,
 summary:focus-visible,
 [tabindex]:focus-visible,
 [role="button"]:focus-visible {
-  outline: 3px solid #B8973A !important;
+  outline: 3px solid var(--accent-solid) !important;
   outline-offset: 2px !important;
 }
 
@@ -1191,8 +1190,9 @@ html:not(.dark) {
   --done-accent:          #4F7A63;
   --done-accent-soft:     rgba(79, 122, 99, 0.12);
   --done-accent-line:     rgba(79, 122, 99, 0.40);
-  --accent-solid:         #695E68;
+  --accent-solid:         #80707E;
   --on-accent:            #FFFFFF;
+  --accent-text:          #695E68;
 }
 
 /* Checkout is a payment page, not a browsing surface: the site-wide floating
@@ -1207,6 +1207,16 @@ body.zen-chanting-open [data-floating-dock],
 body.zen-chanting-open aside,
 body.zen-chanting-open button[aria-label="Collapse sidebar"] {
   display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-mantra-library] *,
+  body.zen-chanting-open * {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Floating dock (compass FAB) — purple pulse, matching its own border color
