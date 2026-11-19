@@ -22,6 +22,7 @@ export interface MinimalistChantingViewProps {
   isAarti?: boolean;
   currentTime?: number;
   duration?: number;
+  onSeek?: (sec: number) => void;
 }
 
 const OM_MEDALLION_IMAGE = '/marketing/mantras/exec-ce641b41-377a-428e-9ae9-53d82af4accf.png';
@@ -36,81 +37,128 @@ function fmtTime(sec?: number) {
 /**
  * Sacred Aarti sanctuary view — shown when an Aarti song is playing.
  * An Aarti is an offering of light and devotion, not a counted repetition.
+ * Renders the glowing sacred Diya with radiating sound wave rings and audio progress bar (matching Image 3).
  */
 function AartiPlayerView({
   isDark,
   currentTime = 0,
   duration = 0,
+  onSeek,
 }: {
   isDark: boolean;
   currentTime?: number;
   duration?: number;
+  onSeek?: (sec: number) => void;
 }) {
-  const pct = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
+  const pct = duration > 0 ? Math.min(100, Math.max(0, (currentTime / duration) * 100)) : 0;
+  const barRef = useRef<HTMLDivElement>(null);
+
+  const handleBarClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!duration || !onSeek || !barRef.current) return;
+    const rect = barRef.current.getBoundingClientRect();
+    const clickX = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+    const newPct = clickX / rect.width;
+    onSeek(newPct * duration);
+  };
 
   return (
     <div className="relative flex flex-col items-center justify-center my-auto py-6 px-6 max-w-sm w-full mx-auto select-none">
-      {/* Sacred Diya / Flame Offering Aura */}
-      <div className="relative w-44 h-44 sm:w-52 sm:h-52 flex items-center justify-center mb-6">
-        {/* Soft glowing concentric rings */}
+      {/* Concentric sound wave rings with sacred Diya at center (Image 3) */}
+      <div className="relative w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center mb-6">
+        {/* Soft glowing ambient aura */}
         <div
           className="absolute inset-0 rounded-full pointer-events-none"
           style={{
             background: isDark
               ? 'radial-gradient(circle, rgba(255, 209, 71, 0.22) 0%, rgba(255, 160, 0, 0.08) 45%, transparent 70%)'
               : 'radial-gradient(circle, rgba(212, 175, 55, 0.2) 0%, rgba(196, 151, 70, 0.06) 50%, transparent 70%)',
-            filter: 'blur(12px)',
+            filter: 'blur(16px)',
           }}
         />
 
-        {/* Outer decorative ring */}
+        {/* Outer acoustic wave ring */}
         <div
           className="w-full h-full rounded-full border flex items-center justify-center transition-all duration-700"
           style={{
-            borderColor: isDark ? 'rgba(255, 209, 71, 0.25)' : 'rgba(196, 151, 70, 0.3)',
+            borderColor: isDark ? 'rgba(255, 209, 71, 0.22)' : 'rgba(196, 151, 70, 0.25)',
             boxShadow: isDark
-              ? '0 0 32px rgba(255, 209, 71, 0.15), inset 0 0 24px rgba(255, 209, 71, 0.1)'
-              : '0 0 24px rgba(196, 151, 70, 0.12), inset 0 0 16px rgba(196, 151, 70, 0.08)',
+              ? '0 0 32px rgba(255, 209, 71, 0.12), inset 0 0 24px rgba(255, 209, 71, 0.08)'
+              : '0 0 24px rgba(196, 151, 70, 0.1), inset 0 0 16px rgba(196, 151, 70, 0.06)',
           }}
         >
-          {/* Inner ring */}
+          {/* Middle acoustic wave ring */}
           <div
-            className="w-32 h-32 sm:w-36 sm:h-36 rounded-full border flex flex-col items-center justify-center text-center p-3"
+            className="w-48 h-48 sm:w-54 sm:h-54 rounded-full border flex items-center justify-center transition-all duration-700"
             style={{
-              borderColor: isDark ? 'rgba(255, 209, 71, 0.35)' : 'rgba(196, 151, 70, 0.4)',
-              background: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(255, 255, 255, 0.5)',
+              borderColor: isDark ? 'rgba(255, 209, 71, 0.3)' : 'rgba(196, 151, 70, 0.32)',
             }}
           >
-            {/* Sacred Diya lamp */}
-            <span className="text-4xl sm:text-5xl select-none" role="img" aria-label="Diya flame">🪔</span>
+            {/* Inner ring */}
+            <div
+              className="w-32 h-32 sm:w-36 sm:h-36 rounded-full border flex flex-col items-center justify-center text-center p-3"
+              style={{
+                borderColor: isDark ? 'rgba(255, 209, 71, 0.4)' : 'rgba(196, 151, 70, 0.42)',
+                background: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(255, 255, 255, 0.5)',
+              }}
+            >
+              {/* Sacred Diya lamp */}
+              <span className="text-4xl sm:text-5xl select-none filter drop-shadow-[0_0_16px_rgba(255,209,71,0.6)]" role="img" aria-label="Diya flame">🪔</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Progress bar and time */}
-      <div className="w-full max-w-xs space-y-1.5">
+      {/* Progress bar and time (matching Image 3) */}
+      <div className="w-full max-w-xs space-y-2">
         <div
-          className="w-full h-1.5 rounded-full overflow-hidden"
-          style={{
-            background: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
-          }}
+          ref={barRef}
+          onClick={handleBarClick}
+          role="slider"
+          aria-label="Seek audio playback"
+          aria-valuemin={0}
+          aria-valuemax={duration || 100}
+          aria-valuenow={currentTime}
+          className="relative w-full h-2 rounded-full cursor-pointer select-none py-1 -my-1"
         >
+          {/* Track background */}
           <div
-            className="h-full rounded-full transition-all duration-300"
+            className="w-full h-1.5 rounded-full overflow-hidden"
             style={{
-              width: `${pct}%`,
-              background: 'linear-gradient(90deg, #F5C769 0%, #D4982A 100%)',
-              boxShadow: isDark ? '0 0 8px rgba(255, 209, 71, 0.6)' : 'none',
+              background: isDark ? 'rgba(255, 255, 255, 0.16)' : 'rgba(0, 0, 0, 0.12)',
             }}
-          />
+          >
+            {/* Golden progress fill */}
+            <div
+              className="h-full rounded-full transition-all duration-200"
+              style={{
+                width: `${pct}%`,
+                background: 'linear-gradient(90deg, #F5C769 0%, #D4982A 100%)',
+                boxShadow: isDark ? '0 0 10px rgba(255, 209, 71, 0.7)' : 'none',
+              }}
+            />
+          </div>
+
+          {/* Small rounded golden thumb */}
+          {pct > 0 && (
+            <div
+              className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full shadow-md pointer-events-none transition-all duration-200"
+              style={{
+                left: `calc(${pct}% - 7px)`,
+                background: '#FFD147',
+                border: isDark ? '1.5px solid #141E22' : '1.5px solid #FFFFFF',
+                boxShadow: '0 0 8px rgba(255, 209, 71, 0.8)',
+              }}
+            />
+          )}
         </div>
 
+        {/* Timestamps */}
         <div
           className="flex items-center justify-between text-xs font-semibold tabular-nums px-0.5"
-          style={{ color: isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(58, 39, 24, 0.82)' }}
+          style={{ color: isDark ? 'rgba(255, 255, 255, 0.82)' : 'rgba(58, 39, 24, 0.82)' }}
         >
           <span>{fmtTime(currentTime)}</span>
-          <span>{duration > 0 ? fmtTime(duration) : ''}</span>
+          <span>{duration > 0 ? fmtTime(duration) : '0:00'}</span>
         </div>
       </div>
     </div>
@@ -462,11 +510,12 @@ export function MinimalistChantingView({
   isAarti,
   currentTime = 0,
   duration = 0,
+  onSeek,
 }: MinimalistChantingViewProps) {
-  const isAartiTrack = isAarti ?? (
+  const isAartiTrack = Boolean(
+    isAarti ||
     title.toLowerCase().includes('aarti') ||
-    (subtitle && subtitle.toLowerCase().includes('aarti')) ||
-    false
+    (subtitle && subtitle.toLowerCase().includes('aarti'))
   );
   const queryTheme = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('theme') : null;
   const resolvedInitial = queryTheme === 'light' ? false : queryTheme === 'dark' ? true : initialDark;
@@ -654,6 +703,7 @@ export function MinimalistChantingView({
             isDark={isDark}
             currentTime={currentTime}
             duration={duration}
+            onSeek={onSeek}
           />
         )}
 

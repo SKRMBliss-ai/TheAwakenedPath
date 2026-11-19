@@ -66,6 +66,7 @@ const MyBestEveryDay = lazy(() => import('./features/kids/MyBestEveryDay'));
 /** The situation practice gym (also served standalone at /mindgymforadults) —
  *  here it is the "Start here" tab, the first thing a new person meets. */
 const AdultGym = lazy(() => import('./features/practise/Adult').then(m => ({ default: m.AdultGym })));
+import { StartHerePortal } from './features/portal/StartHerePortal';
 const MeditationPracticeRoom = lazy(() => import('./features/practise/MeditationPracticeRoom'));
 const VirtuesView = lazy(() => import('./features/practice-path/VirtuesView').then(m => ({ default: m.VirtuesView })));
 const CircleView = lazy(() => import('./features/practice-path/CircleView').then(m => ({ default: m.CircleView })));
@@ -608,11 +609,30 @@ export default function UntetheredApp() {
     };
   }, [profile, currentUser?.email]);
   const [showSignIn, setShowSignIn] = useState(false);
+  const [showPortalForGuest, setShowPortalForGuest] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('claim') === '1' || urlParams.get('signin') === '1') return false;
+    return true;
+  });
 
   // ── Persisted navigation state — app resumes exactly where user left off ──
   const [activeTab, setActiveTab] = usePersistedState<string>('awakened-tab', 'start');
   /** Bumped when "Start" is tapped, so the gym returns to its front door even if it is already open. */
   const [startKey, setStartKey] = useState(0);
+  const [startMode, setStartMode] = useState<'portal' | 'workout'>('portal');
+  const isChoosingPath = activeTab === 'start' && startMode === 'portal';
+
+  // First-time visitors who haven't explicitly chosen a sanctuary yet land on the 3-cards portal
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const chosen = localStorage.getItem('user-path-chosen');
+      const urlParams = new URLSearchParams(window.location.search);
+      if (!chosen || urlParams.get('start') === '1') {
+        setActiveTab('start');
+      }
+    }
+  }, [setActiveTab]);
   const [activeQuestionId, setActiveQuestionId] = usePersistedState<string>('awakened-question', 'question1');
   const [viewMode, setViewMode] = usePersistedState<'explanation' | 'practice' | 'video'>(
     'awakened-view-mode',
@@ -1183,7 +1203,53 @@ export default function UntetheredApp() {
     if (showSignIn) {
       return <SignInScreen />;
     }
-    return <EmailCaptureScreen onShowSignIn={() => setShowSignIn(true)} />;
+    const fromEmailLink = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('claim') === '1';
+    if (fromEmailLink) {
+      return <SignInScreen />;
+    }
+
+    if (showPortalForGuest) {
+      return (
+        <div className="min-h-screen w-full bg-[var(--bg-primary)] overflow-y-auto">
+          {/* Minimal top bar for guest portal */}
+          <header className="flex items-center justify-between px-6 py-4 max-w-6xl mx-auto border-b border-[var(--border-subtle)]">
+            <MindGymLogo />
+            <button
+              type="button"
+              onClick={() => setShowSignIn(true)}
+              className="text-xs font-bold uppercase tracking-wider text-[var(--accent-primary)] hover:underline cursor-pointer"
+            >
+              Sign In
+            </button>
+          </header>
+          <StartHerePortal
+            onSelectAdult={() => {
+              try { localStorage.setItem('user-path-chosen', 'adult'); } catch {}
+              setShowPortalForGuest(false);
+            }}
+            onSelectKids={() => {
+              try { localStorage.setItem('user-path-chosen', 'kids'); } catch {}
+              window.location.href = '/tiny-kids-transformations';
+            }}
+            onSelectMantras={() => {
+              try { localStorage.setItem('user-path-chosen', 'mantras'); } catch {}
+              window.location.href = '/mantras';
+            }}
+            onSelectMusic={() => {
+              try { localStorage.setItem('user-path-chosen', 'music'); } catch {}
+              window.location.href = '/mantras#music';
+            }}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <EmailCaptureScreen
+        onShowSignIn={() => setShowSignIn(true)}
+        onBackToPortal={() => setShowPortalForGuest(true)}
+      />
+    );
   }
 
   // ── Full-app lock: once the 300 free tokens are used up, the entire app is
@@ -1394,9 +1460,9 @@ export default function UntetheredApp() {
         )}
       </AnimatePresence>
 
-      {/* SIDEBAR */}
+      {/* SIDEBAR — hidden until the person enters a space from Start Here */}
       {/* Floating sidebar expand button — only visible on desktop when sidebar is collapsed */}
-      {isSidebarCollapsed && (
+      {!isChoosingPath && isSidebarCollapsed && (
         <motion.button
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -1419,7 +1485,7 @@ export default function UntetheredApp() {
       {/* Floating sidebar collapse button — the mirror of the expand tab
           above, on the sidebar's outer edge rather than crammed into the
           logo row (where it used to sit directly against the wordmark). */}
-      {!isSidebarCollapsed && (
+      {!isChoosingPath && !isSidebarCollapsed && (
         <motion.button
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -1441,6 +1507,7 @@ export default function UntetheredApp() {
 
       <aside className={cn(
         "fixed left-0 top-0 bottom-0 w-[280px] flex flex-col z-[70]",
+        isChoosingPath && "hidden pointer-events-none",
         "border-r border-[var(--border-default)]",
         "backdrop-blur-2xl px-2",
         "transition-transform duration-500",
@@ -1507,7 +1574,7 @@ export default function UntetheredApp() {
             return (
               <button
                 key="start"
-                onClick={() => { setStartKey((k) => k + 1); onNavigate('start'); }}
+                onClick={() => { setStartKey((k) => k + 1); setStartMode('portal'); onNavigate('start'); }}
                 aria-current={isActive ? 'page' : undefined}
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-[min(8px,1vh)] rounded-2xl transition-all duration-300 group relative",
@@ -2135,7 +2202,7 @@ export default function UntetheredApp() {
         "relative z-10 min-h-screen transition-all duration-500",
         // Mobile: don't shift content when sidebar is open (overlay instead)
         // Desktop: shift content based on collapsed state
-        isSidebarCollapsed ? "lg:pl-0" : "lg:pl-[280px]"
+        isChoosingPath || isSidebarCollapsed ? "lg:pl-0" : "lg:pl-[280px]"
       )}>
         {/* Time of Day Ambient Tint */}
         <div
@@ -2148,7 +2215,7 @@ export default function UntetheredApp() {
         </AnimatePresence>
 
         {/* ── New-course announcement bar — fixed, full-width, dismissible ── */}
-        {showCourseAnnounce && (
+        {showCourseAnnounce && !isChoosingPath && (
           <div
             className={cn(
               "fixed top-0 right-0 z-[120] h-10 flex items-center overflow-hidden transition-all duration-500",
@@ -2191,12 +2258,15 @@ export default function UntetheredApp() {
         {/* Premium Ribbon Header Overlay */}
         <header className={cn(
           "fixed left-0 right-0 z-[110] px-6 py-4 flex items-center justify-between bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5 transition-all duration-500",
-          showCourseAnnounce ? "top-10" : "top-0",
-          isSidebarCollapsed ? "lg:left-0" : "lg:left-[280px]"
+          showCourseAnnounce && !isChoosingPath ? "top-10" : "top-0",
+          isChoosingPath || isSidebarCollapsed ? "lg:left-0" : "lg:left-[280px]"
         )}>
           <div className="flex items-center gap-3 sm:gap-4">
+            {isChoosingPath && (
+              <MindGymLogo variant="full" size="sm" animated={false} />
+            )}
             {/* Menu button — only functional on mobile */}
-            {isMobile && (
+            {isMobile && !isChoosingPath && (
               <button
                 onClick={() => {
                   setIsSidebarOpen(true);
@@ -2273,7 +2343,7 @@ export default function UntetheredApp() {
 
         <div className={cn(
           "max-w-7xl mx-auto px-2 pb-28 sm:px-4 md:px-6 lg:pb-8 space-y-6 sm:space-y-8",
-          showCourseAnnounce ? "pt-[128px] sm:pt-[136px] md:pt-[144px]" : "pt-[88px] sm:pt-[96px] md:pt-[104px]",
+          showCourseAnnounce && !isChoosingPath ? "pt-[128px] sm:pt-[136px] md:pt-[144px]" : "pt-[88px] sm:pt-[96px] md:pt-[104px]",
           isReportOpen && "hidden"
         )}>
           <SacredWelcomeModal
@@ -2325,23 +2395,58 @@ export default function UntetheredApp() {
               </motion.div>
             )}
 
-            {/* ── START HERE — bring a situation in, or take today's practice ── */}
+            {/* ── START HERE — First time visitor 3 cards portal or situation practice ── */}
             {activeTab === 'start' && (
               <motion.div key="start" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                <Suspense fallback={<TabFallback />}>
-                  <AdultGym
-                    key={startKey}
-                    embedded
-                    hubLabel="Dashboard"
-                    onExitGym={() => onNavigate('home')}
-                    explore={[
-                      { icon: Sun, title: 'Dashboard', sub: 'Today’s journey at a glance', onClick: () => onNavigate('home') },
-                      { icon: Flame, title: 'Practice', sub: 'Journal, breath and practice room', onClick: () => { setPracticeOpen(true); onNavigate('situations'); } },
-                      { icon: GraduationCap, title: 'Courses', sub: 'Go deeper, step by step', onClick: () => { setLearnOpen(true); onNavigate('intelligence'); } },
-                      { icon: Users, title: 'Community', sub: 'Coming soon', onClick: () => { /* Community is coming soon */ } },
-                    ]}
+                {startMode === 'portal' ? (
+                  <StartHerePortal
+                    userName={currentUser?.displayName || (currentUser?.email ? currentUser.email.split('@')[0] : undefined)}
+                    onSelectAdult={(target) => {
+                      try { localStorage.setItem('user-path-chosen', 'adult'); } catch {}
+                      if (target === 'workout') {
+                        setStartMode('workout');
+                      } else {
+                        onNavigate('home');
+                      }
+                    }}
+                    onSelectKids={() => {
+                      try { localStorage.setItem('user-path-chosen', 'kids'); } catch {}
+                      window.location.href = '/tiny-kids-transformations';
+                    }}
+                    onSelectMantras={() => {
+                      try { localStorage.setItem('user-path-chosen', 'mantras'); } catch {}
+                      onNavigate('mantras');
+                    }}
+                    onSelectMusic={() => {
+                      try { localStorage.setItem('user-path-chosen', 'music'); } catch {}
+                      onNavigate('music');
+                    }}
                   />
-                </Suspense>
+                ) : (
+                  <div className="relative max-w-5xl mx-auto px-4 py-4">
+                    <button
+                      type="button"
+                      onClick={() => setStartMode('portal')}
+                      className="inline-flex items-center gap-2 mb-4 px-3.5 py-1.5 rounded-full text-xs font-bold bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all hover:border-[var(--accent-primary)]/40 shadow-xs cursor-pointer"
+                    >
+                      <ArrowLeft size={14} /> Back to all 3 sanctuaries
+                    </button>
+                    <Suspense fallback={<TabFallback />}>
+                      <AdultGym
+                        key={startKey}
+                        embedded
+                        hubLabel="Dashboard"
+                        onExitGym={() => setStartMode('portal')}
+                        explore={[
+                          { icon: Sun, title: 'Dashboard', sub: 'Today’s journey at a glance', onClick: () => onNavigate('home') },
+                          { icon: Flame, title: 'Practice', sub: 'Journal, breath and practice room', onClick: () => { setPracticeOpen(true); onNavigate('situations'); } },
+                          { icon: GraduationCap, title: 'Courses', sub: 'Go deeper, step by step', onClick: () => { setLearnOpen(true); onNavigate('intelligence'); } },
+                          { icon: Users, title: 'Community', sub: 'Coming soon', onClick: () => { /* Community is coming soon */ } },
+                        ]}
+                      />
+                    </Suspense>
+                  </div>
+                )}
               </motion.div>
             )}
 
@@ -2807,7 +2912,7 @@ export default function UntetheredApp() {
       />
       {/* One dock for every floating tool — see MindGymDock. */}
       <MindGymDock
-        hidden={activeTab === 'meditation' && isSidebarCollapsed}
+        hidden={isChoosingPath || (activeTab === 'meditation' && isSidebarCollapsed)}
         active={isAudioEnabled}
         tools={
           <>
@@ -2848,7 +2953,7 @@ export default function UntetheredApp() {
       <MusicMiniPlayer />
 
       {/* ── Mobile bottom navigation — thumb-reachable core tabs (hidden on desktop) ── */}
-      {!(activeTab === 'meditation' && isSidebarCollapsed) && activeTab !== 'wisdom_untethered' && (
+      {!isChoosingPath && !(activeTab === 'meditation' && isSidebarCollapsed) && activeTab !== 'wisdom_untethered' && (
         <nav
           data-bottom-nav
           className="lg:hidden fixed bottom-0 left-0 right-0 z-40 flex items-stretch justify-around border-t border-[var(--border-subtle)] bg-[var(--bg-primary)]/95 backdrop-blur-xl"

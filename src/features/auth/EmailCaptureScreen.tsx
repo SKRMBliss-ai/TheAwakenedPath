@@ -15,6 +15,7 @@ import {
 
 interface EmailCaptureScreenProps {
   onShowSignIn?: () => void;
+  onBackToPortal?: () => void;
 }
 
 function toFriendlyError(err: any): string {
@@ -32,7 +33,7 @@ function toFriendlyError(err: any): string {
   return err?.message || 'Something went wrong. Please try again.';
 }
 
-export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) => {
+export const EmailCaptureScreen = ({ onShowSignIn, onBackToPortal }: EmailCaptureScreenProps) => {
   const { beginAnonymousPath, signInWithGoogle } = useAuth();
   const { theme, mode } = useTheme();
   const [email, setEmail] = useState('');
@@ -48,7 +49,7 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
     if (params.get('google') === '1') {
       // Remove param from URL cleanly
       window.history.replaceState({}, '', window.location.pathname);
-      signInWithGoogle().catch(() => {});
+      signInWithGoogle().catch(() => { });
     }
   }, []);
 
@@ -108,7 +109,7 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
         source: 'app_signup',
         mailingList: true,
         createdAt: serverTimestamp(),
-      }).catch(() => {}); // non-blocking
+      }).catch(() => { }); // non-blocking
       setSuccess(true);
     } catch (err: any) {
       setError(toFriendlyError(err));
@@ -173,224 +174,234 @@ export const EmailCaptureScreen = ({ onShowSignIn }: EmailCaptureScreenProps) =>
         {/* ── Left / main column ── */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 md:pl-12 md:pr-6">
 
-      {/* Identity */}
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.8 }}
-        className="relative z-10 flex flex-col items-center mb-8"
-      >
-        {/* Studio mark — this is the first screen a visitor sees, so it carries
+          {onBackToPortal && (
+            <button
+              type="button"
+              onClick={onBackToPortal}
+              className="mb-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+            >
+              ← Back to all 3 sanctuaries
+            </button>
+          )}
+
+          {/* Identity */}
+          <motion.div
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8 }}
+            className="relative z-10 flex flex-col items-center mb-8"
+          >
+            {/* Studio mark — this is the first screen a visitor sees, so it carries
             the same badge as the website, the sales pages and the portfolio. */}
-        <a href="/" title="Soulful Intelligence Studio" className="mb-4 block w-14 h-14">
-          <SILogoMark />
-        </a>
-        <h1
-          className="text-2xl font-serif font-bold tracking-[0.15em] uppercase text-center"
-          style={{ color: theme.textPrimary }}
-        >
-          Mind Gym
-        </h1>
-        <p
-          className="text-[12px] font-sans font-medium tracking-[0.3em] uppercase mt-2 opacity-75"
-          style={{ color: theme.textSecondary }}
-        >
-          A Presence Study
-        </p>
-      </motion.div>
-
-      {/* Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.2 }}
-        className="relative z-10 w-full max-w-sm"
-      >
-        <div
-          className="relative rounded-[24px] overflow-hidden shadow-2xl"
-          style={{
-            background: theme.bgSurface,
-            border: `1.5px solid ${theme.borderGlass}`,
-            backdropFilter: theme.blur,
-            boxShadow: mode === 'dark' ? '0 25px 50px -12px rgba(0,0,0,0.5)' : '0 25px 50px -12px rgba(0,0,0,0.1)',
-          }}
-        >
-          <div className="p-8 flex flex-col items-center">
-
-            <h2
-              className="text-2xl font-serif font-light mb-8 text-center tracking-wide"
+            <a href="/" title="Soulful Intelligence Studio" className="mb-4 block w-14 h-14">
+              <SILogoMark />
+            </a>
+            <h1
+              className="text-2xl font-serif font-bold tracking-[0.15em] uppercase text-center"
               style={{ color: theme.textPrimary }}
             >
-              Begin Your Path
-            </h2>
-
-            {/* Error */}
-            <AnimatePresence>
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="w-full mb-4 p-3 rounded-xl border"
-                  style={{ backgroundColor: 'rgba(239,68,68,0.1)', borderColor: 'rgba(239,68,68,0.2)' }}
-                >
-                  <p className="text-red-500 text-[12px] font-medium text-center">{error}</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Email form */}
-            <AnimatePresence mode="wait">
-              {success ? (
-                <motion.div
-                  key="success"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="w-full text-center py-6"
-                >
-                  <div className="text-3xl mb-3">✨</div>
-                  <p className="font-serif text-lg" style={{ color: theme.textPrimary }}>
-                    Entering Presence…
-                  </p>
-                </motion.div>
-              ) : (
-                <motion.form
-                  key="form"
-                  onSubmit={handleBegin}
-                  className="w-full space-y-4"
-                >
-                  <div className="space-y-1.5">
-                    <label
-                      htmlFor="entry-email"
-                      className="text-[10px] font-bold uppercase tracking-widest pl-2 opacity-50 block"
-                      style={{ color: theme.textPrimary }}
-                    >
-                      Your Email
-                    </label>
-                    {/* Tells a first-time visitor that this box IS the way in —
-                        no account to create. Without it the email field reads as
-                        a newsletter signup and people bounce to "Sign in". */}
-                    <p
-                      id="entry-email-hint"
-                      className="text-[11px] leading-snug pl-2 pr-1 opacity-60"
-                      style={{ color: theme.textSecondary }}
-                    >
-                      No password needed — enter your email and you&rsquo;re straight into Mind Gym.
-                    </p>
-                    <input
-                      id="entry-email"
-                      aria-describedby="entry-email-hint"
-                      type="text"
-                      inputMode="email"
-                      placeholder="your@soul.com"
-                      value={email}
-                      onChange={(e) => handleEmailChange(e.target.value)}
-                      className="w-full rounded-2xl py-3.5 px-5 text-sm transition-all outline-none"
-                      style={{
-                        background: theme.bgInput,
-                        border: `1.5px solid ${error ? 'rgba(239,68,68,0.6)' : suggestion ? 'rgba(251,191,36,0.5)' : theme.borderDefault}`,
-                        color: theme.textPrimary,
-                      }}
-                      autoComplete="email"
-                      autoCapitalize="none"
-                      spellCheck={false}
-                    />
-                    {suggestion && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mt-2 px-3 py-2 rounded-xl flex items-center justify-between gap-2"
-                        style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)' }}
-                      >
-                        <span className="text-[11px] text-yellow-400">
-                          Did you mean <strong>{suggestion}</strong>?
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => { setEmail(suggestion); setSuggestion(null); setError(''); }}
-                          className="text-[10px] font-black uppercase tracking-widest text-yellow-400 hover:text-yellow-300 transition-colors"
-                        >
-                          Fix
-                        </button>
-                      </motion.div>
-                    )}
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading || mxChecking}
-                    className="w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl transition-all active:scale-95 text-sm font-bold tracking-wide"
-                    style={{
-                      background: `linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))`,
-                      color: '#fff',
-                      boxShadow: '0 4px 20px rgba(140,123,138,0.3)',
-                    }}
-                  >
-                    {mxChecking ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Verifying email…</span>
-                      </>
-                    ) : loading ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        <span>Begin My Path</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </button>
-                </motion.form>
-              )}
-            </AnimatePresence>
-
-            {/* Divider */}
-            <div className="w-full flex items-center gap-4 my-5">
-              <div className="flex-1 h-[1px] opacity-10" style={{ background: theme.textPrimary }} />
-              <span className="text-[10px] font-bold uppercase tracking-widest opacity-30" style={{ color: theme.textSecondary }}>or</span>
-              <div className="flex-1 h-[1px] opacity-10" style={{ background: theme.textPrimary }} />
-            </div>
-
-            {/* Google shortcut */}
-            <button
-              onClick={handleGoogle}
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-3 px-6 py-3 rounded-2xl transition-all active:scale-95 mb-4"
-              style={{
-                background: mode === 'dark' ? 'white' : '#1E1B2E',
-                color: mode === 'dark' ? '#1E1B2E' : 'white',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-              }}
-            >
-              <LayoutGrid className="w-5 h-5 opacity-80" />
-              <span className="text-sm font-bold tracking-wide">Continue with Google</span>
-            </button>
-
-            {/* Already have an account */}
-            <button
-              onClick={onShowSignIn}
-              className="text-[13px] font-medium opacity-65 hover:opacity-90 transition-opacity mb-6"
+              Mind Gym
+            </h1>
+            <p
+              className="text-[12px] font-sans font-medium tracking-[0.3em] uppercase mt-2 opacity-75"
               style={{ color: theme.textSecondary }}
             >
-              Already have an account?{' '}
-              <span className="font-semibold" style={{ color: theme.accentPrimary }}>Sign in</span>
-            </button>
+              A Presence Study
+            </p>
+          </motion.div>
 
-          </div>
-        </div>
-      </motion.div>
+          {/* Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="relative z-10 w-full max-w-sm"
+          >
+            <div
+              className="relative rounded-[24px] overflow-hidden shadow-2xl"
+              style={{
+                background: theme.bgSurface,
+                border: `1.5px solid ${theme.borderGlass}`,
+                backdropFilter: theme.blur,
+                boxShadow: mode === 'dark' ? '0 25px 50px -12px rgba(0,0,0,0.5)' : '0 25px 50px -12px rgba(0,0,0,0.1)',
+              }}
+            >
+              <div className="p-8 flex flex-col items-center">
 
-      {/* Footer */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1 }}
-        className="mt-10 flex flex-col items-center gap-3 z-10"
-      >
-        <p className="text-[11px] font-medium tracking-wide opacity-45 text-center" style={{ color: theme.textPrimary }}>
-          No credit card · Cancel anytime · Your data is private
-        </p>
-      </motion.div>
+                <h2
+                  className="text-2xl font-serif font-light mb-8 text-center tracking-wide"
+                  style={{ color: theme.textPrimary }}
+                >
+                  Begin Your Path
+                </h2>
+
+                {/* Error */}
+                <AnimatePresence>
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="w-full mb-4 p-3 rounded-xl border"
+                      style={{ backgroundColor: 'rgba(239,68,68,0.1)', borderColor: 'rgba(239,68,68,0.2)' }}
+                    >
+                      <p className="text-red-500 text-[12px] font-medium text-center">{error}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Email form */}
+                <AnimatePresence mode="wait">
+                  {success ? (
+                    <motion.div
+                      key="success"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="w-full text-center py-6"
+                    >
+                      <div className="text-3xl mb-3">✨</div>
+                      <p className="font-serif text-lg" style={{ color: theme.textPrimary }}>
+                        Entering Presence…
+                      </p>
+                    </motion.div>
+                  ) : (
+                    <motion.form
+                      key="form"
+                      onSubmit={handleBegin}
+                      className="w-full space-y-4"
+                    >
+                      <div className="space-y-1.5">
+                        <label
+                          htmlFor="entry-email"
+                          className="text-[10px] font-bold uppercase tracking-widest pl-2 opacity-50 block"
+                          style={{ color: theme.textPrimary }}
+                        >
+                          Your Email
+                        </label>
+                        {/* Tells a first-time visitor that this box IS the way in —
+                        no account to create. Without it the email field reads as
+                        a newsletter signup and people bounce to "Sign in". */}
+                        <p
+                          id="entry-email-hint"
+                          className="text-[11px] leading-snug pl-2 pr-1 opacity-60"
+                          style={{ color: theme.textSecondary }}
+                        >
+                          No password needed — enter your email and you&rsquo;re straight into Mind Gym.
+                        </p>
+                        <input
+                          id="entry-email"
+                          aria-describedby="entry-email-hint"
+                          type="text"
+                          inputMode="email"
+                          placeholder="your@soul.com"
+                          value={email}
+                          onChange={(e) => handleEmailChange(e.target.value)}
+                          className="w-full rounded-2xl py-3.5 px-5 text-sm transition-all outline-none"
+                          style={{
+                            background: theme.bgInput,
+                            border: `1.5px solid ${error ? 'rgba(239,68,68,0.6)' : suggestion ? 'rgba(251,191,36,0.5)' : theme.borderDefault}`,
+                            color: theme.textPrimary,
+                          }}
+                          autoComplete="email"
+                          autoCapitalize="none"
+                          spellCheck={false}
+                        />
+                        {suggestion && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="mt-2 px-3 py-2 rounded-xl flex items-center justify-between gap-2"
+                            style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)' }}
+                          >
+                            <span className="text-[11px] text-yellow-400">
+                              Did you mean <strong>{suggestion}</strong>?
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => { setEmail(suggestion); setSuggestion(null); setError(''); }}
+                              className="text-[10px] font-black uppercase tracking-widest text-yellow-400 hover:text-yellow-300 transition-colors"
+                            >
+                              Fix
+                            </button>
+                          </motion.div>
+                        )}
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={loading || mxChecking}
+                        className="w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl transition-all active:scale-95 text-sm font-bold tracking-wide"
+                        style={{
+                          background: `linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))`,
+                          color: '#fff',
+                          boxShadow: '0 4px 20px rgba(140,123,138,0.3)',
+                        }}
+                      >
+                        {mxChecking ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <span>Verifying email…</span>
+                          </>
+                        ) : loading ? (
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <>
+                            <span>Begin My Path</span>
+                            <ArrowRight className="w-4 h-4" />
+                          </>
+                        )}
+                      </button>
+                    </motion.form>
+                  )}
+                </AnimatePresence>
+
+                {/* Divider */}
+                <div className="w-full flex items-center gap-4 my-5">
+                  <div className="flex-1 h-[1px] opacity-10" style={{ background: theme.textPrimary }} />
+                  <span className="text-[10px] font-bold uppercase tracking-widest opacity-30" style={{ color: theme.textSecondary }}>or</span>
+                  <div className="flex-1 h-[1px] opacity-10" style={{ background: theme.textPrimary }} />
+                </div>
+
+                {/* Google shortcut */}
+                <button
+                  onClick={handleGoogle}
+                  disabled={loading}
+                  className="w-full flex items-center justify-center gap-3 px-6 py-3 rounded-2xl transition-all active:scale-95 mb-4"
+                  style={{
+                    background: mode === 'dark' ? 'white' : '#1E1B2E',
+                    color: mode === 'dark' ? '#1E1B2E' : 'white',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                  }}
+                >
+                  <LayoutGrid className="w-5 h-5 opacity-80" />
+                  <span className="text-sm font-bold tracking-wide">Continue with Google</span>
+                </button>
+
+                {/* Already have an account */}
+                <button
+                  onClick={onShowSignIn}
+                  className="text-[13px] font-medium opacity-65 hover:opacity-90 transition-opacity mb-6"
+                  style={{ color: theme.textSecondary }}
+                >
+                  Already have an account?{' '}
+                  <span className="font-semibold" style={{ color: theme.accentPrimary }}>Sign in</span>
+                </button>
+
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Footer */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+            className="mt-10 flex flex-col items-center gap-3 z-10"
+          >
+            <p className="text-[11px] font-medium tracking-wide opacity-45 text-center" style={{ color: theme.textPrimary }}>
+              No credit card · Cancel anytime · Your data is private
+            </p>
+          </motion.div>
 
         </div>{/* end left column */}
 

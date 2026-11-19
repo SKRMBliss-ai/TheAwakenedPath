@@ -2856,10 +2856,9 @@ async function sendKidsZoomBookingEmails({ toEmail, phone, courseId, amount, cur
 async function sendMantraPassEmails({ toEmail, phone, amount, currency, paymentId, provider }) {
     const transporter = getTransporter();
     const paid = amount != null ? `${currency || ''} ${amount}` : 'see payment dashboard';
-    const hasLink = !!MANTRA_PASS_DOWNLOAD_URL;
     await transporter.sendMail({
         from: '"SKRM Bliss AI" <skrmblissai@gmail.com>',
-        to: ADMIN_EMAILS.join(', '),
+        to: [...new Set([...ADMIN_EMAILS, 'shrutikhungar@gmail.com'])].join(', '),
         subject: 'New Mantra Pass buyer — Soulful Mantra Studio',
         html: `<div style="font-family:sans-serif;padding:20px;">
             <h2 style="color:#4A3260;">New Mantra Pass</h2>
@@ -2878,12 +2877,8 @@ async function sendMantraPassEmails({ toEmail, phone, amount, currency, paymentI
         subject: 'Your Mantra Pass',
         html: `<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:24px;color:#3A342C;line-height:1.6;">
             <h2 style="color:#4A3260;">Thank you — your Mantra Pass is confirmed</h2>
-            ${hasLink
-                ? `<p>Your mantras are here: <a href="${MANTRA_PASS_DOWNLOAD_URL}">${MANTRA_PASS_DOWNLOAD_URL}</a>. Keep this email; new mantras are added to the same place.</p>`
-                : '<p>We are preparing your access link (every mantra on a loop without ads, in playlists by deity, time of day and festival, plus the lyrics and meaning PDFs and the 21 and 40 day sadhana plans). It will reach this email address within 24 hours, usually the same day.</p>'}
-            <p>Every mantra we record in future is included in your pass at no extra cost. To request a mantra, or if anything is missing, reply to this email or message us on WhatsApp at +91 82175 81238.</p>
-            <p>Full refund within 7 days if the pass is not right for you. Just reply to this email.</p>
-            <p>The free library, with text and meaning for every mantra, is always at <a href="https://www.skrmblissai.in/mantras">skrmblissai.in/mantras</a>.</p>
+            <p>To access your mantra collection, go to <a href="https://www.skrmblissai.in/mindgym">https://www.skrmblissai.in/mindgym</a>.</p>
+            <p>Log in with the same email address you used to purchase the Mantra Pass, then choose <strong>Mantra</strong> from the left-hand menu.</p>
             <p>With warmth,<br/>Soulful Mantra Studio</p>
         </div>`,
     });

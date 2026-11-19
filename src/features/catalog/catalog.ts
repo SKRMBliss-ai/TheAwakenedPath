@@ -155,7 +155,7 @@ export const DOORS: Door[] = [
     start: { label: 'See how it works', href: '/tiny-kids-transformations' },
   },
   {
-    id: 'mantras', who: 'For prayer & calm', title: 'Mantras & Music',
+    id: 'mantras', who: 'For prayer & calm', title: 'Mantras & Meditation Music Soundscape',
     line: 'Sacred chants with their meaning, and meditation music for calm and sleep.',
     includes: ['Every mantra and all meditation music', 'Mala counter, sankalp tracker, puja sequences', 'Loop and playlists, sleep timer', 'New mantras added free'],
     plans: ['mantra_lifetime_pass'],

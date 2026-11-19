@@ -24,7 +24,7 @@ export const SANKALP_LENGTHS = [21, 40] as const;
 
 /** Whole songs (aartis), not repeated mantras: they are listed together and never counted. */
 const AARTI_SLUGS = new Set(['ganesha-aarti', 'tulsi-aarti', 'saraswati-mantra']);
-export const isAarti = (slug: string) => AARTI_SLUGS.has(slug);
+export const isAarti = (slug: string) => AARTI_SLUGS.has(slug) || slug.toLowerCase().includes('aarti');
 
 export interface Sankalp {
   slug: string;
