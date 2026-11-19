@@ -1201,6 +1201,14 @@ html:not(.dark) {
    mounted. */
 body.si-checkout-open .si-floating-dock { display: none !important; }
 
+/* Minimalist Chanting Sanctuary: Hide floating docks, collapse buttons, and background bars */
+body.zen-chanting-open .si-floating-dock,
+body.zen-chanting-open [data-floating-dock],
+body.zen-chanting-open aside,
+body.zen-chanting-open button[aria-label="Collapse sidebar"] {
+  display: none !important;
+}
+
 /* Floating dock (compass FAB) — purple pulse, matching its own border color
    so it reads as "this is alive" from across the page without a hover. */
 @keyframes si-fab-pulse {

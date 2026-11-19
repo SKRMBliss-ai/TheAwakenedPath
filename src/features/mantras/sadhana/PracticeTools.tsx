@@ -101,7 +101,7 @@ export function SleepTimerButton() {
 }
 
 // ── Mala counter ────────────────────────────────────────────────────────────
-export function MalaDeck({ perPlay, title, todayReps, malaTarget, playing, hasTrack, onTarget, onTap, onClear }: {
+export function MalaDeck({ perPlay, title, todayReps, malaTarget, playing, hasTrack, onTarget, onTap, onClear, onOpenZen }: {
   /** Chants in one playthrough of the selected recording; 0 when it is not counted (an aarti). */
   perPlay: number;
   title: string | null;
@@ -112,6 +112,7 @@ export function MalaDeck({ perPlay, title, todayReps, malaTarget, playing, hasTr
   onTarget: (n: number) => void;
   onTap: () => void;
   onClear: () => void;
+  onOpenZen?: () => void;
 }) {
   // Collapsed to one slim strip by default, so the track list stays near the top of the page.
   const [open, setOpen] = useState(false);
@@ -123,9 +124,9 @@ export function MalaDeck({ perPlay, title, todayReps, malaTarget, playing, hasTr
 
   if (!open) {
     return (
-      <section aria-label="Mala counter" className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)]/60 mb-5">
-        <div className="flex items-center gap-3 p-3 sm:px-4">
-          <div className="relative w-11 h-11 flex-shrink-0" aria-hidden="true">
+      <section aria-label="Mala counter" className="rounded-xl sm:rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)]/60 mb-2.5 sm:mb-5">
+        <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 sm:px-4">
+          <div className="relative w-8 h-8 sm:w-11 sm:h-11 flex-shrink-0" aria-hidden="true">
             <svg viewBox="0 0 44 44" className="w-full h-full -rotate-90">
               <circle cx="22" cy="22" r="18" fill="none" stroke="var(--border-subtle)" strokeWidth="4" />
               <circle cx="22" cy="22" r="18" fill="none" stroke="var(--accent-primary)" strokeWidth="4" strokeLinecap="round"
@@ -133,17 +134,24 @@ export function MalaDeck({ perPlay, title, todayReps, malaTarget, playing, hasTr
             </svg>
           </div>
           <button type="button" onClick={() => setOpen(true)} aria-expanded={false} className="min-w-0 flex-1 text-left">
-            <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">Mala counter{playing && perPlay > 0 ? ' · counting' : ''}</span>
-            <span className="block truncate text-sm font-semibold text-[var(--text-primary)]">
-              {todayReps === 0 ? 'Nothing counted yet today' : `${inMala} of ${malaTarget}`}{malas > 0 ? ` · ${malas} mala${malas === 1 ? '' : 's'} today` : ''}
+            <span className="hidden sm:block text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">Mala counter{playing && perPlay > 0 ? ' · counting' : ''}</span>
+            <span className="block truncate text-xs sm:text-sm font-semibold text-[var(--text-primary)]">
+              {todayReps === 0 ? 'Mala · 0 of ' + malaTarget : `${inMala} of ${malaTarget}`}{malas > 0 ? ` · ${malas}m` : ''}
             </span>
           </button>
+          {onOpenZen && (
+            <button type="button" onClick={onOpenZen} aria-label="Open full-screen minimalist chanting view"
+              className="inline-flex items-center gap-1 h-8 sm:h-9 px-2 sm:px-3 rounded-full bg-gradient-to-r from-amber-500/20 to-amber-600/20 border border-amber-500/40 text-[var(--accent-primary)] text-xs font-bold flex-shrink-0 hover:border-amber-400">
+              <span className="text-amber-400 font-serif text-sm">ॐ</span>
+              <span className="hidden sm:inline">Zen View</span>
+            </button>
+          )}
           <button type="button" onClick={onTap} disabled={!hasTrack || perPlay === 0}
-            className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] text-xs font-bold disabled:opacity-40 flex-shrink-0">
-            <Plus size={14} /> Count 1
+            className="inline-flex items-center gap-1 h-8 sm:h-9 px-2.5 sm:px-3.5 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] text-xs font-bold disabled:opacity-40 flex-shrink-0">
+            <Plus size={13} /> Count 1
           </button>
-          <button type="button" onClick={() => setOpen(true)} aria-label="Open mala counter settings" className="w-9 h-9 grid place-items-center rounded-full border border-[color-mix(in_srgb,var(--text-muted)_45%,transparent)] text-[var(--text-secondary)] flex-shrink-0">
-            <ChevronDown size={16} />
+          <button type="button" onClick={() => setOpen(true)} aria-label="Open mala counter settings" className="w-8 h-8 sm:w-9 sm:h-9 grid place-items-center rounded-full border border-[color-mix(in_srgb,var(--text-muted)_45%,transparent)] text-[var(--text-secondary)] flex-shrink-0">
+            <ChevronDown size={15} />
           </button>
         </div>
       </section>
@@ -182,6 +190,12 @@ export function MalaDeck({ perPlay, title, todayReps, malaTarget, playing, hasTr
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            {onOpenZen && (
+              <button type="button" onClick={onOpenZen} aria-label="Open full-screen minimalist chanting view"
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-full bg-gradient-to-r from-amber-500/25 to-amber-600/25 border border-amber-500/40 text-[var(--accent-primary)] text-sm font-bold hover:border-amber-400">
+                <span className="text-amber-400 font-serif text-base">ॐ</span> Fullscreen Zen Chanting
+              </button>
+            )}
             <button type="button" onClick={onTap} disabled={!hasTrack}
               className="inline-flex items-center gap-2 h-10 px-4 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] text-sm font-bold disabled:opacity-40">
               <Plus size={16} /> Count one by hand
@@ -190,7 +204,11 @@ export function MalaDeck({ perPlay, title, todayReps, malaTarget, playing, hasTr
               className="inline-flex items-center gap-1.5 h-10 px-3 rounded-full border border-[var(--border-subtle)] text-xs font-bold text-[var(--text-secondary)] disabled:opacity-40">
               <RotateCcw size={14} /> Clear today
             </button>
-            <span className="text-xs text-[var(--text-muted)]">{perPlay === 0 ? 'An aarti is a song, so it is not counted.' : `Adds ${perPlay} each time this recording finishes${playing ? ' (counting now)' : ''}, or tap to count.`}</span>
+            {perPlay > 0 && (
+              <span className="text-xs text-[var(--text-muted)]">
+                Adds {perPlay} each time this recording finishes{playing ? ' (counting now)' : ''}, or tap to count.
+              </span>
+            )}
           </div>
         </div>
       </div>

@@ -24,6 +24,7 @@ import { chantsPer } from '../mantras/sadhana/chantCounts';
 import { PUJA_SEQUENCES, resolveSequence, PUJA_REPEATS } from '../mantras/sadhana/pujaSequences';
 import { MalaDeck, SankalpTab, PujaTab, SleepTimerButton, PracticeTeaser } from '../mantras/sadhana/PracticeTools';
 import { useMediaSession, softBell } from '../mantras/sadhana/practiceAudio';
+import { MinimalistChantingView } from '../mantras/sadhana/MinimalistChantingView';
 
 /** Tracks anyone can play before buying (the first ones in the library). */
 export const FREE_TRACKS = 3;
@@ -88,6 +89,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
     playlists.filter((p) => p.trackIds.length).forEach((p) => { const g = p.group || 'Playlists'; m.set(g, [...(m.get(g) ?? []), p]); });
     return Array.from(m.entries());
   }, [playlists]);
+  const flatPlaylists = useMemo(() => playlists.filter((p) => p.trackIds.length > 0), [playlists]);
   const activeLists = playlists.filter((p) => sel[groupOf(p)] === p.id);
   const baseIds = activeLists.reduce((ids, l) => ids.filter((id) => l.trackIds.includes(id)), tracks.map((t) => t.id));
   const countFor = (p: Playlist) => tracks.filter((t) => p.trackIds.includes(t.id)
@@ -109,6 +111,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
   const [showUnlock, setShowUnlock] = useState(false);
   const [tab, setTab] = useState<'library' | 'puja' | 'sankalp'>('library');
   const [pujaRepeats, setPujaRepeats] = useState<number>(PUJA_REPEATS[1]);
+  const [zenChantOpen, setZenChantOpen] = useState(() => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('zen') === '1');
 
   const isMantras = kind === 'mantras';
 
@@ -206,6 +209,7 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
 
   const onRow = (t: LibraryTrack) => {
     if (isLocked(t.id)) { goPricing(); return; }
+    if (tools) setZenChantOpen(true);
     if (trackId === t.id && isMine) {
       if (playing) VoiceService.pause(); else VoiceService.resume('music');
       return;
@@ -284,31 +288,31 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
   const up = UPGRADE[kind];
 
   return (
-    <div ref={pageRef} className="relative max-w-5xl mx-auto px-4 md:px-8 pt-6 pb-28" style={{ paddingBottom: 112 + Math.max(0, (barBox?.bottom ?? 12) - 12) }}>
-      {/* Header: a soft mauve hero card */}
-      <header className="relative overflow-hidden rounded-3xl border border-[var(--border-subtle)] p-5 sm:p-8 mb-6"
+    <div ref={pageRef} className="relative max-w-5xl mx-auto px-3 sm:px-4 md:px-8 pt-3 sm:pt-6 pb-28" style={{ paddingBottom: 112 + Math.max(0, (barBox?.bottom ?? 12) - 12) }}>
+      {/* Header: a soft mauve hero card — compact on mobile */}
+      <header className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-[var(--border-subtle)] p-3.5 sm:p-8 mb-3 sm:mb-6"
         style={{ background: 'linear-gradient(135deg, color-mix(in srgb, #A798A5 22%, var(--bg-surface)) 0%, var(--bg-surface) 62%)' }}>
         <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-16 w-72 h-72 rounded-full"
           style={{ background: 'radial-gradient(circle, rgba(233,201,138,.28) 0%, rgba(233,201,138,0) 70%)' }} />
-        <div className="relative flex flex-col sm:flex-row gap-5 sm:gap-8 sm:items-center">
-          <img src={cover} alt="" className="w-28 h-28 sm:w-40 sm:h-40 rounded-2xl object-contain p-2 flex-shrink-0 self-start sm:self-center" />
+        <div className="relative flex flex-col sm:flex-row gap-3 sm:gap-8 sm:items-center">
+          <img src={cover} alt="" className="hidden sm:block w-28 h-28 sm:w-40 sm:h-40 rounded-2xl object-contain p-2 flex-shrink-0 self-start sm:self-center" />
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)] mb-2">{kicker}</p>
-            <h1 className="font-serif text-4xl md:text-6xl text-[var(--text-primary)] leading-none mb-3">{title}</h1>
-            <p className="text-[15px] text-[var(--text-secondary)] max-w-xl mb-5 leading-relaxed">{description}</p>
-            <div className="flex flex-wrap items-center gap-3">
-              <button onClick={playAll} className="inline-flex items-center gap-2 h-12 px-7 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] font-bold text-sm shadow-lg">
-                {unlocked ? <Play size={16} fill="currentColor" /> : <Lock size={15} />} Play {listName}
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)] mb-1 sm:mb-2">{kicker}</p>
+            <h1 className="font-serif text-3xl sm:text-4xl md:text-6xl text-[var(--text-primary)] leading-none mb-2 sm:mb-3">{title}</h1>
+            <p className="hidden sm:block text-[15px] text-[var(--text-secondary)] max-w-xl mb-5 leading-relaxed">{description}</p>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <button onClick={playAll} className="inline-flex items-center gap-1.5 sm:gap-2 h-9 sm:h-12 px-4 sm:px-7 rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)] font-bold text-xs sm:text-sm shadow-md">
+                {unlocked ? <Play size={14} fill="currentColor" /> : <Lock size={14} />} Play {listName}
               </button>
-              <span className="inline-flex items-center h-8 px-3 rounded-full bg-[var(--bg-color)]/60 border border-[var(--border-subtle)] text-xs font-bold text-[var(--text-secondary)]">
+              <span className="inline-flex items-center h-7 sm:h-8 px-2.5 sm:px-3 rounded-full bg-[var(--bg-color)]/60 border border-[var(--border-subtle)] text-[11px] sm:text-xs font-bold text-[var(--text-secondary)]">
                 {tracks.length} {isMantras ? 'mantras' : 'tracks'}
               </span>
               {unlocked ? (
-                <span className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-[var(--bg-color)]/60 border border-[var(--border-subtle)] text-xs font-bold text-[var(--accent-primary)]">
+                <span className="hidden sm:inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-[var(--bg-color)]/60 border border-[var(--border-subtle)] text-xs font-bold text-[var(--accent-primary)]">
                   <Check size={13} /> {isMantras ? 'Loop, playlists and practice tools' : 'Loop and playlists'}
                 </span>
               ) : (
-                <button onClick={goPricing} className="h-12 px-5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-color)]/60 text-sm font-bold text-[var(--text-primary)] hover:bg-[var(--bg-surface)]">
+                <button onClick={goPricing} className="h-9 sm:h-12 px-4 sm:px-5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-color)]/60 text-xs sm:text-sm font-bold text-[var(--text-primary)] hover:bg-[var(--bg-surface)]">
                   Unlock · {priceOf(up.single)}
                 </button>
               )}
@@ -318,10 +322,10 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
       </header>
 
       {tools && (
-        <div className="flex gap-2 mb-5" role="tablist" aria-label="Mantras sections">
+        <div className="flex gap-1.5 sm:gap-2 mb-2.5 sm:mb-5" role="tablist" aria-label="Mantras sections">
           {([['library', 'Library'], ['puja', 'Puja sequences'], ['sankalp', 'My sadhana']] as const).map(([id, label]) => (
             <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)}
-              className={cn('h-9 px-4 rounded-full text-[13px] font-bold border transition-colors',
+              className={cn('h-8 sm:h-9 px-3 sm:px-4 rounded-full text-xs sm:text-[13px] font-bold border transition-colors',
                 tab === id ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent' : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_55%,transparent)]')}>{label}</button>
           ))}
         </div>
@@ -332,48 +336,101 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
         <SankalpTab state={sadhana.state} progress={sankalpInfo} mantraOptions={mantraOptions} titleOf={titleOf}
           onStart={(slug, days, daily) => sadhana.start(slug, days, daily)} onEnd={sadhana.end} onChant={chantNow} />
       )}
-      {tools && tab === 'library' && (
+      {tools && tab === 'library' && (!counterSlug || !isAarti(counterSlug)) && (
         <MalaDeck perPlay={counterSlug && !isAarti(counterSlug) ? chantsPer(counterSlug) : 0} title={counterTrack?.title ?? null} todayReps={counterSlug ? repsOn(sadhana.state, dateKey(), counterSlug) : 0}
           malaTarget={sadhana.state.malaTarget} playing={playing} hasTrack={!!counterSlug}
-          onTarget={sadhana.setMalaTarget} onTap={() => counterSlug && countOne(counterSlug)} onClear={() => counterSlug && sadhana.clearToday(counterSlug)} />
+          onTarget={sadhana.setMalaTarget} onTap={() => counterSlug && countOne(counterSlug)} onClear={() => counterSlug && sadhana.clearToday(counterSlug)}
+          onOpenZen={() => setZenChantOpen(true)} />
       )}
 
       {(!tools || tab === 'library') && (<>
       {tracks.length > 12 && (
-        <div className="relative mb-3">
-          <Search size={16} aria-hidden="true" className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+        <div className="relative mb-2 sm:mb-3">
+          <Search size={15} aria-hidden="true" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
           <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} aria-label={`Search ${title}`} placeholder={`Search ${title.toLowerCase()}, e.g. Ganesha or Navratri`}
-            className="w-full h-11 rounded-full pl-11 pr-4 text-sm bg-[var(--bg-color)] text-[var(--text-primary)] border border-[color-mix(in_srgb,var(--text-muted)_45%,transparent)] outline-none focus:border-[var(--accent-primary)]" />
+            className="w-full h-9 sm:h-11 rounded-full pl-9 sm:pl-11 pr-4 text-xs sm:text-sm bg-[var(--bg-color)] text-[var(--text-primary)] border border-[color-mix(in_srgb,var(--text-muted)_45%,transparent)] outline-none focus:border-[var(--accent-primary)]" />
         </div>
       )}
 
-      {/* Filters */}
-      <div className="mb-4 space-y-2" role="group" aria-label="Filter the list">
-        {groups.map(([g, items]) => (
-          <div key={g} className="flex items-center gap-3">
-            <span className="w-12 flex-shrink-0 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">{g}</span>
-            <div style={{ maskImage: 'linear-gradient(to right, #000 calc(100% - 32px), transparent)', WebkitMaskImage: 'linear-gradient(to right, #000 calc(100% - 32px), transparent)' }}
-              className="flex gap-2 overflow-x-auto pb-1 pr-8 min-w-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {[{ id: '', name: 'All' } as { id: string; name: string }, ...items].map((p) => {
-                const on = (sel[g] ?? '') === p.id;
-                const full = p.id ? items.find((x) => x.id === p.id)! : null;
-                const n = full ? countFor(full) : null;
-                if (full && n === 0 && !on) return null;
-                return (
-                  <button key={p.id || 'all'} type="button" aria-pressed={on} onClick={() => setSel((s) => ({ ...s, [g]: on ? '' : p.id }))}
-                    className={cn('flex-shrink-0 h-9 px-4 rounded-full text-[13px] font-bold whitespace-nowrap border transition-colors',
-                      on ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent'
-                        : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_55%,transparent)]')}>
-                    {p.name}{n !== null && <span className="opacity-60 ml-1">{n}</span>}
-                  </button>
-                );
-              })}
-            </div>
+      {/* Filters — Single clean row on mobile, full grouped rows on desktop */}
+      <div className="mb-3" role="group" aria-label="Filter the list">
+        {/* Mobile: 1 single horizontal scrolling row */}
+        <div className="sm:hidden">
+          <div
+            style={{
+              maskImage: 'linear-gradient(to right, #000 calc(100% - 24px), transparent)',
+              WebkitMaskImage: 'linear-gradient(to right, #000 calc(100% - 24px), transparent)',
+            }}
+            className="flex gap-1.5 overflow-x-auto py-0.5 pr-6 min-w-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            <button
+              type="button"
+              aria-pressed={activeLists.length === 0}
+              onClick={() => setSel({})}
+              className={cn(
+                'flex-shrink-0 h-7 px-3 rounded-full text-[11px] font-semibold whitespace-nowrap border transition-colors',
+                activeLists.length === 0
+                  ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent shadow-xs'
+                  : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_50%,transparent)]'
+              )}
+            >
+              All
+            </button>
+            {flatPlaylists.map((p) => {
+              const g = groupOf(p);
+              const on = (sel[g] ?? '') === p.id;
+              const n = countFor(p);
+              if (n === 0 && !on) return null;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setSel((s) => ({ ...s, [g]: on ? '' : p.id }))}
+                  className={cn(
+                    'flex-shrink-0 h-7 px-2.5 rounded-full text-[11px] font-semibold whitespace-nowrap border transition-colors',
+                    on
+                      ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent shadow-xs'
+                      : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_50%,transparent)] hover:border-[var(--text-muted)]'
+                  )}
+                >
+                  {p.name}
+                  {n !== null && <span className="opacity-55 ml-1 text-[10px]">{n}</span>}
+                </button>
+              );
+            })}
           </div>
-        ))}
+        </div>
+
+        {/* Desktop: Grouped rows (TYPE, WHEN, DEITY) */}
+        <div className="hidden sm:block space-y-1.5">
+          {groups.map(([g, items]) => (
+            <div key={g} className="flex items-center gap-2">
+              <span className="w-11 flex-shrink-0 text-[9px] font-black uppercase tracking-[0.14em] text-[var(--text-muted)]">{g}</span>
+              <div style={{ maskImage: 'linear-gradient(to right, #000 calc(100% - 24px), transparent)', WebkitMaskImage: 'linear-gradient(to right, #000 calc(100% - 24px), transparent)' }}
+                className="flex gap-1.5 overflow-x-auto py-0.5 pr-6 min-w-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {[{ id: '', name: 'All' } as { id: string; name: string }, ...items].map((p) => {
+                  const on = (sel[g] ?? '') === p.id;
+                  const full = p.id ? items.find((x) => x.id === p.id)! : null;
+                  const n = full ? countFor(full) : null;
+                  if (full && n === 0 && !on) return null;
+                  return (
+                    <button key={p.id || 'all'} type="button" aria-pressed={on} onClick={() => setSel((s) => ({ ...s, [g]: on ? '' : p.id }))}
+                      className={cn('flex-shrink-0 h-7 px-2.5 rounded-full text-[11px] font-semibold whitespace-nowrap border transition-colors',
+                        on ? 'bg-[var(--accent-primary)] text-[var(--bg-color)] border-transparent shadow-xs'
+                          : 'bg-[var(--bg-color)] text-[var(--text-primary)] border-[color-mix(in_srgb,var(--text-muted)_50%,transparent)] hover:border-[var(--text-muted)]')}>
+                      {p.name}{n !== null && <span className="opacity-55 ml-1 text-[10px]">{n}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
         {activeLists.length > 0 && (
           <div className="flex items-center justify-between gap-3 pt-1">
-            <p className="text-sm text-[var(--text-secondary)] flex items-center gap-2 min-w-0"><ListMusic size={15} className="flex-shrink-0" /> <span className="truncate">{rows.length} {rows.length === 1 ? 'result' : 'results'} for {listName}</span></p>
+            <p className="text-xs text-[var(--text-secondary)] flex items-center gap-1.5 min-w-0"><ListMusic size={14} className="flex-shrink-0" /> <span className="truncate">{rows.length} {rows.length === 1 ? 'result' : 'results'} for {listName}</span></p>
             <button type="button" onClick={() => setSel({})} className="text-xs font-bold underline text-[var(--text-secondary)] flex-shrink-0">Clear filters</button>
           </div>
         )}
@@ -434,11 +491,30 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
         <div style={barBox ? { left: barBox.left, width: barBox.width, bottom: barBox.bottom } : undefined} className="fixed bottom-3 z-40 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-color)]/95 backdrop-blur-xl shadow-2xl">
           <div className="h-1 bg-[var(--border-subtle)] overflow-hidden rounded-t-2xl"><div className="h-full bg-[var(--accent-primary)]" style={{ width: `${pct}%` }} /></div>
           <div className="flex items-center gap-3 p-3">
-            <img src={current.cover} alt="" className="w-11 h-11 rounded-lg object-cover flex-shrink-0" />
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold text-[var(--text-primary)]">{current.title}</span>
-              <span className="block truncate text-[11px] text-[var(--text-muted)]">{pujaName ? `${pujaName} · ${queue ? queue.indexOf(current.id) + 1 : 1} of ${queue?.length ?? 1}` : queue ? (activeLists.length ? `Playing ${listName}` : 'Playing the whole library') : current.subtitle}</span>
-            </span>
+            <button
+              type="button"
+              onClick={() => tools && setZenChantOpen(true)}
+              className="flex items-center gap-3 min-w-0 flex-1 text-left cursor-pointer group"
+              aria-label={tools ? 'Open full-screen chanting view' : undefined}
+            >
+              <img src={current.cover} alt="" className="w-11 h-11 rounded-lg object-cover flex-shrink-0 group-hover:opacity-85 transition-opacity" />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors">{current.title}</span>
+                <span className="block truncate text-[11px] text-[var(--text-muted)]">{pujaName ? `${pujaName} · ${queue ? queue.indexOf(current.id) + 1 : 1} of ${queue?.length ?? 1}` : queue ? (activeLists.length ? `Playing ${listName}` : 'Playing the whole library') : current.subtitle}</span>
+              </span>
+            </button>
+            {tools && (
+              <button
+                type="button"
+                onClick={() => setZenChantOpen(true)}
+                aria-label="Open Zen Chanting View"
+                title="Full-screen Minimalist Chanting View"
+                className="flex items-center gap-1 h-9 px-2.5 rounded-full bg-gradient-to-r from-amber-500/20 to-amber-600/20 border border-amber-500/35 text-[var(--accent-primary)] text-xs font-bold flex-shrink-0 hover:border-amber-400"
+              >
+                <span className="text-amber-400 font-serif text-sm">ॐ</span>
+                <span className="hidden sm:inline">Zen View</span>
+              </button>
+            )}
             <button aria-label="Previous" onClick={() => step(-1)} className="p-2 text-[var(--text-secondary)]"><SkipBack size={18} /></button>
             <button aria-label={playing ? 'Pause' : 'Play'} onClick={() => (playing ? VoiceService.pause() : VoiceService.resume('music'))}
               className="w-10 h-10 grid place-items-center rounded-full bg-[var(--accent-primary)] text-[var(--bg-color)]">
@@ -456,6 +532,31 @@ export function SoundLibrary({ kind, title, kicker, description, cover, tracks, 
             </button>
           </div>
         </div>
+      )}
+
+      {/* Fullscreen Minimalist Chanting View for Paid Owners on Mobile */}
+      {tools && (
+        <MinimalistChantingView
+          isOpen={zenChantOpen}
+          onClose={() => setZenChantOpen(false)}
+          title={current?.title ?? (counterTrack?.title || 'Sacred Mantra')}
+          subtitle={current?.subtitle ?? counterTrack?.subtitle}
+          todayReps={counterSlug ? repsOn(sadhana.state, dateKey(), counterSlug) : 0}
+          malaTarget={sadhana.state.malaTarget}
+          playing={playing}
+          onTogglePlay={() => {
+            if (!current && counterTrack) { void playTrack(counterTrack, null); return; }
+            if (playing) VoiceService.pause(); else VoiceService.resume('music');
+          }}
+          onStop={() => VoiceService.stopMusic()}
+          onCountOne={() => counterSlug && countOne(counterSlug)}
+          onReset={() => counterSlug && sadhana.clearToday(counterSlug)}
+          onSelectTarget={(target) => sadhana.setMalaTarget(target)}
+          isDark={typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : true}
+          isAarti={counterSlug ? isAarti(counterSlug) : current ? isAarti(slugOf(current.id) || '') : false}
+          currentTime={progress.currentTime}
+          duration={progress.duration}
+        />
       )}
 
       {/* Unlock sheet */}
