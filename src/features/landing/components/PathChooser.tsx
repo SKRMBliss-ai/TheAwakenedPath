@@ -20,7 +20,7 @@ const ART: Record<Door['id'], { img: string; alt: string; object?: boolean; fade
   // right edges are faded into the card background, which uses the same colour.
   me: { img: '/marketing/mind-gym-guide-namaste.webp', alt: 'A guide with hands pressed together in namaste', fade: true },
   child: { img: '/marketing/kids/hero-sim-diary.webp', alt: 'Sim Katyal with her son and the daily diary chart' },
-  mantras: { img: '/marketing/mantras/altar-9-mantras.webp', alt: 'Golden 9-mantra altar with Vedic deities and lotus crest', object: true },
+  mantras: { img: '/marketing/mantras/exec-ce641b41-377a-428e-9ae9-53d82af4accf.png', alt: 'Sacred Om', object: true },
 };
 
 const PER = { once: ' once', month: '/month', year: '/year' } as const;
@@ -115,7 +115,7 @@ export default function PathChooser({ palette }: { palette: Palette }) {
            breathing room and a soft shadow to sit on the same ground line. */
         .pc-img img.pc-fade { -webkit-mask-image: linear-gradient(to right, transparent 0, #000 9%, #000 91%, transparent 100%);
           mask-image: linear-gradient(to right, transparent 0, #000 9%, #000 91%, transparent 100%); }
-        .pc-img img.pc-obj { height: 86%; margin-bottom: 7%; filter: drop-shadow(0 14px 18px rgba(60,40,20,.28)); }
+        .pc-img img.pc-obj { height: 80%; margin-bottom: 7.5%; filter: drop-shadow(0 12px 20px rgba(0,0,0,0.4)) drop-shadow(0 0 16px rgba(233,201,138,0.22)); }
         .pc-card:hover .pc-img img { transform: scale(1.04); }
         .pc-body { display: flex; flex-direction: column; gap: 12px; padding: 22px 22px 24px; flex: 1; }
         @media (max-width: 900px) { .pc-grid { grid-template-columns: 1fr; } .pc-img { aspect-ratio: 16 / 9; } }
