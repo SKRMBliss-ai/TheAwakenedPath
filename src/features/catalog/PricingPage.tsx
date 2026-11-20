@@ -65,6 +65,26 @@ function DoorColumn({ palette, door, selected, onPick }: { palette: Palette; doo
           />
         </div>
       )}
+      {door.id === 'me' && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 160, margin: '2px 0 6px' }}>
+          <img
+            src="/assets/gym/adult-character@320.webp"
+            alt="Adult Mind Gym"
+            style={{ maxHeight: 160, width: 'auto', objectFit: 'contain' }}
+            loading="lazy"
+          />
+        </div>
+      )}
+      {door.id === 'child' && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 160, margin: '2px 0 6px' }}>
+          <img
+            src="/assets/gym/chirpy/chirpy-feelings-trio.webp"
+            alt="Kids Mind Gym Chirpy Feelings & Emotions"
+            style={{ maxHeight: 140, maxWidth: '95%', objectFit: 'contain' }}
+            loading="lazy"
+          />
+        </div>
+      )}
       {door.id === 'mantras' && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 160, margin: '2px 0 6px' }}>
           <img
