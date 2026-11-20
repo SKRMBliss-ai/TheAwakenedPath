@@ -48,8 +48,8 @@ function DoorColumn({ palette, door, selected, onPick }: { palette: Palette; doo
       {door.id === 'mantras' && (
         <div style={{ borderRadius: 16, overflow: 'hidden', border: `1px solid ${palette.BORDER}`, margin: '2px 0 2px', boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }}>
           <img
-            src="/marketing/mantras/altar-9-mantras.webp"
-            alt="9 Sacred Mantras Golden Altar Tablet"
+            src={palette.isDark ? '/marketing/mantras/om-altar-mauve.webp' : '/marketing/mantras/om-altar-ivory.webp'}
+            alt="Sacred Golden Om Lotus Emblem"
             width={1024}
             height={576}
             style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }}
