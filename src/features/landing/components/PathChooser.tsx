@@ -18,7 +18,7 @@ const SANS = "'Outfit', system-ui, -apple-system, sans-serif";
 const ART: Record<Door['id'], { img: string; alt: string; object?: boolean; fade?: boolean }> = {
   // This photo has its own dark-purple background (not a cutout); its left and
   // right edges are faded into the card background, which uses the same colour.
-  me: { img: '/marketing/mind-gym-guide-namaste.webp', alt: 'A guide with hands pressed together in namaste', fade: true },
+  me: { img: '/marketing/adult-guide-shruti-mic.webp', alt: 'Shruti Khungar, guide for Adult Mind Gym', fade: true },
   child: { img: '/marketing/kids/hero-sim-diary.webp', alt: 'Sim Katyal with her son and the daily diary chart' },
   mantras: { img: '/marketing/mantras/exec-ce641b41-377a-428e-9ae9-53d82af4accf.png', alt: 'Sacred Om', object: true },
 };
