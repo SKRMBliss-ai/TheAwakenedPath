@@ -46,37 +46,31 @@ function DoorColumn({ palette, door, selected, onPick }: { palette: Palette; doo
       <h2 id={`door-${door.id}`} style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 3vw, 36px)', fontWeight: 500, lineHeight: 1.1, margin: 0 }}>{door.title}</h2>
       <p style={{ margin: 0, fontSize: 15.5, lineHeight: 1.6, color: palette.INK2 }}>{door.line}</p>
       {door.id === 'me' && (
-        <div style={{ borderRadius: 16, overflow: 'hidden', border: `1px solid ${palette.BORDER}`, margin: '2px 0 2px', boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 160, margin: '2px 0 6px' }}>
           <img
-            src={palette.isDark ? '/marketing/gym/adult-door-mauve.webp' : '/marketing/gym/adult-door-ivory.webp'}
+            src="/assets/gym/adult-character@320.webp"
             alt="Adult Mind Gym"
-            width={1024}
-            height={576}
-            style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }}
+            style={{ maxHeight: 160, width: 'auto', objectFit: 'contain' }}
             loading="lazy"
           />
         </div>
       )}
       {door.id === 'child' && (
-        <div style={{ borderRadius: 16, overflow: 'hidden', border: `1px solid ${palette.BORDER}`, margin: '2px 0 2px', boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 160, margin: '2px 0 6px' }}>
           <img
-            src={palette.isDark ? '/marketing/gym/kids-door-mauve.webp' : '/marketing/gym/kids-door-ivory.webp'}
+            src="/assets/gym/chirpy/chirpy-feelings-trio.webp"
             alt="Kids Mind Gym Chirpy Feelings & Emotions"
-            width={1024}
-            height={576}
-            style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }}
+            style={{ maxHeight: 140, maxWidth: '95%', objectFit: 'contain' }}
             loading="lazy"
           />
         </div>
       )}
       {door.id === 'mantras' && (
-        <div style={{ borderRadius: 16, overflow: 'hidden', border: `1px solid ${palette.BORDER}`, margin: '2px 0 2px', boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 160, margin: '2px 0 6px' }}>
           <img
-            src={palette.isDark ? '/marketing/mantras/om-altar-mauve.webp' : '/marketing/mantras/om-altar-ivory.webp'}
+            src="/marketing/mantras/exec-ce641b41-377a-428e-9ae9-53d82af4accf.png"
             alt="Sacred Golden Om Lotus Emblem"
-            width={1024}
-            height={576}
-            style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }}
+            style={{ maxHeight: 155, maxWidth: '95%', objectFit: 'contain' }}
             loading="lazy"
           />
         </div>
