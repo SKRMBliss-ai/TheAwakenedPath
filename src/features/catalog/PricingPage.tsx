@@ -166,34 +166,34 @@ function Checkout({ palette, id, user, onClose, queued, onAdd, onRemove }: {
       {/* Header Visual — Spacious, uncropped sacred diya */}
       <div style={{
         margin: 'calc(-1 * clamp(20px, 3vw, 28px)) calc(-1 * clamp(20px, 3vw, 28px)) 20px',
-        height: 'clamp(180px, 24vw, 240px)',
+        height: 'clamp(200px, 28vw, 250px)',
         position: 'relative',
         overflow: 'hidden',
         borderTopLeftRadius: 26,
         borderTopRightRadius: 26,
-        background: palette.isDark ? '#241B24' : '#F7F1E6',
+        background: palette.isDark ? '#A07378' : '#F4E5D6',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
       }}>
         <img
-          src={palette.isDark ? '/marketing/mantras/diya-mauve.webp' : '/marketing/mantras/diya-ivory.webp'}
+          src={palette.isDark ? '/marketing/mantras/diya-banner-mauve.webp' : '/marketing/mantras/diya-banner-ivory.webp'}
           alt="Golden sacred diya altar"
           aria-hidden="true"
           style={{
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            objectPosition: 'center 46%',
+            objectPosition: 'center center',
           }}
         />
-        {/* Soft bottom fade into card surface */}
+        {/* Soft bottom fade into card surface — subtle 28px so it never obscures the marble pedestal or petal */}
         <div style={{
           position: 'absolute',
           bottom: 0,
           left: 0,
           right: 0,
-          height: 64,
+          height: 28,
           background: `linear-gradient(to bottom, transparent 0%, ${palette.CARD} 100%)`,
           pointerEvents: 'none',
         }} />
