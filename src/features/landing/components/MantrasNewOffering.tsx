@@ -1,5 +1,5 @@
-import { useRef } from 'react';
-import { ArrowRight, Bell, Sparkles, Volume2, ShieldCheck, ChevronLeft, ChevronRight, Moon, Flame } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { ArrowRight, Bell, Sparkles, Volume2, ShieldCheck, ChevronLeft, ChevronRight, Moon, Flame, Play, X } from 'lucide-react';
 import type { Palette } from '../../../lib/siteTheme';
 import { track } from '../../../lib/analytics';
 
@@ -76,6 +76,7 @@ const FEATURED_MANTRAS: FeaturedMantra[] = [
 export default function MantrasNewOffering({ palette }: { palette: Palette }) {
   const isDark = palette.isDark;
   const railRef = useRef<HTMLDivElement>(null);
+  const [isPlayingVideo, setIsPlayingVideo] = useState(false);
 
   const scrollRail = (dir: 1 | -1) => {
     railRef.current?.scrollBy({ left: dir * 320, behavior: 'smooth' });
@@ -163,35 +164,213 @@ export default function MantrasNewOffering({ palette }: { palette: Palette }) {
             }}
             className="mo-feature-grid"
           >
-            {/* Visual: Golden 9-Mantra Tablet Artwork */}
+            {/* Visual: Mantra Pass Walkthrough Video */}
             <div style={{ position: 'relative', textAlign: 'center' }}>
               <div
                 style={{
                   position: 'relative',
                   borderRadius: 24,
                   overflow: 'hidden',
-                  background: 'radial-gradient(ellipse at 50% 60%, rgba(233,201,138,0.2), transparent 70%), #1B1522',
-                  border: `1px solid ${isDark ? 'rgba(233,201,138,0.3)' : 'rgba(233,201,138,0.45)'}`,
-                  boxShadow: '0 16px 40px rgba(0,0,0,0.25)',
+                  aspectRatio: '16 / 9',
+                  background: '#0D0A12',
+                  border: `1.5px solid ${isDark ? 'rgba(233,201,138,0.35)' : 'rgba(216,174,94,0.45)'}`,
+                  boxShadow: isDark
+                    ? '0 24px 60px rgba(0,0,0,0.6), 0 0 32px rgba(216,174,94,0.18)'
+                    : '0 20px 50px rgba(60,40,30,0.18), 0 0 28px rgba(216,174,94,0.22)',
                 }}
               >
-                <img
-                  src="/marketing/mantras/altar-9-mantras.webp"
-                  alt="Soulful Mantra Studio sacred 9-mantra altar with Vedic deities"
-                  loading="lazy"
-                  width={680}
-                  height={420}
-                  style={{
-                    width: '100%',
-                    height: 'auto',
-                    display: 'block',
-                    transform: 'scale(1.02)',
-                    transition: 'transform 0.5s ease',
-                  }}
-                />
+                {!isPlayingVideo ? (
+                  <div
+                    onClick={() => {
+                      setIsPlayingVideo(true);
+                      track('HOME_MANTRAS_VIDEO_PLAY');
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Play Mantra Pass Walkthrough Video"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        setIsPlayingVideo(true);
+                        track('HOME_MANTRAS_VIDEO_PLAY');
+                      }
+                    }}
+                    style={{
+                      position: 'relative',
+                      width: '100%',
+                      height: '100%',
+                      cursor: 'pointer',
+                      display: 'block',
+                      overflow: 'hidden',
+                    }}
+                    className="group"
+                  >
+                    <img
+                      src="/marketing/mantras/mantra-pass-video-poster.webp"
+                      alt="Mantra Pass Walkthrough — Chant in Peace with 108 Mala Counter"
+                      loading="lazy"
+                      width={1280}
+                      height={720}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        display: 'block',
+                        transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+                      }}
+                      className="group-hover:scale-105"
+                    />
+
+                    {/* Gradient depth vignette */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.52) 100%)',
+                        pointerEvents: 'none',
+                      }}
+                    />
+
+                    {/* Top Pill Badge */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 14,
+                        left: 14,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        padding: '6px 12px',
+                        borderRadius: 999,
+                        background: 'rgba(15,10,20,0.82)',
+                        backdropFilter: 'blur(8px)',
+                        border: '1px solid rgba(233,201,138,0.45)',
+                        color: '#E9C98A',
+                        fontFamily: SANS,
+                        fontSize: 11,
+                        fontWeight: 800,
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                      }}
+                    >
+                      <Play size={12} fill="#E9C98A" />
+                      <span>1-Min Walkthrough</span>
+                    </div>
+
+                    {/* Center Pulsing Play Button */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 10,
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: 'relative',
+                          width: 68,
+                          height: 68,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        {/* Outer animated ripple */}
+                        <div
+                          className="mo-play-ripple"
+                          style={{
+                            position: 'absolute',
+                            inset: -8,
+                            borderRadius: '50%',
+                            border: '2px solid rgba(233,201,138,0.7)',
+                            pointerEvents: 'none',
+                          }}
+                        />
+                        {/* Circle button */}
+                        <div
+                          style={{
+                            width: 64,
+                            height: 64,
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #F5DC9C 0%, #D8AE5E 100%)',
+                            boxShadow: '0 12px 30px rgba(0,0,0,0.6), 0 0 28px rgba(216,174,94,0.65)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease',
+                          }}
+                          className="group-hover:scale-110"
+                        >
+                          <Play size={24} fill="#1A140B" color="#1A140B" style={{ marginLeft: 3 }} />
+                        </div>
+                      </div>
+
+                      <span
+                        style={{
+                          fontFamily: SANS,
+                          fontSize: 12,
+                          fontWeight: 700,
+                          letterSpacing: '0.04em',
+                          color: '#FFFFFF',
+                          textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+                          background: 'rgba(0,0,0,0.55)',
+                          padding: '4px 12px',
+                          borderRadius: 999,
+                          backdropFilter: 'blur(4px)',
+                        }}
+                      >
+                        Watch Walkthrough
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                    <iframe
+                      src="https://www.youtube-nocookie.com/embed/KluTr0iPoJk?autoplay=1&rel=0&modestbranding=1&playsinline=1"
+                      title="Mantra Pass Walkthrough Video"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        border: 'none',
+                        display: 'block',
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setIsPlayingVideo(false)}
+                      aria-label="Close video player"
+                      style={{
+                        position: 'absolute',
+                        top: 10,
+                        right: 10,
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        background: 'rgba(0,0,0,0.78)',
+                        border: '1px solid rgba(255,255,255,0.25)',
+                        color: '#FFFFFF',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        zIndex: 2,
+                      }}
+                      className="hover:opacity-80"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {/* Floating Pill Under Image */}
+              {/* Floating Pill Under Video */}
               <div
                 style={{
                   marginTop: 12,
@@ -205,7 +384,7 @@ export default function MantrasNewOffering({ palette }: { palette: Palette }) {
                 }}
               >
                 <Sparkles size={14} color="#D8AE5E" />
-                <span>Featuring Ganesha, Shiva, Lakshmi, Saraswati, Durga, Surya, Vishnu & Tulsi</span>
+                <span>Walkthrough · 108 Mala counter, ad-free sacred chanting &amp; puja sequences</span>
               </div>
             </div>
 
@@ -355,6 +534,32 @@ export default function MantrasNewOffering({ palette }: { palette: Palette }) {
                 >
                   Explore Free Library →
                 </a>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPlayingVideo(true);
+                    track('HOME_MANTRAS_WATCH_VIDEO_BTN');
+                  }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '12px 18px',
+                    borderRadius: 999,
+                    background: isDark ? 'rgba(233,201,138,0.1)' : 'rgba(216,174,94,0.12)',
+                    border: `1.5px solid ${isDark ? 'rgba(233,201,138,0.35)' : 'rgba(216,174,94,0.45)'}`,
+                    color: isDark ? '#E9C98A' : '#7D5A18',
+                    fontFamily: SANS,
+                    fontSize: 14,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                  className="hover:scale-105 active:scale-95"
+                >
+                  <Play size={14} fill="currentColor" /> Watch Walkthrough
+                </button>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: palette.INK2, fontFamily: SANS }}>
@@ -518,6 +723,14 @@ export default function MantrasNewOffering({ palette }: { palette: Palette }) {
       <style>{`
         .mo-card:hover { transform: translateY(-4px); border-color: ${palette.PURPLE_STRONG} !important; }
         .mo-rail::-webkit-scrollbar { display: none; }
+        @keyframes moRipple {
+          0% { transform: scale(0.92); opacity: 0.85; }
+          50% { transform: scale(1.18); opacity: 0.35; }
+          100% { transform: scale(1.36); opacity: 0; }
+        }
+        .mo-play-ripple {
+          animation: moRipple 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+        }
         @media (max-width: 900px) {
           .mo-feature-grid { grid-template-columns: 1fr !important; }
           .mo-pillars-grid { grid-template-columns: 1fr !important; }
