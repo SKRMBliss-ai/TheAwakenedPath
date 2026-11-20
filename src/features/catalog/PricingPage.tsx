@@ -45,6 +45,30 @@ function DoorColumn({ palette, door, selected, onPick }: { palette: Palette; doo
         padding: '6px 12px', borderRadius: 999, background: palette.BAND, color: palette.ON_BAND }}>{door.who}</span>
       <h2 id={`door-${door.id}`} style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 3vw, 36px)', fontWeight: 500, lineHeight: 1.1, margin: 0 }}>{door.title}</h2>
       <p style={{ margin: 0, fontSize: 15.5, lineHeight: 1.6, color: palette.INK2 }}>{door.line}</p>
+      {door.id === 'me' && (
+        <div style={{ borderRadius: 16, overflow: 'hidden', border: `1px solid ${palette.BORDER}`, margin: '2px 0 2px', boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }}>
+          <img
+            src={palette.isDark ? '/marketing/gym/adult-door-mauve.webp' : '/marketing/gym/adult-door-ivory.webp'}
+            alt="Adult Mind Gym"
+            width={1024}
+            height={576}
+            style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }}
+            loading="lazy"
+          />
+        </div>
+      )}
+      {door.id === 'child' && (
+        <div style={{ borderRadius: 16, overflow: 'hidden', border: `1px solid ${palette.BORDER}`, margin: '2px 0 2px', boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }}>
+          <img
+            src={palette.isDark ? '/marketing/gym/kids-door-mauve.webp' : '/marketing/gym/kids-door-ivory.webp'}
+            alt="Kids Mind Gym Chirpy Feelings & Emotions"
+            width={1024}
+            height={576}
+            style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }}
+            loading="lazy"
+          />
+        </div>
+      )}
       {door.id === 'mantras' && (
         <div style={{ borderRadius: 16, overflow: 'hidden', border: `1px solid ${palette.BORDER}`, margin: '2px 0 2px', boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }}>
           <img
