@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
-import { Flame, Sparkles, Sun, Moon, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, LogIn, Mail, Youtube, Eye, CheckSquare, Wind, ChevronLeft, ChevronRight, Download, Home, Trophy, Users, CalendarDays, GraduationCap } from 'lucide-react';
+import { Flame, Sparkles, Sun, Moon, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, LogIn, Mail, Youtube, Eye, CheckSquare, Wind, ChevronLeft, ChevronRight, Download, Trophy, Users, CalendarDays, GraduationCap } from 'lucide-react';
 import { usePageSeo } from './lib/seo';
 import { db } from './firebase';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
