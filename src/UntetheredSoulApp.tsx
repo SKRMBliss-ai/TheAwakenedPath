@@ -35,7 +35,6 @@ import { PhonePromptModal } from './components/domain/PhonePromptModal';
 import SacredWelcomeModal from './components/ui/SacredWelcomeModal';
 import { LeaveMindGymModal } from './components/ui/LeaveMindGymModal';
 import { PresenceBreath } from './components/ui/PresenceBreath';
-import { FirstRunWelcome } from './components/ui/FirstRunWelcome';
 import { DashboardGrid } from './features/practices/DashboardGrid';
 import PriceSlider from './components/ui/PriceSlider';
 import { useActivityTracker } from './hooks/useActivityTracker';
@@ -2361,8 +2360,8 @@ export default function UntetheredApp() {
             onConfirm={() => { window.location.href = 'https://www.skrmblissai.in'; }}
           />
 
-          {/* First-run orientation — shows once for new users */}
-          <FirstRunWelcome />
+          {/* The four-step "A calmer mind, daily" welcome was removed: the Today screen
+              already says what to do, so a pop-up to read first was one step too many. */}
 
           <AnimatePresence mode="wait">
             {activeTab === 'paywall' && (
