@@ -11,12 +11,14 @@ import { CHALLENGE_DAYS, challengeInfo, usePractiseStore } from './store';
 import { buildBespokeRoom, draftPattern, STRENGTHS, TODAYS_PRACTICES } from './content';
 import { Session } from './Session';
 import { CoachView } from './CoachView';
+import { JourneyMap } from './JourneyMap';
+import { nextJourneyRoom } from './journey';
 import { Card, Fade, GhostButton, PatternIcon, PractiseShell, PrimaryButton, RoomIcon, StrengthIcon, TopBar } from './ui';
 import { GYM_ADULT_THEME } from './theme';
 import { useSpeechInput } from './useSpeechInput';
 import './adult.css';
 
-type View = 'home' | 'intake' | 'pattern' | 'created' | 'session' | 'today' | 'saved' | 'coach';
+type View = 'home' | 'intake' | 'pattern' | 'created' | 'session' | 'today' | 'saved' | 'coach' | 'map';
 
 const CHARACTER = '/assets/gym/adult-character@160.webp';
 const CHARACTER_2X = '/assets/gym/adult-character@320.webp';
@@ -195,6 +197,16 @@ export function AdultGym({
         onExit={() => go(sessionFrom === 'created' ? 'home' : sessionFrom)}
         onComplete={() => { /* progress written in-engine; ownership actions live in My Practices */ }}
       />
+    );
+  }
+
+  /* ── The journey map ───────────────────────────────────────────────── */
+  if (view === 'map') {
+    return (
+      <Shell>
+        <TopBar backText="Back" title="My journey" onBack={() => go('home')} backLabel="Back to Today" right={hub} />
+        <JourneyMap onStart={(r) => startSession(r, 'map')} />
+      </Shell>
     );
   }
 
@@ -614,7 +626,8 @@ export function AdultGym({
         {embedded && (
           <div className="sm:hidden">
             <TodayPath
-              room={(activePlans[0] ?? null)?.room ?? TODAYS_PRACTICES[indexOfToday()]}
+              room={(activePlans[0] ?? null)?.room ?? nextJourneyRoom(store.reflections) ?? TODAYS_PRACTICES[indexOfToday()]}
+              onMap={() => go('map')}
               onStart={(r) => { sfx.pop(); startSession(r, 'home'); }}
               onMind={() => { setSituation(''); go('intake'); }}
               onCoach={() => go('coach')}
@@ -698,6 +711,13 @@ export function AdultGym({
             );
           })}
         </div>
+        <button
+          onClick={() => go('map')}
+          className="mt-4 min-h-[44px] text-[13px] font-semibold underline-offset-4 hover:underline"
+          style={{ color: 'var(--p-accent)' }}
+        >
+          See my journey map
+        </button>
         </div>
 
         {explore && explore.length > 0 && (
@@ -746,11 +766,13 @@ function TodayPath({
   onStart,
   onMind,
   onCoach,
+  onMap,
 }: {
   room: PracticeRoom;
   onStart: (r: PracticeRoom) => void;
   onMind: () => void;
   onCoach: () => void;
+  onMap: () => void;
 }) {
   const store = usePractiseStore();
   const today = getLocalDayString();
@@ -841,6 +863,9 @@ function TodayPath({
         </button>
         <button onClick={onCoach} className="min-h-[44px] text-[13px] font-semibold underline-offset-4 hover:underline" style={{ color: 'var(--p-accent)' }}>
           Check in with my coach
+        </button>
+        <button onClick={onMap} className="min-h-[44px] text-[13px] font-semibold underline-offset-4 hover:underline" style={{ color: 'var(--p-accent)' }}>
+          My journey
         </button>
       </div>
     </div>
