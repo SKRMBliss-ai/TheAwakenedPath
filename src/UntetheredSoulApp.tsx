@@ -673,6 +673,10 @@ export default function UntetheredApp() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showLeaveMindGymModal, setShowLeaveMindGymModal] = useState(false);
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 1024 : true);
+  // On a phone there is one daily screen: the Dashboard opens Today instead.
+  useEffect(() => {
+    if (isMobile && activeTab === 'home') setActiveTab('start');
+  }, [isMobile, activeTab, setActiveTab]);
   const { unlocked, points, toastQueue, dismissToast, checkAndUnlock, awardEvent } = useAchievements();
   const [achievementsOpen, setAchievementsOpen] = useState(false);
   const { isAudioEnabled, toggleAudio, setVibrationalState } = useGenerativeAudio();

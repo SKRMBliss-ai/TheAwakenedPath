@@ -611,6 +611,19 @@ export function AdultGym({
           </div>
         </div>
 
+        {embedded && (
+          <div className="sm:hidden">
+            <TodayPath
+              room={(activePlans[0] ?? null)?.room ?? TODAYS_PRACTICES[indexOfToday()]}
+              onStart={(r) => { sfx.pop(); startSession(r, 'home'); }}
+              onMind={() => { setSituation(''); go('intake'); }}
+              onCoach={() => go('coach')}
+            />
+          </div>
+        )}
+
+        {/* Larger screens (and the standalone gym) keep the full set of doors. */}
+        <div className={embedded ? 'hidden sm:block' : undefined}>
         <Card onClick={() => { sfx.pop(); go('coach'); }} ariaLabel="Daily check-in with your coach" className="mt-6 flex items-center gap-4 !p-4">
           <div className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl" style={{ background: 'var(--p-accent-soft)', color: 'var(--p-accent)' }}>
             <HeartHandshake size={22} aria-hidden />
@@ -685,6 +698,7 @@ export function AdultGym({
             );
           })}
         </div>
+        </div>
 
         {explore && explore.length > 0 && (
           <div className="hidden sm:block">
@@ -715,6 +729,121 @@ export function AdultGym({
         </div>
       </Fade>
     </Shell>
+  );
+}
+
+const THOUGHT_KEY = 'mg-today-thought-read';
+
+/**
+ * Today, on a phone: three small steps and nothing else to decide.
+ *   1. Today's thought  — one line to carry (the practice's own aim).
+ *   2. Today's practice — the plan's practice if one is running, else today's.
+ *   3. One line         — a single sentence, saved as a reflection.
+ * Progress is "n of 3"; when all three are done the screen says so and stops asking.
+ */
+function TodayPath({
+  room,
+  onStart,
+  onMind,
+  onCoach,
+}: {
+  room: PracticeRoom;
+  onStart: (r: PracticeRoom) => void;
+  onMind: () => void;
+  onCoach: () => void;
+}) {
+  const store = usePractiseStore();
+  const today = getLocalDayString();
+  const [thoughtRead, setThoughtRead] = useState(() => {
+    try { return localStorage.getItem(THOUGHT_KEY) === today; } catch { return false; }
+  });
+  const [writing, setWriting] = useState(false);
+  const [line, setLine] = useState('');
+  const practised = store.lastPractisedDay === today;
+  const wrote = store.reflections.some((r) => r.roomId === 'daily-line' && r.date === today);
+  const done = [thoughtRead, practised, wrote].filter(Boolean).length;
+
+  const markRead = () => {
+    setThoughtRead(true);
+    try { localStorage.setItem(THOUGHT_KEY, today); } catch { /* private mode: fine for today */ }
+  };
+  const saveLine = () => {
+    if (!line.trim()) return;
+    store.addReflection({ roomId: 'daily-line', roomTitle: 'One line', gym: 'adult', discovery: line.trim(), date: today });
+    setLine('');
+    setWriting(false);
+  };
+
+  const row = (n: number, ok: boolean, title: string, sub: string, onClick?: () => void) => (
+    <button
+      onClick={onClick}
+      disabled={!onClick}
+      className="flex min-h-[64px] w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition disabled:cursor-default"
+      style={{ background: 'var(--p-surface)', border: '1px solid var(--p-line)' }}
+    >
+      <span
+        className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-full text-sm font-bold"
+        style={ok ? { background: 'var(--p-accent-fill, var(--p-accent))', color: '#fff' } : { background: 'var(--p-accent-soft)', color: 'var(--p-accent)' }}
+        aria-hidden
+      >
+        {ok ? <Check size={16} strokeWidth={3} /> : n}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[15px] font-semibold" style={{ color: 'var(--p-ink)' }}>{title}</span>
+        <span className="block text-[13px] leading-snug" style={{ color: 'var(--p-muted)' }}>{sub}</span>
+      </span>
+      {onClick && !ok && <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--p-muted)' }} aria-hidden />}
+    </button>
+  );
+
+  return (
+    <div className="mt-6">
+      <div className="mb-2 flex items-baseline justify-between">
+        <span className="text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--p-muted)' }}>Today</span>
+        <span className="text-[12px] font-semibold" style={{ color: 'var(--p-accent)' }}>{done} of 3</span>
+      </div>
+
+      {done === 3 ? (
+        <div className="rounded-2xl p-5 text-center" style={{ background: 'var(--p-accent-soft)' }}>
+          <p className="text-base font-semibold" style={{ color: 'var(--p-ink)' }}>Done for today.</p>
+          <p className="mt-1 text-[13px]" style={{ color: 'var(--p-muted)' }}>Carry it into your day. See you tomorrow.</p>
+        </div>
+      ) : (
+        <div className="space-y-2.5">
+          {row(1, thoughtRead, 'Today\u2019s thought', room.whatPractising, thoughtRead ? undefined : markRead)}
+          {row(2, practised, room.title, practised ? 'Practised today.' : 'About 5 minutes. Tap to begin.', practised ? undefined : () => onStart(room))}
+          {writing && !wrote ? (
+            <div className="rounded-2xl p-3" style={{ background: 'var(--p-surface)', border: '1px solid var(--p-line)' }}>
+              <textarea
+                value={line}
+                onChange={(e) => setLine(e.target.value)}
+                rows={2}
+                autoFocus
+                aria-label="One line about today"
+                placeholder="What did I notice today?"
+                className="w-full resize-none rounded-xl p-3 text-sm outline-none"
+                style={{ background: 'transparent', color: 'var(--p-ink)' }}
+              />
+              <div className="mt-2 flex gap-2">
+                <button onClick={saveLine} disabled={!line.trim()} className="min-h-[44px] flex-1 rounded-xl text-sm font-semibold text-white disabled:opacity-40" style={{ background: 'var(--p-accent-fill, var(--p-accent))' }}>Save</button>
+                <button onClick={() => setWriting(false)} className="min-h-[44px] rounded-xl px-4 text-sm font-semibold" style={{ color: 'var(--p-muted)' }}>Cancel</button>
+              </div>
+            </div>
+          ) : (
+            row(3, wrote, 'One line', wrote ? 'Written today.' : 'What did I notice today? Optional.', wrote ? undefined : () => setWriting(true))
+          )}
+        </div>
+      )}
+
+      <div className="mt-4 flex flex-wrap justify-center gap-x-5 gap-y-1">
+        <button onClick={onMind} className="min-h-[44px] text-[13px] font-semibold underline-offset-4 hover:underline" style={{ color: 'var(--p-accent)' }}>
+          Something on my mind
+        </button>
+        <button onClick={onCoach} className="min-h-[44px] text-[13px] font-semibold underline-offset-4 hover:underline" style={{ color: 'var(--p-accent)' }}>
+          Check in with my coach
+        </button>
+      </div>
+    </div>
   );
 }
 
