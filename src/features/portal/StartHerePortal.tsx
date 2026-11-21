@@ -45,12 +45,12 @@ export function StartHerePortal({
           className="flex flex-col rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] overflow-hidden shadow-xl hover:border-amber-500/40 hover:shadow-2xl transition-all duration-300 group"
         >
           {/* Visual Header - Bigger Image */}
-          <div className="relative h-72 sm:h-80 lg:h-[350px] w-full overflow-hidden bg-[#F7F1E6]">
+          <div className="relative aspect-square sm:aspect-auto sm:h-80 lg:h-[350px] w-full overflow-hidden bg-[#F7F1E6]">
             <img
               src="/marketing/adult-character-hero.webp"
               alt="Adult Mind Gym guide in serene presence"
               loading="lazy"
-              className="w-full h-full object-contain sm:object-cover object-top group-hover:scale-105 transition-transform duration-700"
+              className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700"
             />
             <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[var(--bg-surface)] via-[var(--bg-surface)]/60 to-transparent pointer-events-none" />
             <span className="absolute top-4 left-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-white text-[11px] font-bold uppercase tracking-wider">
@@ -90,12 +90,12 @@ export function StartHerePortal({
           className="flex flex-col rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] overflow-hidden shadow-xl hover:border-amber-500/40 hover:shadow-2xl transition-all duration-300 group"
         >
           {/* Visual Header - Bigger Image */}
-          <div className="relative h-72 sm:h-80 lg:h-[350px] w-full overflow-hidden bg-[#F7F1E6]">
+          <div className="relative aspect-square sm:aspect-auto sm:h-80 lg:h-[350px] w-full overflow-hidden bg-[#F7F1E6]">
             <img
               src="/marketing/kids/smily-boy-chirpy-hero.webp"
               alt="Smiling boy with Chirpy companion"
               loading="lazy"
-              className="w-full h-full object-contain sm:object-cover object-top group-hover:scale-105 transition-transform duration-700"
+              className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700"
             />
             <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[var(--bg-surface)] via-[var(--bg-surface)]/60 to-transparent pointer-events-none" />
             <span className="absolute top-4 left-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-white text-[11px] font-bold uppercase tracking-wider">
@@ -135,12 +135,12 @@ export function StartHerePortal({
           className="flex flex-col rounded-3xl border border-amber-500/35 bg-gradient-to-b from-amber-500/[0.04] to-[var(--bg-surface)] overflow-hidden shadow-xl hover:border-amber-400 hover:shadow-2xl transition-all duration-300 group"
         >
           {/* Visual Header - Bigger Image */}
-          <div className="relative h-72 sm:h-80 lg:h-[350px] w-full overflow-hidden bg-[#F7F1E6]">
+          <div className="relative aspect-square sm:aspect-auto sm:h-80 lg:h-[350px] w-full overflow-hidden bg-[#F7F1E6]">
             <img
               src="/marketing/mantras/ganesha-hero-matched.webp"
               alt="Lord Ganesha in meditation on lotus"
               loading="lazy"
-              className="w-full h-full object-contain sm:object-cover object-top group-hover:scale-105 transition-transform duration-700"
+              className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700"
             />
             <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[var(--bg-surface)] via-[var(--bg-surface)]/60 to-transparent pointer-events-none" />
             <span className="absolute top-4 left-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-amber-400/30 text-amber-300 text-[11px] font-bold uppercase tracking-wider">
