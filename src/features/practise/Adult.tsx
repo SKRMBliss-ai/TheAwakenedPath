@@ -662,10 +662,13 @@ export function AdultGym({
         )}
 
         <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {doors.map((d) => {
+          {doors.map((d, i) => {
             const Icon = d.icon;
             return (
-              <Card key={d.title} onClick={() => { sfx.pop(); d.onClick(); }} className="flex items-center gap-4 !p-4">
+              // On a phone only the first two doors show: one thing on my mind, or today's practice.
+              // "Continue" and "Saved" stay on larger screens, so the daily view isn't a menu.
+              <div key={d.title} className={embedded && i >= 2 ? 'hidden sm:block' : undefined}>
+              <Card onClick={() => { sfx.pop(); d.onClick(); }} className="flex items-center gap-4 !p-4">
                 <div
                   className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl shadow-sm"
                   style={{ background: `linear-gradient(150deg, ${d.tint[0]}, ${d.tint[1]})` }}
@@ -678,12 +681,13 @@ export function AdultGym({
                 </div>
                 <ChevronRight size={18} className="flex-shrink-0" style={{ color: 'var(--p-line)' }} aria-hidden />
               </Card>
+              </div>
             );
           })}
         </div>
 
         {explore && explore.length > 0 && (
-          <div>
+          <div className="hidden sm:block">
             <SectionLabel>Want more? Explore Mind Gym</SectionLabel>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {explore.map((e) => {
@@ -705,7 +709,10 @@ export function AdultGym({
           </div>
         )}
 
-        <JourneyStrip />
+        {/* The journey strip is detail, not the daily task: shown on larger screens only when embedded. */}
+        <div className={embedded ? 'hidden sm:block' : undefined}>
+          <JourneyStrip />
+        </div>
       </Fade>
     </Shell>
   );

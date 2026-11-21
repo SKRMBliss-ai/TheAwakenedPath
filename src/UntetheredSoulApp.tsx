@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { Flame, Sparkles, Sun, Moon, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, LogIn, Mail, Youtube, Eye, CheckSquare, Wind, ChevronLeft, ChevronRight, Download, Home, Trophy, Users, CalendarDays, GraduationCap } from 'lucide-react';
 import { usePageSeo } from './lib/seo';
-import { MeditationHomeCard } from './features/meditation/MeditationHomeCard';
 import { db } from './firebase';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { cn } from './lib/utils';
@@ -2502,13 +2501,9 @@ export default function UntetheredApp() {
                   </button>
                 </div>
 
-                {/* ── Daily Meditation Room entry card — aligned with the journey column ── */}
-                <div className="mt-4 max-w-2xl mx-auto w-full">
-                  <MeditationHomeCard
-                    onEnter={() => onNavigate('meditation')}
-                    adminOverride={['skrmblissai@gmail.com','shrutikhungar@gmail.com','simkatyal1@gmail.com'].includes(currentUser?.email ?? '')}
-                  />
-                </div>
+                {/* The live "Wellness session" card was removed from the dashboard: with no
+                    members yet it only added a second thing to look at. The meditation room
+                    itself is unchanged and still reachable from the menu. */}
 
                 {/* ── Feelings & Emotions — owner's continue-course card ── */}
                 {ownsEmotionCourse && (
@@ -2960,13 +2955,13 @@ export default function UntetheredApp() {
           style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
           {[
-            { id: 'start', icon: Sparkles, label: 'Start' },
-            { id: 'home', icon: Home, label: 'Home' },
-            // Courses is the hub (CoursesHub renders on the 'intelligence' tab),
-            // and on a phone the bottom bar is the only nav most people use.
+            // Five calm places, one job each. "Today" holds the daily practice
+            // (the old Home dashboard and the Practice room are folded into it).
+            { id: 'start', icon: Sparkles, label: 'Today' },
+            // Courses is the hub (CoursesHub renders on the 'intelligence' tab).
             { id: 'intelligence', icon: GraduationCap, label: 'Courses' },
+            { id: 'music', icon: Headphones, label: 'Sounds' },
             { id: 'chapters', icon: BookOpen, label: 'Journal' },
-            { id: 'situations', icon: Flame, label: 'Practice' },
             { id: 'profile', icon: User, label: 'You' },
           ].map(({ id, icon: Icon, label }) => {
             const active = activeTab === id;
