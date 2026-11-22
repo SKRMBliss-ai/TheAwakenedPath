@@ -64,6 +64,7 @@ const MyBestEveryDay = lazy(() => import('./features/kids/MyBestEveryDay'));
 /** The situation practice gym (also served standalone at /mindgymforadults) —
  *  here it is the "Start here" tab, the first thing a new person meets. */
 const AdultGym = lazy(() => import('./features/practise/Adult').then(m => ({ default: m.AdultGym })));
+const DailyPractice = lazy(() => import('./features/daily/DailyPractice'));
 import { StartHerePortal } from './features/portal/StartHerePortal';
 const MeditationPracticeRoom = lazy(() => import('./features/practise/MeditationPracticeRoom'));
 const VirtuesView = lazy(() => import('./features/practice-path/VirtuesView').then(m => ({ default: m.VirtuesView })));
@@ -625,6 +626,8 @@ export default function UntetheredApp() {
   const [startKey, setStartKey] = useState(0);
   // Once someone has chosen the adult path, Start / Today opens their daily practice, not the chooser.
   const [startMode, setStartMode] = useState<'portal' | 'workout'>(defaultStartMode);
+  /** Inside the adult path: false = the daily session, true = the full practice library. */
+  const [showLibrary, setShowLibrary] = useState(false);
   const isChoosingPath = activeTab === 'start' && startMode === 'portal';
 
   // First-time visitors who haven't explicitly chosen a sanctuary yet land on the 3-cards portal
@@ -2437,6 +2440,19 @@ export default function UntetheredApp() {
                     >
                       <ArrowLeft size={14} /> Back to all 3 sanctuaries
                     </button>
+                    {!showLibrary ? (
+                      <Suspense fallback={<TabFallback />}>
+                        <DailyPractice key={startKey} onMore={() => setShowLibrary(true)} />
+                      </Suspense>
+                    ) : (
+                    <>
+                    <button
+                      type="button"
+                      onClick={() => setShowLibrary(false)}
+                      className="inline-flex items-center gap-2 mb-4 ml-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer"
+                    >
+                      <ArrowLeft size={14} /> Back to today
+                    </button>
                     <Suspense fallback={<TabFallback />}>
                       <AdultGym
                         key={startKey}
@@ -2451,6 +2467,8 @@ export default function UntetheredApp() {
                         ]}
                       />
                     </Suspense>
+                    </>
+                    )}
                   </div>
                 )}
               </motion.div>

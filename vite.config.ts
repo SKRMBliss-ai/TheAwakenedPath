@@ -228,6 +228,7 @@ export default defineConfig({
         rewrite: (path) => {
           if (path.startsWith('/api/voice')) return '/textToSpeech';
           if (path.startsWith('/api/witness')) return '/witnessPresence';
+          if (path.startsWith('/api/mind-guide')) return '/mindGuide';
           if (path.startsWith('/api/grounding')) return '/getGrounding';
           if (path.startsWith('/api/emotion')) return '/analyzeEmotion';
           if (path.startsWith('/api/daily-meditation')) return '/getDailyMeditation';
