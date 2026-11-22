@@ -338,7 +338,66 @@ const PWYW_PRODUCTS = {
         suggested: { USD: 49.99, INR: 4999, EUR: 49.99, GBP: 39.99, CAD: 69.99, AUD: 79.99, AED: 179, SGD: 69.99 },
         min: { USD: 49.99, INR: 4999, EUR: 49.99, GBP: 39.99, CAD: 69.99, AUD: 79.99, AED: 179, SGD: 69.99 },
     },
+    // ── Mind Gym for Kids membership ──────────────────────────────────────
+    // Sold SEPARATELY from the adult membership: these write their own expiry
+    // field (entitlementField) instead of membershipUntil, so neither product
+    // unlocks the other. The yearly plan additionally sets extrasField, which
+    // is what unlocks the 3-day live challenge place and Sim's personal
+    // guidance. Sign-in is required (requiresAccount) — no guest checkout.
+    kids_membership_monthly: {
+        grantType: "membership",
+        days: 30,
+        entitlementField: "kidsMembershipUntil",
+        requiresAccount: true,
+        planName: "Mind Gym for Kids Membership (Monthly)",
+        // Fixed price: min === suggested, so the price on the parent screen
+        // is the price charged. Keep in sync with kids-v1/paywall/kidsPlans.ts.
+        suggested: { USD: 3, INR: 240, EUR: 3, GBP: 3, CAD: 4, AUD: 4, AED: 12, SGD: 4 },
+        min: { USD: 3, INR: 240, EUR: 3, GBP: 3, CAD: 4, AUD: 4, AED: 12, SGD: 4 },
+    },
+    kids_membership_yearly: {
+        grantType: "membership",
+        days: 365,
+        entitlementField: "kidsMembershipUntil",
+        extrasField: "kidsExtrasUntil",
+        requiresAccount: true,
+        planName: "Mind Gym for Kids Membership (Yearly)",
+        suggested: { USD: 30, INR: 2400, EUR: 30, GBP: 25, CAD: 40, AUD: 45, AED: 110, SGD: 40 },
+        min: { USD: 30, INR: 2400, EUR: 30, GBP: 25, CAD: 40, AUD: 45, AED: 110, SGD: 40 },
+    },
 };
+
+// The Firestore fields a membership purchase extends on users/{uid}. Adult
+// membership → membershipUntil; kids membership → kidsMembershipUntil (and the
+// yearly kids plan also → kidsExtrasUntil). Derived from the server-side
+// catalogue by product id, never from anything the client sent. Shared by
+// grantPurchase and the Razorpay webhook so the two can't drift.
+function membershipFieldUpdate(productId, currentData, days) {
+    const product = PWYW_PRODUCTS[productId] || {};
+    const current = currentData || {};
+    const field = product.entitlementField || "membershipUntil";
+    const update = {
+        [field]: admin.firestore.Timestamp.fromMillis(extendMembershipUntilMs(current[field], days)),
+    };
+    if (product.extrasField) {
+        update[product.extrasField] = admin.firestore.Timestamp.fromMillis(
+            extendMembershipUntilMs(current[product.extrasField], days)
+        );
+    }
+    return update;
+}
+
+const isKidsMembershipProduct = (id) => !!PWYW_PRODUCTS[id] && PWYW_PRODUCTS[id].entitlementField === "kidsMembershipUntil";
+
+// A product that must be bought by a signed-in account (the kids membership):
+// true when the buyer id is missing or one of the guest placeholders.
+// `productId` may be a comma-separated bundle, so every item is checked.
+function isAccountRequiredButMissing(productId, userId) {
+    const needsAccount = parseCourseIds(productId).some((item) => PWYW_PRODUCTS[item] && PWYW_PRODUCTS[item].requiresAccount);
+    if (!needsAccount) return false;
+    const id = String(userId || "");
+    return !id || id === "anonymous" || id === "guest_pending" || id.startsWith("guest_");
+}
 
 // Clamp a client-chosen amount to the product's floor for the resolved charge
 // currency. Falls back to the currency's suggested amount if none/invalid was
@@ -1075,6 +1134,9 @@ exports.createRazorpayOrder = onRequest({ secrets: [razorpayKeyId, razorpayKeySe
     if (!orderInfo || orderInfo.amount == null) {
         return res.status(400).send("Invalid or missing courseId");
     }
+    if (isAccountRequiredButMissing(courseId, userId)) {
+        return res.status(401).send("Please sign in before buying this membership");
+    }
 
     let { currency: chargeCurrency, amount, grantType, membershipDays } = orderInfo;
 
@@ -1176,6 +1238,12 @@ async function grantPurchase({
 
             for (const item of items) {
                 const pwyw = PWYW_PRODUCTS[item];
+                if (pwyw && pwyw.entitlementField) {
+                    // Kids membership needs a signed-in account (the order
+                    // endpoints refuse guests); never turn it into adult
+                    // membershipUntil here.
+                    continue;
+                }
                 if (pwyw && pwyw.grantType === 'membership' && pwyw.days) {
                     if (!alreadyProcessed) {
                         const baseMs = newUntilMs || (guestData.membershipUntil && typeof guestData.membershipUntil.toMillis === 'function' ? guestData.membershipUntil.toMillis() : null);
@@ -1219,10 +1287,18 @@ async function grantPurchase({
         let newUntilMs = null;
         const coursesToAdd = [];
         const tracksToAdd = [];
+        // Mind Gym for Kids memberships extend their OWN fields
+        // (kidsMembershipUntil, and kidsExtrasUntil for yearly), never
+        // membershipUntil, so adult and kids access stay separate.
+        let kidsUpdate = {};
 
         for (const item of items) {
             const pwyw = PWYW_PRODUCTS[item];
-            if (pwyw && pwyw.grantType === 'membership' && pwyw.days) {
+            if (pwyw && pwyw.grantType === 'membership' && pwyw.days && pwyw.entitlementField) {
+                if (!alreadyProcessed) {
+                    kidsUpdate = { ...kidsUpdate, ...membershipFieldUpdate(item, { ...userData, ...kidsUpdate }, pwyw.days) };
+                }
+            } else if (pwyw && pwyw.grantType === 'membership' && pwyw.days) {
                 if (!alreadyProcessed) {
                     const baseMs = newUntilMs || (userData.membershipUntil && typeof userData.membershipUntil.toMillis === 'function' ? userData.membershipUntil.toMillis() : null);
                     newUntilMs = extendMembershipUntilMs(baseMs, pwyw.days);
@@ -1235,11 +1311,12 @@ async function grantPurchase({
             }
         }
 
-        if (!newUntilMs && grantType === 'membership' && membershipDays && !alreadyProcessed) {
+        if (!newUntilMs && Object.keys(kidsUpdate).length === 0 && grantType === 'membership' && membershipDays && !alreadyProcessed) {
             newUntilMs = extendMembershipUntilMs(userData.membershipUntil, membershipDays);
         }
 
         const updateData = {
+            ...kidsUpdate,
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
         };
         if (newUntilMs) {
@@ -1272,6 +1349,14 @@ async function grantPurchase({
                 } catch (emailErr) {
                     console.error("Failed to send mantra pass emails:", emailErr);
                 }
+            }
+            if (isKidsMembershipProduct(item) && userEmail && !isGuest) {
+                try {
+                    await sendKidsWelcomeEmail(userEmail, PWYW_PRODUCTS[item].planName, !!PWYW_PRODUCTS[item].extrasField);
+                } catch (emailErr) {
+                    console.error("Failed to send kids membership email:", emailErr);
+                }
+                continue;
             }
             if (!isKidsZoomPass(item) && !isMantraPass(item) && userEmail && !sentAccessEmail) {
                 try {
@@ -1439,6 +1524,9 @@ exports.createPaypalOrder = onRequest({ secrets: [paypalClientId, paypalSecret],
     const orderInfo = resolveItemsTotal(courseId, currency, clientAmount);
     if (!orderInfo || orderInfo.amount == null) {
         return res.status(400).send("Invalid or missing courseId");
+    }
+    if (isAccountRequiredButMissing(courseId, userId)) {
+        return res.status(401).json({ error: "SIGN_IN_REQUIRED", message: "Please sign in before buying this membership" });
     }
 
     let { currency: chargeCurrency, amount, grantType, membershipDays } = orderInfo;
@@ -2800,6 +2888,50 @@ async function sendWelcomeEmail(toEmail, planName) {
         to: toEmail,
         subject: "Welcome: The Path is Open",
         html: emailTemplate
+    });
+}
+
+/**
+ * Welcome email for a Mind Gym for Kids membership. Separate from
+ * sendWelcomeEmail on purpose: that one promises the adult course, the
+ * practice room and consultations, none of which this product includes.
+ */
+async function sendKidsWelcomeEmail(toEmail, planName, hasExtras) {
+    const transporter = getTransporter();
+    const extras = hasExtras
+        ? `<p style="font-family:Georgia,serif;font-size:15px;line-height:1.75;color:#3A342C;margin:0 0 20px;">Your yearly membership also includes a place in the <b>3-day live Tiny Kids Transformations challenge</b> and <b>personal guidance from Sim</b>. Open the Grown-ups area inside the app to reserve your place or to write to Sim.</p>`
+        : '';
+    await transporter.sendMail({
+        from: '"Mind Gym for Kids" <connect@skrmblissai.in>',
+        to: toEmail,
+        subject: 'Welcome to Mind Gym for Kids',
+        html: `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Mind Gym for Kids</title></head>
+<body style="margin:0;padding:0;background:#f0ece4;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0ece4;">
+        <tr><td align="center" style="padding:24px 16px;">
+            <table width="640" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;max-width:640px;background:#FDFAF4;border:1px solid #D9C8EE;">
+                <tr><td style="background:#6D4AB8;height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
+                <tr><td style="padding:32px 40px 12px;text-align:center;">
+                    <p style="font-family:Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#6D4AB8;margin:0 0 16px;">Mind Gym for Kids &middot; Membership active</p>
+                    <h1 style="font-family:Georgia,serif;font-size:26px;font-weight:300;font-style:italic;color:#1C1814;margin:0;line-height:1.3;">Small choices.<br>Big growth.</h1>
+                </td></tr>
+                <tr><td style="padding:12px 40px 32px;text-align:center;">
+                    <p style="font-family:Georgia,serif;font-size:15px;line-height:1.75;color:#3A342C;margin:0 0 20px;">Thank you. Your <b>${escHtml(planName)}</b> is active.</p>
+                    <p style="font-family:Georgia,serif;font-size:15px;line-height:1.75;color:#3A342C;margin:0 0 20px;">Sign in with this email on any phone, tablet or computer and your child can use the whole gym.</p>
+                    ${extras}
+                    <p style="margin:8px 0 0;"><a href="https://www.skrmblissai.in/mindgymforkids" style="display:inline-block;background:#6D4AB8;color:#ffffff;text-decoration:none;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;padding:14px 28px;border-radius:999px;">Open Mind Gym for Kids</a></p>
+                </td></tr>
+                <tr><td style="padding:24px 40px;border-top:1px solid #E9DDF6;text-align:center;">
+                    ${emailFooter({ dark: false })}
+                </td></tr>
+            </table>
+        </td></tr>
+    </table>
+</body>
+</html>`,
     });
 }
 
@@ -5048,6 +5180,162 @@ exports.notifyAdminOnKidsRegistration = onDocumentCreated({
     } catch (error) {
         console.error('Failed to notify admin of kids registration:', error);
     }
+});
+
+/* ===========================================================================
+ * MIND GYM FOR KIDS — MEMBERSHIP EXTRAS (yearly plan)
+ *
+ * The yearly kids membership sets users/{uid}.kidsExtrasUntil (see
+ * PWYW_PRODUCTS / membershipFieldUpdate). That one date unlocks two things a
+ * monthly member does not get:
+ *   - personal guidance by Sim  → kidsGuidanceRequest
+ *   - a place in the 3-day live challenge → kidsChallengeReserve
+ * Both are callables so the entitlement is checked HERE, from Firestore, and
+ * never trusted from the browser.
+ * ======================================================================== */
+const escHtml = (s) => String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+const clip = (s, n) => String(s == null ? '' : s).trim().slice(0, n);
+
+/** Throws unless the caller is signed in and holds live yearly extras
+ *  (admins pass). Returns { uid, email, user }. */
+async function requireKidsExtras(request) {
+    const auth = request.auth;
+    if (!auth) throw new HttpsError('unauthenticated', 'Please sign in first.');
+    const snap = await db.collection('users').doc(auth.uid).get();
+    const user = snap.exists ? snap.data() : {};
+    const email = String(auth.token.email || user.email || '').toLowerCase();
+    const until = user.kidsExtrasUntil && typeof user.kidsExtrasUntil.toMillis === 'function'
+        ? user.kidsExtrasUntil.toMillis() : 0;
+    if (until <= Date.now() && !isAdminEmail(email)) {
+        throw new HttpsError('permission-denied', 'This is included with the yearly Mind Gym for Kids membership.');
+    }
+    return { uid: auth.uid, email, user };
+}
+
+/**
+ * A parent asks Sim a question, or asks for a 1:1 Zoom call. Saved to
+ * kidsGuidanceRequests and emailed to the team; Sim replies by hand on
+ * WhatsApp/email. One open call request per family at a time.
+ */
+exports.kidsGuidanceRequest = onCall({ secrets: [emailUser, emailPass], maxInstances: 5 }, async (request) => {
+    const { uid, email, user } = await requireKidsExtras(request);
+    const d = request.data || {};
+    const kind = d.kind === 'call' ? 'call' : 'question';
+    const message = clip(d.message, 2000);
+    const childAge = clip(d.childAge, 10);
+    const phone = clip(d.phone, 30);
+    const parentName = clip(d.parentName || user.displayName || user.name, 80);
+    if (message.length < 5) throw new HttpsError('invalid-argument', 'Please write a few words so Sim knows how to help.');
+
+    const col = db.collection('kidsGuidanceRequests');
+    const mine = await col.where('uid', '==', uid).get();
+    const since = Date.now() - 24 * 60 * 60 * 1000;
+    let today = 0, openCall = false;
+    mine.forEach((doc) => {
+        const r = doc.data();
+        if (r.createdAt && typeof r.createdAt.toMillis === 'function' && r.createdAt.toMillis() > since) today += 1;
+        if (r.kind === 'call' && r.status === 'open') openCall = true;
+    });
+    if (today >= 5) throw new HttpsError('resource-exhausted', 'That is a lot for one day. Sim will reply to what you have sent.');
+    if (kind === 'call' && openCall) {
+        throw new HttpsError('failed-precondition', 'You already have a call request with Sim. She will be in touch to arrange it.');
+    }
+
+    const ref = await col.add({
+        uid, email, parentName, phone, childAge, kind, message,
+        status: 'open',
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    try {
+        const transporter = getTransporter();
+        const label = kind === 'call' ? '1:1 call request' : 'Question for Sim';
+        await transporter.sendMail({
+            from: '"Mind Gym for Kids" <connect@skrmblissai.in>',
+            to: ADMIN_EMAILS.join(', '),
+            replyTo: email || undefined,
+            subject: `Kids member — ${label}${parentName ? ` from ${parentName}` : ''}`,
+            html: `
+                <div style="font-family: sans-serif; padding: 20px;">
+                    <h2 style="color: #4A3260;">${label} (yearly kids member)</h2>
+                    <p><strong>Parent:</strong> ${escHtml(parentName) || 'N/A'}</p>
+                    <p><strong>Email:</strong> ${escHtml(email) || 'N/A'}</p>
+                    <p><strong>WhatsApp / phone:</strong> ${escHtml(phone) || 'N/A'}</p>
+                    <p><strong>Child's age:</strong> ${escHtml(childAge) || 'N/A'}</p>
+                    <p><strong>Message:</strong></p>
+                    <p style="white-space: pre-wrap; background:#F6F1FA; padding:12px; border-radius:8px;">${escHtml(message)}</p>
+                    <p style="color:#888; font-size:12px;">Request id: ${ref.id}. Reply to this email to answer the parent directly.</p>
+                </div>`,
+        });
+        if (email) {
+            await transporter.sendMail({
+                from: '"Sim at Mind Gym" <connect@skrmblissai.in>',
+                to: email,
+                subject: kind === 'call' ? 'Your call request has reached Sim' : 'Your question has reached Sim',
+                html: `
+                    <div style="font-family: Georgia, serif; padding: 24px; color:#3A342C; line-height:1.7;">
+                        <p>Thank you for writing${parentName ? `, ${escHtml(parentName)}` : ''}.</p>
+                        <p>${kind === 'call'
+                            ? 'Sim has your request for a 1:1 call and will write back with a time that works.'
+                            : 'Sim has your question and will reply personally by email or WhatsApp.'}</p>
+                        <p>Personal guidance is part of your yearly Mind Gym for Kids membership.</p>
+                        ${emailFooter({ dark: false })}
+                    </div>`,
+            });
+        }
+    } catch (e) {
+        // The request is saved either way; a mail failure must not lose it.
+        console.error('[kidsGuidanceRequest] email failed:', e);
+    }
+
+    return { ok: true, id: ref.id };
+});
+
+/**
+ * A yearly member reserves a place in the next 3-day live challenge. Writes
+ * the SAME waitlist doc the public registration form writes (type
+ * 'kids_challenge'), so it lands in the existing registration workflow and
+ * the existing admin notification fires — plus member:true, so nobody sends
+ * this family a donation request.
+ */
+exports.kidsChallengeReserve = onCall({ maxInstances: 5 }, async (request) => {
+    const { uid, email, user } = await requireKidsExtras(request);
+    const d = request.data || {};
+    const childName = clip(d.childName || (user.kid && user.kid.name), 60);
+    const age = clip(d.childAge || (user.kid && user.kid.age), 10);
+    const phone = clip(d.phone, 30);
+    const parentName = clip(d.parentName || user.displayName || user.name, 80);
+    if (!childName) throw new HttpsError('invalid-argument', "Please add your child's first name.");
+    if (!phone) throw new HttpsError('invalid-argument', 'Please add a WhatsApp number so we can send the Zoom link.');
+
+    // One reservation per family per 14 days is plenty — the challenge runs on
+    // weekends, and a double tap must not create two registrations.
+    const recent = await db.collection('waitlist').where('uid', '==', uid).get();
+    const cutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
+    let already = false;
+    recent.forEach((doc) => {
+        const r = doc.data();
+        if (r.type === 'kids_challenge' && r.createdAt && typeof r.createdAt.toMillis === 'function' && r.createdAt.toMillis() > cutoff) already = true;
+    });
+    if (already) return { ok: true, already: true };
+
+    await db.collection('waitlist').add({
+        email, parentName, phone, childName, age,
+        country: clip(d.country, 60),
+        timezone: clip(d.timezone, 60),
+        goal: clip(d.goal, 80),
+        notes: 'Yearly Mind Gym for Kids member — place included, no donation request.',
+        source: 'kids_membership',
+        type: 'kids_challenge',
+        member: true,
+        uid,
+        mailingList: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    return { ok: true, already: false };
 });
 
 /* ===========================================================================

@@ -562,6 +562,9 @@ export function HomeScreen({ name, onDeepDive, onOpenRoom, onPractice, onGrownUp
       <FloorBuddy onOpen={onBuddies} />
       <footer className="mg-safety">
         <button onClick={onGrownUp}>♡ Talk to a grown-up</button>
+        {/* Membership, the live challenge and messages to Sim. KidsGate
+            listens and puts a press-and-hold in front of it. */}
+        <button className="mg-safety-parents" onClick={() => window.dispatchEvent(new Event('mg:parents'))}>For grown-ups</button>
       </footer>
     </div>
     {rooms && <div className="hs-rooms" role="dialog" aria-modal="true" aria-label="My Good Choices rooms" onClick={(e) => { if (e.target === e.currentTarget) setRooms(false); }} onKeyDown={(e) => { if (e.key === 'Escape') setRooms(false); }}>
