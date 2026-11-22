@@ -26,7 +26,7 @@ import {
   onSnapshot,
   increment,
 } from 'firebase/firestore';
-import { hasWisdomAccess, isMonitoredEmail, shouldBlockAnalytics } from '../../config/admin';
+import { hasWisdomAccess, isAdminEmail, isMonitoredEmail, shouldBlockAnalytics } from '../../config/admin';
 import { deductTokens as _deductTokens, buildInitialTokenFields } from '../tokens/tokenService';
 import type { FeatureName, DeductResult } from '../tokens/tokenService';
 import { useTokenToastStore } from '../../stores/tokenToastStore';
@@ -47,6 +47,11 @@ export interface UserProfile {
   // Pay-what-you-want Mind Gym membership — extended (not replaced) by each
   // membership_monthly/yearly purchase; premium while this is in the future.
   membershipUntil?: any;
+  // Mind Gym for Kids membership — its own expiry, sold separately from the
+  // adult membership. kidsExtrasUntil is set only by the yearly kids plan and
+  // unlocks the live 3-day challenge place and Sim's personal guidance.
+  kidsMembershipUntil?: any;
+  kidsExtrasUntil?: any;
   trialUntil?: any;
   createdAt?: any;
   visitCount?: number;
@@ -85,6 +90,10 @@ interface AuthContextType {
    *  users bypass the token system entirely; trial users do not, even while
    *  isAccessValid is still true from time remaining. */
   isPremiumUser: boolean;
+  /** Active Mind Gym for Kids membership (or admin). Separate from adult premium. */
+  hasKidsMembership: boolean;
+  /** Yearly kids plan extras: live challenge place + Sim's personal guidance. */
+  hasKidsExtras: boolean;
   // ── Token system ──
   tokenBalance: number;
   deductTokens: (cost: number, featureName: FeatureName) => Promise<DeductResult>;
@@ -107,6 +116,8 @@ const AuthContext = createContext<AuthContextType>({
   activateTrial: async () => {},
   isAccessValid: false,
   isPremiumUser: false,
+  hasKidsMembership: false,
+  hasKidsExtras: false,
   tokenBalance: 0,
   deductTokens: async () => ({ success: false, newBalance: 0, error: 'USER_NOT_FOUND' }),
   beginAnonymousPath: async () => {},
@@ -229,6 +240,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 subscriptionStatus: d.subscriptionStatus,
                 subscriptionId: d.subscriptionId,
                 membershipUntil: d.membershipUntil,
+                kidsMembershipUntil: d.kidsMembershipUntil,
+                kidsExtrasUntil: d.kidsExtrasUntil,
+                kid: d.kid,
                 trialUntil: d.trialUntil,
                 createdAt: d.createdAt,
                 visitCount: d.visitCount ?? 0,
@@ -403,6 +417,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return false;
   }, [user, profile]);
 
+  // ── Mind Gym for Kids membership — deliberately NOT implied by all_access,
+  // an adult subscription or adult membership: it is sold separately. Admins
+  // pass so the team can always open the app.
+  const stampInFuture = (t: any) => {
+    if (!t) return false;
+    const ms = typeof t.toDate === 'function' ? t.toDate().getTime() : new Date(t).getTime();
+    return ms > Date.now();
+  };
+  const hasKidsMembership = React.useMemo(() => {
+    if (!user || !profile) return false;
+    if (isAdminEmail(user.email)) return true;
+    return stampInFuture(profile.kidsMembershipUntil);
+  }, [user, profile]);
+  const hasKidsExtras = React.useMemo(() => {
+    if (!user || !profile) return false;
+    if (isAdminEmail(user.email)) return true;
+    return stampInFuture(profile.kidsExtrasUntil);
+  }, [user, profile]);
+
   // ── Computed token balance ────────────────────────────────────────────────
   const tokenBalance = profile?.tokensRemaining ?? 0;
 
@@ -556,6 +589,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         activateTrial,
         isAccessValid,
         isPremiumUser,
+        hasKidsMembership,
+        hasKidsExtras,
         tokenBalance,
         deductTokens,
         beginAnonymousPath,

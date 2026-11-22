@@ -34,6 +34,20 @@ const KidsWorld = lazy(() => import('../practise/kids/KidsWorld').then((m) => ({
  * from — it simply isn't the front door any more.
  */
 const KidsGymV1 = lazy(() => import('../practise/kids-v1/best/BestApp'));
+/** The kids app is a paid membership: KidsGate checks it (and provides auth
+ *  for the kids route only) before BestApp is ever loaded. */
+const KidsGate = lazy(() => import('../practise/kids-v1/paywall/KidsGate'));
+
+/** Night-sky loader for the kids route, so there is no cream flash before a
+ *  dark app. Inline styles: it must paint before any kids CSS chunk arrives. */
+const KidsFallback = () => (
+  <div
+    role="status"
+    style={{ minHeight: '100dvh', display: 'grid', placeItems: 'center', background: 'radial-gradient(ellipse at 50% 30%, #2b1d5e, #140d2e 70%)', color: '#cfc4ea', fontSize: 14, fontFamily: "'Outfit', system-ui, sans-serif" }}
+  >
+    Opening Mind Gym…
+  </div>
+);
 
 const GymFallback = () => (
   <div className="grid min-h-screen place-items-center bg-[#FBF7F0] text-[13px] text-[#8A8078]">
@@ -48,9 +62,10 @@ const GymFallback = () => (
  * mounts this once; from here navigation is client-side (see lib/gymRouter),
  * so moving between gyms costs no reload.
  *
- * Deliberately mounts NO providers. Unlike /mindgym, nothing here needs auth,
- * the dark ThemeProvider, or achievements — AdultGym/KidsWorld and
- * MindGymForAll are all fully self-contained.
+ * Mounts NO providers itself. The hub, the adult gym and the old kids page
+ * need no auth, dark ThemeProvider or achievements. The one exception is the
+ * new kids app, a paid membership: its KidsGate brings its own AuthProvider,
+ * scoped to that route.
  */
 export default function GymApp({ initialRoute }: { initialRoute: GymRoute }) {
   const [route, navigate] = useGymRoute(initialRoute);
@@ -66,8 +81,12 @@ export default function GymApp({ initialRoute }: { initialRoute: GymRoute }) {
 
   if (route === 'kidsV1') {
     return (
-      <Suspense fallback={<GymFallback />}>
-        <KidsGymV1 onExitGym={exit} />
+      <Suspense fallback={<KidsFallback />}>
+        <KidsGate onExitGym={exit}>
+          <Suspense fallback={<KidsFallback />}>
+            <KidsGymV1 onExitGym={exit} />
+          </Suspense>
+        </KidsGate>
       </Suspense>
     );
   }
