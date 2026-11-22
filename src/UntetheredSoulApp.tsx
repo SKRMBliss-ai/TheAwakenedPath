@@ -566,6 +566,11 @@ const PAID_PRACTICE_TABS = [
 ];
 const PREVIEW_EMAIL = 'skrmblissai@gmail.com';
 
+/** Start / Today shows the 3-path chooser until the adult path has been picked once. */
+function defaultStartMode(): 'portal' | 'workout' {
+  try { return localStorage.getItem('user-path-chosen') === 'adult' ? 'workout' : 'portal'; } catch { return 'portal'; }
+}
+
 export default function UntetheredApp() {
   const { user: currentUser, profile, loading, signOut, isAccessValid, isPremiumUser, tokenBalance, activateTrial, deductTokens } = useAuth();
 
@@ -618,7 +623,8 @@ export default function UntetheredApp() {
   const [activeTab, setActiveTab] = usePersistedState<string>('awakened-tab', 'start');
   /** Bumped when "Start" is tapped, so the gym returns to its front door even if it is already open. */
   const [startKey, setStartKey] = useState(0);
-  const [startMode, setStartMode] = useState<'portal' | 'workout'>('portal');
+  // Once someone has chosen the adult path, Start / Today opens their daily practice, not the chooser.
+  const [startMode, setStartMode] = useState<'portal' | 'workout'>(defaultStartMode);
   const isChoosingPath = activeTab === 'start' && startMode === 'portal';
 
   // First-time visitors who haven't explicitly chosen a sanctuary yet land on the 3-cards portal
@@ -1576,7 +1582,7 @@ export default function UntetheredApp() {
             return (
               <button
                 key="start"
-                onClick={() => { setStartKey((k) => k + 1); setStartMode('portal'); onNavigate('start'); }}
+                onClick={() => { setStartKey((k) => k + 1); setStartMode(defaultStartMode()); onNavigate('start'); }}
                 aria-current={isActive ? 'page' : undefined}
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-[min(8px,1vh)] rounded-2xl transition-all duration-300 group relative",
@@ -2405,11 +2411,9 @@ export default function UntetheredApp() {
                     userName={currentUser?.displayName || (currentUser?.email ? currentUser.email.split('@')[0] : undefined)}
                     onSelectAdult={(target) => {
                       try { localStorage.setItem('user-path-chosen', 'adult'); } catch {}
-                      if (target === 'workout') {
-                        setStartMode('workout');
-                      } else {
-                        onNavigate('home');
-                      }
+                      // Adult goes straight into the daily practice (Today), whichever button was used.
+                      void target;
+                      setStartMode('workout');
                     }}
                     onSelectKids={() => {
                       try { localStorage.setItem('user-path-chosen', 'kids'); } catch {}
