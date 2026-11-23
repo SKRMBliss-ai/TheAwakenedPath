@@ -315,6 +315,8 @@ function home(){run=null;const done=S.lastDone===dayKey();const s=h('<section cl
  tools.children[0].onclick=()=>startRun('breathe');tools.children[1].onclick=()=>startRun('stream');s.appendChild(tools);
  if(opts.onMore){const m=h('<button class="ghost" style="margin-top:4px">More practices</button>');m.onclick=opts.onMore;s.appendChild(m)}
  s.appendChild(h('<p class="note" style="text-align:center;padding-top:6px">An AI guide for everyday stress. Not a substitute for professional care.</p>'));
+ /* Two columns on wide screens (greeting + path | today + tools); one column on phones. */
+ {const kids=[...s.children];const cols=h('<div class="hcols"><div class="hcol"></div><div class="hcol"></div></div>');kids.slice(1,3).forEach(k=>cols.children[0].appendChild(k));kids.slice(3).forEach(k=>cols.children[1].appendChild(k));s.appendChild(cols);s.classList.add('home')}
  app.innerHTML='';app.appendChild(s);scrollTo(0,0)}
 home();
 return()=>{if(MIC.on&&DICT)DICT.stop();clearTimeout(toastT);root.innerHTML=''};
