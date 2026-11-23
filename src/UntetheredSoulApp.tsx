@@ -692,6 +692,7 @@ export default function UntetheredApp() {
   }, [isMobile, activeTab, setActiveTab]);
   const { unlocked, points, toastQueue, dismissToast, checkAndUnlock, awardEvent } = useAchievements();
   const [achievementsOpen, setAchievementsOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const { isAudioEnabled, toggleAudio, setVibrationalState } = useGenerativeAudio();
   const [lastEntry, setLastEntry] = useState<any>(null);
   const [isReportOpen, setIsReportOpen] = useState(false);
@@ -2331,35 +2332,52 @@ export default function UntetheredApp() {
           </div>
 
           <div className="flex items-center gap-3 sm:gap-5 md:gap-6">
-              {/* Achievements — trophy opens the slide-out drawer */}
-              <button
-                  onClick={() => setAchievementsOpen(true)}
-                  aria-label="Achievements"
-                  className="relative w-9 h-9 rounded-full flex items-center justify-center bg-[var(--bg-surface)] border border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--accent-primary)] hover:border-[var(--accent-primary)]/40 transition-all active:scale-95"
-              >
-                  <Trophy className="w-4 h-4" />
+              {/* One account button instead of three: journey, achievements and the theme switch live in its menu. */}
+              <div className="relative">
+                <button
+                  onClick={() => setAccountMenuOpen((o) => !o)}
+                  aria-label="Account and settings"
+                  aria-haspopup="menu"
+                  aria-expanded={accountMenuOpen}
+                  className="relative w-10 h-10 rounded-full flex items-center justify-center bg-[var(--bg-surface)] border border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--accent-primary)] hover:border-[var(--accent-primary)]/40 transition-all active:scale-95"
+                >
+                  <User className="w-[18px] h-[18px]" />
                   {unlocked.length > 0 && (
                     <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-[var(--accent-primary)] text-black text-[8px] font-black flex items-center justify-center rounded-full border border-[var(--bg-base)]">
                       {unlocked.length}
                     </span>
                   )}
-              </button>
-
-              <ThemeToggle />
-
-              <button
-                  onClick={() => setActiveTab('profile')}
-                  aria-label="Your profile"
-                  className={cn(
-                      "flex items-center gap-3 px-4 py-2 rounded-xl transition-all relative overflow-hidden",
-                      activeTab === 'profile'
-                          ? "bg-[var(--accent-primary)] text-black font-bold shadow-lg"
-                          : "bg-[var(--bg-surface)] border border-[var(--border-default)] text-[var(--text-muted)] hover:bg-[var(--accent-primary)]/10 hover:text-[var(--text-primary)]"
-                  )}
-              >
-                  <User className={cn("w-4 h-4", activeTab === 'profile' ? "fill-current" : "")} />
-                  <span className="text-[10px] font-black tracking-widest uppercase hidden xs:block">Your Journey</span>
-              </button>
+                </button>
+                {accountMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-[80]" onClick={() => setAccountMenuOpen(false)} aria-hidden />
+                    <div
+                      role="menu"
+                      className="absolute right-0 top-12 z-[81] w-60 rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-2 shadow-2xl"
+                    >
+                      <button
+                        role="menuitem"
+                        onClick={() => { setAccountMenuOpen(false); setActiveTab('profile'); }}
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--accent-primary)]/10"
+                      >
+                        <User className="w-4 h-4 text-[var(--text-muted)]" /> Your journey
+                      </button>
+                      <button
+                        role="menuitem"
+                        onClick={() => { setAccountMenuOpen(false); setAchievementsOpen(true); }}
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--accent-primary)]/10"
+                      >
+                        <Trophy className="w-4 h-4 text-[var(--text-muted)]" /> Achievements
+                        {unlocked.length > 0 && <span className="ml-auto text-xs font-bold text-[var(--accent-primary)]">{unlocked.length}</span>}
+                      </button>
+                      <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--text-primary)]">
+                        <span className="flex-1">Dark mode</span>
+                        <ThemeToggle />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
           </div>
         </header>
 
