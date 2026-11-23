@@ -23,10 +23,9 @@ export function siteNav({ home = false }: { home?: boolean } = {}): NavLink[] {
       label: 'Mantras & Music',
       href: '/mantras',
       subItems: [
-        { label: 'Mantra Library', sub: '25+ sacred Vedic chants with Devanagari & meanings', href: '/mantras#library' },
-        { label: 'Mantra Pass', sub: 'Lifetime ad-free chanting, 108 mala counter, puja sequences', href: '/mantras/lifetime-pass', badge: 'NEW' },
+        { label: 'Mantra Pass', sub: 'Lifetime ad-free chanting, 108 mala counter, puja sequences', href: '/mantras/lifetime-pass' },
+        { label: 'Meditation Music Pass', sub: 'All meditation music for calm, sleep and deep practice', href: '/meditation-music', badge: 'NEW' },
         { label: 'Daily Sadhana', sub: 'Morning rituals, 21-day sankalp & sleep timer', href: '/mantras#begin' },
-        { label: 'Gita Chants', sub: 'Chapter recitations with commentary', href: '/mantras#gita', badge: 'SOON' },
       ],
     },
     { label: 'Pricing', href: '/pricing' },
