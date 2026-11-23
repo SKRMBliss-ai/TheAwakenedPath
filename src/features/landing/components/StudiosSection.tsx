@@ -36,13 +36,23 @@ export default function StudiosSection({ palette }: { palette: Palette }) {
         <div className="st-grid">
           {STUDIOS.map((s) => (
             <article key={s.key} style={{ ['--st-line' as string]: palette.BORDER, display: 'flex', flexDirection: 'column', background: palette.CARD,
-              border: `1px solid ${palette.BORDER}`, borderRadius: 28, overflow: 'hidden', color: palette.INK }}>
-              <div style={{ padding: '24px 24px 20px', background: `linear-gradient(135deg, ${s.accent}, ${s.accent}CC)`, color: '#FFFFFF', textAlign: 'center' }}>
-                <img src={s.logo} alt={`${s.name} logo`} width={96} height={96} loading="lazy"
-                  style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: '50%', display: 'block', margin: '0 auto 14px', background: '#FFFFFF', boxShadow: '0 6px 18px rgba(0,0,0,.25)' }} />
-                <span style={{ display: 'block', fontFamily: SANS, fontSize: 11, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', opacity: 0.85 }}>{s.handle}</span>
-                <h3 style={{ fontFamily: SERIF, fontSize: 'clamp(26px, 2.6vw, 32px)', fontWeight: 500, lineHeight: 1.15, margin: '6px 0 6px' }}>{s.name}</h3>
-                <p style={{ fontFamily: SANS, fontSize: 14.5, lineHeight: 1.55, margin: 0, opacity: 0.92 }}>{s.channelLine}</p>
+              border: `1px solid ${palette.BORDER}`, borderRadius: 28, overflow: 'visible', color: palette.INK }}>
+              {/* Picture band, with the studio's own logo sitting across its lower edge */}
+              <div style={{ position: 'relative', height: 250, display: 'flex', background: 'radial-gradient(ellipse at 50% 100%, rgba(233,201,138,0.22), transparent 70%), #1C1425', borderBottom: `4px solid ${s.accent}` }}>
+                <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden', borderRadius: '27px 27px 0 0' }}>
+                {s.images.map((im) => (
+                  <img key={im.src} src={im.src} alt={im.alt} loading="lazy" decoding="async"
+                    style={{ flex: 1, minWidth: 0, height: '100%', objectFit: im.contain ? 'contain' : 'cover', objectPosition: 'center top', padding: im.contain ? 18 : 0 }} />
+                ))}
+                </div>
+                <img src={s.logo} alt={`${s.name} logo`} width={84} height={84} loading="lazy"
+                  style={{ position: 'absolute', left: '50%', bottom: -42, transform: 'translateX(-50%)', width: 84, height: 84, objectFit: 'cover', borderRadius: '50%',
+                    background: '#FFFFFF', border: '3px solid #FFFFFF', boxShadow: '0 8px 22px rgba(0,0,0,.3)' }} />
+              </div>
+              <div style={{ padding: '54px 24px 6px', textAlign: 'center' }}>
+                <span style={{ display: 'block', fontFamily: SANS, fontSize: 11, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: s.accent }}>{s.handle}</span>
+                <h3 style={{ fontFamily: SERIF, fontSize: 'clamp(26px, 2.6vw, 32px)', fontWeight: 500, lineHeight: 1.15, margin: '6px 0 6px', color: palette.INK }}>{s.name}</h3>
+                <p style={{ fontFamily: SANS, fontSize: 14.5, lineHeight: 1.55, margin: 0, color: palette.INK2 }}>{s.channelLine}</p>
               </div>
 
               <div style={{ padding: '10px 20px 4px', flex: 1 }}>

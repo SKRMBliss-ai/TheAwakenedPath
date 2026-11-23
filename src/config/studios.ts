@@ -32,6 +32,8 @@ export interface Studio {
   accent: string;
   /** The studio's own logo, shown at the centre of its card. */
   logo: string;
+  /** Pictures for the top of the home card: one fills it, two sit side by side. */
+  images: { src: string; alt: string; contain?: boolean }[];
   offerings: StudioOffering[];
 }
 
@@ -47,6 +49,10 @@ export const STUDIOS: Studio[] = [
     channelLine: 'Sim Katyal’s courses, Mind Gym app demos and Kids Mind Gym videos.',
     accent: '#4A3260',
     logo: '/SoulfulStudios/Mind/soulful-mind-studio-logo.webp',
+    images: [
+      { src: '/marketing/adult-guide-shruti-mic.webp', alt: 'Shruti Khungar, guide for the Mind Gym app' },
+      { src: '/marketing/kids/hero-sim-diary.webp', alt: 'Sim Katyal with her son and the daily diary chart' },
+    ],
     offerings: [
       { label: 'Mind Gym app', line: 'Daily practice, journal, courses, mantras and meditation music.', learn: '/aboutmindgym', open: { label: 'Open the app', href: '/mindgym' } },
       { label: 'Feelings & Emotions course', line: 'A guided course by Sim Katyal.', learn: '/feelingsandemotioncourse' },
@@ -62,6 +68,7 @@ export const STUDIOS: Studio[] = [
     channelLine: 'Sacred Indian mantras and chants, with their meaning.',
     accent: '#C4913A',
     logo: '/SoulfulStudios/Mantra/logo-light.webp',
+    images: [{ src: '/marketing/mantras/exec-ce641b41-377a-428e-9ae9-53d82af4accf.png', alt: 'A golden Om on a white medallion', contain: true }],
     offerings: [
       { label: 'Mantras', line: 'Every mantra with Sanskrit, meaning and a mala counter. Also a playlist inside the Mind Gym app.', learn: '/mantras', open: { label: 'Listen in the app', href: '/mindgym' } },
       { label: 'Mantra Pass', line: 'Every mantra, paid once.', learn: '/mantras/lifetime-pass' },
@@ -76,6 +83,7 @@ export const STUDIOS: Studio[] = [
     channelLine: 'Meditation music for calm, sleep and deep practice.',
     accent: '#3F7F86',
     logo: '/SoulfulStudios/Meditation/emblem.webp',
+    images: [{ src: '/SoulfulStudios/Meditation/banner.webp', alt: 'Soulful Meditation Studio' }],
     offerings: [
       { label: 'Meditation music', line: 'Tracks for calm, sleep and deep practice. Also a playlist inside the Mind Gym app.', learn: '/meditation-music', open: { label: 'Listen in the app', href: '/mindgym' } },
       { label: 'Meditation Music Pass', line: 'All the music, paid once.', learn: '/meditation-music/lifetime-pass' },
