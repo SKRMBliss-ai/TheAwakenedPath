@@ -12,7 +12,7 @@ interface MantraWalkthroughModalProps {
 }
 
 const ORDER_PATH = '/pricing?select=mantra_lifetime_pass';
-const BRAND_VIDEO = '/marketing/mantras/soulful-mantra-studio.mp4';
+const BRAND_VIDEO = '/SoulfulStudios/Mantra/soulful-mantra-studio.mp4';
 
 export const MantraWalkthroughModal: React.FC<MantraWalkthroughModalProps> = ({ isOpen, onClose, palette }) => {
   useEffect(() => {

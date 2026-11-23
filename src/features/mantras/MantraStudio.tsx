@@ -31,14 +31,14 @@ const PAGE = '/mantras';
 const MANTRA_BRAND = {
   name: 'Soulful Mantra Studio',
   tagline: 'Where sacred sound meets stillness',
-  logoLight: '/marketing/mantras/logo-light.webp',
-  logoDark: '/marketing/mantras/logo-dark.webp',
+  logoLight: '/SoulfulStudios/Mantra/logo-light.webp',
+  logoDark: '/SoulfulStudios/Mantra/logo-dark.webp',
   href: PAGE,
 };
 const PASS_PATH = `${PAGE}/lifetime-pass`;
 const ORDER_PATH = '/pricing?select=mantra_lifetime_pass';
 const GOLD_BAR = 'linear-gradient(135deg, #E9C98A 0%, #D8AE5E 50%, #EBD29C 100%)';
-const BRAND_VIDEO = '/marketing/mantras/soulful-mantra-studio.mp4';
+const BRAND_VIDEO = '/SoulfulStudios/Mantra/soulful-mantra-studio.mp4';
 const t = (action: string, details = '') => track(action, details, PAGE);
 
 function Kicker({ palette, children }: { palette: Palette; children: React.ReactNode }) {
@@ -53,7 +53,7 @@ const ART = {
   emblem: { src: '/marketing/mantras/emblem-sunburst.webp', w: 560, h: 424 },
   bowl: { src: '/marketing/mantras/bowl-lotus.webp', w: 560, h: 505 },
   namaste: { src: '/marketing/mantras/namaste.webp', w: 420, h: 581 },
-  lockup: { src: '/marketing/mantras/lockup.webp', w: 720, h: 502 },
+  lockup: { src: '/SoulfulStudios/Mantra/lockup.webp', w: 720, h: 502 },
   subscribe: { src: '/marketing/mantras/subscribe-badge.webp', w: 760, h: 293 },
   subscribeLight: { src: '/marketing/mantras/subscribe-badge-light.webp', w: 760, h: 293 },
   subscribeDark: { src: '/marketing/mantras/subscribe-badge-dark.webp', w: 760, h: 293 },
@@ -1188,7 +1188,7 @@ function MantraPassSales() {
     description:
       'One payment for our whole mantra library with practice tools: a mala counter, a sankalp tracker, puja sequences, a sleep timer, and loop and playlists for every chant. No subscription.',
     url,
-    image: 'https://www.skrmblissai.in/marketing/mantras/lockup.webp',
+    image: 'https://www.skrmblissai.in/SoulfulStudios/Mantra/lockup.webp',
     jsonLd: [{
       '@context': 'https://schema.org', '@type': 'FAQPage',
       mainEntity: MANTRA_FAQ.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
@@ -1513,7 +1513,7 @@ function MusicPassSales() {
     title: 'Meditation Music Pass: Calm, Sleep & Deep Practice | Soulful Mind Studio',
     description: 'One payment for all our meditation music, with loop, playlists by mood and a sleep timer. No subscription.',
     url,
-    image: 'https://www.skrmblissai.in/marketing/mantras/lockup.webp',
+    image: 'https://www.skrmblissai.in/SoulfulStudios/Mantra/lockup.webp',
     jsonLd: [{
       '@context': 'https://schema.org', '@type': 'FAQPage',
       mainEntity: MUSIC_FAQ.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
@@ -1672,7 +1672,7 @@ function MusicHub() {
     title: 'Meditation Music for Calm, Sleep & Deep Practice | Soulful Mind Studio',
     description: 'Meditation music for calm, sleep and deep practice. Listen to a preview of every track, then get the whole library with the Meditation Music Pass.',
     url,
-    image: 'https://www.skrmblissai.in/marketing/mantras/lockup.webp',
+    image: 'https://www.skrmblissai.in/SoulfulStudios/Mantra/lockup.webp',
   });
   useEffect(() => { t('PAGE_VISIT_MUSIC_HUB'); }, []);
 
