@@ -122,7 +122,9 @@ export function refundOf(id: string): string {
 
 /** The three doors. Home, menu and /pricing all read this. */
 export interface Door {
-  id: 'me' | 'child' | 'mantras';
+  id: 'me' | 'child' | 'mantras' | 'meditation';
+  /** Which studio bucket the pricing page files it under. */
+  studio: 'mind' | 'mantra' | 'meditation';
   /** The visitor's answer to "who is this for?" */
   who: string;
   /** The product the door leads to. */
@@ -143,7 +145,7 @@ export interface Door {
 
 export const DOORS: Door[] = [
   {
-    id: 'me', who: 'For me', title: 'Adult Mind Gym',
+    id: 'me', studio: 'mind', who: 'For me', title: 'Adult Mind Gym',
     line: 'A few quiet minutes a day for a calmer, clearer mind.',
     includes: ['Daily practice, journal and Breathe', 'Every course, including Feelings & Emotions', 'All mantras and meditation music'],
     plans: ['membership_monthly', 'membership_yearly'],
@@ -152,7 +154,7 @@ export const DOORS: Door[] = [
     extra: { label: 'Only want the Feelings & Emotions course?', id: 'emotion_feelings_course' },
   },
   {
-    id: 'child', who: 'For my child', title: 'Kids Mind Gym',
+    id: 'child', studio: 'mind', who: 'For my child', title: 'Kids Mind Gym',
     line: 'Feelings, stories and games for ages 3 to 12, with a live Zoom class.',
     includes: ['The kids app: feelings, stories and games', 'A live Zoom class with Sim', 'Printables and WhatsApp support for you'],
     plans: ['kids_zoom_monthly', 'kids_zoom_yearly', 'family_monthly'],
@@ -160,12 +162,20 @@ export const DOORS: Door[] = [
     start: { label: 'See how it works', href: '/tiny-kids-transformations' },
   },
   {
-    id: 'mantras', who: 'For prayer & calm', title: 'Mantras & Meditation Music',
-    line: 'Sacred chants with their meaning, and meditation music for calm and sleep.',
-    includes: ['Every mantra, or all meditation music, or both', 'Mala counter, sankalp tracker, puja sequences', 'Loop and playlists, sleep timer', 'New mantras added free'],
-    plans: ['mantra_lifetime_pass', 'meditation_music_pass'],
+    id: 'mantras', studio: 'mantra', who: 'For prayer', title: 'Mantras',
+    line: 'Sacred Indian chants, with their Sanskrit and meaning.',
+    includes: ['Every mantra, with Sanskrit and meaning', 'Mala counter, sankalp tracker, puja sequences', 'Loop and playlists, sleep timer', 'New mantras added free'],
+    plans: ['mantra_lifetime_pass'],
     learnHref: '/mantras',
     start: { label: 'Listen free', href: '/mantras#library' },
+  },
+  {
+    id: 'meditation', studio: 'meditation', who: 'For calm & sleep', title: 'Meditation Music',
+    line: 'Quiet music for calm, sleep and deep practice.',
+    includes: ['All meditation music, with free previews', 'Loop and playlists by mood', 'Sleep timer and lock-screen controls', 'Listening only, no downloads'],
+    plans: ['meditation_music_pass'],
+    learnHref: '/meditation-music',
+    start: { label: 'Listen free', href: '/meditation-music#library' },
   },
 ];
 

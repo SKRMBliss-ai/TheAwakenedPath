@@ -18,6 +18,7 @@ import { SiteHeader, SiteFooter, SERIF, SANS } from '../../components/site/SiteC
 import { siteNav } from '../../components/site/siteNav';
 import { useRazorpay } from '../../hooks/useRazorpay';
 import { usePaypal } from '../../hooks/usePaypal';
+import { STUDIOS, type StudioKey } from '../../config/studios';
 import { CURRENCY, DOORS, PRODUCTS, canonicalId, formatPrice, priceOf, product, refundOf, wasOf, type Door, type Product } from './catalog';
 
 const t = (a: string, d = '') => track(a, d, '/pricing');
@@ -63,6 +64,11 @@ function DoorColumn({ palette, door, selected, onPick }: { palette: Palette; doo
             style={{ maxHeight: 140, maxWidth: '95%', objectFit: 'contain' }}
             loading="lazy"
           />
+        </div>
+      )}
+      {door.id === 'meditation' && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 160, margin: '2px 0 6px' }}>
+          <img src="/SoulfulStudios/Meditation/bowl.webp" alt="A glowing singing bowl with a lotus" style={{ maxHeight: 150, maxWidth: '95%', objectFit: 'contain' }} loading="lazy" />
         </div>
       )}
       {door.id === 'mantras' && (
@@ -393,6 +399,21 @@ export default function PricingPage() {
   });
   const checkoutRef = useRef<HTMLDivElement>(null);
   const [queued, setQueued] = useState<string[]>([]);
+  // The bucket (studio) being shown: from ?studio=, else the studio of the plan in ?select=, else Mind.
+  const [studio, setStudio] = useState<StudioKey>(() => {
+    const q = new URLSearchParams(window.location.search);
+    const asKey = q.get('studio');
+    if (asKey === 'mantra' || asKey === 'meditation' || asKey === 'mind') return asKey;
+    const sel = q.get('select');
+    const d = sel ? DOORS.find((x) => x.plans.includes(canonicalId(sel)) || x.extra?.id === sel) : null;
+    return d?.studio ?? 'mind';
+  });
+  const [seenStudios, setSeenStudios] = useState<Set<StudioKey>>(() => new Set([studio]));
+  const chooseStudio = (k: StudioKey) => {
+    setStudio(k); setSeenStudios((p) => new Set(p).add(k)); t('PRICING_STUDIO', k);
+    try { const url = new URL(window.location.href); url.searchParams.set('studio', k); window.history.replaceState({}, '', url); } catch { /* ignore */ }
+  };
+  const doors = DOORS.filter((d) => d.studio === studio);
 
   useEffect(() => onAuthStateChanged(getAuth(), setUser), []);
   useEffect(() => { t('PAGE_VISIT_PRICING', selected || ''); }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -431,17 +452,30 @@ export default function PricingPage() {
 
       <header style={{ ...sec, paddingTop: 'clamp(16px, 3vw, 32px)', textAlign: 'center' }}>
         <h1 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 5.4vw, 54px)', fontWeight: 400, lineHeight: 1.1, margin: '0 auto 12px', maxWidth: 760 }}>
-          Who is this for?
+          What would you like?
         </h1>
         <p style={{ fontSize: 16, lineHeight: 1.6, color: palette.INK2, margin: '0 auto', maxWidth: 560 }}>
-          Choose one plan. Each is complete on its own.
+          Pick a studio, then a plan. Each plan is complete on its own.
         </p>
       </header>
 
-      {/* The three doors, each with its plans */}
+      {/* Three buckets, one per studio; each shows only its own plans */}
       <div id="plans" style={{ ...sec, paddingTop: 0, scrollMarginTop: 90 }}>
-        <div className="pr-doors" style={wrap}>
-          {DOORS.map((d) => <DoorColumn key={d.id} palette={palette} door={d} selected={selected} onPick={pick} />)}
+        <div role="tablist" aria-label="Choose a studio" className="pr-tabs" style={wrap}>
+          {STUDIOS.map((s) => {
+            const on = s.key === studio;
+            const pulse = !on && !seenStudios.has(s.key);
+            return (
+              <button key={s.key} type="button" role="tab" aria-selected={on} aria-controls="pr-panel" data-pulse={pulse} className="pr-tab" onClick={() => chooseStudio(s.key)}
+                style={{ ['--acc' as string]: s.accent, ['--glow' as string]: `${s.accent}99`, ['--card' as string]: palette.CARD, ['--ink' as string]: palette.INK, ['--line' as string]: palette.BORDER }}>
+                <img src={s.logo} alt="" width={40} height={40} />
+                <span>{s.name.replace('Soulful ', '')}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div id="pr-panel" role="tabpanel" className="pr-doors" key={studio} style={{ ...wrap, gridTemplateColumns: `repeat(${doors.length}, minmax(0, 1fr))`, maxWidth: doors.length === 1 ? 520 : wrap.maxWidth }}>
+          {doors.map((d) => <DoorColumn key={d.id} palette={palette} door={d} selected={selected} onPick={pick} />)}
         </div>
       </div>
 
@@ -472,9 +506,18 @@ export default function PricingPage() {
 
       <style>{`
         .pr-doors { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: stretch; }
+        .pr-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-bottom: 22px; }
+        .pr-tab { display: inline-flex; align-items: center; gap: 10px; min-height: 56px; padding: 8px 22px 8px 10px; border-radius: 999px; cursor: pointer; font-family: ${SANS}; font-size: 16px; font-weight: 700;
+          background: var(--card); color: var(--ink); border: 1.5px solid var(--line); transition: transform .25s ease, box-shadow .25s ease, background .25s ease; }
+        .pr-tab img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #fff; }
+        .pr-tab:hover { transform: translateY(-2px); }
+        .pr-tab[aria-selected="true"] { background: var(--acc); color: #fff; border-color: var(--acc); box-shadow: 0 6px 22px var(--glow); }
+        .pr-tab[data-pulse="true"] { border-color: var(--acc); animation: pr-pulse 2.2s ease-in-out infinite; }
+        @keyframes pr-pulse { 0%,100% { box-shadow: 0 0 0 0 var(--glow), 0 0 8px var(--glow); } 50% { box-shadow: 0 0 0 5px transparent, 0 0 22px var(--glow); } }
         .pr-opt { transition: border-color .2s ease, background .2s ease; }
         .pr-opt:hover { border-color: ${palette.PURPLE_STRONG} !important; }
-        @media (max-width: 900px) { .pr-doors { grid-template-columns: 1fr; } }
+        @media (max-width: 900px) { .pr-doors { grid-template-columns: 1fr !important; } }
+        @media (prefers-reduced-motion: reduce) { .pr-tab { animation: none !important; transition: none; } }
         @media (max-width: 600px) {
           .pr-doors { gap: 16px; }
           .pr-col { padding: 20px 16px !important; border-radius: 24px !important; }
