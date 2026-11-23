@@ -12,7 +12,7 @@ import { BookOpen, Repeat, ListMusic, FileText, Bell, MessageCircle, ShieldCheck
 import { usePageSeo } from '../../lib/seo';
 import { track } from '../../lib/analytics';
 import { useSiteTheme, type Palette } from '../../lib/siteTheme';
-import { SiteHeader, SiteFooter, SERIF, SANS } from '../../components/site/SiteChrome';
+import { SiteHeader, SiteFooter, SERIF, SANS, type NavLink } from '../../components/site/SiteChrome';
 import { useRazorpay } from '../../hooks/useRazorpay';
 import { usePaypal } from '../../hooks/usePaypal';
 import { VoiceService, useVoiceStatus } from '../../services/voiceService';
@@ -737,8 +737,43 @@ function MantraFooter({ palette }: { palette: Palette }) {
   );
 }
 
-function Header({ palette, toggle, home }: { palette: Palette; toggle: () => void; home: boolean }) {
+const MEDITATION_BRAND = {
+  name: 'Soulful Meditation Studio',
+  tagline: 'Where stillness awakens awareness',
+  logoLight: '/SoulfulStudios/Meditation/emblem.webp',
+  logoDark: '/SoulfulStudios/Meditation/emblem.webp',
+  href: '/meditation-music',
+};
+
+/** Every main offering, so each studio's pages link to all the others. */
+const OFFERINGS_MENU: NavLink = {
+  label: 'Our offerings',
+  subItems: [
+    { label: 'Mind Gym app', sub: 'Practice, journal, courses, mantras and music', href: '/aboutmindgym' },
+    { label: 'Feelings & Emotions course', sub: 'A guided course by Sim Katyal', href: '/feelingsandemotioncourse' },
+    { label: 'Kids Mind Gym', sub: 'Feelings, stories and games, ages 3 to 12', href: '/tiny-kids-transformations' },
+    { label: 'Mantras', sub: 'Sacred Indian mantras, with meaning', href: '/mantras' },
+    { label: 'Meditation Music', sub: 'Calm, sleep and deep practice', href: '/meditation-music' },
+  ],
+};
+
+function Header({ palette, toggle, home, studio = 'mantra' }: { palette: Palette; toggle: () => void; home: boolean; studio?: 'mantra' | 'meditation' }) {
   const base = home ? '' : PAGE;
+  if (studio === 'meditation') {
+    return (
+      <SiteHeader
+        palette={palette}
+        onToggleTheme={toggle}
+        brand={MEDITATION_BRAND}
+        links={[
+          { label: 'Music', href: '/meditation-music#library' },
+          { label: 'Questions', href: '/meditation-music/lifetime-pass#faq', secondary: true },
+          OFFERINGS_MENU,
+        ]}
+        cta={{ label: 'Meditation Music Pass →', href: MUSIC_PASS_PATH, onClick: () => t('MUSIC_HEADER_CTA') }}
+      />
+    );
+  }
   return (
     <SiteHeader
       palette={palette}
@@ -746,10 +781,9 @@ function Header({ palette, toggle, home }: { palette: Palette; toggle: () => voi
       brand={MANTRA_BRAND}
       links={[
         { label: 'Mantra Library', href: `${base}#library` },
-        { label: 'Gita · soon', href: `${base}#gita` },
         { label: 'How to begin', href: `${base}#begin`, secondary: true },
         { label: 'Questions', href: `${base}#faq`, secondary: true },
-        { label: 'Soulful Mind Studio ↗', href: MIND_STUDIO_URL, secondary: true },
+        OFFERINGS_MENU,
       ]}
       cta={{ label: 'Mantra Pass →', href: PASS_PATH, onClick: () => t('MANTRA_HEADER_CTA') }}
     />
@@ -1511,7 +1545,7 @@ function MusicPassSales() {
   const { palette, toggle } = useSiteTheme();
   const url = 'https://www.skrmblissai.in/meditation-music/lifetime-pass';
   usePageSeo({
-    title: 'Meditation Music Pass: Calm, Sleep & Deep Practice | Soulful Mind Studio',
+    title: 'Meditation Music Pass: Calm, Sleep & Deep Practice | Soulful Meditation Studio',
     description: 'One payment for all our meditation music, with loop, playlists by mood and a sleep timer. No subscription.',
     url,
     image: 'https://www.skrmblissai.in/SoulfulStudios/Mantra/lockup.webp',
@@ -1536,7 +1570,7 @@ function MusicPassSales() {
   return (
     <div className="min-h-screen w-full antialiased" style={{ fontFamily: SANS, background: palette.BG, color: palette.INK, overflowX: 'hidden', paddingBottom: 84 }}>
       <PageStyles palette={palette} />
-      <Header palette={palette} toggle={toggle} home={false} />
+      <Header palette={palette} toggle={toggle} home={false} studio="meditation" />
 
       <nav aria-label="Back" style={{ ...wrap, padding: '10px 20px 0' }}>
         <a href="/meditation-music" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, color: palette.PURPLE_STRONG, fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
@@ -1556,7 +1590,7 @@ function MusicPassSales() {
             </div>
             <figcaption style={{ textAlign: 'center', paddingTop: 14, color: '#241E24' }}>
               <span style={{ display: 'block', fontFamily: SERIF, fontSize: 'clamp(20px, 2.4vw, 26px)', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Meditation Music</span>
-              <span style={{ display: 'block', fontSize: 11.5, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', opacity: 0.75, marginTop: 2 }}>Soulful Mind Studio</span>
+              <span style={{ display: 'block', fontSize: 11.5, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', opacity: 0.75, marginTop: 2 }}>Soulful Meditation Studio</span>
             </figcaption>
           </figure>
           <div>
@@ -1672,7 +1706,7 @@ function MusicHub() {
   const { palette, toggle } = useSiteTheme();
   const url = 'https://www.skrmblissai.in/meditation-music';
   usePageSeo({
-    title: 'Meditation Music for Calm, Sleep & Deep Practice | Soulful Mind Studio',
+    title: 'Soulful Meditation Studio: Meditation Music for Calm, Sleep & Deep Practice',
     description: 'Meditation music for calm, sleep and deep practice. Listen to a preview of every track, then get the whole library with the Meditation Music Pass.',
     url,
     image: 'https://www.skrmblissai.in/SoulfulStudios/Mantra/lockup.webp',
@@ -1696,7 +1730,7 @@ function MusicHub() {
   return (
     <div className="min-h-screen w-full antialiased" style={{ fontFamily: SANS, background: palette.BG, color: palette.INK, overflowX: 'hidden' }}>
       <PageStyles palette={palette} />
-      <Header palette={palette} toggle={toggle} home={false} />
+      <Header palette={palette} toggle={toggle} home={false} studio="meditation" />
 
       <header style={{ position: 'relative', overflow: 'hidden', background: '#14202A', color: '#FFFFFF', padding: 'clamp(36px, 6vw, 80px) clamp(16px, 5vw, 96px)' }}>
         <video ref={heroVideo} autoPlay muted playsInline preload="auto" poster="/SoulfulStudios/Meditation/banner.webp" aria-hidden="true"
@@ -1710,9 +1744,12 @@ function MusicHub() {
           <img src="/SoulfulStudios/Meditation/emblem.webp" alt="Soulful Meditation Studio" width={132} height={132}
             style={{ width: 132, height: 132, display: 'block', margin: '0 auto 18px', borderRadius: '50%', boxShadow: '0 10px 30px rgba(0,0,0,.45)' }} />
           <span style={{ display: 'block', fontSize: 12, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#E9C98A', marginBottom: 10 }}>@SoulfulMeditationStudio</span>
-          <h1 style={{ fontFamily: SERIF, fontSize: 'clamp(36px, 5.4vw, 62px)', fontWeight: 400, lineHeight: 1.08, letterSpacing: '-0.02em', margin: '0 0 14px', color: '#FFFFFF' }}>
-            Meditation music <span style={{ color: '#E9C98A' }}>for calm, sleep and deep practice</span>
+          <h1 style={{ fontFamily: SERIF, fontSize: 'clamp(38px, 6vw, 70px)', fontWeight: 400, lineHeight: 1.08, letterSpacing: '-0.02em', margin: '0 0 12px', color: '#FFFFFF' }}>
+            Soulful Meditation Studio
           </h1>
+          <p style={{ fontFamily: SERIF, fontSize: 'clamp(22px, 3vw, 32px)', fontStyle: 'italic', lineHeight: 1.2, margin: '0 0 16px', color: '#E9C98A' }}>
+            Meditation music for calm, sleep and deep practice
+          </p>
           <p style={{ fontSize: 17, lineHeight: 1.7, color: 'rgba(255,255,255,.88)', margin: '0 auto 22px', maxWidth: 600 }}>
             Quiet music to sit with, sleep to and come back to. Listen to a preview of any track, then keep the whole library with one payment.
           </p>
