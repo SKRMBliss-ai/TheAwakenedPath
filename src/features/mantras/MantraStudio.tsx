@@ -12,13 +12,13 @@ import { BookOpen, Repeat, ListMusic, FileText, Bell, MessageCircle, ShieldCheck
 import { usePageSeo } from '../../lib/seo';
 import { track } from '../../lib/analytics';
 import { useSiteTheme, type Palette } from '../../lib/siteTheme';
-import { SiteHeader, SiteFooter, SERIF, SANS, type NavLink } from '../../components/site/SiteChrome';
+import { SiteHeader, SiteFooter, studioCols, SERIF, SANS, type NavLink } from '../../components/site/SiteChrome';
 import { useRazorpay } from '../../hooks/useRazorpay';
 import { usePaypal } from '../../hooks/usePaypal';
 import { VoiceService, useVoiceStatus } from '../../services/voiceService';
 import {
   MANTRAS, MOMENTS, DEITIES, MANTRA_FAQ, PASS_INCLUDES, MANTRA_BASE_URL, MANTRA_SUBSCRIBE_URL,
-  MANTRA_WHATSAPP, MANTRA_WHATSAPP_GROUP, MANTRA_PASS_ID, MUSIC_PASS_PRICE, MANTRA_PASS_OPEN, MANTRA_PASS_REFUND_DAYS, MANTRA_CURRENCY,
+  MANTRA_WHATSAPP_GROUP, MANTRA_PASS_ID, MUSIC_PASS_PRICE, MANTRA_PASS_OPEN, MANTRA_PASS_REFUND_DAYS, MANTRA_CURRENCY,
   passPrice, singlePrice, singleId, soldSingly, findMantra, thumb, waLink, getMantraAudioUrl, type Mantra, type Moment,
 } from './mantraData';
 import { SACRED_TRACKS } from '../music/musicData';
@@ -688,7 +688,20 @@ function PageStyles({ palette }: { palette: Palette }) {
   );
 }
 
-const MIND_STUDIO_URL = 'https://www.skrmblissai.in';
+
+/** Footer for the meditation music pages: Soulful Meditation Studio's brand, the shared studio columns. */
+function MusicFooter({ palette }: { palette: Palette }) {
+  return (
+    <SiteFooter
+      palette={palette}
+      brand={MEDITATION_BRAND}
+      youtubeUrl="https://www.youtube.com/@SoulfulMeditationStudio?sub_confirmation=1"
+      socialLabels={['YouTube', 'WhatsApp']}
+      description="Quiet meditation music for calm, sleep and deep practice. Part of the Soulful studios."
+      cols={studioCols()}
+    />
+  );
+}
 
 /** Footer for every mantra page: Soulful Mantra Studio's own, with a way across
  *  to the sister vertical, Soulful Mind Studio (the main skrmblissai.in site). */
@@ -700,39 +713,8 @@ function MantraFooter({ palette }: { palette: Palette }) {
       youtubeUrl={MANTRA_SUBSCRIBE_URL}
       socialLabels={['YouTube', 'WhatsApp']}
       whatsappUrl={MANTRA_WHATSAPP_GROUP}
-      description="Soft, unhurried mantra recordings with the Sanskrit text and its meaning in plain words. A sister studio of Soulful Mind Studio."
-      cols={[
-        {
-          title: 'Mantras',
-          items: [
-            { label: 'Mantra Library', href: `${PAGE}#library` },
-            { label: 'Mantra Pass', href: PASS_PATH },
-            { label: 'How to begin', href: `${PAGE}#begin` },
-            { label: 'Gita (coming soon)', href: `${PAGE}#gita` },
-            { label: 'YouTube channel', href: MANTRA_SUBSCRIBE_URL },
-            { label: 'Join our WhatsApp group', href: MANTRA_WHATSAPP_GROUP },
-          ],
-        },
-        {
-          title: 'Soulful Mind Studio',
-          items: [
-            { label: 'Visit Soulful Mind Studio', href: MIND_STUDIO_URL },
-            { label: 'Mind Gym', href: '/mindgym' },
-            { label: 'Kids Mind Gym', href: '/tiny-kids-transformations' },
-            { label: 'Feelings & Emotions course', href: '/feelingsandemotioncourse' },
-          ],
-        },
-        {
-          title: 'Contact & legal',
-          items: [
-            { label: 'connect@skrmblissai.in', href: 'mailto:connect@skrmblissai.in' },
-            { label: 'WhatsApp +91 82175 81238', href: MANTRA_WHATSAPP },
-            { label: 'Privacy', href: '/policies#privacy' },
-            { label: 'Terms', href: '/policies#terms' },
-            { label: 'Refunds', href: '/policies#refund' },
-          ],
-        },
-      ]}
+      description="Soft, unhurried mantra recordings with the Sanskrit text and its meaning in plain words. Part of the Soulful studios."
+      cols={studioCols()}
     />
   );
 }
@@ -1682,7 +1664,7 @@ function MusicPassSales() {
         </div>
       </section>
 
-      <MantraFooter palette={palette} />
+      <MusicFooter palette={palette} />
 
       <div style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 50, background: '#1B1714', borderTop: '1px solid rgba(233,201,138,0.3)',
         padding: '10px clamp(14px, 4vw, 40px)', paddingBottom: 'max(10px, env(safe-area-inset-bottom))' }}>
@@ -1797,7 +1779,7 @@ function MusicHub() {
         </div>
       </section>
 
-      <MantraFooter palette={palette} />
+      <MusicFooter palette={palette} />
     </div>
   );
 }

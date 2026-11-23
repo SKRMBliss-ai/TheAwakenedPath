@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Palette } from '../../lib/siteTheme';
 import { trackNavClick, trackFooterClick } from '../../lib/analytics';
+import { STUDIOS } from '../../config/studios';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SiteChrome — the one header and footer used by every public surface:
@@ -401,40 +402,54 @@ const SOCIALS: { label: string; url: string; d: string }[] = [
   { label: 'Facebook', url: FACEBOOK_URL, d: 'M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073Z' },
 ];
 
-const MANTRA_SUBSCRIBE_URL = 'https://www.youtube.com/@SoulfulMantraStudio?sub_confirmation=1';
+/**
+ * The footer columns every page shares: one column per studio (each with its own
+ * offerings and YouTube channel) plus contact and legal. Pages differ only in the
+ * brand block on the left, so every footer cross-links every main offering.
+ */
+export function studioCols(): { title: string; items: NavLink[] }[] {
+  const yt = (k: 'mind' | 'mantra' | 'meditation') => STUDIOS.find((s) => s.key === k)!.subscribe;
+  return [
+    {
+      title: 'Soulful Mind Studio',
+      items: [
+        { label: 'Mind Gym app', href: '/aboutmindgym' },
+        { label: 'Kids Mind Gym', href: '/tiny-kids-transformations' },
+        { label: 'Feelings & Emotions course', href: '/feelingsandemotioncourse' },
+        { label: 'Plans & Pricing', href: '/pricing' },
+        { label: 'YouTube channel', href: yt('mind') },
+      ],
+    },
+    {
+      title: 'Soulful Mantra Studio',
+      items: [
+        { label: 'Mantras', href: '/mantras' },
+        { label: 'Mantra Pass', href: '/mantras/lifetime-pass' },
+        { label: 'Daily Sadhana & Mala Counter', href: '/mantras#begin' },
+        { label: 'YouTube channel', href: yt('mantra') },
+      ],
+    },
+    {
+      title: 'Soulful Meditation Studio',
+      items: [
+        { label: 'Meditation Music', href: '/meditation-music' },
+        { label: 'Meditation Music Pass', href: '/meditation-music/lifetime-pass' },
+        { label: 'YouTube channel', href: yt('meditation') },
+      ],
+    },
+    {
+      title: 'Contact & Legal',
+      items: [
+        { label: 'About us', href: '/about-us' },
+        { label: 'connect@skrmblissai.in', href: 'mailto:connect@skrmblissai.in' },
+        { label: 'WhatsApp +91 82175 81238', href: WHATSAPP_URL },
+        { label: 'Privacy · Terms · Refunds', href: '/policies' },
+      ],
+    },
+  ];
+}
 
-const FOOTER_COLS: { title: string; items: NavLink[] }[] = [
-  {
-    title: 'Mind & Wellbeing',
-    items: [
-      { label: 'Adult Mind Gym', href: '/aboutmindgym' },
-      { label: 'Kids Mind Gym', href: '/tiny-kids-transformations' },
-      { label: 'Feelings & Emotions course', href: '/feelingsandemotioncourse' },
-      { label: 'Emotional health check', href: '/knowyouremotionalhealth' },
-      { label: 'Plans & Pricing', href: '/pricing' },
-    ],
-  },
-  {
-    title: 'Sacred Mantras',
-    items: [
-      { label: 'Mantra Pass (Lifetime)', href: '/mantras/lifetime-pass' },
-      { label: 'Meditation Music', href: '/meditation-music' },
-      { label: 'Meditation Music Pass', href: '/meditation-music/lifetime-pass' },
-      { label: 'Daily Sadhana & Mala Counter', href: '/mantras#begin' },
-      { label: 'Sacred Chants Channel', href: MANTRA_SUBSCRIBE_URL },
-    ],
-  },
-  {
-    title: 'Studio & Legal',
-    items: [
-      { label: 'About us', href: '/about-us' },
-      { label: 'Digital services', href: '/#services' },
-      { label: 'connect@skrmblissai.in', href: 'mailto:connect@skrmblissai.in' },
-      { label: 'WhatsApp +91 82175 81238', href: WHATSAPP_URL },
-      { label: 'Privacy · Terms · Refunds', href: '/policies' },
-    ],
-  },
-];
+const FOOTER_COLS = studioCols();
 
 /** Site-wide footer: brand block, three link columns, socials, legal line. */
 export function SiteFooter({ palette, brand, description, cols, youtubeUrl, whatsappUrl, socialLabels }: {
