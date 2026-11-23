@@ -87,7 +87,7 @@ export default function StudiosSection({ palette }: { palette: Palette }) {
         .st-row:hover,.st-row:focus-visible{background:var(--st-tint)}
         .st-row svg{transition:transform .25s ease}
         .st-row:hover svg{transform:translateX(5px)}
-        .st-btn{flex:1 1 150px;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 18px;border-radius:999px;font-family:${SANS};font-size:14.5px;font-weight:700;text-decoration:none;transition:transform .2s ease,box-shadow .2s ease}
+        .st-btn{flex:1 1 auto;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 24px;border-radius:999px;font-family:${SANS};font-size:15px;font-weight:700;letter-spacing:.01em;text-decoration:none;white-space:nowrap;transition:transform .2s ease,box-shadow .2s ease}
         .st-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.18)}
         .st-visual img{transition:transform .8s ease}
         .st-panel:hover .st-visual img{transform:scale(1.04)}
@@ -166,7 +166,7 @@ export default function StudiosSection({ palette }: { palette: Palette }) {
                 )}
                 <a href={s.subscribe} target="_blank" rel="noopener noreferrer" className="st-btn" onClick={() => track('HOME_STUDIO_YOUTUBE', s.key)}
                   aria-label={`Watch ${s.name} on YouTube`} style={{ border: `1.5px solid ${palette.BORDER}`, color: palette.INK }}>
-                  <Youtube size={17} aria-hidden="true" /> Watch on YouTube
+                  <Youtube size={18} aria-hidden="true" /> YouTube channel
                 </a>
               </div>
             </div>

@@ -56,9 +56,9 @@ export const STUDIOS: Studio[] = [
       { src: '/marketing/kids/hero-sim-diary.webp', alt: 'Sim Katyal with her son and the daily diary chart' },
     ],
     offerings: [
-      { label: 'Mind Gym app', line: 'The web app: daily practice, journal, courses, mantras and meditation music.', learn: '/aboutmindgym', plans: ['membership_monthly', 'membership_yearly'], open: { label: 'Open the web app', href: '/mindgym' } },
+      { label: 'Mind Gym app', line: 'The web app: daily practice, journal, courses, mantras and meditation music.', learn: '/aboutmindgym', plans: ['membership_monthly', 'membership_yearly'], open: { label: 'Open web app', href: '/mindgym' } },
       { label: 'Feelings & Emotions course', line: 'A guided course by Sim Katyal.', learn: '/feelingsandemotioncourse', plans: ['emotion_feelings_course'] },
-      { label: 'Kids Mind Gym', line: 'Feelings, stories and games for ages 3 to 12, with a live Zoom class.', learn: '/tiny-kids-transformations', plans: ['kids_zoom_monthly', 'kids_zoom_yearly'], open: { label: 'Open the kids web app', href: '/mindgymforkids' } },
+      { label: 'Kids Mind Gym', line: 'Feelings, stories and games for ages 3 to 12, with a live Zoom class.', learn: '/tiny-kids-transformations', plans: ['kids_zoom_monthly', 'kids_zoom_yearly'], open: { label: 'Open kids web app', href: '/mindgymforkids' } },
     ],
   },
   {
@@ -72,7 +72,7 @@ export const STUDIOS: Studio[] = [
     logo: '/SoulfulStudios/Mantra/logo-light.webp',
     images: [{ src: '/marketing/mantras/exec-ce641b41-377a-428e-9ae9-53d82af4accf.png', alt: 'A golden Om on a white medallion', contain: true }],
     offerings: [
-      { label: 'Mantras', line: 'Every mantra with Sanskrit, meaning and a mala counter. Also a playlist inside the Mind Gym web app.', learn: '/mantras', open: { label: 'Listen in the web app', href: '/mindgym' } },
+      { label: 'Mantras', line: 'Every mantra with Sanskrit, meaning and a mala counter. Also a playlist inside the Mind Gym web app.', learn: '/mantras', open: { label: 'Open web app', href: '/mindgym' } },
       { label: 'Mantra Pass', line: 'Every mantra, paid once.', learn: '/mantras/lifetime-pass', plans: ['mantra_lifetime_pass'] },
     ],
   },
@@ -85,9 +85,9 @@ export const STUDIOS: Studio[] = [
     channelLine: 'Meditation music for calm, sleep and deep practice.',
     accent: '#3F7F86',
     logo: '/SoulfulStudios/Meditation/emblem.webp',
-    images: [{ src: '/SoulfulStudios/Meditation/ritual-objects.webp', alt: 'Tingsha bells, a glowing singing bowl, candles and a golden wind chime' }],
+    images: [{ src: '/SoulfulStudios/Meditation/bowl.webp', alt: 'A glowing singing bowl with a lotus', contain: true }],
     offerings: [
-      { label: 'Meditation music', line: 'Tracks for calm, sleep and deep practice. Also a playlist inside the Mind Gym web app.', learn: '/meditation-music', open: { label: 'Listen in the web app', href: '/mindgym' } },
+      { label: 'Meditation music', line: 'Tracks for calm, sleep and deep practice. Also a playlist inside the Mind Gym web app.', learn: '/meditation-music', open: { label: 'Open web app', href: '/mindgym' } },
       { label: 'Meditation Music Pass', line: 'All the music, paid once.', learn: '/meditation-music/lifetime-pass', plans: ['meditation_music_pass'] },
     ],
   },
