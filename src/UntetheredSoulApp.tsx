@@ -2130,7 +2130,7 @@ export default function UntetheredApp() {
             </div>
 
             <a
-              href="https://www.youtube.com/@SoulfulIntelligenceStudio?sub_confirmation=1"
+              href="https://www.youtube.com/@SoulfulMindStudio?sub_confirmation=1"
               target="_blank"
               rel="noopener noreferrer"
               className="w-full flex items-center gap-3 px-4 py-2 rounded-xl transition-all hover:bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:text-[#FF0000] group"

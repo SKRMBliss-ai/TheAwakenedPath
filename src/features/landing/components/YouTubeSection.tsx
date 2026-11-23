@@ -1,7 +1,7 @@
 /**
  * YouTubeSection.tsx
- * "Fresh from our channels" — the newest real uploads from each of our two YouTube
- * channels (Soulful Mantra Studio and Soulful Mind Studio).
+ * "Fresh from our channels" — the newest real uploads from each of our three YouTube
+ * channels (Mind, Mantras and Meditation studios).
  *
  * Honesty rules, because a "latest" heading is a promise:
  *  - Every card is a real upload fetched from the channel. There are no built-in
@@ -12,6 +12,7 @@
  */
 import { useEffect, useState } from 'react';
 import type { Palette } from '../../../lib/siteTheme';
+import { STUDIOS, type StudioKey } from '../../../config/studios';
 
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS  = "'Outfit', system-ui, sans-serif";
@@ -21,7 +22,7 @@ const STALE_DAYS = 75;
 
 interface Channel {
   /** Query value the backend understands. */
-  key: 'mantra' | 'mind';
+  key: StudioKey;
   label: string;
   blurb: string;
   accent: string;
@@ -30,21 +31,9 @@ interface Channel {
   subscribe: string;
 }
 
-const CHANNELS: Channel[] = [
-  {
-    key: 'mantra', label: 'Soulful Mantra Studio', blurb: 'Mantras, chants and meditation music',
-    accent: '#C4913A',
-    url: 'https://www.youtube.com/@SoulfulMantraStudio',
-    subscribe: 'https://www.youtube.com/@SoulfulMantraStudio?sub_confirmation=1',
-  },
-  {
-    key: 'mind', label: 'Soulful Mind Studio', blurb: 'Meditation, courses and teachings',
-    accent: '#4A3260',
-    // The channel's YouTube handle has not changed with the studio's new name.
-    url: 'https://www.youtube.com/@SoulfulIntelligenceStudio',
-    subscribe: 'https://www.youtube.com/@SoulfulIntelligenceStudio?sub_confirmation=1',
-  },
-];
+const CHANNELS: Channel[] = STUDIOS.map((s) => ({
+  key: s.key, label: s.name, blurb: s.channelLine, accent: s.accent, url: s.url, subscribe: s.subscribe,
+}));
 
 interface Video {
   id: string;

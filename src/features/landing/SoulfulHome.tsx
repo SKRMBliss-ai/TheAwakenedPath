@@ -1,4 +1,4 @@
-import PathChooser from './components/PathChooser';
+import StudiosSection from './components/StudiosSection';
 import MantrasNewOffering from './components/MantrasNewOffering';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
@@ -29,7 +29,7 @@ const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS  = "'Outfit', system-ui, -apple-system, sans-serif";
 const SI_LOGO = SI_LOGO_SRC;
 const WHATSAPP = 'https://wa.me/918217581238?text=' + encodeURIComponent("Hi Soulful Intelligence — I'd like to talk about a project.");
-const YOUTUBE  = 'https://www.youtube.com/@SoulfulIntelligenceStudio?sub_confirmation=1';
+const YOUTUBE  = 'https://www.youtube.com/@SoulfulMindStudio?sub_confirmation=1';
 
 const track = (action: string) => {
   try {
@@ -377,7 +377,7 @@ export default function SoulfulHome() {
 
           {/* 2. The three doors */}
           <div id="choose" style={{ scrollMarginTop: 80 }}>
-            <PathChooser palette={palette} />
+            <StudiosSection palette={palette} />
           </div>
 
           {/* Section divider */}

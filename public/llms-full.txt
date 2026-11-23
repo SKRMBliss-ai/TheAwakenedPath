@@ -11,7 +11,7 @@ Soulful Intelligence Studio (web domain: https://www.skrmblissai.in) is a digita
 3. **MindGym (`/mindgym`)**: A web & progressive web application (PWA) designed for daily 5-minute presence rituals, witness journaling, body-awareness tracking, and breathwork.
 4. **Emotional Health Check (`/knowyouremotionalhealth`)**: A 2-minute diagnostic self-assessment that evaluates emotional awareness, reactivity levels, and stress patterns.
 5. **About MindGym & Witness Journaling (`/aboutmindgym`)**: An in-depth guide on the mechanics of witness journaling and releasing emotional energy.
-6. **YouTube Channel (`@SoulfulIntelligenceStudio`)**: Official video platform containing guided meditations, course teasers, and mindfulness talks.
+6. **YouTube channels**: `@SoulfulMindStudio` (courses, Mind Gym app and Kids Mind Gym videos), `@SoulfulMantrasStudio` (Indian mantras), `@SoulfulMeditationStudio` (meditation music and guided meditations).
 
 ---
 
@@ -59,4 +59,4 @@ The curriculum and practices across SKRM Bliss AI combine modern neuroplasticity
 - **Instructor**: Sim Katyal
 - **Role**: Emotional Intelligence & Presence Guide, Co-Founder of Soulful Intelligence Studio (with Shruti Khungar).
 - **Official Site**: https://www.skrmblissai.in
-- **YouTube**: https://www.youtube.com/@SoulfulIntelligenceStudio
+- **YouTube**: https://www.youtube.com/@SoulfulMindStudio · https://www.youtube.com/@SoulfulMantrasStudio · https://www.youtube.com/@SoulfulMeditationStudio

@@ -713,7 +713,7 @@ export default function EmotionFeelingsCourse() {
           provider: {
             '@type': 'Organization',
             name: 'Soulful Intelligence Studio',
-            sameAs: ['https://www.skrmblissai.in', 'https://www.youtube.com/@SoulfulIntelligenceStudio'],
+            sameAs: ['https://www.skrmblissai.in', 'https://www.youtube.com/@SoulfulMindStudio'],
           },
           instructor: {
             '@type': 'Person',

@@ -785,11 +785,18 @@ exports.getLatestVideos = onRequest({ secrets: [youtubeApiKey], cors: true }, as
     // ?channel=mantra reads Soulful Mantra Studio's uploads; anything else is the
     // Mind Studio channel exactly as before. Each channel has its own cache doc,
     // and only the Mind channel uses the curated playlists and pinned course ids.
+    // Three channels: ?channel=mantra (Soulful Mantras Studio), ?channel=meditation
+    // (Soulful Meditation Studio), anything else is Soulful Mind Studio. Each has its
+    // own cache doc; only Mind uses the curated playlists and pinned course ids.
     const isMantraChannel = req.query.channel === 'mantra';
-    const channelHandle = isMantraChannel ? '@SoulfulMantraStudio' : '@SoulfulIntelligenceStudio';
-    const streamPlaylists = isMantraChannel ? {} : STREAM_PLAYLISTS;
-    const streamVideoIds = isMantraChannel ? {} : STREAM_VIDEO_IDS;
-    const cacheRef = db.collection('cache').doc(isMantraChannel ? 'latest_youtube_videos_mantra' : 'latest_youtube_videos');
+    const isMeditationChannel = req.query.channel === 'meditation';
+    const isPlainChannel = isMantraChannel || isMeditationChannel;
+    const channelHandle = isMantraChannel ? '@SoulfulMantrasStudio'
+        : isMeditationChannel ? '@SoulfulMeditationStudio' : '@SoulfulMindStudio';
+    const streamPlaylists = isPlainChannel ? {} : STREAM_PLAYLISTS;
+    const streamVideoIds = isPlainChannel ? {} : STREAM_VIDEO_IDS;
+    const cacheRef = db.collection('cache').doc(isMantraChannel ? 'latest_youtube_videos_mantra'
+        : isMeditationChannel ? 'latest_youtube_videos_meditation' : 'latest_youtube_videos_mind');
 
     let cached = null;
     try {
@@ -968,7 +975,7 @@ async function getDailyYoutubeVideo(youtubeKey, firestoreDb) {
     if (!youtubeKey) return getTodaysVideo();
 
     const fallback = getTodaysVideo();
-    const handle = '@SoulfulIntelligenceStudio';
+    const handle = '@SoulfulMeditationStudio';
     try {
         // 0) Get video IDs sent in the last 3 days so we can avoid repeating them
         const recentlySentIds = new Set();
@@ -2884,7 +2891,7 @@ const emailFooter = ({ dark = false } = {}) => `
     </p>
     <p style="font-size:10px;color:${dark ? 'rgba(253,250,244,0.55)' : 'rgba(30,25,18,0.6)'};margin:8px 0 0;line-height:1.8;">
       By <a href="https://www.skrmblissai.in/twinsouls" style="color:#B8973A;text-decoration:none;">Twin Souls</a> &nbsp;&middot;&nbsp;
-      <a href="https://www.youtube.com/@SoulfulIntelligenceStudio?sub_confirmation=1" style="color:#B8973A;text-decoration:none;">
+      <a href="https://www.youtube.com/@SoulfulMeditationStudio?sub_confirmation=1" style="color:#B8973A;text-decoration:none;">
         <img src="https://img.icons8.com/material-rounded/24/B8973A/youtube-play.png" style="width:14px;height:14px;vertical-align:middle;margin-right:2px;" alt="YouTube" />
         Soulful Intelligence Studio
       </a>
