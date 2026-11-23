@@ -1537,7 +1537,8 @@ export default function UntetheredApp() {
       )}
 
       <aside className={cn(
-        "fixed left-0 top-0 bottom-0 w-[280px] flex flex-col z-[70]",
+        "fixed left-0 bottom-0 w-[280px] flex flex-col z-[70]",
+        showCourseAnnounce && !isChoosingPath ? "top-10" : "top-0",
         isChoosingPath && "hidden pointer-events-none",
         "border-r border-[var(--border-default)]",
         "backdrop-blur-2xl px-2",
@@ -2249,8 +2250,7 @@ export default function UntetheredApp() {
         {showCourseAnnounce && !isChoosingPath && (
           <div
             className={cn(
-              "fixed top-0 right-0 z-[120] h-10 flex items-center overflow-hidden transition-all duration-500",
-              isSidebarCollapsed ? "left-0" : "left-0 lg:left-[280px]"
+              "fixed top-0 right-0 left-0 z-[120] h-10 flex items-center overflow-hidden"
             )}
             style={{ background: '#25233A', boxShadow: '0 1px 8px rgba(37,35,58,0.18)' }}
           >
