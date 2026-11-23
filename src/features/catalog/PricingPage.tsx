@@ -119,6 +119,7 @@ function upsells(id: string): string[] {
     'membership_monthly',   // Adult Mind Gym
     'kids_zoom_monthly',    // Kids Mind Gym
     'mantra_lifetime_pass', // Mantra Pass
+    'meditation_music_pass', // Meditation Music Pass
   ];
   if (!product(id).unlocks.includes('emotion_course')) {
     candidates.push('emotion_feelings_course');
@@ -401,7 +402,7 @@ export default function PricingPage() {
 
   usePageSeo({
     title: 'Pricing: Adult Mind Gym, Kids Mind Gym, Mantras & Music | SKRM Bliss AI',
-    description: 'Three simple plans: Adult Mind Gym for you, Kids Mind Gym for your child, and the Mantra Pass for mantras and meditation music.',
+    description: 'Three simple plans: Adult Mind Gym for you, Kids Mind Gym for your child, and separate passes for mantras and meditation music.',
     url: 'https://www.skrmblissai.in/pricing',
   });
 

@@ -826,8 +826,8 @@ export default function SoulfulHome() {
                     desc: 'Sacred mantras with traditional Devanagari text, English transliterations, word-by-word meanings, and ad-free looping chant audio for daily sadhana.',
                     href: '/mantras',
                     action: 'Explore Mantras →',
-                    video: '/marketing/mantras/soulful-mantra-studio.mp4',
-                    img: '/marketing/mantras/lockup.webp',
+                    video: '/SoulfulStudios/Mantra/soulful-mantra-studio.mp4',
+                    img: '/SoulfulStudios/Mantra/lockup.webp',
                   },
                   {
                     type: 'apps',

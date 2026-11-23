@@ -71,7 +71,7 @@ export function SacredSoundsLibrary({ previewAsGuest = false }: { previewAsGuest
   }, []);
 
   return (
-    <SoundLibrary previewAsGuest={previewAsGuest} kind="sacred_sounds" kicker="Soulful Mantra Studio" title="Sacred Sounds"
+    <SoundLibrary previewAsGuest={previewAsGuest} kind="sacred_sounds" kicker="Soulful Mantra Studio" title="Meditation Music"
       description="Meditation music for calm, sleep and deep practice. Tap a track to listen."
       cover={fallback} tracks={tracks} playlists={playlists} />
   );

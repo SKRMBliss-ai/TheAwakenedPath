@@ -73,9 +73,14 @@ export const PRODUCTS: Product[] = [
   },
   // ── Mantras & Music ──────────────────────────────────────────────────────
   {
-    id: 'mantra_lifetime_pass', name: 'Mantra Pass', unlocks: ['mantras', 'sacred_sounds'],
+    id: 'mantra_lifetime_pass', name: 'Mantra Pass', unlocks: ['mantras'],
     price: { INR: 999, USD: 14.99 }, billing: 'once',
-    pitch: 'Every mantra and all meditation music, with a mala counter, sankalp tracker and puja sequences. Pay once, keep it.',
+    pitch: 'Every mantra, with a mala counter, sankalp tracker and puja sequences. Pay once, keep it.',
+  },
+  {
+    id: 'meditation_music_pass', name: 'Meditation Music Pass', unlocks: ['sacred_sounds'],
+    price: { INR: 999, USD: 14.99 }, billing: 'once',
+    pitch: 'All meditation music for calm, sleep and deep practice, with playlists and a sleep timer. Pay once, keep it.',
   },
   // ── Bought by id only (not a main choice) ────────────────────────────────
   {
@@ -109,7 +114,7 @@ export const isPwyw = (id: string) => id.startsWith('membership_') || id.startsW
 
 /** Refund promise per product, shown at checkout. Matches /policies#refund. */
 export function refundOf(id: string): string {
-  if (['mantra_lifetime_pass', 'sacred_sounds_pass', 'sound_bundle'].includes(id)) return 'Full refund within 7 days.';
+  if (['mantra_lifetime_pass', 'meditation_music_pass', 'sacred_sounds_pass', 'sound_bundle'].includes(id)) return 'Full refund within 7 days.';
   if (id === 'kids_zoom_yearly' || id === 'family_yearly') return '100% money back in the first 30 days.';
   if (id === 'kids_zoom_monthly' || id === 'family_monthly' || id === 'emotion_feelings_course') return '100% money back, any time.';
   return 'Full refund within 15 days.';
@@ -155,10 +160,10 @@ export const DOORS: Door[] = [
     start: { label: 'See how it works', href: '/tiny-kids-transformations' },
   },
   {
-    id: 'mantras', who: 'For prayer & calm', title: 'Mantras & Meditation Music Soundscape',
+    id: 'mantras', who: 'For prayer & calm', title: 'Mantras & Meditation Music',
     line: 'Sacred chants with their meaning, and meditation music for calm and sleep.',
-    includes: ['Every mantra and all meditation music', 'Mala counter, sankalp tracker, puja sequences', 'Loop and playlists, sleep timer', 'New mantras added free'],
-    plans: ['mantra_lifetime_pass'],
+    includes: ['Every mantra, or all meditation music, or both', 'Mala counter, sankalp tracker, puja sequences', 'Loop and playlists, sleep timer', 'New mantras added free'],
+    plans: ['mantra_lifetime_pass', 'meditation_music_pass'],
     learnHref: '/mantras',
     start: { label: 'Listen free', href: '/mantras#library' },
   },
@@ -217,5 +222,5 @@ export function owns(p: OwnerProfile | null | undefined, what: Entitlement, isPr
 /** What a locked sound library sends people to buy. Both libraries: the Mantra Pass. */
 export const UPGRADE: Record<'mantras' | 'sacred_sounds', { single: string; bundle: string }> = {
   mantras: { single: 'mantra_lifetime_pass', bundle: 'membership_yearly' },
-  sacred_sounds: { single: 'mantra_lifetime_pass', bundle: 'membership_yearly' },
+  sacred_sounds: { single: 'meditation_music_pass', bundle: 'membership_yearly' },
 };

@@ -801,6 +801,32 @@ export default function KidsChallenge() {
             </ul>
           </div>
         </div>
+
+        {/* The challenge is also part of the yearly Mind Gym for Kids
+            membership. The free, donation-based registration above is
+            unchanged; this only tells members-to-be the other way in. */}
+        <a
+          href="/mindgymforkids"
+          onClick={() => trackKids('KIDS_MEMBERSHIP_CTA')}
+          style={{
+            maxWidth: 1060, margin: '22px auto 0', display: 'flex', flexWrap: 'wrap', gap: 14,
+            alignItems: 'center', justifyContent: 'space-between',
+            padding: '18px 22px', borderRadius: 20, textDecoration: 'none',
+            background: isDark ? 'rgba(0,0,0,0.22)' : 'rgba(255,255,255,0.7)',
+            border: `1px solid ${border}`,
+          }}
+        >
+          <span style={{ fontFamily: SANS, fontSize: 14.5, lineHeight: 1.6, color: palette.INK, flex: '1 1 320px' }}>
+            <strong>Included with the yearly Mind Gym for Kids membership.</strong>{' '}
+            Members get a place in this challenge, the full kids app, and personal guidance from Sim.
+          </span>
+          <span style={{
+            fontFamily: SANS, fontSize: 13.5, fontWeight: 800, color: palette.ON_ACCENT,
+            background: palette.PURPLE_STRONG, padding: '10px 18px', borderRadius: 999, whiteSpace: 'nowrap',
+          }}>
+            See the membership →
+          </span>
+        </a>
       </section>
 
       <div style={{ padding: '0 24px', position: 'relative', zIndex: 2 }}><div className="si-divider" /></div>

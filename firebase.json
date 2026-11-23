@@ -95,6 +95,13 @@
         }
       },
       {
+        "source": "/api/mind-guide",
+        "function": {
+          "functionId": "mindGuide",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/api/grounding",
         "function": {
           "functionId": "getGrounding",

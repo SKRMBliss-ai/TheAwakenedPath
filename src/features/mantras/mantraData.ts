@@ -33,6 +33,9 @@ export const MANTRA_PASS_REFUND_DAYS = 7;
 // Mantra Pass price. Keep in sync with catalog.ts and COURSE_PRICES in functions/index.js.
 const PASS_FOUNDING: Record<KidsCurrency, number> = { USD: 14.99, INR: 999 };
 
+// Meditation Music Pass. Keep in sync with catalog.ts and the backend price tables.
+export const MUSIC_PASS_PRICE: Record<KidsCurrency, number> = { USD: 14.99, INR: 999 };
+
 export const MANTRA_CURRENCY: KidsCurrency = KIDS_ZOOM_CURRENCY;
 export const passPrice = () => formatKidsPrice(PASS_FOUNDING[MANTRA_CURRENCY], MANTRA_CURRENCY);
 
@@ -809,7 +812,7 @@ export const findMantra = (slug: string) => MANTRAS.find((m) => m.slug === slug)
 export const thumb = (videoId: string) => `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
 
 export const PASS_INCLUDES = [
-  'Every mantra and all meditation music, on a loop for as long as you like, in the app',
+  'Every mantra, on a loop for as long as you like, in the app',
   'Neatly organised playlists: by deity, by time of day (morning, evening lamp, sleep), by festival and by mood',
   'A mala counter that counts every repetition as the chant plays, with a soft bell at each mala',
   'A 21 or 40 day sankalp tracker with a daily target and your streak',

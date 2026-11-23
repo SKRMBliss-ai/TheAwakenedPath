@@ -28,7 +28,8 @@ service cloud.firestore {
     // anyone could unlock every paid course/premium for free from devtools.
     function entitlementsUnchanged() {
       return !request.resource.data.diff(resource.data).affectedKeys()
-        .hasAny(['purchasedCourses', 'ownedTracks', 'subscriptionStatus', 'subscriptionId', 'membershipUntil']);
+        .hasAny(['purchasedCourses', 'ownedTracks', 'subscriptionStatus', 'subscriptionId', 'membershipUntil',
+                  'kidsMembershipUntil', 'kidsExtrasUntil']);
     }
 
     // On create, entitlement fields may only be seeded to their empty defaults
@@ -36,13 +37,17 @@ service cloud.firestore {
     // user can't self-provision by pre-filling them on the very first write.
     // membershipUntil (pay-what-you-want membership expiry) must be absent
     // entirely — there's no legitimate "empty" value for a timestamp field.
+    // Same for the Mind Gym for Kids membership dates (kidsMembershipUntil,
+    // and kidsExtrasUntil for the yearly plan's challenge + Sim guidance).
     function entitlementsSeedSafe() {
       let d = request.resource.data;
       return (!('purchasedCourses' in d) || d.purchasedCourses.size() == 0)
         && (!('ownedTracks' in d) || d.ownedTracks.size() == 0)
         && (!('subscriptionStatus' in d) || d.subscriptionStatus == 'INACTIVE')
         && (!('subscriptionId' in d))
-        && (!('membershipUntil' in d));
+        && (!('membershipUntil' in d))
+        && (!('kidsMembershipUntil' in d))
+        && (!('kidsExtrasUntil' in d));
     }
 
     // The user doc itself — entitlement fields are guarded here.

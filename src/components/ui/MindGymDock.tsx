@@ -169,26 +169,8 @@ export function MindGymDock({ tools, hidden, active }: MindGymDockProps) {
     </>
   );
 
-  // ── Desktop: a permanent rail on the right edge ────────────────────────
-  if (isDesktop) {
-    return (
-      <>
-        {panels}
-        <div
-          className={cn(
-            'fixed right-0 top-1/2 -translate-y-1/2 z-[140] transition-all duration-500',
-            away ? 'opacity-0 pointer-events-none translate-x-14' : 'opacity-100',
-          )}
-        >
-          <div className="flex flex-col items-center gap-2.5 py-3.5 px-2 rounded-l-2xl border border-r-0 border-[var(--border-subtle)] bg-[var(--bg-secondary)]/90 backdrop-blur-2xl shadow-2xl">
-            {entries}
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  // ── Mobile: one button above the bottom nav, expanding upward ──────────
+  // ── One button, everywhere: it opens the list of helpers (assistant, hub, tools, ways to connect).
+  //    On desktop it sits in the bottom-right corner instead of a permanent column of icons. ──
   return (
     <>
       {panels}
@@ -204,7 +186,7 @@ export function MindGymDock({ tools, hidden, active }: MindGymDockProps) {
 
       <div
         className={cn(
-          'fixed right-4 bottom-24 z-[140] flex flex-col items-end gap-3 transition-all duration-500',
+          isDesktop ? 'fixed right-6 bottom-6 z-[140] flex flex-col items-end gap-3 transition-all duration-500' : 'fixed right-4 bottom-24 z-[140] flex flex-col items-end gap-3 transition-all duration-500',
           away ? 'opacity-0 pointer-events-none translate-x-10' : 'opacity-100',
         )}
       >
@@ -225,7 +207,7 @@ export function MindGymDock({ tools, hidden, active }: MindGymDockProps) {
         <button
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          aria-label={open ? 'Close tools' : 'Open tools'}
+          aria-label={open ? 'Close helpers' : 'Open helpers: assistant, tools and ways to connect'}
           className={cn(
             'relative w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all',
             'border-2 active:scale-95 overflow-hidden',

@@ -1,7 +1,6 @@
-import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
-import { Flame, Sparkles, Sun, Moon, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, LogIn, Mail, Youtube, Eye, CheckSquare, Wind, ChevronLeft, ChevronRight, Download, Home, Trophy, Users, CalendarDays, GraduationCap } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
+import { Flame, Sparkles, Sun, Moon, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, LogIn, Mail, Youtube, Eye, CheckSquare, Wind, ChevronLeft, ChevronRight, Download, Trophy, Users, CalendarDays, GraduationCap } from 'lucide-react';
 import { usePageSeo } from './lib/seo';
-import { MeditationHomeCard } from './features/meditation/MeditationHomeCard';
 import { db } from './firebase';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { cn } from './lib/utils';
@@ -36,7 +35,6 @@ import { PhonePromptModal } from './components/domain/PhonePromptModal';
 import SacredWelcomeModal from './components/ui/SacredWelcomeModal';
 import { LeaveMindGymModal } from './components/ui/LeaveMindGymModal';
 import { PresenceBreath } from './components/ui/PresenceBreath';
-import { FirstRunWelcome } from './components/ui/FirstRunWelcome';
 import { DashboardGrid } from './features/practices/DashboardGrid';
 import PriceSlider from './components/ui/PriceSlider';
 import { useActivityTracker } from './hooks/useActivityTracker';
@@ -66,6 +64,8 @@ const MyBestEveryDay = lazy(() => import('./features/kids/MyBestEveryDay'));
 /** The situation practice gym (also served standalone at /mindgymforadults) —
  *  here it is the "Start here" tab, the first thing a new person meets. */
 const AdultGym = lazy(() => import('./features/practise/Adult').then(m => ({ default: m.AdultGym })));
+const DailyPractice = lazy(() => import('./features/daily/DailyPractice'));
+import { DailySoundToggle } from './features/daily/DailySoundToggle';
 import { StartHerePortal } from './features/portal/StartHerePortal';
 const MeditationPracticeRoom = lazy(() => import('./features/practise/MeditationPracticeRoom'));
 const VirtuesView = lazy(() => import('./features/practice-path/VirtuesView').then(m => ({ default: m.VirtuesView })));
@@ -568,6 +568,11 @@ const PAID_PRACTICE_TABS = [
 ];
 const PREVIEW_EMAIL = 'skrmblissai@gmail.com';
 
+/** Start / Today shows the 3-path chooser until the adult path has been picked once. */
+function defaultStartMode(): 'portal' | 'workout' {
+  try { return localStorage.getItem('user-path-chosen') === 'adult' ? 'workout' : 'portal'; } catch { return 'portal'; }
+}
+
 export default function UntetheredApp() {
   const { user: currentUser, profile, loading, signOut, isAccessValid, isPremiumUser, tokenBalance, activateTrial, deductTokens } = useAuth();
 
@@ -620,7 +625,10 @@ export default function UntetheredApp() {
   const [activeTab, setActiveTab] = usePersistedState<string>('awakened-tab', 'start');
   /** Bumped when "Start" is tapped, so the gym returns to its front door even if it is already open. */
   const [startKey, setStartKey] = useState(0);
-  const [startMode, setStartMode] = useState<'portal' | 'workout'>('portal');
+  // Once someone has chosen the adult path, Start / Today opens their daily practice, not the chooser.
+  const [startMode, setStartMode] = useState<'portal' | 'workout'>(defaultStartMode);
+  /** Inside the adult path: false = the daily session, true = the full practice library. */
+  const [showLibrary, setShowLibrary] = useState(false);
   const isChoosingPath = activeTab === 'start' && startMode === 'portal';
 
   // First-time visitors who haven't explicitly chosen a sanctuary yet land on the 3-cards portal
@@ -673,10 +681,36 @@ export default function UntetheredApp() {
   const [showReward, setShowReward] = useState<Reward | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  /** Show the "full screen" nudge on the collapse arrow until it has been used once. */
+  const [fullScreenHint, setFullScreenHint] = useState(() => {
+    try { return localStorage.getItem('mg-fullscreen-hint') !== 'seen'; } catch { return true; }
+  });
   const [showLeaveMindGymModal, setShowLeaveMindGymModal] = useState(false);
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 1024 : true);
+  // On a phone there is one daily screen: the Dashboard opens Today instead.
+  useEffect(() => {
+    if (isMobile && activeTab === 'home') setActiveTab('start');
+  }, [isMobile, activeTab, setActiveTab]);
   const { unlocked, points, toastQueue, dismissToast, checkAndUnlock, awardEvent } = useAchievements();
   const [achievementsOpen, setAchievementsOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
+  // The account menu closes on a click or tap anywhere outside it, and on Escape.
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+    const onDown = (e: MouseEvent | TouchEvent) => {
+      if (accountMenuRef.current && !accountMenuRef.current.contains(e.target as Node)) setAccountMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setAccountMenuOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('touchstart', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('touchstart', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [accountMenuOpen]);
   const { isAudioEnabled, toggleAudio, setVibrationalState } = useGenerativeAudio();
   const [lastEntry, setLastEntry] = useState<any>(null);
   const [isReportOpen, setIsReportOpen] = useState(false);
@@ -1490,23 +1524,38 @@ export default function UntetheredApp() {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 20 }}
-          onClick={() => setIsSidebarCollapsed(true)}
-          aria-label="Collapse sidebar"
-          className="hidden lg:flex fixed left-[280px] top-1/2 -translate-y-1/2 z-[75] w-8 h-14 items-center justify-center rounded-r-2xl transition-all hover:w-10 group"
+          onClick={() => {
+            setIsSidebarCollapsed(true);
+            if (fullScreenHint) {
+              setFullScreenHint(false);
+              try { localStorage.setItem('mg-fullscreen-hint', 'seen'); } catch { /* ignore */ }
+            }
+          }}
+          aria-label="Collapse sidebar for full screen"
+          className={`hidden lg:flex fixed left-[280px] top-1/2 -translate-y-1/2 z-[75] w-8 h-14 items-center justify-center rounded-r-2xl transition-all hover:w-10 group${fullScreenHint && activeTab === 'start' ? ' mg-nudge' : ''}`}
           style={{
             background: 'var(--bg-surface)',
             border: '1.5px solid var(--border-default)',
             borderLeft: 'none',
             boxShadow: '4px 0 20px rgba(0,0,0,0.15)',
           }}
-          title="Collapse sidebar"
+          title="Collapse sidebar for full screen"
         >
           <ChevronLeft size={16} style={{ color: 'var(--text-muted)' }} className="group-hover:scale-110 transition-transform" />
+          {fullScreenHint && activeTab === 'start' && (
+            <span
+              className="absolute left-full top-1/2 -translate-y-1/2 ml-3 whitespace-nowrap rounded-full px-3 py-1.5 text-[12px] font-semibold pointer-events-none"
+              style={{ background: '#25233A', color: '#fff', boxShadow: '0 6px 18px rgba(0,0,0,0.25)' }}
+            >
+              Click for full screen
+            </span>
+          )}
         </motion.button>
       )}
 
       <aside className={cn(
-        "fixed left-0 top-0 bottom-0 w-[280px] flex flex-col z-[70]",
+        "fixed left-0 bottom-0 w-[280px] flex flex-col z-[70]",
+        showCourseAnnounce && !isChoosingPath ? "top-10" : "top-0",
         isChoosingPath && "hidden pointer-events-none",
         "border-r border-[var(--border-default)]",
         "backdrop-blur-2xl px-2",
@@ -1574,7 +1623,7 @@ export default function UntetheredApp() {
             return (
               <button
                 key="start"
-                onClick={() => { setStartKey((k) => k + 1); setStartMode('portal'); onNavigate('start'); }}
+                onClick={() => { setStartKey((k) => k + 1); setStartMode(defaultStartMode()); onNavigate('start'); }}
                 aria-current={isActive ? 'page' : undefined}
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-[min(8px,1vh)] rounded-2xl transition-all duration-300 group relative",
@@ -1710,7 +1759,7 @@ export default function UntetheredApp() {
             </div>
             <div className="space-y-0.5 ml-2 pl-5 border-l border-[var(--border-subtle)]/40 mt-0.5">
               {[
-                { id: 'music', icon: Headphones, label: 'Sacred Sounds' },
+                { id: 'music', icon: Headphones, label: 'Meditation Music' },
                 { id: 'mantras', icon: Sparkles, label: 'Mantras' },
               ].map(item => {
                 const isActive = activeTab === item.id;
@@ -2218,29 +2267,25 @@ export default function UntetheredApp() {
         {showCourseAnnounce && !isChoosingPath && (
           <div
             className={cn(
-              "fixed top-0 right-0 z-[120] h-10 flex items-center overflow-hidden transition-all duration-500",
-              isSidebarCollapsed ? "left-0" : "left-0 lg:left-[280px]"
+              "fixed top-0 right-0 left-0 z-[120] h-10 flex items-center overflow-hidden"
             )}
-            style={{ background: 'linear-gradient(90deg, #1b1508 0%, #3a2e12 45%, #7a611f 100%)', boxShadow: '0 1px 12px rgba(0,0,0,0.25)' }}
+            style={{ background: '#25233A', boxShadow: '0 1px 8px rgba(37,35,58,0.18)' }}
           >
-            {/* shimmer sweep (self-contained keyframe) */}
-            <style>{`@keyframes annShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
-            <span className="pointer-events-none absolute inset-0 opacity-40" style={{ background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.18) 50%, transparent 70%)', backgroundSize: '200% 100%', animation: 'annShimmer 3.5s linear infinite' }} />
             <a
               href="/feelingsandemotioncourse"
               className="relative flex-1 min-w-0 h-full flex items-center justify-center gap-2 sm:gap-3 px-3 group"
             >
-              <span className="hidden sm:inline text-[9px] font-black uppercase tracking-[0.28em] flex items-center gap-1.5 flex-shrink-0" style={{ color: '#C9AE8E' }}>
-                <span className="inline-block w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#C9AE8E' }} />
+              <span className="hidden sm:inline text-[9px] font-black uppercase tracking-[0.28em] flex items-center gap-1.5 flex-shrink-0" style={{ color: '#F2B48F' }}>
+                <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: '#F2B48F' }} />
                 New Course
               </span>
-              <span className="text-[12px] sm:text-[13px] font-semibold truncate" style={{ color: '#F5ECD2' }}>
+              <span className="text-[12px] sm:text-[13px] font-semibold truncate" style={{ color: '#F3EEF8' }}>
                 <span className="font-bold text-white">Understanding Feelings &amp; Emotions</span>
-                <span className="hidden sm:inline" style={{ color: 'rgba(245,236,210,0.7)' }}> — watch the first lessons free</span>
+                <span className="hidden sm:inline" style={{ color: 'rgba(243,238,248,0.72)' }}> — watch the first lessons free</span>
               </span>
               <span
                 className="flex items-center gap-1 px-3 sm:px-4 py-1 rounded-full text-[11px] sm:text-[12px] font-black flex-shrink-0 group-hover:brightness-105 transition-all"
-                style={{ background: 'linear-gradient(to right, #C9AE8E, #A98A67)', color: '#241C14' }}
+                style={{ background: '#C25B3F', color: '#FFFFFF' }}
               >
                 Enroll <span aria-hidden>→</span>
               </span>
@@ -2299,38 +2344,65 @@ export default function UntetheredApp() {
                 <span className="text-[10px] font-black uppercase tracking-widest">Return</span>
               </motion.button>
             )}
+            {/* Daily session: back to the sanctuaries, in the same line as the other controls. */}
+            {activeTab === 'start' && startMode === 'workout' && !showLibrary && (
+              <button
+                type="button"
+                onClick={() => setStartMode('portal')}
+                className="flex items-center gap-1.5 min-h-[44px] px-3 rounded-full text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-all"
+              >
+                <ArrowLeft className="w-4 h-4" /> All sanctuaries
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-3 sm:gap-5 md:gap-6">
-              {/* Achievements — trophy opens the slide-out drawer */}
-              <button
-                  onClick={() => setAchievementsOpen(true)}
-                  aria-label="Achievements"
-                  className="relative w-9 h-9 rounded-full flex items-center justify-center bg-[var(--bg-surface)] border border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--accent-primary)] hover:border-[var(--accent-primary)]/40 transition-all active:scale-95"
-              >
-                  <Trophy className="w-4 h-4" />
+              {activeTab === 'start' && startMode === 'workout' && !showLibrary && <DailySoundToggle />}
+              {/* One account button instead of three: journey, achievements and the theme switch live in its menu. */}
+              <div className="relative" ref={accountMenuRef}>
+                <button
+                  onClick={() => setAccountMenuOpen((o) => !o)}
+                  aria-label="Account and settings"
+                  aria-haspopup="menu"
+                  aria-expanded={accountMenuOpen}
+                  className="relative w-10 h-10 rounded-full flex items-center justify-center bg-[var(--bg-surface)] border border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--accent-primary)] hover:border-[var(--accent-primary)]/40 transition-all active:scale-95"
+                >
+                  <User className="w-[18px] h-[18px]" />
                   {unlocked.length > 0 && (
                     <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-[var(--accent-primary)] text-black text-[8px] font-black flex items-center justify-center rounded-full border border-[var(--bg-base)]">
                       {unlocked.length}
                     </span>
                   )}
-              </button>
-
-              <ThemeToggle />
-
-              <button
-                  onClick={() => setActiveTab('profile')}
-                  aria-label="Your profile"
-                  className={cn(
-                      "flex items-center gap-3 px-4 py-2 rounded-xl transition-all relative overflow-hidden",
-                      activeTab === 'profile'
-                          ? "bg-[var(--accent-primary)] text-black font-bold shadow-lg"
-                          : "bg-[var(--bg-surface)] border border-[var(--border-default)] text-[var(--text-muted)] hover:bg-[var(--accent-primary)]/10 hover:text-[var(--text-primary)]"
-                  )}
-              >
-                  <User className={cn("w-4 h-4", activeTab === 'profile' ? "fill-current" : "")} />
-                  <span className="text-[10px] font-black tracking-widest uppercase hidden xs:block">Your Journey</span>
-              </button>
+                </button>
+                {accountMenuOpen && (
+                  <>
+                    <div
+                      role="menu"
+                      className="absolute right-0 top-12 z-[81] w-60 rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-2 shadow-2xl"
+                    >
+                      <button
+                        role="menuitem"
+                        onClick={() => { setAccountMenuOpen(false); setActiveTab('profile'); }}
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--accent-primary)]/10"
+                      >
+                        <User className="w-4 h-4 text-[var(--text-muted)]" /> Your journey
+                      </button>
+                      <button
+                        role="menuitem"
+                        onClick={() => { setAccountMenuOpen(false); setAchievementsOpen(true); }}
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--accent-primary)]/10"
+                      >
+                        <Trophy className="w-4 h-4 text-[var(--text-muted)]" /> Achievements
+                        {unlocked.length > 0 && <span className="ml-auto text-xs font-bold text-[var(--accent-primary)]">{unlocked.length}</span>}
+                      </button>
+                      <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--text-primary)]">
+                        <span className="flex-1">Dark mode</span>
+                        <ThemeToggle />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
           </div>
         </header>
 
@@ -2343,7 +2415,10 @@ export default function UntetheredApp() {
 
         <div className={cn(
           "max-w-7xl mx-auto px-2 pb-28 sm:px-4 md:px-6 lg:pb-8 space-y-6 sm:space-y-8",
-          showCourseAnnounce && !isChoosingPath ? "pt-[128px] sm:pt-[136px] md:pt-[144px]" : "pt-[88px] sm:pt-[96px] md:pt-[104px]",
+          // The daily session sits close under the header (one standard gap) instead of the app's roomier default.
+          activeTab === 'start' && startMode === 'workout' && !showLibrary
+            ? (showCourseAnnounce && !isChoosingPath ? "pt-[108px] sm:pt-[112px]" : "pt-[76px] sm:pt-[80px]")
+            : showCourseAnnounce && !isChoosingPath ? "pt-[128px] sm:pt-[136px] md:pt-[144px]" : "pt-[88px] sm:pt-[96px] md:pt-[104px]",
           isReportOpen && "hidden"
         )}>
           <SacredWelcomeModal
@@ -2362,8 +2437,8 @@ export default function UntetheredApp() {
             onConfirm={() => { window.location.href = 'https://www.skrmblissai.in'; }}
           />
 
-          {/* First-run orientation — shows once for new users */}
-          <FirstRunWelcome />
+          {/* The four-step "A calmer mind, daily" welcome was removed: the Today screen
+              already says what to do, so a pop-up to read first was one step too many. */}
 
           <AnimatePresence mode="wait">
             {activeTab === 'paywall' && (
@@ -2403,11 +2478,9 @@ export default function UntetheredApp() {
                     userName={currentUser?.displayName || (currentUser?.email ? currentUser.email.split('@')[0] : undefined)}
                     onSelectAdult={(target) => {
                       try { localStorage.setItem('user-path-chosen', 'adult'); } catch {}
-                      if (target === 'workout') {
-                        setStartMode('workout');
-                      } else {
-                        onNavigate('home');
-                      }
+                      // Adult goes straight into the daily practice (Today), whichever button was used.
+                      void target;
+                      setStartMode('workout');
                     }}
                     onSelectKids={() => {
                       try { localStorage.setItem('user-path-chosen', 'kids'); } catch {}
@@ -2424,12 +2497,27 @@ export default function UntetheredApp() {
                   />
                 ) : (
                   <div className="relative max-w-5xl mx-auto px-4 py-4">
+                    {showLibrary && (
                     <button
                       type="button"
                       onClick={() => setStartMode('portal')}
                       className="inline-flex items-center gap-2 mb-4 px-3.5 py-1.5 rounded-full text-xs font-bold bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all hover:border-[var(--accent-primary)]/40 shadow-xs cursor-pointer"
                     >
                       <ArrowLeft size={14} /> Back to all 3 sanctuaries
+                    </button>
+                    )}
+                    {!showLibrary ? (
+                      <Suspense fallback={<TabFallback />}>
+                        <DailyPractice key={startKey} onMore={() => setShowLibrary(true)} onBack={() => setStartMode('portal')} />
+                      </Suspense>
+                    ) : (
+                    <>
+                    <button
+                      type="button"
+                      onClick={() => setShowLibrary(false)}
+                      className="inline-flex items-center gap-2 mb-4 ml-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer"
+                    >
+                      <ArrowLeft size={14} /> Back to today
                     </button>
                     <Suspense fallback={<TabFallback />}>
                       <AdultGym
@@ -2445,6 +2533,8 @@ export default function UntetheredApp() {
                         ]}
                       />
                     </Suspense>
+                    </>
+                    )}
                   </div>
                 )}
               </motion.div>
@@ -2502,13 +2592,9 @@ export default function UntetheredApp() {
                   </button>
                 </div>
 
-                {/* ── Daily Meditation Room entry card — aligned with the journey column ── */}
-                <div className="mt-4 max-w-2xl mx-auto w-full">
-                  <MeditationHomeCard
-                    onEnter={() => onNavigate('meditation')}
-                    adminOverride={['skrmblissai@gmail.com','shrutikhungar@gmail.com','simkatyal1@gmail.com'].includes(currentUser?.email ?? '')}
-                  />
-                </div>
+                {/* The live "Wellness session" card was removed from the dashboard: with no
+                    members yet it only added a second thing to look at. The meditation room
+                    itself is unchanged and still reachable from the menu. */}
 
                 {/* ── Feelings & Emotions — owner's continue-course card ── */}
                 {ownsEmotionCourse && (
@@ -2530,7 +2616,7 @@ export default function UntetheredApp() {
                       </div>
                       <span
                         className="relative inline-flex items-center gap-1 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-[11px] sm:text-[12px] font-black flex-shrink-0 shadow group-hover:brightness-105 group-hover:gap-1.5 transition-all"
-                        style={{ background: 'linear-gradient(to right, #C9AE8E, #A98A67)', color: '#241C14' }}
+                        style={{ background: '#C25B3F', color: '#FFFFFF' }}
                       >
                         Continue <span aria-hidden>→</span>
                       </span>
@@ -2960,6 +3046,7 @@ export default function UntetheredApp() {
           style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
           {[
+<<<<<<< HEAD
             { id: 'start', icon: Sparkles, label: 'Start' },
             { id: 'home', icon: Home, label: 'Home' },
             { id: 'mantras', icon: Headphones, label: 'Mantras' },
@@ -2967,6 +3054,14 @@ export default function UntetheredApp() {
             // and on a phone the bottom bar is the only nav most people use.
             { id: 'intelligence', icon: GraduationCap, label: 'Courses' },
             { id: 'situations', icon: Flame, label: 'Practice' },
+=======
+            // Five calm places, one job each. "Today" holds the daily practice
+            // (the old Home dashboard and the Practice room are folded into it).
+            { id: 'start', icon: Sparkles, label: 'Today' },
+            // Courses is the hub (CoursesHub renders on the 'intelligence' tab).
+            { id: 'intelligence', icon: GraduationCap, label: 'Courses' },
+            { id: 'music', icon: Headphones, label: 'Sounds' },
+>>>>>>> claude/meditation-music-pass
             { id: 'chapters', icon: BookOpen, label: 'Journal' },
             { id: 'profile', icon: User, label: 'You' },
           ].map(({ id, icon: Icon, label }) => {

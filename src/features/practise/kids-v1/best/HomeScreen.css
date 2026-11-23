@@ -1463,3 +1463,8 @@
   .hs-side .hs-poses{display:block}
   .hs-side .hs-chirp-m{display:block;position:absolute;left:60%;top:17%;width:34%!important;height:auto;z-index:3;filter:drop-shadow(0 1vw 1.4vw #1a0b3c99);animation:hs-chirp-bob 2.6s ease-in-out infinite;transform-origin:50% 90%}
 }
+/* "For grown-ups" — membership, the live challenge, Sim. Quieter than the
+   safety button beside it on purpose: it is not for the child. */
+.mg-safety{gap:8px}
+.mg-safety .mg-safety-parents,.hs-stage .mg-safety .mg-safety-parents{background:transparent;border:1px solid #8f84d866;color:#ffffffb3;font-weight:600}
+@media (max-width:760px){.hs-stage .mg-safety{display:flex;gap:2vw;justify-content:flex-end}}

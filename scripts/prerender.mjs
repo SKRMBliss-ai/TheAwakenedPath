@@ -31,6 +31,8 @@ const ROUTES = [
   '/pricing',
   '/mantras',
   '/mantras/lifetime-pass',
+  '/meditation-music',
+  '/meditation-music/lifetime-pass',
   '/mantras/karagre-vasate-lakshmi',
   '/mantras/om-gan-ganapataye-namah',
   '/mantras/mahalakshmi-mantra',
