@@ -53,6 +53,7 @@ export function DailyPractice({ onMore, onBack }: { onMore?: () => void; onBack?
       },
       onMore: () => moreRef.current?.(),
       onBack: onBack ? () => backRef.current?.() : undefined,
+      hostControls: !!onBack,
     });
   }, []);
 

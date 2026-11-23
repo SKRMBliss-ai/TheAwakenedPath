@@ -65,6 +65,7 @@ const MyBestEveryDay = lazy(() => import('./features/kids/MyBestEveryDay'));
  *  here it is the "Start here" tab, the first thing a new person meets. */
 const AdultGym = lazy(() => import('./features/practise/Adult').then(m => ({ default: m.AdultGym })));
 const DailyPractice = lazy(() => import('./features/daily/DailyPractice'));
+import { DailySoundToggle } from './features/daily/DailySoundToggle';
 import { StartHerePortal } from './features/portal/StartHerePortal';
 const MeditationPracticeRoom = lazy(() => import('./features/practise/MeditationPracticeRoom'));
 const VirtuesView = lazy(() => import('./features/practice-path/VirtuesView').then(m => ({ default: m.VirtuesView })));
@@ -2329,9 +2330,20 @@ export default function UntetheredApp() {
                 <span className="text-[10px] font-black uppercase tracking-widest">Return</span>
               </motion.button>
             )}
+            {/* Daily session: back to the sanctuaries, in the same line as the other controls. */}
+            {activeTab === 'start' && startMode === 'workout' && !showLibrary && (
+              <button
+                type="button"
+                onClick={() => setStartMode('portal')}
+                className="flex items-center gap-1.5 min-h-[44px] px-3 rounded-full text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-all"
+              >
+                <ArrowLeft className="w-4 h-4" /> All sanctuaries
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-3 sm:gap-5 md:gap-6">
+              {activeTab === 'start' && startMode === 'workout' && !showLibrary && <DailySoundToggle />}
               {/* One account button instead of three: journey, achievements and the theme switch live in its menu. */}
               <div className="relative">
                 <button

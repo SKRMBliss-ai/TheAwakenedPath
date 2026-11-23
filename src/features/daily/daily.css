@@ -158,8 +158,8 @@ body.dark-mode .md-daily{background:linear-gradient(180deg,#E9E6F1 0%,#F6F2F0 10
 .md-daily .g-main,.md-daily .g-rest{display:flex;flex-direction:column;gap:18px;min-width:0}
 .md-daily .screen.home>.top{min-height:44px;justify-content:space-between}
 @media (min-width:720px){
-  .md-daily .md-app:has(.screen.home){max-width:760px;padding-top:12px;position:relative}
-  .md-daily .hcols{gap:22px;padding-top:8px}
+  .md-daily .md-app:has(.screen.home){max-width:760px;padding-top:0;position:relative}
+  .md-daily .hcols{gap:22px;padding-top:0}
   .md-daily .g-main,.md-daily .g-rest{gap:22px}
   .md-daily .screen.home h1{font-size:46px}
   .md-daily .g-sky .skycard svg{min-height:300px;object-fit:cover}
@@ -171,3 +171,8 @@ body.dark-mode .md-daily{background:linear-gradient(180deg,#E9E6F1 0%,#F6F2F0 10
 
 .md-daily .backlink{min-height:44px;padding:0 4px;font-size:15px;font-weight:600;color:var(--mist-2);border-radius:12px}
 .md-daily .backlink:hover{color:var(--mist)}
+
+/* One standard top margin: the host top bar already carries the controls, so the greeting starts right below it. */
+.md-daily .md-app{padding-top:8px}
+.md-daily .screen.home{gap:0}
+.md-daily .screen.home>.hcols{margin-top:0}

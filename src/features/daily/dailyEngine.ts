@@ -22,6 +22,8 @@ export interface DailyOptions {
   speak?: (text: string) => void;
   onMore?: () => void;
   onBack?: () => void;
+  /** The host app shows the back link and sound button in its own top bar. */
+  hostControls?: boolean;
 }
 
 export function mountDailyPractice(root: HTMLElement, opts: DailyOptions = {}): () => void {
@@ -53,7 +55,10 @@ function micFor(box){const wrap=h('<div style="display:flex;flex-direction:colum
 function remember(entry){S.history.unshift(entry);S.history=S.history.slice(0,20);save()}
 
 /* ---------- sound ---------- */
-let ac=null,soundOn=true;
+const readSound=()=>{try{return localStorage.getItem('mg-daily-sound')!=='off'}catch(e){return true}};
+let ac=null,soundOn=readSound();
+const setSound=v=>{soundOn=v;try{localStorage.setItem('mg-daily-sound',v?'on':'off')}catch(e){}window.dispatchEvent(new CustomEvent('mg-daily-sound'))};
+const onSoundEvt=()=>{soundOn=readSound()};window.addEventListener('mg-daily-sound',onSoundEvt);
 function tone(f,d,type,g){if(!soundOn)return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const t=ac.currentTime,o=ac.createOscillator(),v=ac.createGain();o.type=type||'sine';o.frequency.value=f;v.gain.setValueAtTime(0,t);v.gain.linearRampToValueAtTime(g||.07,t+.02);v.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(v);v.connect(ac.destination);o.start(t);o.stop(t+d+.05)}catch(e){}}
 const chime=()=>{tone(784,.6);setTimeout(()=>tone(1175,.8),110)};
 const soft=()=>tone(330,.35,'triangle',.05);
@@ -119,7 +124,7 @@ function go(){if(MIC.on&&DICT)DICT.stop();const id=run.steps[run.i];app.innerHTM
 function next(){run.i++;if(run.i>=run.steps.length){if(run.only){toast(run.only==='breathe'?'Nicely done. Come back any time.':'Lighter already.');home()}else finish()}else go()}
 function topBar(){const n=run.mode?run.steps.length:8;const bar=run.only?'<div class="spacer"></div>':'<div class="bar" aria-hidden="true">'+Array.from({length:n},(_,k)=>'<i class="'+(k<=run.i?'on':'')+'"></i>').join('')+'</div>';
  const el=h('<div class="top"><button class="iconbtn" aria-label="Leave and go home">'+ICON.x+'</button>'+bar+'<button class="iconbtn" aria-label="Sound on or off">'+(soundOn?ICON.sound:ICON.mute)+'</button></div>');
- el.children[0].onclick=home;el.lastElementChild.onclick=e=>{soundOn=!soundOn;e.currentTarget.innerHTML=soundOn?ICON.sound:ICON.mute;if(soundOn)chime()};return el}
+ el.children[0].onclick=home;el.lastElementChild.onclick=e=>{setSound(!soundOn);e.currentTarget.innerHTML=soundOn?ICON.sound:ICON.mute;if(soundOn)chime()};return el}
 const SCREENS={};
 
 SCREENS.checkin=()=>{const s=h('<section class="screen"></section>');s.appendChild(topBar());
@@ -302,7 +307,7 @@ const greet=()=>{const hr=new Date().getHours();return hr<12?'Good morning':hr<1
 function home(){run=null;const done=S.lastDone===dayKey();const s=h('<section class="screen"></section>');
  const top=h('<div class="top">'+(opts.onBack?'<button class="backlink" type="button">‹ All sanctuaries</button>':'<span class="brand">Mind <b>Gym</b></span>')+'<div class="spacer"></div><button class="iconbtn" aria-label="Sound on or off">'+(soundOn?ICON.sound:ICON.mute)+'</button></div>');
  if(opts.onBack)top.firstChild.onclick=opts.onBack;
- top.lastChild.onclick=e=>{soundOn=!soundOn;e.currentTarget.innerHTML=soundOn?ICON.sound:ICON.mute;if(soundOn)chime()};s.appendChild(top);
+ top.lastChild.onclick=e=>{setSound(!soundOn);e.currentTarget.innerHTML=soundOn?ICON.sound:ICON.mute;if(soundOn)chime()};if(!opts.hostControls)s.appendChild(top);
  s.appendChild(h('<div><h1>'+greet()+'.</h1><p class="lede">'+(done?'You’ve trained today. You’re one step higher.':'Five minutes, one step up.')+'</p></div>'));
  s.appendChild(skyEl(false));
  if(S.mission&&S.missionDay&&S.missionDay!==dayKey()&&!S.missionTried[S.missionDay]){const f=h('<div class="mission"><p class="eyebrow">Your last mission</p><p style="font-size:16px"></p><div class="pair"><button class="opt" style="text-align:center">I tried it</button><button class="opt" style="text-align:center">Not yet</button></div></div>');f.children[1].textContent=S.mission;
@@ -325,5 +330,5 @@ function home(){run=null;const done=S.lastDone===dayKey();const s=h('<section cl
   const cols=h('<div class="hcols"></div>');cols.append(greet,sky,main,rest);s.appendChild(cols);s.classList.add('home')}
  app.innerHTML='';app.appendChild(s);scrollTo(0,0)}
 home();
-return()=>{if(MIC.on&&DICT)DICT.stop();clearTimeout(toastT);root.innerHTML=''};
+return()=>{window.removeEventListener('mg-daily-sound',onSoundEvt);if(MIC.on&&DICT)DICT.stop();clearTimeout(toastT);root.innerHTML=''};
 }
