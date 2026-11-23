@@ -142,9 +142,13 @@
 .md-daily .stat span{font-size:13px;color:var(--mist-2)}
 .md-daily .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#1B2342;color:#FFFFFF;padding:10px 16px;border-radius:20px;font-weight:600;font-size:14px;z-index:5;box-shadow:0 10px 24px rgba(0,0,0,.4)}
 @media (prefers-reduced-motion:reduce){.md-daily *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
-.md-daily{min-height:calc(100dvh - 120px);border-radius:28px;background:linear-gradient(180deg,#E9E6F1 0%,#F6F2F0 100%);color:var(--mist);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-tap-highlight-color:transparent;position:relative;overflow:hidden}
+.md-daily{min-height:calc(100dvh - 120px);border-radius:0;background:transparent;color:var(--mist);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-tap-highlight-color:transparent;position:relative;overflow:hidden}
 .md-daily .md-app{max-width:440px;margin:0 auto;padding:16px 16px 36px;display:flex;flex-direction:column;min-height:inherit}
 .md-daily .toast{position:fixed;bottom:calc(88px + env(safe-area-inset-bottom,0px))}
-@media (max-width:640px){.md-daily{border-radius:0;margin:0 -8px}}
+@media (max-width:640px){.md-daily{margin:0 -8px}}
+/* On the app's light page the session sits directly on it (no frame). The app's dark theme keeps a lilac panel so the dark text stays readable. */
+body.dark-mode .md-daily{background:linear-gradient(180deg,#E9E6F1 0%,#F6F2F0 100%);border-radius:28px}
+/* The app already shows the Mind Gym name; keep only the sound toggle. */
+.md-daily .brand{display:none}
 .md-daily h1,.md-daily h2,.md-daily h3{font-weight:600}
 .md-daily .sentence,.md-daily .tcard .tx,.md-daily .paper{font-weight:600}
