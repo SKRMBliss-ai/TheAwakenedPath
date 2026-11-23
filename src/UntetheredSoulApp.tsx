@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
 import { Flame, Sparkles, Sun, Moon, BookOpen, User, BarChart2, ArrowLeft, Clock, Menu, X, Lock, Headphones, LogOut, LogIn, Mail, Youtube, Eye, CheckSquare, Wind, ChevronLeft, ChevronRight, Download, Trophy, Users, CalendarDays, GraduationCap } from 'lucide-react';
 import { usePageSeo } from './lib/seo';
 import { db } from './firebase';
@@ -694,6 +694,23 @@ export default function UntetheredApp() {
   const { unlocked, points, toastQueue, dismissToast, checkAndUnlock, awardEvent } = useAchievements();
   const [achievementsOpen, setAchievementsOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
+  // The account menu closes on a click or tap anywhere outside it, and on Escape.
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+    const onDown = (e: MouseEvent | TouchEvent) => {
+      if (accountMenuRef.current && !accountMenuRef.current.contains(e.target as Node)) setAccountMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setAccountMenuOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('touchstart', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('touchstart', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [accountMenuOpen]);
   const { isAudioEnabled, toggleAudio, setVibrationalState } = useGenerativeAudio();
   const [lastEntry, setLastEntry] = useState<any>(null);
   const [isReportOpen, setIsReportOpen] = useState(false);
@@ -2342,7 +2359,7 @@ export default function UntetheredApp() {
           <div className="flex items-center gap-3 sm:gap-5 md:gap-6">
               {activeTab === 'start' && startMode === 'workout' && !showLibrary && <DailySoundToggle />}
               {/* One account button instead of three: journey, achievements and the theme switch live in its menu. */}
-              <div className="relative">
+              <div className="relative" ref={accountMenuRef}>
                 <button
                   onClick={() => setAccountMenuOpen((o) => !o)}
                   aria-label="Account and settings"
@@ -2359,7 +2376,6 @@ export default function UntetheredApp() {
                 </button>
                 {accountMenuOpen && (
                   <>
-                    <div className="fixed inset-0 z-[80]" onClick={() => setAccountMenuOpen(false)} aria-hidden />
                     <div
                       role="menu"
                       className="absolute right-0 top-12 z-[81] w-60 rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-2 shadow-2xl"

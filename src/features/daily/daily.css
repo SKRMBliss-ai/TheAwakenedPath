@@ -146,8 +146,8 @@
 .md-daily .md-app{max-width:440px;margin:0 auto;padding:16px 16px 36px;display:flex;flex-direction:column;min-height:inherit}
 .md-daily .toast{position:fixed;bottom:calc(88px + env(safe-area-inset-bottom,0px))}
 @media (max-width:640px){.md-daily{margin:0 -8px}}
-/* On the app's light page the session sits directly on it (no frame). The app's dark theme keeps a lilac panel so the dark text stays readable. */
-body.dark-mode .md-daily{background:linear-gradient(180deg,#E9E6F1 0%,#F6F2F0 100%);border-radius:28px}
+/* On the app's pages the session sits directly on them (no frame); dark mode has its own palette below. */
+
 /* The app already shows the Mind Gym name; keep only the sound toggle. */
 .md-daily .brand{display:none}
 .md-daily h1,.md-daily h2,.md-daily h3{font-weight:600}
@@ -176,3 +176,21 @@ body.dark-mode .md-daily{background:linear-gradient(180deg,#E9E6F1 0%,#F6F2F0 10
 .md-daily .md-app{padding-top:8px}
 .md-daily .screen.home{gap:0}
 .md-daily .screen.home>.hcols{margin-top:0}
+
+/* ---------- Dark mode: the same room at night (deep violet, warm coral, soft light text) ---------- */
+body.dark-mode .md-daily{
+  --night:transparent; --panel:#1F1D33; --panel-2:#272440; --line:#3A3660;
+  --mist:#F1EEF8; --mist-2:#B7B2CF; --slate:#C25B3F; --gold:#E0775A; --gold-ink:#F2A58E; --tint:#3A2A36;
+  --mint:#6FD4B0; --rose:#F2A58E; --sky:#B9B4F2; --shadow:0 10px 28px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
+body.dark-mode .md-daily .today{background:var(--panel)}
+body.dark-mode .md-daily .mission{background:linear-gradient(160deg,#3A2C2E,#2A2540);border-color:#5E4348}
+body.dark-mode .md-daily .river{background:#1B3547;border-color:#2D5469}
+body.dark-mode .md-daily .help{background:#3A2530;border-color:#6B4256}
+body.dark-mode .md-daily .chip{background:rgba(255,255,255,.06)}
+body.dark-mode .md-daily .why{background:#262345}
+body.dark-mode .md-daily .skycard{border-color:var(--line)}
+body.dark-mode .md-daily .week i{border-color:var(--line)}
+body.dark-mode .md-daily .week i.done{background:var(--gold);border-color:var(--gold-ink)}
+body.dark-mode .md-daily .toast{background:#F1EEF8;color:#25233A}
