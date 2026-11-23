@@ -153,19 +153,19 @@ body.dark-mode .md-daily{background:linear-gradient(180deg,#E9E6F1 0%,#F6F2F0 10
 .md-daily h1,.md-daily h2,.md-daily h3{font-weight:600}
 .md-daily .sentence,.md-daily .tcard .tx,.md-daily .paper{font-weight:600}
 
-/* Home layout: phone = one column in reading order; tablet and up = hero row (greeting + start card | tall path), then the rest full width. */
-.md-daily .hcols{display:flex;flex-direction:column;gap:16px}
-.md-daily .g-main,.md-daily .g-rest{display:flex;flex-direction:column;gap:16px;min-width:0}
+/* Home layout: the same reading order everywhere (greeting, path, start card, week, tools). Tablet and up just gets a roomier, centred column with a horizontal start card. */
+.md-daily .hcols{display:flex;flex-direction:column;gap:18px}
+.md-daily .g-main,.md-daily .g-rest{display:flex;flex-direction:column;gap:18px;min-width:0}
 .md-daily .screen.home>.top{min-height:36px;justify-content:flex-end}
 @media (min-width:720px){
-  .md-daily .md-app:has(.screen.home){max-width:1040px;padding-top:12px;position:relative}
+  .md-daily .md-app:has(.screen.home){max-width:760px;padding-top:12px;position:relative}
   .md-daily .screen.home>.top{position:absolute;top:8px;right:20px;min-height:0;z-index:2}
-  .md-daily .hcols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);grid-template-areas:"greet sky" "main sky" "rest rest";column-gap:32px;row-gap:20px;align-items:start;padding-top:8px}
-  .md-daily .g-greet{grid-area:greet;padding-top:12px}
-  .md-daily .g-sky{grid-area:sky}
-  .md-daily .g-main{grid-area:main}
-  .md-daily .g-rest{grid-area:rest}
-  .md-daily .screen.home h1{font-size:44px}
-  .md-daily .g-sky .skycard svg{min-height:340px;object-fit:cover}
-  .md-daily .g-rest .tools{grid-template-columns:repeat(2,minmax(0,1fr));max-width:560px}
+  .md-daily .hcols{gap:22px;padding-top:8px}
+  .md-daily .g-main,.md-daily .g-rest{gap:22px}
+  .md-daily .screen.home h1{font-size:46px}
+  .md-daily .g-sky .skycard svg{min-height:300px;object-fit:cover}
+  .md-daily .today{display:grid;grid-template-columns:minmax(0,1fr) 240px;column-gap:28px;align-items:center;padding:24px 28px}
+  .md-daily .today>.eyebrow,.md-daily .today>h2,.md-daily .today>p{grid-column:1}
+  .md-daily .today>.cta{grid-column:2;grid-row:1 / span 3}
+  .md-daily .g-rest .tools{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
