@@ -153,12 +153,13 @@ body.dark-mode .md-daily{background:linear-gradient(180deg,#E9E6F1 0%,#F6F2F0 10
 .md-daily h1,.md-daily h2,.md-daily h3{font-weight:600}
 .md-daily .sentence,.md-daily .tcard .tx,.md-daily .paper{font-weight:600}
 
-/* Home layout: phone = one column; laptop = two columns so it doesn't float in a narrow strip. */
+/* Home layout: phone = one column; from tablet width up = two columns, so it never floats in a narrow strip. */
 .md-daily .hcols{display:flex;flex-direction:column;gap:16px}
 .md-daily .hcol{display:flex;flex-direction:column;gap:16px;min-width:0}
 .md-daily .screen.home>.top{min-height:36px;justify-content:flex-end}
-@media (min-width:1024px){
-  .md-daily .md-app:has(.screen.home){max-width:1040px;padding-top:8px}
-  .md-daily .hcols{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:36px;align-items:start}
-  .md-daily .screen.home h1{font-size:44px}
+@media (min-width:720px){
+  .md-daily .md-app:has(.screen.home){max-width:1040px;padding-top:12px;position:relative}
+  .md-daily .screen.home>.top{position:absolute;top:8px;right:20px;min-height:0;z-index:2}
+  .md-daily .hcols{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:32px;align-items:start;padding-top:8px}
+  .md-daily .screen.home h1{font-size:42px}
 }
