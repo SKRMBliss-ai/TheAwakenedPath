@@ -1,5 +1,4 @@
 import StudiosSection from './components/StudiosSection';
-import MantrasNewOffering from './components/MantrasNewOffering';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, MessageCircle } from 'lucide-react';
@@ -267,13 +266,6 @@ export default function SoulfulHome() {
           {/* Section divider */}
           <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
 
-          {/* 2.5 New Offering: Soulful Mantra Studio & Mantra Pass */}
-          <div id="mantras-offering">
-            <MantrasNewOffering palette={palette} />
-          </div>
-
-          {/* Section divider */}
-          <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
 
           {/* 3. Fresh videos from both channels */}
           <div id="videos">
