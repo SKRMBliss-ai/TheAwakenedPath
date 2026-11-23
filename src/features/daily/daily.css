@@ -1,5 +1,5 @@
 /* Mind Gym Daily, scoped under .md-daily. Mountain path theme. */
-.md-daily /* Layout concept: one phone-width column under a night sky. Each day you train lights a star; seven stars complete a constellation. One task per screen, .md-daily one big action. */ :root{   --night:#EFEDF4; --panel:#FFFFFF; --panel-2:#F6F4F9; --line:#DAD6E4;   --mist:#25233A; --mist-2:#5C5873; --gold:#C25B3F; --on-gold:#FFFFFF; --gold-ink:#A8462D;   --slate:#25233A; --peach:#F2B48F; --tint:#FBEAE3;   --mint:#1D7A60; --rose:#B4472F; --sky:#4B4880; --paper:#FFFFFF; --ink:#25233A;   --shadow:0 10px 28px rgba(37,35,58,.09);   --display:'Cormorant Garamond',Georgia,serif;   --body:'Outfit',system-ui,-apple-system,sans-serif;   --r-lg:26px; --r-md:18px;   color-scheme:light; }
+.md-daily{   --night:#EFEDF4; --panel:#FFFFFF; --panel-2:#F6F4F9; --line:#DAD6E4;   --mist:#25233A; --mist-2:#5C5873; --gold:#C25B3F; --on-gold:#FFFFFF; --gold-ink:#A8462D;   --slate:#25233A; --peach:#F2B48F; --tint:#FBEAE3;   --mint:#1D7A60; --rose:#B4472F; --sky:#4B4880; --paper:#FFFFFF; --ink:#25233A;   --shadow:0 10px 28px rgba(37,35,58,.09);   --display:'Cormorant Garamond',Georgia,serif;   --body:'Outfit',system-ui,-apple-system,sans-serif;   --r-lg:26px; --r-md:18px;   color-scheme:light; }
 .md-daily, .md-daily{height:100%}
 .md-daily [hidden]{display:none!important}
 .md-daily{background:linear-gradient(180deg,#E9E6F1 0%,#F6F2F0 100%) fixed var(--night);color:var(--mist);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-tap-highlight-color:transparent}
@@ -153,13 +153,19 @@ body.dark-mode .md-daily{background:linear-gradient(180deg,#E9E6F1 0%,#F6F2F0 10
 .md-daily h1,.md-daily h2,.md-daily h3{font-weight:600}
 .md-daily .sentence,.md-daily .tcard .tx,.md-daily .paper{font-weight:600}
 
-/* Home layout: phone = one column; from tablet width up = two columns, so it never floats in a narrow strip. */
+/* Home layout: phone = one column in reading order; tablet and up = hero row (greeting + start card | tall path), then the rest full width. */
 .md-daily .hcols{display:flex;flex-direction:column;gap:16px}
-.md-daily .hcol{display:flex;flex-direction:column;gap:16px;min-width:0}
+.md-daily .g-main,.md-daily .g-rest{display:flex;flex-direction:column;gap:16px;min-width:0}
 .md-daily .screen.home>.top{min-height:36px;justify-content:flex-end}
 @media (min-width:720px){
   .md-daily .md-app:has(.screen.home){max-width:1040px;padding-top:12px;position:relative}
   .md-daily .screen.home>.top{position:absolute;top:8px;right:20px;min-height:0;z-index:2}
-  .md-daily .hcols{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:32px;align-items:start;padding-top:8px}
-  .md-daily .screen.home h1{font-size:42px}
+  .md-daily .hcols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);grid-template-areas:"greet sky" "main sky" "rest rest";column-gap:32px;row-gap:20px;align-items:start;padding-top:8px}
+  .md-daily .g-greet{grid-area:greet;padding-top:12px}
+  .md-daily .g-sky{grid-area:sky}
+  .md-daily .g-main{grid-area:main}
+  .md-daily .g-rest{grid-area:rest}
+  .md-daily .screen.home h1{font-size:44px}
+  .md-daily .g-sky .skycard svg{min-height:340px;object-fit:cover}
+  .md-daily .g-rest .tools{grid-template-columns:repeat(2,minmax(0,1fr));max-width:560px}
 }
