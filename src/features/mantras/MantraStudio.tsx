@@ -1678,6 +1678,17 @@ function MusicHub() {
     image: 'https://www.skrmblissai.in/SoulfulStudios/Mantra/lockup.webp',
   });
   useEffect(() => { t('PAGE_VISIT_MUSIC_HUB'); }, []);
+  // The hero video plays once on its own, then the words fade in over its last frame.
+  // If it cannot play (autoplay blocked, reduced motion, load error) the words show at once.
+  const [heroDone, setHeroDone] = useState(() => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+  const heroVideo = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const v = heroVideo.current;
+    if (!v || heroDone) return;
+    v.play().catch(() => setHeroDone(true));
+    const failsafe = setTimeout(() => setHeroDone(true), 45000);
+    return () => clearTimeout(failsafe);
+  }, [heroDone]);
 
   const fallback = '/marketing/mantras/bowl-lotus.webp';
   const box: React.CSSProperties = { background: palette.CARD, border: `1px solid ${palette.BORDER}`, borderRadius: 24 };
@@ -1688,12 +1699,14 @@ function MusicHub() {
       <Header palette={palette} toggle={toggle} home={false} />
 
       <header style={{ position: 'relative', overflow: 'hidden', background: '#14202A', color: '#FFFFFF', padding: 'clamp(36px, 6vw, 80px) clamp(16px, 5vw, 96px)' }}>
-        <video autoPlay muted loop playsInline preload="metadata" poster="/SoulfulStudios/Meditation/banner.webp" aria-hidden="true"
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.55 }}>
+        <video ref={heroVideo} autoPlay muted playsInline preload="auto" poster="/SoulfulStudios/Meditation/banner.webp" aria-hidden="true"
+          onEnded={() => setHeroDone(true)} onError={() => setHeroDone(true)}
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: heroDone ? 0.55 : 1, transition: 'opacity 1s ease' }}>
           <source src="/SoulfulStudios/Meditation/hero.mp4" type="video/mp4" />
         </video>
-        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(10,20,28,.35), rgba(10,20,28,.7))' }} />
-        <div style={{ ...wrap, position: 'relative', maxWidth: 900, textAlign: 'center' }}>
+        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(10,20,28,.35), rgba(10,20,28,.7))', opacity: heroDone ? 1 : 0, transition: 'opacity 1s ease' }} />
+        <div style={{ ...wrap, position: 'relative', maxWidth: 900, textAlign: 'center', opacity: heroDone ? 1 : 0, transform: heroDone ? 'none' : 'translateY(10px)',
+          transition: 'opacity 1s ease, transform 1s ease', pointerEvents: heroDone ? 'auto' : 'none' }} aria-hidden={!heroDone}>
           <img src="/SoulfulStudios/Meditation/emblem.webp" alt="Soulful Meditation Studio" width={132} height={132}
             style={{ width: 132, height: 132, display: 'block', margin: '0 auto 18px', borderRadius: '50%', boxShadow: '0 10px 30px rgba(0,0,0,.45)' }} />
           <span style={{ display: 'block', fontSize: 12, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#E9C98A', marginBottom: 10 }}>@SoulfulMeditationStudio</span>
@@ -1705,7 +1718,11 @@ function MusicHub() {
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
             <Btn palette={palette} href={MUSIC_PASS_PATH} label={`Meditation Music Pass · ${musicPrice()}`} event="MUSIC_HUB_PASS" />
-            <Btn palette={palette} href="#library" label="Browse the music" event="MUSIC_HUB_BROWSE" ghost />
+            <a href="#library" onClick={() => t('MUSIC_HUB_BROWSE')} className="sms-btn"
+              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minHeight: 48, padding: '12px 22px', borderRadius: 999,
+                border: '1.5px solid rgba(255,255,255,.7)', background: 'rgba(255,255,255,.1)', color: '#FFFFFF', fontFamily: SANS, fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
+              Browse the music
+            </a>
           </div>
         </div>
       </header>
