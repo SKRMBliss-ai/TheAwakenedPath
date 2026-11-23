@@ -2252,26 +2252,23 @@ export default function UntetheredApp() {
               "fixed top-0 right-0 z-[120] h-10 flex items-center overflow-hidden transition-all duration-500",
               isSidebarCollapsed ? "left-0" : "left-0 lg:left-[280px]"
             )}
-            style={{ background: 'linear-gradient(90deg, #1b1508 0%, #3a2e12 45%, #7a611f 100%)', boxShadow: '0 1px 12px rgba(0,0,0,0.25)' }}
+            style={{ background: '#25233A', boxShadow: '0 1px 8px rgba(37,35,58,0.18)' }}
           >
-            {/* shimmer sweep (self-contained keyframe) */}
-            <style>{`@keyframes annShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
-            <span className="pointer-events-none absolute inset-0 opacity-40" style={{ background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.18) 50%, transparent 70%)', backgroundSize: '200% 100%', animation: 'annShimmer 3.5s linear infinite' }} />
             <a
               href="/feelingsandemotioncourse"
               className="relative flex-1 min-w-0 h-full flex items-center justify-center gap-2 sm:gap-3 px-3 group"
             >
-              <span className="hidden sm:inline text-[9px] font-black uppercase tracking-[0.28em] flex items-center gap-1.5 flex-shrink-0" style={{ color: '#C9AE8E' }}>
-                <span className="inline-block w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#C9AE8E' }} />
+              <span className="hidden sm:inline text-[9px] font-black uppercase tracking-[0.28em] flex items-center gap-1.5 flex-shrink-0" style={{ color: '#F2B48F' }}>
+                <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: '#F2B48F' }} />
                 New Course
               </span>
-              <span className="text-[12px] sm:text-[13px] font-semibold truncate" style={{ color: '#F5ECD2' }}>
+              <span className="text-[12px] sm:text-[13px] font-semibold truncate" style={{ color: '#F3EEF8' }}>
                 <span className="font-bold text-white">Understanding Feelings &amp; Emotions</span>
-                <span className="hidden sm:inline" style={{ color: 'rgba(245,236,210,0.7)' }}> — watch the first lessons free</span>
+                <span className="hidden sm:inline" style={{ color: 'rgba(243,238,248,0.72)' }}> — watch the first lessons free</span>
               </span>
               <span
                 className="flex items-center gap-1 px-3 sm:px-4 py-1 rounded-full text-[11px] sm:text-[12px] font-black flex-shrink-0 group-hover:brightness-105 transition-all"
-                style={{ background: 'linear-gradient(to right, #C9AE8E, #A98A67)', color: '#241C14' }}
+                style={{ background: '#C25B3F', color: '#FFFFFF' }}
               >
                 Enroll <span aria-hidden>→</span>
               </span>
@@ -2600,7 +2597,7 @@ export default function UntetheredApp() {
                       </div>
                       <span
                         className="relative inline-flex items-center gap-1 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-[11px] sm:text-[12px] font-black flex-shrink-0 shadow group-hover:brightness-105 group-hover:gap-1.5 transition-all"
-                        style={{ background: 'linear-gradient(to right, #C9AE8E, #A98A67)', color: '#241C14' }}
+                        style={{ background: '#C25B3F', color: '#FFFFFF' }}
                       >
                         Continue <span aria-hidden>→</span>
                       </span>
