@@ -21,6 +21,7 @@ import {
   MANTRA_WHATSAPP_GROUP, MANTRA_PASS_ID, MUSIC_PASS_PRICE, MANTRA_PASS_OPEN, MANTRA_PASS_REFUND_DAYS, MANTRA_CURRENCY,
   passPrice, singlePrice, singleId, soldSingly, findMantra, thumb, waLink, getMantraAudioUrl, type Mantra, type Moment,
 } from './mantraData';
+import LightScene from '../meditation/LightScene';
 import { SACRED_TRACKS } from '../music/musicData';
 import { formatKidsPrice } from '../landing/kidsPricing';
 import { downloadAudio } from './mantraDownload';
@@ -1592,6 +1593,8 @@ function MusicPassSales() {
         </div>
       </header>
 
+      <LightScene palette={palette} />
+
       <section style={{ ...sec, background: palette.BG2 }}>
         <div style={wrap}>
           <SectionTitle palette={palette} art="bowl" artHeight={100} kicker="What you get" title="Quiet music, made easy to use" />
@@ -1745,6 +1748,8 @@ function MusicHub() {
           </div>
         </div>
       </header>
+
+      <LightScene palette={palette} />
 
       <section id="library" style={{ ...sec, paddingTop: 0 }}>
         <div style={wrap}>
