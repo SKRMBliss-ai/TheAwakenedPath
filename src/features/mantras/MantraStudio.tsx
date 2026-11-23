@@ -22,6 +22,7 @@ import {
   passPrice, singlePrice, singleId, soldSingly, findMantra, thumb, waLink, getMantraAudioUrl, type Mantra, type Moment,
 } from './mantraData';
 import LightScene from '../meditation/LightScene';
+import MoodMoments, { type Mood } from '../meditation/MoodMoments';
 import { SACRED_TRACKS } from '../music/musicData';
 import { formatKidsPrice } from '../landing/kidsPricing';
 import { downloadAudio } from './mantraDownload';
@@ -1593,7 +1594,20 @@ function MusicPassSales() {
         </div>
       </header>
 
-      <LightScene palette={palette} />
+      <section style={sec}>
+        <div className="sms-sales-hero" style={{ ...wrap, maxWidth: 1000, display: 'grid', gridTemplateColumns: '1fr 1.1fr', gap: 'clamp(20px, 4vw, 48px)', alignItems: 'center' }}>
+          <div style={{ borderRadius: 28, background: '#14111C', padding: 'clamp(16px, 3vw, 28px)' }}>
+            <LightScene palette={{ ...palette, isDark: true }} bare />
+          </div>
+          <div>
+            <Kicker palette={palette}>Made for the quiet hours</Kicker>
+            <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 3.6vw, 42px)', fontWeight: 400, lineHeight: 1.15, margin: '0 0 12px' }}>Light a candle, press play, let go.</h2>
+            <p style={{ margin: 0, fontSize: 16, lineHeight: 1.7, color: palette.INK2 }}>
+              The music is made for the end of the day and the start of a sit. Put it on a loop, set the sleep timer, and let the room go quiet around you.
+            </p>
+          </div>
+        </div>
+      </section>
 
       <section style={{ ...sec, background: palette.BG2 }}>
         <div style={wrap}>
@@ -1709,6 +1723,8 @@ function MusicHub() {
     return () => clearTimeout(failsafe);
   }, [heroDone]);
 
+  const [mood, setMood] = useState<Mood | null>(null);
+  const shown = mood ? SACRED_TRACKS.filter((tr) => tr.mood === mood) : SACRED_TRACKS;
   const fallback = '/marketing/mantras/bowl-lotus.webp';
   const box: React.CSSProperties = { background: palette.CARD, border: `1px solid ${palette.BORDER}`, borderRadius: 24 };
 
@@ -1749,13 +1765,26 @@ function MusicHub() {
         </div>
       </header>
 
-      <LightScene palette={palette} />
-
-      <section id="library" style={{ ...sec, paddingTop: 0 }}>
+      <section style={{ ...sec, paddingBottom: 'clamp(12px, 2vw, 24px)' }}>
         <div style={wrap}>
-          <SectionTitle palette={palette} art="bowl" artHeight={96} kicker="The library" title="Choose how you want to feel" />
+          <SectionTitle palette={palette} kicker="Start with a feeling" title="How do you want to feel?"
+            sub="Hover over one to wake it up. Choose it to see only that music." />
+          <MoodMoments palette={palette} value={mood} onChange={(m) => { setMood(m); t('MUSIC_HUB_MOOD', m ?? 'all'); if (m) document.getElementById('library')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} />
+        </div>
+      </section>
+
+      <section id="library" style={{ ...sec, paddingTop: 'clamp(24px, 4vw, 48px)' }}>
+        <div style={wrap}>
+          <SectionTitle palette={palette} kicker="The library" title={mood ? `${mood} music` : 'All the music'}
+            sub={mood ? undefined : 'Every track plays as a short free preview.'} />
+          {mood && (
+            <p style={{ textAlign: 'center', margin: '-8px 0 18px' }}>
+              <button type="button" onClick={() => setMood(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: palette.PURPLE_STRONG, fontFamily: SANS, fontSize: 14.5, fontWeight: 700, textDecoration: 'underline', padding: 8 }}>Show all the music</button>
+            </p>
+          )}
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
-            {SACRED_TRACKS.map((tr) => (
+            {shown.map((tr) => (
               <div key={tr.id} className="sms-card" style={{ ...box, padding: 14, display: 'flex', flexDirection: 'column' }}>
                 <img src={(palette.isDark ? tr.coverImage?.dark : tr.coverImage?.light) || fallback} alt="" loading="lazy" width={480} height={360}
                   style={{ width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: 16, display: 'block', marginBottom: 12 }} />
@@ -1781,6 +1810,18 @@ function MusicHub() {
             borderRadius: 999, background: palette.ON_BAND, color: '#FFFFFF', fontFamily: SANS, fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
             See the Meditation Music Pass →
           </a>
+        </div>
+      </section>
+
+      <section id="faq" style={sec}>
+        <SectionTitle palette={palette} kicker="Questions" title="Before you decide" />
+        <div style={{ maxWidth: 780, margin: '0 auto', display: 'grid', gap: 10 }}>
+          {MUSIC_FAQ.map((f) => (
+            <details key={f.q} style={{ ...box, borderRadius: 18, padding: '4px 22px' }}>
+              <summary style={{ cursor: 'pointer', padding: '14px 0', fontSize: 15.5, fontWeight: 700 }}>{f.q}</summary>
+              <p style={{ margin: '0 0 16px', fontSize: 14.5, lineHeight: 1.7, color: palette.INK2 }}>{f.a}</p>
+            </details>
+          ))}
         </div>
       </section>
 
