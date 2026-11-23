@@ -37,7 +37,9 @@ export default function StudiosSection({ palette }: { palette: Palette }) {
           {STUDIOS.map((s) => (
             <article key={s.key} style={{ ['--st-line' as string]: palette.BORDER, display: 'flex', flexDirection: 'column', background: palette.CARD,
               border: `1px solid ${palette.BORDER}`, borderRadius: 28, overflow: 'hidden', color: palette.INK }}>
-              <div style={{ padding: '22px 24px 18px', background: `linear-gradient(135deg, ${s.accent}, ${s.accent}CC)`, color: '#FFFFFF' }}>
+              <div style={{ padding: '24px 24px 20px', background: `linear-gradient(135deg, ${s.accent}, ${s.accent}CC)`, color: '#FFFFFF', textAlign: 'center' }}>
+                <img src={s.logo} alt={`${s.name} logo`} width={96} height={96} loading="lazy"
+                  style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: '50%', display: 'block', margin: '0 auto 14px', background: '#FFFFFF', boxShadow: '0 6px 18px rgba(0,0,0,.25)' }} />
                 <span style={{ display: 'block', fontFamily: SANS, fontSize: 11, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', opacity: 0.85 }}>{s.handle}</span>
                 <h3 style={{ fontFamily: SERIF, fontSize: 'clamp(26px, 2.6vw, 32px)', fontWeight: 500, lineHeight: 1.15, margin: '6px 0 6px' }}>{s.name}</h3>
                 <p style={{ fontFamily: SANS, fontSize: 14.5, lineHeight: 1.55, margin: 0, opacity: 0.92 }}>{s.channelLine}</p>

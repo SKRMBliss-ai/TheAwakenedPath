@@ -30,6 +30,8 @@ export interface Studio {
   /** One line about what the channel publishes. */
   channelLine: string;
   accent: string;
+  /** The studio's own logo, shown at the centre of its card. */
+  logo: string;
   offerings: StudioOffering[];
 }
 
@@ -44,6 +46,7 @@ export const STUDIOS: Studio[] = [
     subscribe: `${yt('@SoulfulMindStudio')}?sub_confirmation=1`,
     channelLine: 'Sim Katyal’s courses, Mind Gym app demos and Kids Mind Gym videos.',
     accent: '#4A3260',
+    logo: '/SoulfulStudios/Mind/soulful-mind-studio-logo.webp',
     offerings: [
       { label: 'Mind Gym app', line: 'Daily practice, journal, courses, mantras and meditation music.', learn: '/aboutmindgym', open: { label: 'Open the app', href: '/mindgym' } },
       { label: 'Feelings & Emotions course', line: 'A guided course by Sim Katyal.', learn: '/feelingsandemotioncourse' },
@@ -58,6 +61,7 @@ export const STUDIOS: Studio[] = [
     subscribe: `${yt('@SoulfulMantrasStudio')}?sub_confirmation=1`,
     channelLine: 'Sacred Indian mantras and chants, with their meaning.',
     accent: '#C4913A',
+    logo: '/SoulfulStudios/Mantra/logo-light.webp',
     offerings: [
       { label: 'Mantras', line: 'Every mantra with Sanskrit, meaning and a mala counter. Also a playlist inside the Mind Gym app.', learn: '/mantras', open: { label: 'Listen in the app', href: '/mindgym' } },
       { label: 'Mantra Pass', line: 'Every mantra, paid once.', learn: '/mantras/lifetime-pass' },
@@ -71,6 +75,7 @@ export const STUDIOS: Studio[] = [
     subscribe: `${yt('@SoulfulMeditationStudio')}?sub_confirmation=1`,
     channelLine: 'Meditation music for calm, sleep and deep practice.',
     accent: '#3F7F86',
+    logo: '/SoulfulStudios/Meditation/emblem.webp',
     offerings: [
       { label: 'Meditation music', line: 'Tracks for calm, sleep and deep practice. Also a playlist inside the Mind Gym app.', learn: '/meditation-music', open: { label: 'Listen in the app', href: '/mindgym' } },
       { label: 'Meditation Music Pass', line: 'All the music, paid once.', learn: '/meditation-music/lifetime-pass' },

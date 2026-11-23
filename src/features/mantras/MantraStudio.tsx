@@ -1549,8 +1549,10 @@ function MusicPassSales() {
           <figure style={{ margin: 0, padding: 'clamp(14px, 2.2vw, 22px)', borderRadius: 30, background: GOLD_BAR,
             boxShadow: palette.isDark ? '0 30px 70px rgba(0,0,0,.55)' : '0 30px 70px rgba(122,95,68,.28)' }}>
             <div style={{ borderRadius: 18, overflow: 'hidden' }}>
-              <img src="/marketing/mantras/om-altar.webp" alt="Meditation Music Pass: a glowing Om above a still lotus" width={1024} height={768}
-                style={{ width: '100%', height: 'auto', aspectRatio: '4 / 3', objectFit: 'cover', display: 'block' }} />
+              <div style={{ background: '#F7F1E6', padding: 'clamp(18px, 4vw, 40px)', display: 'grid', placeItems: 'center' }}>
+                <img src="/SoulfulStudios/Meditation/emblem.webp" alt="Soulful Meditation Studio emblem" width={480} height={480}
+                  style={{ width: 'min(100%, 380px)', height: 'auto', aspectRatio: '1 / 1', display: 'block' }} />
+              </div>
             </div>
             <figcaption style={{ textAlign: 'center', paddingTop: 14, color: '#241E24' }}>
               <span style={{ display: 'block', fontFamily: SERIF, fontSize: 'clamp(20px, 2.4vw, 26px)', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Meditation Music</span>
@@ -1685,13 +1687,20 @@ function MusicHub() {
       <PageStyles palette={palette} />
       <Header palette={palette} toggle={toggle} home={false} />
 
-      <header style={{ ...sec, paddingTop: 'clamp(28px, 4.5vw, 56px)', paddingBottom: 'clamp(20px, 3vw, 36px)' }}>
-        <div style={{ ...wrap, maxWidth: 900, textAlign: 'center' }}>
-          <Kicker palette={palette}>Soulful Mind Studio</Kicker>
-          <h1 style={{ fontFamily: SERIF, fontSize: 'clamp(36px, 5.4vw, 62px)', fontWeight: 400, lineHeight: 1.08, letterSpacing: '-0.02em', margin: '0 0 14px' }}>
-            Meditation music <span style={{ color: palette.BROWN }}>for calm, sleep and deep practice</span>
+      <header style={{ position: 'relative', overflow: 'hidden', background: '#14202A', color: '#FFFFFF', padding: 'clamp(36px, 6vw, 80px) clamp(16px, 5vw, 96px)' }}>
+        <video autoPlay muted loop playsInline preload="metadata" poster="/SoulfulStudios/Meditation/banner.webp" aria-hidden="true"
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.55 }}>
+          <source src="/SoulfulStudios/Meditation/hero.mp4" type="video/mp4" />
+        </video>
+        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(10,20,28,.35), rgba(10,20,28,.7))' }} />
+        <div style={{ ...wrap, position: 'relative', maxWidth: 900, textAlign: 'center' }}>
+          <img src="/SoulfulStudios/Meditation/emblem.webp" alt="Soulful Meditation Studio" width={132} height={132}
+            style={{ width: 132, height: 132, display: 'block', margin: '0 auto 18px', borderRadius: '50%', boxShadow: '0 10px 30px rgba(0,0,0,.45)' }} />
+          <span style={{ display: 'block', fontSize: 12, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#E9C98A', marginBottom: 10 }}>@SoulfulMeditationStudio</span>
+          <h1 style={{ fontFamily: SERIF, fontSize: 'clamp(36px, 5.4vw, 62px)', fontWeight: 400, lineHeight: 1.08, letterSpacing: '-0.02em', margin: '0 0 14px', color: '#FFFFFF' }}>
+            Meditation music <span style={{ color: '#E9C98A' }}>for calm, sleep and deep practice</span>
           </h1>
-          <p style={{ fontSize: 17, lineHeight: 1.7, color: palette.INK2, margin: '0 auto 22px', maxWidth: 600 }}>
+          <p style={{ fontSize: 17, lineHeight: 1.7, color: 'rgba(255,255,255,.88)', margin: '0 auto 22px', maxWidth: 600 }}>
             Quiet music to sit with, sleep to and come back to. Listen to a preview of any track, then keep the whole library with one payment.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
