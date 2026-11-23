@@ -104,10 +104,10 @@ export default function StudiosSection({ palette }: { palette: Palette }) {
       <div style={{ maxWidth: 1180, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', maxWidth: 700, margin: '0 auto clamp(26px, 4vw, 42px)' }}>
           <h2 id="studios-h" style={{ fontFamily: SERIF, fontSize: 'clamp(34px, 5vw, 56px)', fontWeight: 400, lineHeight: 1.1, color: palette.INK, margin: '0 0 10px' }}>
-            Three studios, one web app
+            Three ways in. One calm place.
           </h2>
           <p style={{ fontFamily: SANS, fontSize: 16, lineHeight: 1.65, color: palette.INK2, margin: 0 }}>
-            Pick a studio to see what is inside and what it costs. Each has its own YouTube channel, and everything also plays inside the Mind Gym web app.
+            Tap a studio to see what is inside and what it costs. Whichever you choose, it all opens in one place: the Mind Gym web app.
           </p>
         </div>
 
