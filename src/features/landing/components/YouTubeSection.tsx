@@ -137,7 +137,7 @@ function VideoCard({ video, accent, isDark }: { video: Video; accent: string; is
   );
 }
 
-export default function YouTubeSection({ palette, onTrack }: { palette: Palette; onTrack?: (action: string) => void }) {
+export default function YouTubeSection({ palette, onTrack, studio }: { palette: Palette; onTrack?: (action: string) => void; studio?: StudioKey }) {
   const [rows, setRows] = useState<Partial<Record<Channel['key'], Video[]>>>({});
   const [done, setDone] = useState(false);
   const isDark = palette.isDark;
@@ -161,6 +161,7 @@ export default function YouTubeSection({ palette, onTrack }: { palette: Palette;
 
   // Only channels with a genuinely recent upload are shown.
   const visible = CHANNELS
+    .filter((c) => !studio || c.key === studio)
     .map((c) => ({ channel: c, videos: rows[c.key] ?? [] }))
     .filter(({ videos }) => videos.length > 0 && (daysSince(videos[0].publishedAt) ?? 9999) <= STALE_DAYS);
 
@@ -187,7 +188,7 @@ export default function YouTubeSection({ palette, onTrack }: { palette: Palette;
           From our channels
         </p>
         <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(26px, 3vw, 42px)', fontWeight: 400, color: ink, margin: '0 0 8px', letterSpacing: '-0.01em' }}>
-          Fresh from our channels
+          {studio ? `Fresh from ${CHANNELS.find((c) => c.key === studio)?.label}` : 'Fresh from our channels'}
         </h2>
         <p style={{ fontFamily: SANS, fontSize: 13.5, color: inkSub, margin: 0 }}>
           New videos, free to watch. Subscribe to get each one as it is published.

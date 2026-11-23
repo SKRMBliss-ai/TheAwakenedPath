@@ -1,4 +1,6 @@
 import StudiosSection from './components/StudiosSection';
+import StudioTryFree from './components/StudioTryFree';
+import type { StudioKey } from '../../config/studios';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, MessageCircle } from 'lucide-react';
@@ -72,6 +74,9 @@ export default function SoulfulHome() {
     if (param === 'products') return 'products';
     return 'you';
   });
+
+  // The studio tab the visitor chose; every section below the tabs follows it.
+  const [studio, setStudio] = useState<StudioKey>('mind');
 
   const [productFilter, setProductFilter] = useState<'all' | 'apps' | 'websites'>('all');
   const [playingVideo, setPlayingVideo] = useState<string | null>(null);
@@ -260,7 +265,7 @@ export default function SoulfulHome() {
 
           {/* 2. The three doors */}
           <div id="choose" style={{ scrollMarginTop: 80 }}>
-            <StudiosSection palette={palette} />
+            <StudiosSection palette={palette} active={studio} onChange={setStudio} />
           </div>
 
           {/* Section divider */}
@@ -269,26 +274,27 @@ export default function SoulfulHome() {
 
           {/* 3. Fresh videos from both channels */}
           <div id="videos">
-            <YouTubeSection palette={palette} onTrack={track} />
+            <YouTubeSection palette={palette} onTrack={track} studio={studio} />
           </div>
 
           {/* Section divider */}
           <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
 
-          {/* 9. Free guides */}
+          {/* 9. Free things to try: the Mind guides, or mantras / music previews */}
           <div id="tools">
-            <FreeGuides palette={palette} />
+            {studio === 'mind' ? <FreeGuides palette={palette} /> : <StudioTryFree palette={palette} studio={studio} />}
           </div>
 
           {/* Section divider */}
           <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
 
           {/* 9.5 AI Master Knowledge & Citation Hub */}
-          <AiKnowledgeBlock palette={palette} />
+          {studio === 'mind' && <AiKnowledgeBlock palette={palette} />}
 
           {/* 4. Final call to action */}
           <FinalCta
             palette={palette}
+            studio={studio}
             onCta={() => track('HOME_FINAL_CTA')}
           />
 

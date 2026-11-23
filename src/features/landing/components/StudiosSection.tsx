@@ -43,15 +43,14 @@ function Visual({ s, palette }: { s: Studio; palette: Palette }) {
   );
 }
 
-export default function StudiosSection({ palette }: { palette: Palette }) {
-  const [active, setActive] = useState<StudioKey>('mind');
+export default function StudiosSection({ palette, active, onChange }: { palette: Palette; active: StudioKey; onChange: (k: StudioKey) => void }) {
   const [seen, setSeen] = useState<Set<StudioKey>>(new Set(['mind']));
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   const dark = palette.isDark;
   const s = STUDIOS.find((x) => x.key === active)!;
 
   const pick = (k: StudioKey, focus = false) => {
-    setActive(k);
+    onChange(k);
     setSeen((prev) => new Set(prev).add(k));
     track('HOME_STUDIO_TAB', k);
     if (focus) tabs.current[STUDIOS.findIndex((x) => x.key === k)]?.focus();

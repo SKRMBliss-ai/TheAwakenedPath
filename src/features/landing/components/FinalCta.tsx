@@ -9,7 +9,14 @@ import type { Palette } from '../../../lib/siteTheme';
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS  = "'Outfit', system-ui, sans-serif";
 
-export default function FinalCta({ palette, onCta }: { palette: Palette; onCta?: () => void }) {
+const COPY = {
+  mind: { h2: 'You have spent years trying to change your mind.', h3: 'Maybe it is time to understand it.', cta: 'Begin Your Journey', href: '/mindgym', color: '#4A3260' },
+  mantra: { h2: 'You do not have to chant alone, or in a hurry.', h3: 'One mantra, one lamp, a few quiet minutes.', cta: 'Chant with the Mantra Pass', href: '/mantras/lifetime-pass', color: '#A87420' },
+  meditation: { h2: 'Rest is not a reward you have to earn.', h3: 'Let the music do the settling.', cta: 'Get the Meditation Music Pass', href: '/meditation-music/lifetime-pass', color: '#2F6A71' },
+} as const;
+
+export default function FinalCta({ palette, onCta, studio = 'mind' }: { palette: Palette; onCta?: () => void; studio?: 'mind' | 'mantra' | 'meditation' }) {
+  const copy = COPY[studio];
   const isDark = palette.isDark;
   const ink    = isDark ? '#EDE9E3' : '#2A2118';
 
@@ -53,7 +60,7 @@ export default function FinalCta({ palette, onCta }: { palette: Palette; onCta?:
         letterSpacing: '-0.02em',
         position: 'relative',
       }}>
-        You have spent years trying to change your mind.
+        {copy.h2}
       </h2>
 
       <h3 style={{
@@ -67,23 +74,23 @@ export default function FinalCta({ palette, onCta }: { palette: Palette; onCta?:
         letterSpacing: '-0.01em',
         position: 'relative',
       }}>
-        Maybe it is time to understand it.
+        {copy.h3}
       </h3>
 
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, position: 'relative' }}>
         <a
-          href="/mindgym"
+          href={copy.href}
           onClick={onCta}
           className="si-btn-breathe"
           style={{
             display: 'inline-block',
             padding: '16px 40px', borderRadius: 999,
-            background: '#4A3260', color: '#fff', textDecoration: 'none',
+            background: copy.color, color: '#fff', textDecoration: 'none',
             fontFamily: SANS, fontSize: 15, fontWeight: 800, letterSpacing: '0.01em',
           }}
-          aria-label="Begin Your Journey — enter Mind Gym"
+          aria-label={copy.cta}
         >
-          Begin Your Journey
+          {copy.cta}
         </a>
       </div>
 
