@@ -3046,22 +3046,12 @@ export default function UntetheredApp() {
           style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
           {[
-<<<<<<< HEAD
-            { id: 'start', icon: Sparkles, label: 'Start' },
-            { id: 'home', icon: Home, label: 'Home' },
-            { id: 'mantras', icon: Headphones, label: 'Mantras' },
-            // Courses is the hub (CoursesHub renders on the 'intelligence' tab),
-            // and on a phone the bottom bar is the only nav most people use.
-            { id: 'intelligence', icon: GraduationCap, label: 'Courses' },
-            { id: 'situations', icon: Flame, label: 'Practice' },
-=======
             // Five calm places, one job each. "Today" holds the daily practice
             // (the old Home dashboard and the Practice room are folded into it).
             { id: 'start', icon: Sparkles, label: 'Today' },
             // Courses is the hub (CoursesHub renders on the 'intelligence' tab).
             { id: 'intelligence', icon: GraduationCap, label: 'Courses' },
             { id: 'music', icon: Headphones, label: 'Sounds' },
->>>>>>> claude/meditation-music-pass
             { id: 'chapters', icon: BookOpen, label: 'Journal' },
             { id: 'profile', icon: User, label: 'You' },
           ].map(({ id, icon: Icon, label }) => {
