@@ -137,6 +137,50 @@ function VideoCard({ video, accent, isDark }: { video: Video; accent: string; is
   );
 }
 
+/** The newest uploads of ONE channel, for use inside that studio's tab. Shown whatever their age. */
+export function ChannelLatest({ palette, channelKey, onTrack }: { palette: Palette; channelKey: StudioKey; onTrack?: (action: string) => void }) {
+  const [videos, setVideos] = useState<Video[] | null>(null);
+  const channel = CHANNELS.find((c) => c.key === channelKey)!;
+  const isDark = palette.isDark;
+
+  useEffect(() => {
+    let cancelled = false;
+    setVideos(null);
+    fetch(`/api/latest-videos?channel=${channelKey}&max=4`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((data) => { if (!cancelled) setVideos(Array.isArray(data?.videos) ? (data.videos as Video[]).slice(0, 4) : []); })
+      .catch(() => { if (!cancelled) setVideos([]); });
+    return () => { cancelled = true; };
+  }, [channelKey]);
+
+  if (!videos || videos.length === 0) return null;
+
+  return (
+    <div style={{ padding: 'clamp(18px, 3vw, 30px)', borderTop: `1px solid ${palette.BORDER}`, background: isDark ? 'rgba(12,9,16,0.35)' : 'rgba(240,232,220,0.3)' }}>
+      <style>{`
+        .si-yt-grid { display: grid; gap: 18px; grid-template-columns: 1fr; }
+        @media (min-width: 560px)  { .si-yt-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1000px) { .si-yt-grid { grid-template-columns: repeat(4, 1fr); } }
+      `}</style>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
+        <span style={{ fontFamily: SANS, fontSize: 12, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: isDark ? '#EDE9E3' : '#2A2118' }}>
+          Latest on YouTube · {channel.label}
+        </span>
+        <a href={channel.subscribe} target="_blank" rel="noopener noreferrer" onClick={() => onTrack?.(`HOME_YOUTUBE_SUBSCRIBE_${channel.key.toUpperCase()}`)}
+          aria-label={`Subscribe to ${channel.label} on YouTube`}
+          style={{ display: 'inline-flex', alignItems: 'center', minHeight: 38, padding: '0 16px', borderRadius: 999, background: '#FF0000', color: '#fff', textDecoration: 'none', fontFamily: SANS, fontSize: 13, fontWeight: 800 }}>
+          Subscribe
+        </a>
+      </div>
+      <div className="si-yt-grid" role="list" aria-label={`Latest videos from ${channel.label}`}>
+        {videos.map((v) => (
+          <div key={v.id} role="listitem"><VideoCard video={v} accent={channel.accent} isDark={isDark} /></div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function YouTubeSection({ palette, onTrack, studio }: { palette: Palette; onTrack?: (action: string) => void; studio?: StudioKey }) {
   const [rows, setRows] = useState<Partial<Record<Channel['key'], Video[]>>>({});
   const [done, setDone] = useState(false);

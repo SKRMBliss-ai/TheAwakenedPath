@@ -14,7 +14,6 @@ import HeroMark from '../../components/site/HeroMark';
 import SacredGeometry from './components/SacredGeometry';
 import CursorGlow from './components/CursorGlow';
 import HeroSection from './components/HeroSection';
-import YouTubeSection from './components/YouTubeSection';
 import FreeGuides from './components/FreeGuides';
 import AiKnowledgeBlock from './components/AiKnowledgeBlock';
 import FinalCta from './components/FinalCta';
@@ -271,14 +270,6 @@ export default function SoulfulHome() {
           {/* Section divider */}
           <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
 
-
-          {/* 3. Fresh videos from both channels */}
-          <div id="videos">
-            <YouTubeSection palette={palette} onTrack={track} studio={studio} />
-          </div>
-
-          {/* Section divider */}
-          <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
 
           {/* 9. Free things to try: the Mind guides, or mantras / music previews */}
           <div id="tools">

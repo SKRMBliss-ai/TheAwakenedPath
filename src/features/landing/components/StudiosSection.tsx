@@ -15,6 +15,7 @@ import { track } from '../../../lib/analytics';
 import { STUDIOS, type Studio, type StudioKey } from '../../../config/studios';
 import { priceOf, product } from '../../catalog/catalog';
 import LightScene from '../../meditation/LightScene';
+import { ChannelLatest } from './YouTubeSection';
 
 const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS = "'Outfit', system-ui, -apple-system, sans-serif";
@@ -170,6 +171,7 @@ export default function StudiosSection({ palette, active, onChange }: { palette:
               </div>
             </div>
           </div>
+          <ChannelLatest palette={palette} channelKey={s.key} onTrack={track} />
         </div>
 
         {/* The common price: one membership that covers every studio */}
