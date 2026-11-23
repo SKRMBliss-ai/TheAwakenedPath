@@ -2399,7 +2399,10 @@ export default function UntetheredApp() {
 
         <div className={cn(
           "max-w-7xl mx-auto px-2 pb-28 sm:px-4 md:px-6 lg:pb-8 space-y-6 sm:space-y-8",
-          showCourseAnnounce && !isChoosingPath ? "pt-[128px] sm:pt-[136px] md:pt-[144px]" : "pt-[88px] sm:pt-[96px] md:pt-[104px]",
+          // The daily session sits close under the header (one standard gap) instead of the app's roomier default.
+          activeTab === 'start' && startMode === 'workout' && !showLibrary
+            ? (showCourseAnnounce && !isChoosingPath ? "pt-[108px] sm:pt-[112px]" : "pt-[76px] sm:pt-[80px]")
+            : showCourseAnnounce && !isChoosingPath ? "pt-[128px] sm:pt-[136px] md:pt-[144px]" : "pt-[88px] sm:pt-[96px] md:pt-[104px]",
           isReportOpen && "hidden"
         )}>
           <SacredWelcomeModal
