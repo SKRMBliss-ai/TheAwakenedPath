@@ -56,9 +56,9 @@ export const STUDIOS: Studio[] = [
   {
     key: 'mantra',
     name: 'Soulful Mantras Studio',
-    handle: '@SoulfulMantrasStudio',
-    url: yt('@SoulfulMantrasStudio'),
-    subscribe: `${yt('@SoulfulMantrasStudio')}?sub_confirmation=1`,
+    handle: '@SoulfulMantraStudio',
+    url: yt('@SoulfulMantraStudio'),
+    subscribe: `${yt('@SoulfulMantraStudio')}?sub_confirmation=1`,
     channelLine: 'Sacred Indian mantras and chants, with their meaning.',
     accent: '#C4913A',
     logo: '/SoulfulStudios/Mantra/logo-light.webp',

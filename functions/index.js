@@ -791,7 +791,7 @@ exports.getLatestVideos = onRequest({ secrets: [youtubeApiKey], cors: true }, as
     const isMantraChannel = req.query.channel === 'mantra';
     const isMeditationChannel = req.query.channel === 'meditation';
     const isPlainChannel = isMantraChannel || isMeditationChannel;
-    const channelHandle = isMantraChannel ? '@SoulfulMantrasStudio'
+    const channelHandle = isMantraChannel ? '@SoulfulMantraStudio'
         : isMeditationChannel ? '@SoulfulMeditationStudio' : '@SoulfulMindStudio';
     const streamPlaylists = isPlainChannel ? {} : STREAM_PLAYLISTS;
     const streamVideoIds = isPlainChannel ? {} : STREAM_VIDEO_IDS;

@@ -2,7 +2,7 @@
 // Soulful Mantra Studio — the mantra library and the Mantra Pass.
 //
 // ONE place for the catalogue and the price. Every entry here is a chant that
-// is published on our own YouTube channel (@SoulfulMantrasStudio); do not list a
+// is published on our own YouTube channel (@SoulfulMantraStudio); do not list a
 // mantra until its recording is live. The texts are traditional, the meanings
 // and notes are written by us.
 //
@@ -16,7 +16,7 @@
 import { KIDS_ZOOM_CURRENCY, formatKidsPrice, type KidsCurrency } from '../landing/kidsPricing';
 
 export const MANTRA_BASE_URL = 'https://www.skrmblissai.in/mantras';
-export const MANTRA_CHANNEL_URL = 'https://www.youtube.com/@SoulfulMantrasStudio';
+export const MANTRA_CHANNEL_URL = 'https://www.youtube.com/@SoulfulMantraStudio';
 export const MANTRA_SUBSCRIBE_URL = `${MANTRA_CHANNEL_URL}?sub_confirmation=1`;
 export const MANTRA_WHATSAPP = 'https://wa.me/918217581238';
 /** Soulful Mantra Studio WhatsApp group (community, new-mantra alerts). */
