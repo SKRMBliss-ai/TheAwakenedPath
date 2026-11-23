@@ -156,10 +156,9 @@ body.dark-mode .md-daily{background:linear-gradient(180deg,#E9E6F1 0%,#F6F2F0 10
 /* Home layout: the same reading order everywhere (greeting, path, start card, week, tools). Tablet and up just gets a roomier, centred column with a horizontal start card. */
 .md-daily .hcols{display:flex;flex-direction:column;gap:18px}
 .md-daily .g-main,.md-daily .g-rest{display:flex;flex-direction:column;gap:18px;min-width:0}
-.md-daily .screen.home>.top{min-height:36px;justify-content:flex-end}
+.md-daily .screen.home>.top{min-height:44px;justify-content:space-between}
 @media (min-width:720px){
   .md-daily .md-app:has(.screen.home){max-width:760px;padding-top:12px;position:relative}
-  .md-daily .screen.home>.top{position:absolute;top:8px;right:20px;min-height:0;z-index:2}
   .md-daily .hcols{gap:22px;padding-top:8px}
   .md-daily .g-main,.md-daily .g-rest{gap:22px}
   .md-daily .screen.home h1{font-size:46px}
@@ -169,3 +168,6 @@ body.dark-mode .md-daily{background:linear-gradient(180deg,#E9E6F1 0%,#F6F2F0 10
   .md-daily .today>.cta{grid-column:2;grid-row:1 / span 3}
   .md-daily .g-rest .tools{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+.md-daily .backlink{min-height:44px;padding:0 4px;font-size:15px;font-weight:600;color:var(--mist-2);border-radius:12px}
+.md-daily .backlink:hover{color:var(--mist)}

@@ -21,6 +21,7 @@ export interface DailyOptions {
   reply?: (input: any) => Promise<string | null>;
   speak?: (text: string) => void;
   onMore?: () => void;
+  onBack?: () => void;
 }
 
 export function mountDailyPractice(root: HTMLElement, opts: DailyOptions = {}): () => void {
@@ -299,7 +300,8 @@ function finish(){const first=S.lastDone!==dayKey();if(first){if(S.example){S.ex
 /* ---------- home ---------- */
 const greet=()=>{const hr=new Date().getHours();return hr<12?'Good morning':hr<18?'Good afternoon':'Good evening'};
 function home(){run=null;const done=S.lastDone===dayKey();const s=h('<section class="screen"></section>');
- const top=h('<div class="top"><span class="brand">Mind <b>Gym</b></span><div class="spacer"></div><button class="iconbtn" aria-label="Sound on or off">'+(soundOn?ICON.sound:ICON.mute)+'</button></div>');
+ const top=h('<div class="top">'+(opts.onBack?'<button class="backlink" type="button">‹ All sanctuaries</button>':'<span class="brand">Mind <b>Gym</b></span>')+'<div class="spacer"></div><button class="iconbtn" aria-label="Sound on or off">'+(soundOn?ICON.sound:ICON.mute)+'</button></div>');
+ if(opts.onBack)top.firstChild.onclick=opts.onBack;
  top.lastChild.onclick=e=>{soundOn=!soundOn;e.currentTarget.innerHTML=soundOn?ICON.sound:ICON.mute;if(soundOn)chime()};s.appendChild(top);
  s.appendChild(h('<div><h1>'+greet()+'.</h1><p class="lede">'+(done?'You’ve trained today. You’re one step higher.':'Five minutes, one step up.')+'</p></div>'));
  s.appendChild(skyEl(false));

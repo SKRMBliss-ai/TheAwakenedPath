@@ -30,11 +30,13 @@ async function post(body: Record<string, unknown>): Promise<Record<string, unkno
  * The engine lives in dailyEngine.ts; this component only mounts it and
  * connects it to the app's AI route, voice and navigation.
  */
-export function DailyPractice({ onMore }: { onMore?: () => void }) {
+export function DailyPractice({ onMore, onBack }: { onMore?: () => void; onBack?: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const moreRef = useRef(onMore);
+  const backRef = useRef(onBack);
   useEffect(() => {
     moreRef.current = onMore;
+    backRef.current = onBack;
   });
 
   useEffect(() => {
@@ -50,6 +52,7 @@ export function DailyPractice({ onMore }: { onMore?: () => void }) {
         void VoiceService.speak(text, { gender: 'FEMALE' });
       },
       onMore: () => moreRef.current?.(),
+      onBack: onBack ? () => backRef.current?.() : undefined,
     });
   }, []);
 

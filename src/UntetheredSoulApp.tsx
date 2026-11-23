@@ -2451,6 +2451,7 @@ export default function UntetheredApp() {
                   />
                 ) : (
                   <div className="relative max-w-5xl mx-auto px-4 py-4">
+                    {showLibrary && (
                     <button
                       type="button"
                       onClick={() => setStartMode('portal')}
@@ -2458,9 +2459,10 @@ export default function UntetheredApp() {
                     >
                       <ArrowLeft size={14} /> Back to all 3 sanctuaries
                     </button>
+                    )}
                     {!showLibrary ? (
                       <Suspense fallback={<TabFallback />}>
-                        <DailyPractice key={startKey} onMore={() => setShowLibrary(true)} />
+                        <DailyPractice key={startKey} onMore={() => setShowLibrary(true)} onBack={() => setStartMode('portal')} />
                       </Suspense>
                     ) : (
                     <>
