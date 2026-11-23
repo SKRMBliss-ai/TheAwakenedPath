@@ -425,7 +425,6 @@ export function studioCols(): { title: string; items: NavLink[] }[] {
       items: [
         { label: 'Mantras', href: '/mantras' },
         { label: 'Mantra Pass', href: '/mantras/lifetime-pass' },
-        { label: 'Daily Sadhana & Mala Counter', href: '/mantras#begin' },
         { label: 'YouTube channel', href: yt('mantra') },
       ],
     },
@@ -443,7 +442,9 @@ export function studioCols(): { title: string; items: NavLink[] }[] {
         { label: 'About us', href: '/about-us' },
         { label: 'connect@skrmblissai.in', href: 'mailto:connect@skrmblissai.in' },
         { label: 'WhatsApp +91 82175 81238', href: WHATSAPP_URL },
-        { label: 'Privacy · Terms · Refunds', href: '/policies' },
+        { label: 'Privacy', href: '/policies#privacy' },
+        { label: 'Terms', href: '/policies#terms' },
+        { label: 'Refunds', href: '/policies#refund' },
       ],
     },
   ];
