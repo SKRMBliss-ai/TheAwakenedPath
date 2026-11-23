@@ -669,15 +669,16 @@ function PageStyles({ palette }: { palette: Palette }) {
         .sms-chips { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; padding-bottom: 6px; -webkit-overflow-scrolling: touch; }
       }
       @media (max-width: 640px) {
-        .sms-sales-hero h1 { font-size: 34px !important; line-height: 1.15 !important; }
+        .sms-hero h1 { font-size: 30px !important; line-height: 1.15 !important; }
+        .sms-sales-hero h1 { font-size: 30px !important; line-height: 1.15 !important; }
         .sms-sales-hero p { font-size: 16px !important; line-height: 1.65 !important; }
-        .sms-chip { font-size: 14px !important; min-height: 42px !important; }
-        .sms-btn { font-size: 15.5px !important; min-height: 48px !important; }
+        .sms-chip { font-size: 14px !important; min-height: 44px !important; }
+        .sms-btn { font-size: 15.5px !important; min-height: 50px !important; width: 100% !important; }
         .sms-ticker span { font-size: 13.5px !important; }
         .sms-card h3 { font-size: 22px !important; }
-        .sms-card p { font-size: 15px !important; line-height: 1.6 !important; }
+        .sms-card p { font-size: 15.5px !important; line-height: 1.6 !important; }
         .sms-face-back span { font-size: 14px !important; }
-        .sms-pass h1 { font-size: 32px !important; }
+        .sms-pass h1 { font-size: 28px !important; }
         .sms-pass p { font-size: 15.5px !important; line-height: 1.6 !important; }
       }
       @media (prefers-reduced-motion: reduce) { .sms-card, .sms-btn { transition: none; } .sms-card:hover, .sms-btn:hover { transform: none; } }
@@ -836,8 +837,8 @@ function MantraHub() {
             fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: palette.BROWN, marginBottom: 18 }}>
             Soulful Mantra Studio
           </span>
-          <h1 style={{ fontFamily: SERIF, fontSize: 'clamp(38px, 6vw, 64px)', fontWeight: 400, lineHeight: 1.08, letterSpacing: '-0.02em', margin: '0 0 16px' }}>
-            Know what you chant. <span style={{ color: palette.BROWN }}>Chant it every day.</span>
+          <h1 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 5.5vw, 64px)', fontWeight: 400, lineHeight: 1.12, letterSpacing: '-0.02em', margin: '0 0 16px', wordBreak: 'break-word' }}>
+            Know what you chant. <span style={{ color: palette.BROWN, display: 'inline-block' }}>Chant it every day.</span>
           </h1>
           <p style={{ fontSize: 17.5, lineHeight: 1.7, color: palette.INK2, margin: '0 auto 12px', maxWidth: 620 }}>
             Soft, unhurried mantra recordings with the Sanskrit text, how to say it and what it means, in plain words.

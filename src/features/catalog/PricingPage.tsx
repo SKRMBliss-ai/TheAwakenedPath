@@ -40,31 +40,11 @@ function optionLabel(id: string, door: Door): string {
 function DoorColumn({ palette, door, selected, onPick }: { palette: Palette; door: Door; selected: string | null; onPick: (id: string) => void }) {
   return (
     <section id={door.id} aria-labelledby={`door-${door.id}`} className="pr-col"
-      style={{ background: palette.CARD, border: `1px solid ${palette.BORDER}`, borderRadius: 28, padding: 'clamp(20px, 2.6vw, 28px)', display: 'flex', flexDirection: 'column', gap: 14, scrollMarginTop: 90 }}>
-      <span style={{ alignSelf: 'flex-start', fontSize: 13, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase',
+      style={{ background: palette.CARD, border: `1px solid ${palette.BORDER}`, borderRadius: 28, padding: 'clamp(18px, 3.5vw, 28px)', display: 'flex', flexDirection: 'column', gap: 14, scrollMarginTop: 90 }}>
+      <span style={{ alignSelf: 'flex-start', fontSize: 12.5, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase',
         padding: '6px 12px', borderRadius: 999, background: palette.BAND, color: palette.ON_BAND }}>{door.who}</span>
-      <h2 id={`door-${door.id}`} style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 3vw, 36px)', fontWeight: 500, lineHeight: 1.1, margin: 0 }}>{door.title}</h2>
+      <h2 id={`door-${door.id}`} style={{ fontFamily: SERIF, fontSize: 'clamp(25px, 3.2vw, 36px)', fontWeight: 500, lineHeight: 1.15, margin: 0 }}>{door.title}</h2>
       <p style={{ margin: 0, fontSize: 15.5, lineHeight: 1.6, color: palette.INK2 }}>{door.line}</p>
-      {door.id === 'me' && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 160, margin: '2px 0 6px' }}>
-          <img
-            src="/assets/gym/adult-character@320.webp"
-            alt="Adult Mind Gym"
-            style={{ maxHeight: 160, width: 'auto', objectFit: 'contain' }}
-            loading="lazy"
-          />
-        </div>
-      )}
-      {door.id === 'child' && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 160, margin: '2px 0 6px' }}>
-          <img
-            src="/assets/gym/chirpy/chirpy-feelings-trio.webp"
-            alt="Kids Mind Gym Chirpy Feelings & Emotions"
-            style={{ maxHeight: 140, maxWidth: '95%', objectFit: 'contain' }}
-            loading="lazy"
-          />
-        </div>
-      )}
       {door.id === 'me' && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 160, margin: '2px 0 6px' }}>
           <img
@@ -449,10 +429,10 @@ export default function PricingPage() {
       </nav>
 
       <header style={{ ...sec, paddingTop: 'clamp(16px, 3vw, 32px)', textAlign: 'center' }}>
-        <h1 style={{ fontFamily: SERIF, fontSize: 'clamp(36px, 5.4vw, 58px)', fontWeight: 400, lineHeight: 1.08, margin: '0 auto 12px', maxWidth: 760 }}>
+        <h1 style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 5.4vw, 54px)', fontWeight: 400, lineHeight: 1.1, margin: '0 auto 12px', maxWidth: 760 }}>
           Who is this for?
         </h1>
-        <p style={{ fontSize: 16.5, lineHeight: 1.65, color: palette.INK2, margin: '0 auto', maxWidth: 560 }}>
+        <p style={{ fontSize: 16, lineHeight: 1.6, color: palette.INK2, margin: '0 auto', maxWidth: 560 }}>
           Choose one plan. Each is complete on its own.
         </p>
       </header>
@@ -494,6 +474,10 @@ export default function PricingPage() {
         .pr-opt { transition: border-color .2s ease, background .2s ease; }
         .pr-opt:hover { border-color: ${palette.PURPLE_STRONG} !important; }
         @media (max-width: 900px) { .pr-doors { grid-template-columns: 1fr; } }
+        @media (max-width: 600px) {
+          .pr-doors { gap: 16px; }
+          .pr-col { padding: 20px 16px !important; border-radius: 24px !important; }
+        }
         @media (prefers-reduced-motion: reduce) { .pr-opt { transition: none; } }
       `}</style>
     </div>

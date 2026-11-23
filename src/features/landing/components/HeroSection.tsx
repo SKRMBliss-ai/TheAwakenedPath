@@ -103,6 +103,14 @@ export default function HeroSection({ palette, onStartPractice }: Props) {
         @media (max-width: 1023px) {
           .si-hero-mobile-photo { display: block; }
         }
+        @media (max-width: 640px) {
+          .si-hero-wrap { padding: clamp(24px, 5vw, 44px) 16px 36px !important; }
+          .si-hero-mobile-photo { max-width: 260px !important; margin: 0 auto 16px !important; }
+          .si-hero-copy h1 { font-size: clamp(28px, 7.5vw, 40px) !important; line-height: 1.15 !important; }
+          .si-hero-copy h2 { font-size: clamp(22px, 5.5vw, 30px) !important; line-height: 1.18 !important; margin-bottom: 18px !important; }
+          .si-hero-copy p { font-size: 15px !important; line-height: 1.6 !important; }
+          .si-hero-copy .si-btn-breathe { width: 100% !important; min-height: 50px !important; font-size: 15.5px !important; }
+        }
       `}</style>
       {/* ── 1. Warm atmospheric ground ── */}
       <div
@@ -186,6 +194,7 @@ export default function HeroSection({ palette, onStartPractice }: Props) {
 
       {/* ── 4. Overlaid Text Content ── */}
       <div
+        className="si-hero-wrap"
         style={{
           position: 'relative',
           zIndex: 2,

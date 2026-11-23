@@ -2962,27 +2962,26 @@ export default function UntetheredApp() {
           {[
             { id: 'start', icon: Sparkles, label: 'Start' },
             { id: 'home', icon: Home, label: 'Home' },
+            { id: 'mantras', icon: Headphones, label: 'Mantras' },
             // Courses is the hub (CoursesHub renders on the 'intelligence' tab),
             // and on a phone the bottom bar is the only nav most people use.
             { id: 'intelligence', icon: GraduationCap, label: 'Courses' },
-            { id: 'chapters', icon: BookOpen, label: 'Journal' },
             { id: 'situations', icon: Flame, label: 'Practice' },
+            { id: 'chapters', icon: BookOpen, label: 'Journal' },
             { id: 'profile', icon: User, label: 'You' },
           ].map(({ id, icon: Icon, label }) => {
-            const active = activeTab === id;
+            const active = activeTab === id || (id === 'mantras' && (activeTab === 'mantras' || activeTab === 'music'));
             return (
               <button
                 key={id}
                 onClick={() => { if (id === 'start') setStartKey((k) => k + 1); onNavigate(id); }}
-                className="flex-1 min-w-0 flex flex-col items-center justify-center gap-1 py-2.5 active:scale-95 transition-transform"
+                className="flex-1 min-w-0 flex flex-col items-center justify-center gap-1 py-2 active:scale-95 transition-transform"
                 style={{ color: active ? 'var(--accent-primary)' : 'var(--text-muted)' }}
                 aria-label={label}
                 aria-current={active ? 'page' : undefined}
               >
-                <Icon size={20} strokeWidth={active ? 2.4 : 1.8} />
-                {/* Five items on a 375px screen leaves ~70px each, so the
-                    tracking tightens and the label is never allowed to wrap. */}
-                <span className="text-[9px] font-bold uppercase tracking-[0.04em] w-full text-center truncate">{label}</span>
+                <Icon size={19} strokeWidth={active ? 2.4 : 1.8} />
+                <span className="text-[9px] font-bold uppercase tracking-[0.02em] w-full text-center truncate">{label}</span>
               </button>
             );
           })}

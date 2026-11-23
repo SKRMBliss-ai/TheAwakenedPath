@@ -139,7 +139,7 @@ function VideoCard({ video, accent, isDark }: { video: Video; accent: string; is
         <p style={{
           fontFamily: SERIF, fontSize: 17, fontWeight: 500, margin: '0 0 10px', lineHeight: 1.3, color: ink,
           overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical',
-        }}>{video.title}</p>
+        }}>{video.title.replace(/[\uFFFD\uFFFE\uFFFF]+/g, '')}</p>
         <span style={{ fontFamily: SANS, fontSize: 11, color: inkSub, fontWeight: 600, marginTop: 'auto' }}>
           {fmtAgo(video.publishedAt) ?? ''}
         </span>
@@ -180,7 +180,7 @@ export default function YouTubeSection({ palette, onTrack }: { palette: Palette;
 
   return (
     <section
-      className="si-reveal"
+      className="si-reveal si-visible"
       style={{
         padding: 'clamp(64px, 9vw, 104px) clamp(24px, 6vw, 96px)',
         position: 'relative', zIndex: 2,

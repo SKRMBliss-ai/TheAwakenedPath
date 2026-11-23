@@ -201,13 +201,13 @@ function ThemeToggle({ palette, onToggle }: { palette: Palette; onToggle: () => 
       aria-label={palette.isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       title={palette.isDark ? 'Light mode' : 'Dark mode'}
       style={{
-        width: 34, height: 34, borderRadius: '50%', cursor: 'pointer', flexShrink: 0,
-        background: 'transparent', border: `1px solid ${palette.BORDER}`, color: palette.INK2,
+        width: 38, height: 38, borderRadius: '50%', cursor: 'pointer', flexShrink: 0,
+        background: 'transparent', border: `1.5px solid ${palette.BORDER}`, color: palette.INK,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         transition: 'border-color .2s, color .2s',
       }}
     >
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
         {palette.isDark
           ? <><circle cx="12" cy="12" r="4.2" /><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4" /></>
           : <path d="M20.5 14.4A8.5 8.5 0 1 1 9.6 3.5a6.8 6.8 0 0 0 10.9 10.9Z" />}
@@ -230,90 +230,99 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
   showThemeToggle?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const shell = palette.isDark ? 'rgba(21,18,15,0.90)' : 'rgba(244,241,234,0.90)';
+  const shell = palette.isDark ? 'rgba(21,18,15,0.92)' : 'rgba(244,241,234,0.94)';
 
   return (
     <header style={{
       position: 'sticky', top: 0, zIndex: 60, background: shell,
       backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
       borderBottom: `1px solid ${palette.BORDER}`,
+      width: '100%',
     }}>
-      <div style={{
-        maxWidth: 1120, margin: '0 auto', padding: '12px 20px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
+      <div className="si-header-inner" style={{
+        maxWidth: 1120, margin: '0 auto', padding: '10px 18px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+        width: '100%', boxSizing: 'border-box',
       }}>
-        <a href={brand ? brand.href : '/'} onClick={onLogoClick} className="si-brand" style={{ display: 'flex', alignItems: 'center', gap: 16, textDecoration: 'none', flexShrink: 0, minWidth: 0 }}>
-          <SiteLogo palette={palette} size={64} brand={brand} />
+        <a href={brand ? brand.href : '/'} onClick={onLogoClick} className="si-brand" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', flex: '1 1 auto', minWidth: 0, overflow: 'hidden' }}>
+          <SiteLogo palette={palette} size={48} brand={brand} />
         </a>
 
-        <nav className="si-nav-row" style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          {links.map((l) => (
-            l.subItems && l.subItems.length > 0 ? (
-              <NavDropdown key={l.label} link={l} palette={palette} />
-            ) : (
+        {/* Right side actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+          <nav className="si-nav-row" style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+            {links.map((l) => (
+              l.subItems && l.subItems.length > 0 ? (
+                <NavDropdown key={l.label} link={l} palette={palette} />
+              ) : (
+                <a
+                  key={l.label}
+                  href={l.href}
+                  onClick={() => { trackNavClick(l.label, l.href); l.onClick?.(); }}
+                  className={`si-nav${l.secondary ? ' si-hide-sm' : ''}`}
+                  style={{
+                    color: palette.INK2,
+                    textDecoration: 'none',
+                    fontSize: 13.5,
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
+                    padding: '6px 10px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    minHeight: 32,
+                  }}
+                >
+                  {l.label}
+                </a>
+              )
+            ))}
+            {cta && (
               <a
-                key={l.label}
-                href={l.href}
-                onClick={() => { trackNavClick(l.label, l.href); l.onClick?.(); }}
-                className={`si-nav${l.secondary ? ' si-hide-sm' : ''}`}
+                href={cta.href}
+                onClick={() => { trackNavClick(`CTA: ${cta.label}`, cta.href); cta.onClick?.(); }}
+                className="si-hide-sm"
                 style={{
-                  color: palette.INK2,
-                  textDecoration: 'none',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  whiteSpace: 'nowrap',
-                  padding: '6px 10px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  minHeight: 32,
+                  background: palette.PURPLE_STRONG, color: palette.isDark ? '#15120F' : '#fff',
+                  padding: '9px 18px', borderRadius: 999, fontWeight: 800, fontSize: 13.5,
+                  textDecoration: 'none', whiteSpace: 'nowrap',
                 }}
               >
-                {l.label}
+                {cta.label}
               </a>
-            )
-          ))}
-          {showThemeToggle && <ThemeToggle palette={palette} onToggle={onToggleTheme} />}
-          {cta && (
-            <a
-              href={cta.href}
-              onClick={() => { trackNavClick(`CTA: ${cta.label}`, cta.href); cta.onClick?.(); }}
-              className="si-hide-sm"
-              style={{
-                background: palette.PURPLE_STRONG, color: palette.isDark ? '#15120F' : '#fff',
-                padding: '9px 18px', borderRadius: 999, fontWeight: 800, fontSize: 13,
-                textDecoration: 'none', whiteSpace: 'nowrap',
-              }}
-            >
-              {cta.label}
-            </a>
-          )}
-        </nav>
+            )}
+          </nav>
 
-        {/* Burger — only rendered on narrow screens by the stylesheet below */}
-        <button
-          className="si-burger"
-          onClick={() => setOpen((o) => !o)}
-          aria-label="Menu"
-          aria-expanded={open}
-          style={{
-            display: 'none', width: 34, height: 34, borderRadius: 9, cursor: 'pointer',
-            background: 'transparent', border: `1px solid ${palette.BORDER}`, color: palette.INK,
-            alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0, minWidth: 34,
-          }}
-        >
-          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            {open ? <path d="M18 6 6 18M6 6l12 12" /> : <path d="M3 7h18M3 12h18M3 17h18" />}
-          </svg>
-        </button>
+          {showThemeToggle && <ThemeToggle palette={palette} onToggle={onToggleTheme} />}
+
+          {/* Burger — rendered on narrow screens (<= 900px) */}
+          <button
+            className="si-burger"
+            onClick={() => setOpen((o) => !o)}
+            aria-label="Toggle navigation menu"
+            aria-expanded={open}
+            style={{
+              display: 'none', width: 42, height: 42, borderRadius: 10, cursor: 'pointer',
+              background: 'transparent', border: `1.5px solid ${palette.BORDER}`, color: palette.INK,
+              alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0, minWidth: 42, padding: 0,
+            }}
+          >
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+              {open ? <path d="M18 6 6 18M6 6l12 12" /> : <path d="M3 7h18M3 12h18M3 17h18" />}
+            </svg>
+          </button>
+        </div>
       </div>
 
       {open && (
-        <div style={{ borderTop: `1px solid ${palette.BORDER}`, background: shell, padding: '10px 20px 16px' }}>
+        <div style={{
+          borderTop: `1px solid ${palette.BORDER}`, background: shell, padding: '14px 18px 22px',
+          maxHeight: 'calc(100vh - 70px)', overflowY: 'auto', WebkitOverflowScrolling: 'touch',
+        }}>
           {links.map((l) => (
             l.subItems && l.subItems.length > 0 ? (
-              <div key={l.label} style={{ borderBottom: `1px solid ${palette.BORDER}`, padding: '11px 2px' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: palette.BROWN, marginBottom: 8 }}>
+              <div key={l.label} style={{ borderBottom: `1px solid ${palette.BORDER}`, padding: '12px 0' }}>
+                <div style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: palette.BROWN, marginBottom: 8 }}>
                   {l.label}
                 </div>
                 {l.subItems.map((sub) => (
@@ -322,13 +331,13 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
                     href={sub.href}
                     onClick={() => { trackNavClick(sub.label, sub.href); sub.onClick?.(); setOpen(false); }}
                     style={{
-                      display: 'block', padding: '8px 10px', color: palette.INK, textDecoration: 'none',
-                      borderRadius: 8, background: palette.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-                      margin: '4px 0',
+                      display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 48, padding: '10px 14px', color: palette.INK, textDecoration: 'none',
+                      borderRadius: 12, background: palette.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                      margin: '6px 0',
                     }}
                   >
-                    <div style={{ fontSize: 14, fontWeight: 700 }}>{sub.label}</div>
-                    {sub.sub && <div style={{ fontSize: 12, color: palette.INK2, marginTop: 2 }}>{sub.sub}</div>}
+                    <div style={{ fontSize: 15.5, fontWeight: 700 }}>{sub.label}</div>
+                    {sub.sub && <div style={{ fontSize: 13, color: palette.INK2, marginTop: 2 }}>{sub.sub}</div>}
                   </a>
                 ))}
               </div>
@@ -338,8 +347,8 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
                 href={l.href}
                 onClick={() => { trackNavClick(l.label, l.href); l.onClick?.(); setOpen(false); }}
                 style={{
-                  display: 'block', padding: '11px 2px', color: palette.INK, textDecoration: 'none',
-                  fontSize: 15, fontWeight: 600, borderBottom: `1px solid ${palette.BORDER}`,
+                  display: 'flex', alignItems: 'center', minHeight: 48, padding: '10px 2px', color: palette.INK, textDecoration: 'none',
+                  fontSize: 16, fontWeight: 700, borderBottom: `1px solid ${palette.BORDER}`,
                 }}
               >
                 {l.label}
@@ -351,9 +360,9 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
               href={cta.href}
               onClick={() => { trackNavClick(`CTA: ${cta.label}`, cta.href); cta.onClick?.(); setOpen(false); }}
               style={{
-                display: 'block', marginTop: 14, textAlign: 'center', background: palette.PURPLE_STRONG,
-                color: palette.isDark ? '#15120F' : '#fff', padding: '13px 18px', borderRadius: 999,
-                fontWeight: 800, fontSize: 14, textDecoration: 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 16, textAlign: 'center', background: palette.PURPLE_STRONG,
+                color: palette.isDark ? '#15120F' : '#fff', minHeight: 50, padding: '13px 20px', borderRadius: 999,
+                fontWeight: 800, fontSize: 15.5, textDecoration: 'none',
               }}
             >
               {cta.label}
@@ -365,13 +374,11 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
       <style>{`
         .si-nav:hover { color: ${palette.PURPLE_STRONG} !important; }
         .si-nav-row { flex-shrink: 0; }
-        @media (max-width: 520px) {
-          /* On a phone the logo, name and tagline filled the row and pushed the theme
-             and menu buttons off the screen: a smaller logo, no tagline, and the name
-             allowed to shrink keep both buttons visible. */
-          .si-brand { gap: 10px !important; flex-shrink: 1 !important; }
-          .si-brand img { width: 44px !important; height: 44px !important; }
-          .si-brand-name { font-size: 17px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        @media (max-width: 600px) {
+          .si-header-inner { padding: 8px 12px !important; }
+          .si-brand { gap: 8px !important; flex-shrink: 1 !important; }
+          .si-brand img { width: 40px !important; height: 40px !important; }
+          .si-brand-name { font-size: 16px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(100vw - 130px); }
           .si-brand-tag { display: none !important; }
         }
         @media (max-width: 860px) {
@@ -379,18 +386,6 @@ export function SiteHeader({ palette, onToggleTheme, links, cta, onLogoClick, sh
           .si-nav-row { gap: 12px; }
         }
         @media (max-width: 900px) {
-          /* 640px was too low a threshold: a page like the course sales page
-             passes 7 nav links (none marked secondary), which don't fit next
-             to the logo even at iPad Air width (820px) — they wrapped onto
-             the wordmark exactly like the phone-width bug this block was
-             originally written to fix. 900px covers phones AND tablets in
-             portrait, so the full link row only ever renders where it
-             actually has room.
-             Needs !important — each link also carries an inline
-             display:'inline-flex' (for icon/text alignment on desktop),
-             and inline styles beat a plain class rule regardless of
-             media query, so without this the links stayed visible and
-             overlapped the wordmark instead of collapsing to the burger. */
           .si-nav-row .si-nav { display: none !important; }
           .si-burger { display: inline-flex !important; }
         }

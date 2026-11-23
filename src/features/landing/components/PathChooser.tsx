@@ -72,20 +72,20 @@ export default function PathChooser({ palette }: { palette: Palette }) {
                   <p style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.6, color: palette.INK2, margin: 0 }}>{d.line}</p>
                   <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 7 }}>
                     {d.includes.map((x) => (
-                      <li key={x} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontFamily: SANS, fontSize: 14, lineHeight: 1.45, color: palette.INK }}>
-                        <Check size={16} color={palette.PURPLE_STRONG} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} /> {x}
+                      <li key={x} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontFamily: SANS, fontSize: 14.5, lineHeight: 1.5, color: palette.INK }}>
+                        <Check size={16} color={palette.PURPLE_STRONG} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} /> {x}
                       </li>
                     ))}
                   </ul>
                   <div style={{ marginTop: 'auto', paddingTop: 10 }}>
                     <p style={{ fontFamily: SANS, fontSize: 18, fontWeight: 700, margin: '0 0 12px' }}>{fromPrice(d)}</p>
                     <a href={d.start.href} onClick={() => track('HOME_DOOR_START', d.id)} className="pc-cta"
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 48, borderRadius: 999,
-                        background: palette.PURPLE_STRONG, color: palette.ON_ACCENT, fontFamily: SANS, fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 50, borderRadius: 999,
+                        background: palette.PURPLE_STRONG, color: palette.ON_ACCENT, fontFamily: SANS, fontSize: 15.5, fontWeight: 800, textDecoration: 'none' }}>
                       {d.start.label} <ArrowRight size={16} aria-hidden="true" />
                     </a>
                     <a href={`/pricing#${d.id}`} onClick={() => track('HOME_DOOR_PLANS', d.id)}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 44, marginTop: 4, fontFamily: SANS, fontSize: 14,
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 46, marginTop: 6, fontFamily: SANS, fontSize: 14.5,
                         fontWeight: 700, color: palette.PURPLE_STRONG, textDecoration: 'none' }}>
                       See plans and prices
                     </a>
@@ -118,7 +118,11 @@ export default function PathChooser({ palette }: { palette: Palette }) {
         .pc-img img.pc-obj { height: 80%; margin-bottom: 7.5%; filter: drop-shadow(0 12px 20px rgba(0,0,0,0.4)) drop-shadow(0 0 16px rgba(233,201,138,0.22)); }
         .pc-card:hover .pc-img img { transform: scale(1.04); }
         .pc-body { display: flex; flex-direction: column; gap: 12px; padding: 22px 22px 24px; flex: 1; }
-        @media (max-width: 900px) { .pc-grid { grid-template-columns: 1fr; } .pc-img { aspect-ratio: 16 / 9; } }
+        @media (max-width: 900px) {
+          .pc-grid { grid-template-columns: 1fr; }
+          .pc-img { aspect-ratio: 16 / 9; }
+          .pc-body { padding: 18px 16px 22px; }
+        }
         @media (prefers-reduced-motion: reduce) {
           .pc-card, .pc-img img { transition: none; }
           .pc-card:hover { transform: none; } .pc-card:hover .pc-img img { transform: none; }

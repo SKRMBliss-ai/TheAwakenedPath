@@ -997,6 +997,35 @@ export default function EmotionFeelingsCourse() {
       }}
     >
       {/* ── Fixed Sacred Geometry & Cursor Glow ───────────────────────────── */}
+      <style>{`
+        @media (max-width: 768px) {
+          .si-course-hero-scrim {
+            background: ${isDark
+              ? 'linear-gradient(180deg, rgba(13,10,18,0.85) 0%, rgba(13,10,18,0.92) 50%, rgba(13,10,18,0.98) 100%) !important'
+              : 'linear-gradient(180deg, rgba(249,245,239,0.88) 0%, rgba(249,245,239,0.94) 50%, rgba(249,245,239,0.98) 100%) !important'};
+          }
+          .si-course-hero-content {
+            padding: clamp(36px, 8vw, 64px) 16px !important;
+          }
+          .si-course-hero-badge {
+            white-space: normal !important;
+            font-size: 10px !important;
+            line-height: 1.4 !important;
+            margin-bottom: 16px !important;
+            padding: 6px 12px !important;
+          }
+          .si-course-hero-h1 {
+            font-size: clamp(28px, 6.5vw, 44px) !important;
+            line-height: 1.15 !important;
+          }
+          .si-course-hero-btn {
+            width: 100% !important;
+            text-align: center !important;
+            justify-content: center !important;
+            min-height: 50px !important;
+          }
+        }
+      `}</style>
       <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
         <SacredGeometry isDark={isDark} />
         <div 
@@ -1077,6 +1106,7 @@ export default function EmotionFeelingsCourse() {
         {/* Gradient Scrim Overlay for Readability */}
         <div
           aria-hidden="true"
+          className="si-course-hero-scrim"
           style={{
             position: 'absolute',
             inset: 0,
@@ -1105,6 +1135,7 @@ export default function EmotionFeelingsCourse() {
 
         {/* Overlaid Text Content Container (Kept on Left 45% so Sim remains 100% visible on right) */}
         <div
+          className="si-course-hero-content"
           style={{
             position: 'relative',
             zIndex: 2,
@@ -1116,6 +1147,7 @@ export default function EmotionFeelingsCourse() {
         >
           <div style={{ maxWidth: 510 }}>
             <div
+              className="si-course-hero-badge"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -1136,11 +1168,12 @@ export default function EmotionFeelingsCourse() {
             </div>
 
             <h1
+              className="si-course-hero-h1"
               style={{
                 fontFamily: SERIF,
-                fontSize: 'clamp(42px, 5.2vw, 74px)',
+                fontSize: 'clamp(36px, 5.2vw, 74px)',
                 fontWeight: 400,
-                lineHeight: 1.08,
+                lineHeight: 1.1,
                 color: ink,
                 margin: '0 0 16px',
                 letterSpacing: '-0.01em',
@@ -1171,7 +1204,7 @@ export default function EmotionFeelingsCourse() {
                   setActiveVideoUrl('https://www.youtube.com/embed/nbyToUpT1_8?autoplay=1&rel=0');
                   setShowVideoModal(true);
                 }}
-                className="si-btn-breathe"
+                className="si-btn-breathe si-course-hero-btn"
                 style={{
                   padding: '15px 32px',
                   borderRadius: 999,
@@ -1193,6 +1226,7 @@ export default function EmotionFeelingsCourse() {
 
               <a
                 href="#guide"
+                className="si-course-hero-btn"
                 style={{
                   padding: '15px 24px',
                   borderRadius: 999,
@@ -1204,10 +1238,10 @@ export default function EmotionFeelingsCourse() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 6,
-                  transition: 'color 0.2s ease',
+                  border: `1px solid ${borderC}`,
                 }}
               >
-                Read the overview <ChevronDown size={16} />
+                Meet Sim Katyal →
               </a>
             </div>
           </div>
@@ -3273,22 +3307,26 @@ export default function EmotionFeelingsCourse() {
           <button
             onClick={() => openCheckout()}
             style={{
-              display: 'block',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               width: '100%',
               maxWidth: 480,
               margin: '0 auto',
-              padding: '14px',
+              minHeight: 50,
+              padding: '14px 24px',
               borderRadius: 999,
               cursor: 'pointer',
               background: '#4A3260',
               color: '#fff',
               border: 'none',
               fontFamily: SANS,
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: 800,
+              boxShadow: '0 8px 24px rgba(74,50,96,0.35)',
             }}
           >
-            Join the Course
+            Join the Course →
           </button>
         </div>
       )}

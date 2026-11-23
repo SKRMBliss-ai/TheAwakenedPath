@@ -160,16 +160,27 @@ export default function SoulfulHome() {
       });
     }, { threshold: 0.08, rootMargin: '0px 0px -32px 0px' });
 
-    // Observe all si-reveal elements that are below the fold
-    document.querySelectorAll<HTMLElement>('.si-reveal').forEach((el) => {
-      if (el.getBoundingClientRect().top > window.innerHeight * 0.92) {
-        io.observe(el);
-      } else {
-        el.classList.add('si-visible');
-      }
-    });
+    const observeAll = () => {
+      document.querySelectorAll<HTMLElement>('.si-reveal:not(.si-visible)').forEach((el) => {
+        if (el.getBoundingClientRect().top > window.innerHeight * 0.92) {
+          io.observe(el);
+        } else {
+          el.classList.add('si-visible');
+        }
+      });
+    };
 
-    return () => io.disconnect();
+    // Observe all si-reveal elements that are below the fold
+    observeAll();
+
+    // Catch dynamically mounted sections (e.g. async video fetch)
+    const mo = typeof MutationObserver !== 'undefined' ? new MutationObserver(() => observeAll()) : null;
+    mo?.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      io.disconnect();
+      mo?.disconnect();
+    };
   }, [audience]);
 
 
@@ -185,7 +196,7 @@ export default function SoulfulHome() {
       minHeight: '100vh',
       overflowX: 'hidden',
       position: 'relative',
-      paddingBottom: 72,  // space for fixed bottom tab bar
+      paddingBottom: 96,  // space for fixed bottom tab bar
     }}>
       {/* ── Sacred geometry — fixed behind the entire page ─────────────────── */}
       <SacredGeometry isDark={isDark} />
@@ -200,11 +211,12 @@ export default function SoulfulHome() {
         style={{
           position: 'relative', zIndex: 51, display: 'flex', alignItems: 'center',
           justifyContent: 'center', gap: 8, flexWrap: 'wrap',
-          padding: '9px 16px', textAlign: 'center', textDecoration: 'none',
+          width: '100%', boxSizing: 'border-box',
+          padding: '8px 12px', textAlign: 'center', textDecoration: 'none',
           background: isDark ? 'linear-gradient(90deg, #2D1F2D 0%, #3D263C 50%, #2D1F2D 100%)' : 'linear-gradient(90deg, #F5EDE1 0%, #EFE1D0 50%, #F5EDE1 100%)',
           color: isDark ? '#EBD29C' : '#6A4F2C',
           borderBottom: `1px solid ${isDark ? 'rgba(233,201,138,0.22)' : 'rgba(216,174,94,0.3)'}`,
-          fontFamily: SANS, fontSize: 12.5, fontWeight: 700,
+          fontFamily: SANS, fontSize: 12, fontWeight: 700, lineHeight: 1.4,
         }}
       >
         <span>🪔 New offering: Soulful Mantra Studio — Ad-free sacred Vedic chanting with 108 mala counter</span>
