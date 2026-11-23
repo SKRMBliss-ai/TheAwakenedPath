@@ -143,7 +143,7 @@ SCREENS.share=()=>{const s=h('<section class="screen"></section>');s.appendChild
  const cta=h('<button class="cta" disabled>Help me with this</button>');ta.oninput=()=>{cta.disabled=ta.value.trim().length<3};
  cta.onclick=()=>{run.topic=ta.value.trim();setPath('personal');run.guideP=askGuide(run.topic,WX[run.weather].label,run.followUp);chime();next()};
  const good=h('<button class="ghost">Nothing specific — you choose for me</button>');good.onclick=()=>{setPath('learning');soft();next()};
- s.append(ta,micFor(ta),chips,h('<p class="note">Your words go to the AI guide to personalise today’s session. Your history stays on this device only.</p>'),h('<div class="spacer"></div>'),cta,good);return s};
+ s.append(ta,micFor(ta),chips,h('<p class="note">Your words are sent securely to shape today’s practice around you. Your history stays on this device only.</p>'),h('<div class="spacer"></div>'),cta,good);return s};
 
 SCREENS.guide=()=>{const s=h('<section class="screen"></section>');s.appendChild(topBar());
  s.appendChild(h('<div><p class="eyebrow">Your guide</p><h2>Let’s look at it together</h2></div>'));
@@ -321,7 +321,7 @@ function home(){run=null;const done=S.lastDone===dayKey();const s=h('<section cl
  const tools=h('<div class="tools"><button class="tool">'+ICON.breath+'<b>Calm in 60 seconds</b><span>Three slow breaths</span></button><button class="tool">'+ICON.leaf+'<b>Let a thought go</b><span>Leaves on the stream</span></button></div>');
  tools.children[0].onclick=()=>startRun('breathe');tools.children[1].onclick=()=>startRun('stream');s.appendChild(tools);
  if(opts.onMore){const m=h('<button class="ghost" style="margin-top:4px">More practices</button>');m.onclick=opts.onMore;s.appendChild(m)}
- s.appendChild(h('<p class="note" style="text-align:center;padding-top:6px">An AI guide for everyday stress. Not a substitute for professional care.</p>'));
+ s.appendChild(h('<p class="note" style="text-align:center;padding-top:6px">A fresh practice every day, shaped around you. Not a substitute for professional care.</p>'));
  /* Wide screens: [greeting + start card | tall path], then the rest full width. Phones keep the original single-column order. */
  {const k=[...s.children];const top=k[0],greet=k[1],sky=k[2];const todayEl=s.querySelector('.today');const mission=s.querySelector('.mission');
   const main=h('<div class="g-main"></div>');if(mission)main.appendChild(mission);main.appendChild(todayEl);
