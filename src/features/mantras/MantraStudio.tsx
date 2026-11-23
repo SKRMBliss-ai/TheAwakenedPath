@@ -1701,7 +1701,7 @@ function MusicHub() {
       <header style={{ position: 'relative', overflow: 'hidden', background: '#14202A', color: '#FFFFFF', padding: 'clamp(36px, 6vw, 80px) clamp(16px, 5vw, 96px)' }}>
         <video ref={heroVideo} autoPlay muted playsInline preload="auto" poster="/SoulfulStudios/Meditation/banner.webp" aria-hidden="true"
           onEnded={() => setHeroDone(true)} onError={() => setHeroDone(true)}
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: heroDone ? 0.55 : 1, transition: 'opacity 1s ease' }}>
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: heroDone ? 0.6 : 1, filter: heroDone ? 'blur(7px)' : 'none', transform: heroDone ? 'scale(1.06)' : 'none', transition: 'opacity 1s ease, filter 1s ease, transform 1s ease' }}>
           <source src="/SoulfulStudios/Meditation/hero.mp4" type="video/mp4" />
         </video>
         <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(10,20,28,.35), rgba(10,20,28,.7))', opacity: heroDone ? 1 : 0, transition: 'opacity 1s ease' }} />
