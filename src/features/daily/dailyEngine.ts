@@ -321,7 +321,7 @@ function home(){run=null;const done=S.lastDone===dayKey();const s=h('<section cl
  const tools=h('<div class="tools"><button class="tool">'+ICON.breath+'<b>Calm in 60 seconds</b><span>Three slow breaths</span></button><button class="tool">'+ICON.leaf+'<b>Let a thought go</b><span>Leaves on the stream</span></button></div>');
  tools.children[0].onclick=()=>startRun('breathe');tools.children[1].onclick=()=>startRun('stream');s.appendChild(tools);
  if(opts.onMore){const m=h('<button class="ghost" style="margin-top:4px">More practices</button>');m.onclick=opts.onMore;s.appendChild(m)}
- s.appendChild(h('<p class="note" style="text-align:center;padding-top:6px">A fresh practice every day, shaped around you. Not a substitute for professional care.</p>'));
+ s.appendChild(h('<p class="note" style="text-align:center;padding-top:6px">A new practice every day, shaped around you.</p>'));
  /* Wide screens: [greeting + start card | tall path], then the rest full width. Phones keep the original single-column order. */
  {const k=[...s.children];const top=k[0],greet=k[1],sky=k[2];const todayEl=s.querySelector('.today');const mission=s.querySelector('.mission');
   const main=h('<div class="g-main"></div>');if(mission)main.appendChild(mission);main.appendChild(todayEl);
