@@ -1759,7 +1759,7 @@ export default function UntetheredApp() {
             </div>
             <div className="space-y-0.5 ml-2 pl-5 border-l border-[var(--border-subtle)]/40 mt-0.5">
               {[
-                { id: 'music', icon: Headphones, label: 'Sacred Sounds' },
+                { id: 'music', icon: Headphones, label: 'Meditation Music' },
                 { id: 'mantras', icon: Sparkles, label: 'Mantras' },
               ].map(item => {
                 const isActive = activeTab === item.id;

@@ -185,6 +185,7 @@ const isPricingRoute = (() => {
   const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
   const forward: Record<string, string> = {
     '/mantras/lifetime-pass/checkout': 'mantra_lifetime_pass',
+    '/meditation-music/checkout': 'meditation_music_pass',
     '/feelingsandemotioncourse/checkout': 'emotion_feelings_course',
   };
   if (forward[p]) { window.location.replace(`/pricing?select=${forward[p]}`); return true; }
@@ -196,7 +197,8 @@ const isPricingRoute = (() => {
 const mantraRoute = (() => {
   if (typeof window === 'undefined') return null;
   const p = window.location.pathname.replace(/\/+$/, '').toLowerCase();
-  type R = { slug?: string; view?: 'pass' | 'order' };
+  type R = { slug?: string; view?: 'pass' | 'order' | 'music' };
+  if (p === '/meditation-music' || p === '/meditation-music/index.html') return { view: 'music' } as R;
   if (p === '/mantras' || p === '/mantras/index.html') return {} as R;
   if (p === '/mantras/lifetime-pass' || p === '/mantras/lifetime-pass/index.html') return { view: 'pass' } as R;
   if (p === '/mantras/lifetime-pass/checkout') return { view: 'order' } as R;

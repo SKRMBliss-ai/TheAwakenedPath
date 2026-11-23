@@ -217,6 +217,7 @@ const COURSE_PRICES = {
     // Mantra Pass now covers mantras AND meditation music. The two old ids
     // below are retired (merged into it) and priced the same so old links work.
     "mantra_lifetime_pass": 14.99,
+    "meditation_music_pass": 14.99,
     // Sacred Sounds (meditation music) pass, and both libraries together.
     // Keep in sync with src/features/catalog/catalog.ts.
     "sacred_sounds_pass": 14.99,
@@ -228,8 +229,9 @@ const COURSE_PRICES = {
 // `purchasedCourses`. List the courses explicitly rather than excluding them
 // one by one, so a new course added above cannot silently leak into the
 // track library (which is how emotion_feelings_course ended up there).
-const COURSE_IDS = new Set(['emotion_feelings_course', 'wisdom_untethered', 'all_access', 'kids_zoom_monthly', 'kids_zoom_yearly', 'mantra_lifetime_pass', 'sacred_sounds_pass', 'sound_bundle']);
-const isMantraPass = (id) => id === 'mantra_lifetime_pass' || id === 'sacred_sounds_pass' || id === 'sound_bundle';
+const COURSE_IDS = new Set(['emotion_feelings_course', 'wisdom_untethered', 'all_access', 'kids_zoom_monthly', 'kids_zoom_yearly', 'mantra_lifetime_pass', 'meditation_music_pass', 'sacred_sounds_pass', 'sound_bundle']);
+const isMusicPass = (id) => id === 'meditation_music_pass';
+const isMantraPass = (id) => id === 'mantra_lifetime_pass' || id === 'meditation_music_pass' || id === 'sacred_sounds_pass' || id === 'sound_bundle';
 // Where pass buyers open the ad-free loop player, playlists and PDFs.
 // Empty = the buyer email promises the link within 24 hours and the team sends it by hand.
 const MANTRA_PASS_DOWNLOAD_URL = '';
@@ -257,6 +259,7 @@ const COURSE_PRICES_INR = {
     "kids_zoom_monthly": 1499,
     "kids_zoom_yearly": 13491,
     "mantra_lifetime_pass": 999,
+    "meditation_music_pass": 999,
     "sacred_sounds_pass": 999,
     "sound_bundle": 999
 };
@@ -1345,7 +1348,7 @@ async function grantPurchase({
             }
             if (isMantraPass(item)) {
                 try {
-                    await sendMantraPassEmails({ toEmail: userEmail, phone: String(guestPhone || '').trim(), amount, currency, paymentId, provider });
+                    await sendMantraPassEmails({ toEmail: userEmail, phone: String(guestPhone || '').trim(), amount, currency, paymentId, provider, music: isMusicPass(item) });
                 } catch (emailErr) {
                     console.error("Failed to send mantra pass emails:", emailErr);
                 }
@@ -3071,15 +3074,17 @@ async function sendKidsZoomBookingEmails({ toEmail, phone, courseId, amount, cur
 
 // Mantra Pass (Soulful Mantra Studio): one email to the team so the
 // download link gets sent, one to the buyer confirming what happens next.
-async function sendMantraPassEmails({ toEmail, phone, amount, currency, paymentId, provider }) {
+async function sendMantraPassEmails({ toEmail, phone, amount, currency, paymentId, provider, music = false }) {
     const transporter = getTransporter();
+    const hasLink = !!MANTRA_PASS_DOWNLOAD_URL;
+    const passName = music ? 'Meditation Music Pass' : 'Mantra Pass';
     const paid = amount != null ? `${currency || ''} ${amount}` : 'see payment dashboard';
     await transporter.sendMail({
         from: '"SKRM Bliss AI" <skrmblissai@gmail.com>',
         to: [...new Set([...ADMIN_EMAILS, 'shrutikhungar@gmail.com'])].join(', '),
-        subject: 'New Mantra Pass buyer — Soulful Mantra Studio',
+        subject: `New ${passName} buyer — Soulful Mantra Studio`,
         html: `<div style="font-family:sans-serif;padding:20px;">
-            <h2 style="color:#4A3260;">New Mantra Pass</h2>
+            <h2 style="color:#4A3260;">New ${passName}</h2>
             <p><strong>Email:</strong> ${toEmail || 'N/A'}</p>
             <p><strong>Phone:</strong> ${phone || 'N/A'}</p>
             <p><strong>Paid:</strong> ${paid} via ${provider || ''} (${paymentId || ''})</p>
@@ -3092,11 +3097,11 @@ async function sendMantraPassEmails({ toEmail, phone, amount, currency, paymentI
     await transporter.sendMail({
         from: '"Soulful Mantra Studio" <connect@skrmblissai.in>',
         to: toEmail,
-        subject: 'Your Mantra Pass',
+        subject: `Your ${passName}`,
         html: `<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:24px;color:#3A342C;line-height:1.6;">
-            <h2 style="color:#4A3260;">Thank you — your Mantra Pass is confirmed</h2>
-            <p>To access your mantra collection, go to <a href="https://www.skrmblissai.in/mindgym">https://www.skrmblissai.in/mindgym</a>.</p>
-            <p>Log in with the same email address you used to purchase the Mantra Pass, then choose <strong>Mantra</strong> from the left-hand menu.</p>
+            <h2 style="color:#4A3260;">Thank you — your ${passName} is confirmed</h2>
+            <p>To access your ${music ? 'meditation music' : 'mantra collection'}, go to <a href="https://www.skrmblissai.in/mindgym?claim=1">https://www.skrmblissai.in/mindgym</a>.</p>
+            <p>Log in with the same email address you used to purchase the ${passName}, then choose <strong>${music ? 'Meditation Music' : 'Mantra'}</strong> from the left-hand menu.</p>
             <p>With warmth,<br/>Soulful Mantra Studio</p>
         </div>`,
     });
