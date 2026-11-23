@@ -423,7 +423,8 @@ const FOOTER_COLS: { title: string; items: NavLink[] }[] = [
     title: 'Sacred Mantras',
     items: [
       { label: 'Mantra Pass (Lifetime)', href: '/mantras/lifetime-pass' },
-      { label: 'Meditation Music Pass', href: '/meditation-music' },
+      { label: 'Meditation Music', href: '/meditation-music' },
+      { label: 'Meditation Music Pass', href: '/meditation-music/lifetime-pass' },
       { label: 'Daily Sadhana & Mala Counter', href: '/mantras#begin' },
       { label: 'Sacred Chants Channel', href: MANTRA_SUBSCRIBE_URL },
     ],

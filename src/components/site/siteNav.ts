@@ -24,7 +24,7 @@ export function siteNav({ home = false }: { home?: boolean } = {}): NavLink[] {
       href: '/mantras',
       subItems: [
         { label: 'Mantra Pass', sub: 'Lifetime ad-free chanting, 108 mala counter, puja sequences', href: '/mantras/lifetime-pass' },
-        { label: 'Meditation Music Pass', sub: 'All meditation music for calm, sleep and deep practice', href: '/meditation-music', badge: 'NEW' },
+        { label: 'Meditation Music Pass', sub: 'All meditation music for calm, sleep and deep practice', href: '/meditation-music/lifetime-pass', badge: 'NEW' },
         { label: 'Daily Sadhana', sub: 'Morning rituals, 21-day sankalp & sleep timer', href: '/mantras#begin' },
       ],
     },

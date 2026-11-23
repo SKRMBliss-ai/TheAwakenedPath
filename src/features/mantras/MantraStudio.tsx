@@ -21,6 +21,7 @@ import {
   MANTRA_WHATSAPP, MANTRA_WHATSAPP_GROUP, MANTRA_PASS_ID, MUSIC_PASS_PRICE, MANTRA_PASS_OPEN, MANTRA_PASS_REFUND_DAYS, MANTRA_CURRENCY,
   passPrice, singlePrice, singleId, soldSingly, findMantra, thumb, waLink, getMantraAudioUrl, type Mantra, type Moment,
 } from './mantraData';
+import { SACRED_TRACKS } from '../music/musicData';
 import { formatKidsPrice } from '../landing/kidsPricing';
 import { downloadAudio } from './mantraDownload';
 import { MantraWalkthroughModal } from './components/MantraWalkthroughModal';
@@ -1493,6 +1494,7 @@ function MantraPassOrder() {
 // Payment runs through the shared checkout on /pricing, exactly like the Mantra Pass,
 // then the buyer signs in at /mindgym and finds Meditation Music unlocked.
 const MUSIC_ORDER_PATH = '/pricing?select=meditation_music_pass';
+const MUSIC_PASS_PATH = '/meditation-music/lifetime-pass';
 const musicPrice = () => formatKidsPrice(MUSIC_PASS_PRICE[MANTRA_CURRENCY], MANTRA_CURRENCY);
 
 const MUSIC_FAQ: { q: string; a: string }[] = [
@@ -1506,7 +1508,7 @@ const MUSIC_FAQ: { q: string; a: string }[] = [
 
 function MusicPassSales() {
   const { palette, toggle } = useSiteTheme();
-  const url = 'https://www.skrmblissai.in/meditation-music';
+  const url = 'https://www.skrmblissai.in/meditation-music/lifetime-pass';
   usePageSeo({
     title: 'Meditation Music Pass: Calm, Sleep & Deep Practice | Soulful Mind Studio',
     description: 'One payment for all our meditation music, with loop, playlists by mood and a sleep timer. No subscription.',
@@ -1536,8 +1538,8 @@ function MusicPassSales() {
       <Header palette={palette} toggle={toggle} home={false} />
 
       <nav aria-label="Back" style={{ ...wrap, padding: '10px 20px 0' }}>
-        <a href="/pricing" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, color: palette.PURPLE_STRONG, fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
-          <ChevronLeft size={18} aria-hidden="true" /> All plans
+        <a href="/meditation-music" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, color: palette.PURPLE_STRONG, fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
+          <ChevronLeft size={18} aria-hidden="true" /> Back to the meditation music
         </a>
       </nav>
 
@@ -1662,9 +1664,84 @@ function MusicPassSales() {
   );
 }
 
+// ── /meditation-music (library page, like /mantras) ──────────────────────────
+function MusicHub() {
+  const { palette, toggle } = useSiteTheme();
+  const url = 'https://www.skrmblissai.in/meditation-music';
+  usePageSeo({
+    title: 'Meditation Music for Calm, Sleep & Deep Practice | Soulful Mind Studio',
+    description: 'Meditation music for calm, sleep and deep practice. Listen to a preview of every track, then get the whole library with the Meditation Music Pass.',
+    url,
+    image: 'https://www.skrmblissai.in/marketing/mantras/lockup.webp',
+  });
+  useEffect(() => { t('PAGE_VISIT_MUSIC_HUB'); }, []);
+
+  const fallback = '/marketing/mantras/bowl-lotus.webp';
+  const box: React.CSSProperties = { background: palette.CARD, border: `1px solid ${palette.BORDER}`, borderRadius: 24 };
+
+  return (
+    <div className="min-h-screen w-full antialiased" style={{ fontFamily: SANS, background: palette.BG, color: palette.INK, overflowX: 'hidden' }}>
+      <PageStyles palette={palette} />
+      <Header palette={palette} toggle={toggle} home={false} />
+
+      <header style={{ ...sec, paddingTop: 'clamp(28px, 4.5vw, 56px)', paddingBottom: 'clamp(20px, 3vw, 36px)' }}>
+        <div style={{ ...wrap, maxWidth: 900, textAlign: 'center' }}>
+          <Kicker palette={palette}>Soulful Mind Studio</Kicker>
+          <h1 style={{ fontFamily: SERIF, fontSize: 'clamp(36px, 5.4vw, 62px)', fontWeight: 400, lineHeight: 1.08, letterSpacing: '-0.02em', margin: '0 0 14px' }}>
+            Meditation music <span style={{ color: palette.BROWN }}>for calm, sleep and deep practice</span>
+          </h1>
+          <p style={{ fontSize: 17, lineHeight: 1.7, color: palette.INK2, margin: '0 auto 22px', maxWidth: 600 }}>
+            Quiet music to sit with, sleep to and come back to. Listen to a preview of any track, then keep the whole library with one payment.
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
+            <Btn palette={palette} href={MUSIC_PASS_PATH} label={`Meditation Music Pass · ${musicPrice()}`} event="MUSIC_HUB_PASS" />
+            <Btn palette={palette} href="#library" label="Browse the music" event="MUSIC_HUB_BROWSE" ghost />
+          </div>
+        </div>
+      </header>
+
+      <section id="library" style={{ ...sec, paddingTop: 0 }}>
+        <div style={wrap}>
+          <SectionTitle palette={palette} art="bowl" artHeight={96} kicker="The library" title="Choose how you want to feel" />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
+            {SACRED_TRACKS.map((tr) => (
+              <div key={tr.id} className="sms-card" style={{ ...box, padding: 14, display: 'flex', flexDirection: 'column' }}>
+                <img src={(palette.isDark ? tr.coverImage?.dark : tr.coverImage?.light) || fallback} alt="" loading="lazy" width={480} height={360}
+                  style={{ width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: 16, display: 'block', marginBottom: 12 }} />
+                <span style={{ display: 'flex', gap: 8, alignItems: 'center', margin: '0 4px 4px', fontSize: 12, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: palette.BROWN }}>
+                  {tr.mood}<span aria-hidden="true">·</span>{tr.duration}
+                </span>
+                <h3 style={{ margin: '0 4px 6px', fontFamily: SERIF, fontSize: 24, fontWeight: 500, lineHeight: 1.2 }}>{tr.title}</h3>
+                <p style={{ margin: '0 4px 4px', fontSize: 14.5, lineHeight: 1.6, color: palette.INK2 }}>{tr.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section style={{ background: palette.BAND, color: palette.ON_BAND, padding: 'clamp(36px, 6vw, 56px) clamp(16px, 5vw, 96px)' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ flex: '1 1 420px' }}>
+            <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', color: palette.ON_BAND_ACCENT }}>Meditation Music Pass</span>
+            <h2 style={{ fontFamily: SERIF, fontSize: 'clamp(26px, 3.6vw, 38px)', fontWeight: 400, lineHeight: 1.15, margin: '8px 0' }}>All the music, on loop, with a sleep timer.</h2>
+            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: palette.ON_BAND_SOFT }}>{musicPrice()} once, no subscription. Full refund within {MANTRA_PASS_REFUND_DAYS} days.</p>
+          </div>
+          <a href={MUSIC_PASS_PATH} onClick={() => t('MUSIC_HUB_BAND_CTA')} className="sms-btn" style={{ display: 'inline-flex', alignItems: 'center', minHeight: 50, padding: '0 28px',
+            borderRadius: 999, background: palette.ON_BAND, color: '#FFFFFF', fontFamily: SANS, fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
+            See the Meditation Music Pass →
+          </a>
+        </div>
+      </section>
+
+      <MantraFooter palette={palette} />
+    </div>
+  );
+}
+
 /** `view` picks the pass pages; otherwise `slug` undefined → the library hub.
  *  An unknown slug returns null so the router can 404. */
-export default function MantraStudio({ slug, view }: { slug?: string; view?: 'pass' | 'order' | 'music' }) {
+export default function MantraStudio({ slug, view }: { slug?: string; view?: 'pass' | 'order' | 'music' | 'musichub' }) {
+  if (view === 'musichub') return <MusicHub />;
   if (view === 'music') return <MusicPassSales />;
   if (view === 'pass') return <MantraPassSales />;
   if (view === 'order') return <MantraPassOrder />;
