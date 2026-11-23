@@ -19,9 +19,19 @@ export default function StudiosSection({ palette }: { palette: Palette }) {
       <style>{`
         .st-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:stretch}
         @media (max-width:980px){.st-grid{grid-template-columns:1fr;max-width:560px;margin:0 auto}}
-        .st-row{display:block;padding:14px 4px;text-decoration:none;color:inherit;border-top:1px solid var(--st-line)}
+        .st-card{transition:transform .35s ease,box-shadow .35s ease,border-color .35s ease}
+        .st-card:hover,.st-card:focus-within{transform:translateY(-6px);box-shadow:0 22px 50px rgba(36,30,36,.22);border-color:var(--st-accent)!important}
+        .st-band img{transition:transform .8s ease}
+        .st-card:hover .st-band img.st-pic{transform:scale(1.06)}
+        .st-logo{transition:transform .5s ease}
+        .st-card:hover .st-logo{transform:translateX(-50%) scale(1.08) rotate(-4deg)!important}
+        .st-row{display:block;padding:14px 10px;margin:0 -6px;border-radius:14px;text-decoration:none;color:inherit;border-top:1px solid var(--st-line);transition:background .25s ease}
         .st-row:first-child{border-top:0}
+        .st-row:hover,.st-row:focus-visible{background:var(--st-tint)}
+        .st-row svg{transition:transform .25s ease}
+        .st-row:hover svg{transform:translateX(5px)}
         .st-row:hover .st-name{text-decoration:underline}
+        @media (prefers-reduced-motion: reduce){.st-card,.st-band img,.st-logo,.st-row svg{transition:none}.st-card:hover{transform:none}}
       `}</style>
       <div style={{ maxWidth: 1180, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', maxWidth: 680, margin: '0 auto clamp(24px, 4vw, 40px)' }}>
@@ -35,17 +45,17 @@ export default function StudiosSection({ palette }: { palette: Palette }) {
 
         <div className="st-grid">
           {STUDIOS.map((s) => (
-            <article key={s.key} style={{ ['--st-line' as string]: palette.BORDER, display: 'flex', flexDirection: 'column', background: palette.CARD,
+            <article key={s.key} className="st-card" style={{ ['--st-line' as string]: palette.BORDER, ['--st-accent' as string]: s.accent, ['--st-tint' as string]: `${s.accent}18`, display: 'flex', flexDirection: 'column', background: palette.CARD,
               border: `1px solid ${palette.BORDER}`, borderRadius: 28, overflow: 'visible', color: palette.INK }}>
               {/* Picture band, with the studio's own logo sitting across its lower edge */}
-              <div style={{ position: 'relative', height: 250, display: 'flex', background: 'radial-gradient(ellipse at 50% 100%, rgba(233,201,138,0.22), transparent 70%), #1C1425', borderBottom: `4px solid ${s.accent}` }}>
+              <div className="st-band" style={{ position: 'relative', height: 250, display: 'flex', background: 'radial-gradient(ellipse at 50% 100%, rgba(233,201,138,0.22), transparent 70%), #1C1425', borderBottom: `4px solid ${s.accent}` }}>
                 <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden', borderRadius: '27px 27px 0 0' }}>
                 {s.images.map((im) => (
-                  <img key={im.src} src={im.src} alt={im.alt} loading="lazy" decoding="async"
+                  <img key={im.src} src={im.src} alt={im.alt} loading="lazy" decoding="async" className="st-pic"
                     style={{ flex: 1, minWidth: 0, height: '100%', objectFit: im.contain ? 'contain' : 'cover', objectPosition: 'center top', padding: im.contain ? 18 : 0 }} />
                 ))}
                 </div>
-                <img src={s.logo} alt={`${s.name} logo`} width={84} height={84} loading="lazy"
+                <img src={s.logo} alt={`${s.name} logo`} width={84} height={84} loading="lazy" className="st-logo"
                   style={{ position: 'absolute', left: '50%', bottom: -42, transform: 'translateX(-50%)', width: 84, height: 84, objectFit: 'cover', borderRadius: '50%',
                     background: '#FFFFFF', border: '3px solid #FFFFFF', boxShadow: '0 8px 22px rgba(0,0,0,.3)' }} />
               </div>
