@@ -680,6 +680,10 @@ export default function UntetheredApp() {
   const [showReward, setShowReward] = useState<Reward | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  /** Show the "full screen" nudge on the collapse arrow until it has been used once. */
+  const [fullScreenHint, setFullScreenHint] = useState(() => {
+    try { return localStorage.getItem('mg-fullscreen-hint') !== 'seen'; } catch { return true; }
+  });
   const [showLeaveMindGymModal, setShowLeaveMindGymModal] = useState(false);
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 1024 : true);
   // On a phone there is one daily screen: the Dashboard opens Today instead.
@@ -1501,18 +1505,32 @@ export default function UntetheredApp() {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 20 }}
-          onClick={() => setIsSidebarCollapsed(true)}
-          aria-label="Collapse sidebar"
-          className="hidden lg:flex fixed left-[280px] top-1/2 -translate-y-1/2 z-[75] w-8 h-14 items-center justify-center rounded-r-2xl transition-all hover:w-10 group"
+          onClick={() => {
+            setIsSidebarCollapsed(true);
+            if (fullScreenHint) {
+              setFullScreenHint(false);
+              try { localStorage.setItem('mg-fullscreen-hint', 'seen'); } catch { /* ignore */ }
+            }
+          }}
+          aria-label="Collapse sidebar for full screen"
+          className={`hidden lg:flex fixed left-[280px] top-1/2 -translate-y-1/2 z-[75] w-8 h-14 items-center justify-center rounded-r-2xl transition-all hover:w-10 group${fullScreenHint && activeTab === 'start' ? ' mg-nudge' : ''}`}
           style={{
             background: 'var(--bg-surface)',
             border: '1.5px solid var(--border-default)',
             borderLeft: 'none',
             boxShadow: '4px 0 20px rgba(0,0,0,0.15)',
           }}
-          title="Collapse sidebar"
+          title="Collapse sidebar for full screen"
         >
           <ChevronLeft size={16} style={{ color: 'var(--text-muted)' }} className="group-hover:scale-110 transition-transform" />
+          {fullScreenHint && activeTab === 'start' && (
+            <span
+              className="absolute left-full top-1/2 -translate-y-1/2 ml-3 whitespace-nowrap rounded-full px-3 py-1.5 text-[12px] font-semibold pointer-events-none"
+              style={{ background: '#25233A', color: '#fff', boxShadow: '0 6px 18px rgba(0,0,0,0.25)' }}
+            >
+              Click for full screen
+            </span>
+          )}
         </motion.button>
       )}
 

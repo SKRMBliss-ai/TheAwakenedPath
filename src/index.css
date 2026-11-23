@@ -1234,3 +1234,8 @@ body.zen-chanting-open button[aria-label="Collapse sidebar"] {
 @media (prefers-reduced-motion: reduce) {
   .si-fab-pulse { animation: none; }
 }
+
+/* Gentle pulse on the sidebar collapse arrow until it has been used once. */
+@keyframes mg-nudge{0%,100%{box-shadow:4px 0 20px rgba(0,0,0,.15),0 0 0 0 rgba(194,91,63,.55)}50%{box-shadow:4px 0 20px rgba(0,0,0,.15),0 0 0 10px rgba(194,91,63,0)}}
+.mg-nudge{animation:mg-nudge 1.6s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.mg-nudge{animation:none}}
