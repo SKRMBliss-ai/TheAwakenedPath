@@ -40,33 +40,7 @@ function Lightable({ off, on, alt, lit, setLit, width, label, glow }: {
   );
 }
 
-const INSTRUMENTS: { src: string; label: string; w: number }[] = [
-  { src: `${DIR}/bowl.webp`, label: 'Singing bowl', w: 170 },
-  { src: `${DIR}/tingsha.webp`, label: 'Tingsha bells', w: 150 },
-  { src: `${DIR}/chime.webp`, label: 'Wind chime', w: 66 },
-  { src: `${DIR}/flute.webp`, label: 'Flute', w: 180 },
-];
-
-export interface SceneCta { label: string; href: string; primary?: boolean }
-
-/** `title`, `intro` and `ctas` let a page reuse the scene to point at its offerings (the home page does). */
-export default function LightScene({ palette, title = 'Light a candle. Begin to settle.', intro = 'Hover over the candles or the lantern to light them. On a phone, tap.', ctas }: {
-  palette: Palette; title?: string; intro?: string; ctas?: SceneCta[];
-}) {
-  const [candle, setCandle] = useState(false);
-  const [lantern, setLantern] = useState(false);
-  const dark = palette.isDark;
-  const anyLit = candle || lantern;
-  const bothLit = candle && lantern;
-
-  const glow = 'radial-gradient(closest-side, rgba(255,200,110,.85), rgba(255,170,70,.35) 55%, transparent 75%)';
-  const panelBg = dark
-    ? `radial-gradient(ellipse at 50% 70%, rgba(255,180,80,${bothLit ? 0.28 : anyLit ? 0.16 : 0.05}), transparent 70%), #14111C`
-    : `radial-gradient(ellipse at 50% 70%, rgba(255,190,90,${bothLit ? 0.5 : anyLit ? 0.3 : 0.08}), transparent 72%), ${palette.CARD}`;
-
-  return (
-    <section aria-labelledby="ls-h" style={{ padding: 'clamp(36px, 6vw, 72px) clamp(16px, 5vw, 96px)' }}>
-      <style>{`
+const SCENE_CSS = `
         .ls-panel{transition:background 1.2s ease;border-radius:32px;overflow:hidden}
         .ls-row{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:center;gap:clamp(16px,5vw,64px)}
         .ls-obj{position:relative;display:block;background:none;border:0;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:24px}
@@ -83,7 +57,50 @@ export default function LightScene({ palette, title = 'Light a candle. Begin to 
         .ls-inst:hover{transform:translateY(-8px)}
         .ls-inst:hover img{filter:drop-shadow(0 12px 22px rgba(233,185,90,.55))}
         @media (prefers-reduced-motion: reduce){.ls-obj .ls-glow,.ls-inst{animation:none!important;transition:none}}
-      `}</style>
+      `;
+
+const INSTRUMENTS: { src: string; label: string; w: number }[] = [
+  { src: `${DIR}/bowl.webp`, label: 'Singing bowl', w: 170 },
+  { src: `${DIR}/tingsha.webp`, label: 'Tingsha bells', w: 150 },
+  { src: `${DIR}/chime.webp`, label: 'Wind chime', w: 66 },
+  { src: `${DIR}/flute.webp`, label: 'Flute', w: 180 },
+];
+
+export interface SceneCta { label: string; href: string; primary?: boolean }
+
+/** `title`, `intro` and `ctas` let a page reuse the scene to point at its offerings (the home page does). */
+export default function LightScene({ palette, title = 'Light a candle. Begin to settle.', intro = 'Hover over the candles or the lantern to light them. On a phone, tap.', ctas, bare = false }: {
+  palette: Palette; title?: string; intro?: string; ctas?: SceneCta[];
+  /** Just the lantern and candles, no heading, panel or instruments: for use inside another panel. */
+  bare?: boolean;
+}) {
+  const [candle, setCandle] = useState(false);
+  const [lantern, setLantern] = useState(false);
+  const dark = palette.isDark;
+  const anyLit = candle || lantern;
+  const bothLit = candle && lantern;
+
+  const glow = 'radial-gradient(closest-side, rgba(255,200,110,.85), rgba(255,170,70,.35) 55%, transparent 75%)';
+  const panelBg = dark
+    ? `radial-gradient(ellipse at 50% 70%, rgba(255,180,80,${bothLit ? 0.28 : anyLit ? 0.16 : 0.05}), transparent 70%), #14111C`
+    : `radial-gradient(ellipse at 50% 70%, rgba(255,190,90,${bothLit ? 0.5 : anyLit ? 0.3 : 0.08}), transparent 72%), ${palette.CARD}`;
+
+  if (bare) {
+    return (
+      <div className="ls-bare">
+        <style>{SCENE_CSS}</style>
+        <div className="ls-row" style={{ minHeight: 260 }}>
+          <Lightable off={`${DIR}/lantern-off.webp`} on={`${DIR}/lantern-on.webp`} alt="A lit golden lantern" lit={lantern} setLit={setLantern} width={170} label="lantern" glow={glow} />
+          <Lightable off={`${DIR}/candle-off.webp`} on={`${DIR}/candle-on.webp`} alt="Three lit candles with jasmine" lit={candle} setLit={setCandle} width={300} label="candles" glow={glow} />
+        </div>
+        <p style={{ textAlign: 'center', margin: '10px 0 0', fontFamily: SANS, fontSize: 13, color: dark ? 'rgba(244,239,230,.7)' : palette.INK2 }}>Hover to light them. On a phone, tap.</p>
+      </div>
+    );
+  }
+
+  return (
+    <section aria-labelledby="ls-h" style={{ padding: 'clamp(36px, 6vw, 72px) clamp(16px, 5vw, 96px)' }}>
+      <style>{SCENE_CSS}</style>
 
       <div className="ls-panel" style={{ maxWidth: 1100, margin: '0 auto', padding: 'clamp(28px, 5vw, 56px) clamp(16px, 4vw, 40px)', background: panelBg,
         border: `1px solid ${dark ? '#2A2338' : palette.BORDER}`, textAlign: 'center' }}>
