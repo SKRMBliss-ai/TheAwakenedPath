@@ -47,7 +47,12 @@ const INSTRUMENTS: { src: string; label: string; w: number }[] = [
   { src: `${DIR}/flute.webp`, label: 'Flute', w: 180 },
 ];
 
-export default function LightScene({ palette }: { palette: Palette }) {
+export interface SceneCta { label: string; href: string; primary?: boolean }
+
+/** `title`, `intro` and `ctas` let a page reuse the scene to point at its offerings (the home page does). */
+export default function LightScene({ palette, title = 'Light a candle. Begin to settle.', intro = 'Hover over the candles or the lantern to light them. On a phone, tap.', ctas }: {
+  palette: Palette; title?: string; intro?: string; ctas?: SceneCta[];
+}) {
   const [candle, setCandle] = useState(false);
   const [lantern, setLantern] = useState(false);
   const dark = palette.isDark;
@@ -83,10 +88,10 @@ export default function LightScene({ palette }: { palette: Palette }) {
       <div className="ls-panel" style={{ maxWidth: 1100, margin: '0 auto', padding: 'clamp(28px, 5vw, 56px) clamp(16px, 4vw, 40px)', background: panelBg,
         border: `1px solid ${dark ? '#2A2338' : palette.BORDER}`, textAlign: 'center' }}>
         <h2 id="ls-h" style={{ fontFamily: SERIF, fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 400, lineHeight: 1.15, margin: '0 0 8px', color: dark ? '#F4EFE6' : palette.INK }}>
-          Light a candle. Begin to settle.
+          {title}
         </h2>
         <p style={{ fontFamily: SANS, fontSize: 15.5, lineHeight: 1.6, margin: '0 auto clamp(20px, 4vw, 36px)', maxWidth: 520, color: dark ? 'rgba(244,239,230,.75)' : palette.INK2 }}>
-          Hover over the candles or the lantern to light them. On a phone, tap.
+          {intro}
         </p>
 
         <div className="ls-row">
@@ -101,6 +106,19 @@ export default function LightScene({ palette }: { palette: Palette }) {
             </li>
           ))}
         </ul>
+
+        {ctas && ctas.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', marginTop: 'clamp(24px, 4vw, 40px)' }}>
+            {ctas.map((c) => (
+              <a key={c.href} href={c.href}
+                style={{ display: 'inline-flex', alignItems: 'center', minHeight: 48, padding: '0 24px', borderRadius: 999, fontFamily: SANS, fontSize: 15, fontWeight: 700, textDecoration: 'none',
+                  background: c.primary ? '#E9C98A' : 'transparent', color: c.primary ? '#241E24' : (dark ? '#F4EFE6' : palette.INK),
+                  border: c.primary ? 'none' : `1.5px solid ${dark ? 'rgba(244,239,230,.5)' : palette.BORDER}` }}>
+                {c.label}
+              </a>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

@@ -1,4 +1,5 @@
 import StudiosSection from './components/StudiosSection';
+import LightScene from '../meditation/LightScene';
 import MantrasNewOffering from './components/MantrasNewOffering';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
@@ -379,6 +380,17 @@ export default function SoulfulHome() {
           <div id="choose" style={{ scrollMarginTop: 80 }}>
             <StudiosSection palette={palette} />
           </div>
+
+          {/* A calm, interactive moment that points at every offering */}
+          <LightScene palette={palette}
+            title="Light a candle. Begin to settle."
+            intro="Mind Gym for daily practice, mantras for prayer, meditation music for rest. Hover over the candles or the lantern to light them."
+            ctas={[
+              { label: 'Meditation music', href: '/meditation-music', primary: true },
+              { label: 'Mantras', href: '/mantras' },
+              { label: 'Mind Gym app', href: '/aboutmindgym' },
+              { label: 'Kids Mind Gym', href: '/tiny-kids-transformations' },
+            ]} />
 
           {/* Section divider */}
           <div style={{ padding: '0 24px' }}><div className="si-divider" /></div>
