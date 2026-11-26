@@ -484,6 +484,15 @@ if (isLibraryPreviewRoute) {
       </Suspense>
     </ErrorBoundary>,
   );
+} else if (window.location.pathname.replace(/\/+$/, '').toLowerCase() === '/breathwork') {
+  const BreathworkComingSoon = lazy(() => import('./components/site/BreathworkComingSoon'));
+  root.render(
+    <ErrorBoundary featureName="BreathworkComingSoon">
+      <Suspense fallback={null}>
+        <BreathworkComingSoon />
+      </Suspense>
+    </ErrorBoundary>,
+  );
 } else if (gymRoute) {
   const GymApp = lazy(() => import('./features/gym/GymApp'));
   root.render(
