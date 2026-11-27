@@ -1,6 +1,10 @@
 const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https");
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
+// Caps how many copies of any v2 function can run at once, so a flood of
+// requests cannot scale the bill without limit. A function's own maxInstances
+// overrides this. Must stay above every function definition.
+require("firebase-functions/v2").setGlobalOptions({ maxInstances: 5 });
 const functionsV1 = require("firebase-functions/v1");
 const { defineSecret } = require("firebase-functions/params");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
@@ -2595,7 +2599,10 @@ exports.siteChat = onCall({
 
 exports.pingDaily = onRequest((req, res) => res.send("Zen Ping Successful"));
 
-exports.testEmail = onRequest({ secrets: [emailUser, emailPass], cors: true }, async (req, res) => {
+// The test/manual email endpoints below send real mail, so each one requires the
+// x-admin-token header (see verifyAdminToken).
+exports.testEmail = onRequest({ secrets: [emailUser, emailPass, adminToken], cors: true }, async (req, res) => {
+    if (!verifyAdminToken(req)) return res.status(401).send("Unauthorized");
     const { to } = req.query;
     if (!to) return res.status(400).send("Provide 'to' email address.");
 
@@ -2622,7 +2629,8 @@ exports.testEmail = onRequest({ secrets: [emailUser, emailPass], cors: true }, a
  * successful send here means the real flow works too. Never touches
  * Firestore or any real order — email only.
  */
-exports.testWelcomeEmail = onRequest({ secrets: [emailUser, emailPass], cors: true }, async (req, res) => {
+exports.testWelcomeEmail = onRequest({ secrets: [emailUser, emailPass, adminToken], cors: true }, async (req, res) => {
+    if (!verifyAdminToken(req)) return res.status(401).send("Unauthorized");
     const { to, plan } = req.query;
     if (!to) return res.status(400).send("Provide 'to' email address. Optional: ?plan=Some+Plan+Name");
     try {
@@ -2634,7 +2642,8 @@ exports.testWelcomeEmail = onRequest({ secrets: [emailUser, emailPass], cors: tr
     }
 });
 
-exports.testGuestAccessEmail = onRequest({ secrets: [emailUser, emailPass], cors: true }, async (req, res) => {
+exports.testGuestAccessEmail = onRequest({ secrets: [emailUser, emailPass, adminToken], cors: true }, async (req, res) => {
+    if (!verifyAdminToken(req)) return res.status(401).send("Unauthorized");
     const { to } = req.query;
     if (!to) return res.status(400).send("Provide 'to' email address.");
     try {
@@ -3161,9 +3170,10 @@ async function sendGuestAccessEmail(toEmail) {
 }
 
 exports.forceTriggerEmail = onRequest({
-    secrets: [emailUser, emailPass, geminiKey, youtubeApiKey],
+    secrets: [emailUser, emailPass, geminiKey, youtubeApiKey, adminToken],
     timeoutSeconds: 300
 }, async (req, res) => {
+    if (!verifyAdminToken(req)) return res.status(401).send("Unauthorized");
     try {
         console.log(`Manually triggering daily reminders...`);
         await runReminderLogic(geminiKey.value(), youtubeApiKey.value(), true);
@@ -3899,7 +3909,8 @@ exports.sendWeeklyEssayNow = onRequest({
 });
 
 /** Manual test send — hit with ?email=you@example.com. Never touches the list. */
-exports.testWeeklyEssay = onRequest({ secrets: [emailUser, emailPass] }, async (req, res) => {
+exports.testWeeklyEssay = onRequest({ secrets: [emailUser, emailPass, adminToken] }, async (req, res) => {
+    if (!verifyAdminToken(req)) { res.status(401).send('Unauthorized'); return; }
     const to = req.query.email;
     if (!to) { res.status(400).send('Pass ?email=you@example.com'); return; }
     await runWeeklyEssay({ onlyEmail: String(to) });
