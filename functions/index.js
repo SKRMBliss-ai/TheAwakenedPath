@@ -2660,9 +2660,10 @@ exports.testGuestAccessEmail = onRequest({ secrets: [emailUser, emailPass, admin
  * Use this to QA the email design before the 8 PM scheduled send.
  */
 exports.previewReminderEmail = onRequest({
-    secrets: [emailUser, emailPass, geminiKey, youtubeApiKey],
+    secrets: [emailUser, emailPass, geminiKey, youtubeApiKey, adminToken],
     cors: true
 }, async (req, res) => {
+    if (!verifyAdminToken(req)) return res.status(401).send("Unauthorized");
     const { to } = req.query;
     if (!to) return res.status(400).send("Provide 'to' email address.");
 
@@ -3302,9 +3303,10 @@ exports.sendMeditationReminders = onSchedule({
 });
 
 exports.testMeditationReminderEmail = onRequest({
-    secrets: [emailUser, emailPass],
+    secrets: [emailUser, emailPass, adminToken],
     cors: true
 }, async (req, res) => {
+    if (!verifyAdminToken(req)) return res.status(401).send("Unauthorized");
     const { to } = req.query;
     if (!to) return res.status(400).send("Provide 'to' email address.");
 
