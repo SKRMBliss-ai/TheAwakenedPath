@@ -1,8 +1,8 @@
 import { initializeApp } from "firebase/app";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
-import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
-import { getFunctions } from "firebase/functions";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, connectFirestoreEmulator } from "firebase/firestore";
+import { getAuth, connectAuthEmulator } from "firebase/auth";
+import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDau-Q6HiBlp2NJ5H1u1GMyfLnUIoLd9aQ",
@@ -39,8 +39,23 @@ if (appCheckSiteKey) {
   });
 }
 
-export const db = getFirestore(app);
+/* Keep fetched documents on the device (shared across tabs). A listener that
+ * reconnects soon after, or an offline visit, is served from this cache instead
+ * of being billed as fresh reads. Where IndexedDB is unavailable the SDK falls
+ * back to an in-memory cache by itself. */
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+});
 export const auth = getAuth(app);
 export const functions = getFunctions(app, 'us-central1');
+
+/* Local development against the Firebase Emulator Suite (no cost, no live
+ * data): run `npx firebase emulators:start`, then set VITE_USE_EMULATORS=true
+ * in .env.local. Never active in a production build. */
+if (import.meta.env.DEV && import.meta.env.VITE_USE_EMULATORS === 'true') {
+  connectFirestoreEmulator(db, '127.0.0.1', 8080);
+  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+  connectFunctionsEmulator(functions, '127.0.0.1', 5001);
+}
 
 export default app;

@@ -93,7 +93,10 @@ export default defineConfig({
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       workbox: {
         maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
+        // App shell only. Pictures used to be precached too, which downloaded
+        // ~98MB of hosting traffic for every new visitor, seen or not. They are
+        // now cached as they are first viewed (see runtimeCaching below).
+        globPatterns: ['**/*.{js,css,html,ico,woff2}', 'pwa-*.png'],
         // /twinsouls is a separate app (the Twin Souls portfolio) served from
         // this same hosting under a subpath — never precache its bundle into the
         // Mind Gym service worker (keeps the SW lean, respects mobile-load).
@@ -164,6 +167,16 @@ export default defineConfig({
         // NetworkFirst handler.
         navigateFallback: undefined,
         runtimeCaching: [
+          {
+            urlPattern: ({ request, sameOrigin }: { request: Request; sameOrigin: boolean }) =>
+              sameOrigin && request.destination === 'image',
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'images',
+              expiration: { maxEntries: 300, maxAgeSeconds: 30 * 24 * 60 * 60, purgeOnQuotaError: true },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
           {
             urlPattern: ({ request, url }: { request: Request; url: URL }) =>
               request.mode === 'navigate' &&

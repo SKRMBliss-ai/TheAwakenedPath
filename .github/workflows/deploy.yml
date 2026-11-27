@@ -64,9 +64,9 @@ jobs:
       # and left dozens of functions un-updated while the job went red. So work
       # out what actually needs deploying (scripts/changed-functions.mjs):
       #   - nothing under functions/ changed  -> no functions are deployed;
-      #   - only some functions' own code changed -> only those are deployed;
-      #   - something shared changed (a helper, a price table, dependencies,
-      #     another file) -> all of them, because we cannot see which ones use it.
+      #   - a function, or a helper it uses, changed -> only those functions;
+      #   - start-up code, dependencies or another file changed -> all of them,
+      #     because every function may be affected.
       # Run it by hand with the `functions` input: changed | all | none | a list.
       - name: Work out which Cloud Functions to deploy
         id: fn

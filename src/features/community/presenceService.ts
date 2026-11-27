@@ -1,5 +1,5 @@
 import {
-  collection, doc, onSnapshot, query, serverTimestamp, setDoc,
+  collection, doc, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc,
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db } from '../../firebase';
@@ -90,7 +90,9 @@ export const presenceService = {
    * everyone else out (or keep ghosts around forever).
    */
   subscribe(cb: (members: PresenceMember[]) => void): Unsubscribe {
-    const q = query(collection(db, 'presence'));
+    // Newest heartbeats only: old presence docs are never read, however many
+    // have piled up in the collection.
+    const q = query(collection(db, 'presence'), orderBy('lastSeen', 'desc'), limit(100));
     return onSnapshot(
       q,
       (snap) => {
